@@ -1,40 +1,17 @@
 #include "pressure_89bsd.h"
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <math.h>
 
-#include <bitset>
-#include <iostream>
-#include <fstream>
-
-#include <ros/ros.h>
-
-#define CMD_RESET 0x1E // reset command
-#define CMD_ADC_READ 0x00 // ADC read command
-#define CMD_ADC_CONV_D1_4096 0x48 // ADC conversion command
-#define CMD_ADC_CONV_D2_4096 0x58 // ADC conversion command
-#define CMD_PROM 0xA0 // Coefficient location
-
-#define Q0 9.0
-#define Q1 11.0
-#define Q2 9.0
-#define Q3 15.0
-#define Q4 15.0
-#define Q5 16.0
-#define Q6 16.0
+#define Q0 9
+#define Q1 11
+#define Q2 9
+#define Q3 15
+#define Q4 15
+#define Q5 16
+#define Q6 16
 
 #define T_MIN -20.0
 #define T_MAX 85.0
+#define P_MAX 6.0
+#define P_MIN 0.0
 
 using namespace std;
 
@@ -80,13 +57,11 @@ int Pressure_89BSD::init_sensor(){
   ROS_INFO("[Pressure_89BSD] Sensor initialization");
   reset();
 
+  unsigned char buff[2] = {0, 0};
   for(int i=0; i<7; i++){
     const char add = CMD_PROM + (char) 2*(i+1);
-    if (write(m_file,&add,1) != 1)
-      ROS_WARN("[Pressure_89BSD] Error Writing");
-    u_int8_t buff[2] = {0};
-    if (read(m_file,&buff,2) != 2)
-      ROS_WARN("[Pressure_89BSD] Error Reading");
+    if (i2c_smbus_read_block_data(m_file, add, buff)!=2)
+        ROS_WARN("[Pressure_89BSD] Error Reading");
     m_prom[i] = (buff[0] << 8) | buff[1] << 0;
   }
   ROS_INFO("[Pressure_89BSD] Sensor Read PROM OK");
@@ -118,7 +93,19 @@ int Pressure_89BSD::init_sensor(){
   return 0;
 }
 
-int Pressure_89BSD::get_value(){
+int Pressure_89BSD::measure(){
+  get_D1();
+  get_D2();
 
-  return 0;
+  double x = m_D2/(2<<24);
+  m_temperature = m_A0/3.0+2.0*m_A1*x+2.0*m_A2*x*x;
+
+  double top = m_D1 + m_C0*(2<<Q0) + m_C3*(2<<Q3)*x + m_C4*(2<<Q4)*x*x;
+  double bot = m_C1*(2<<Q1) + m_C5*(2<<Q5)*x + m_C6*(2<<Q6)*x*x;
+  double y = top/bot;
+  double z = (2<<Q2)/(double)((2<<24));
+
+  double p = (1.0-m_C2*z)*y+m_C2*z*y*y;
+
+  m_pressure = (p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN;
 }

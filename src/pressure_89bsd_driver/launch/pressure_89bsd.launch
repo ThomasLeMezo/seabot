@@ -1,0 +1,5 @@
+<launch>
+  <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node">
+  	<param name="frequency" value="5.0" />
+  </node>
+</launch>
