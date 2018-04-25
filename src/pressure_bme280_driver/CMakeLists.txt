@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pressure_89bsd_driver)
+project(pressure_bme280_driver)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -105,8 +105,8 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS include src
-#  LIBRARIES pressure_89bsd_driver
+ INCLUDE_DIRS include src
+#  LIBRARIES pressure_bme280_driver
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -118,13 +118,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-    include
-    ${catkin_INCLUDE_DIRS}
+ include
+ ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/pressure_89bsd_driver.cpp
+#   src/${PROJECT_NAME}/pressure_bme280_driver.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,11 +135,12 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/pressure_89bsd_driver_node.cpp)
-add_executable(pressure_89bsd_node
+# add_executable(${PROJECT_NAME}_node src/pressure_bme280_driver_node.cpp)
+add_executable(bme280_node
   src/main.cpp
-  src/pressure_89bsd.cpp
+  src/bme280.c
 )
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,7 +156,7 @@ add_executable(pressure_89bsd_node
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(pressure_89bsd_node
+target_link_libraries(bme280_node
    ${catkin_LIBRARIES}
 )
 
@@ -199,7 +200,7 @@ target_link_libraries(pressure_89bsd_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_pressure_89bsd_driver.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_pressure_bme280_driver.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
