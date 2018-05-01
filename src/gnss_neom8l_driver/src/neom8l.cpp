@@ -4,6 +4,29 @@ NeoM8L::NeoM8L(){
   // Parser init
   nmea_zero_INFO(&m_info);
   nmea_parser_init(&m_parser);
+
+  // Projections
+
+  if (!(pj_lambert = pj_init_plus("+init=epsg:2154 +proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "))){
+      printf("Error Lambert \n");
+      exit(1);
+    }
+
+    if (!(pj_latlong = pj_init_plus("+init=epsg:4326")))    {
+      printf("Error LatLong \n");
+      exit(1);
+  }
+
+}
+
+void NeoM8L::convert_local_frame(){
+  // Warning : x <-> lon and y <-> lat
+  double x = m_info.lon * DEG_TO_RAD;
+  double y = m_info.lat * DEG_TO_RAD;
+
+  pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, NULL );
+  m_east = x;
+  m_north = y;
 }
 
 

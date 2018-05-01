@@ -26,6 +26,8 @@ Features
 - Multilevel architecture of algorithms
 - Additional functions of geographical mathematics
 
+- NEW PRTI01 NMEA sentences (DVL)
+
 Supported (tested) platforms
 
 - Linux (GCC)

@@ -23,6 +23,8 @@
 #include <nmea/parser.h>
 #include <nmea/gmath.h>
 
+#include <proj_api.h>
+
 class NeoM8L
 {
 public:
@@ -41,7 +43,28 @@ public:
    */
   int read_data();
 
+  /**
+   * @brief get_nmea_info
+   * @return
+   */
   const nmeaINFO& get_nmea_info() const;
+
+  /**
+   * @brief convert_local_frame
+   */
+  void convert_local_frame();
+
+  /**
+   * @brief get_east
+   * @return
+   */
+  const double& get_east() const;
+
+  /**
+   * @brief get_north
+   * @return
+   */
+  const double& get_north() const;
 
 private:
   int m_file;
@@ -52,10 +75,21 @@ private:
   nmeaPARSER m_parser;
 
   std::ostringstream m_string_buff;
+
+  projPJ pj_lambert, pj_latlong;
+  double m_east, m_north;
 };
 
 inline const nmeaINFO& NeoM8L::get_nmea_info() const{
   return m_info;
+}
+
+inline const double& NeoM8L::get_north() const{
+  return m_north;
+}
+
+inline const double& NeoM8L::get_east() const{
+  return m_east;
 }
 
 #endif // NEOM8L_H
