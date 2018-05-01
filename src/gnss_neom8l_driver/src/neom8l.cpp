@@ -7,7 +7,7 @@ NeoM8L::NeoM8L(){
 
   // Projections
 
-  if (!(pj_lambert = pj_init_plus("+init=epsg:2154 +proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "))){
+  if (!(pj_lambert = pj_init_plus("+init=epsg:2154"))){
       printf("Error Lambert \n");
       exit(1);
     }
@@ -52,6 +52,7 @@ int NeoM8L::read_data(){
   // Number of byte available
   unsigned char buff_nb_byte[2];
   // i2c_smbus_read_i2c_block_data : issue with kernel < 2.6.23 (?)
+  // i2c_smbus_read_block_data is limited to 32bit (SMBUS protocol), => use the "i2c" version
   i2c_smbus_read_i2c_block_data(m_file, 0xFD, 2, buff_nb_byte); // OxFD, 0xFE (16 bit)
   unsigned int nb_byte = (buff_nb_byte[0] << 8) | buff_nb_byte[1] << 0; // test if i2c_smbus_write_word_data works ?
 
