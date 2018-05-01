@@ -15,6 +15,8 @@
 
 #include <ros/ros.h>
 
+#define MOTOR_PWM_STOP 1500
+
 class Thruster
 {
 public:
@@ -27,7 +29,7 @@ public:
 
 private:
   int m_file;
-  const int m_i2c_addr = 0x70;
+  const int m_i2c_addr = 0x38;
   const char* m_i2c_periph = "/dev/i2c-1";
 };
 

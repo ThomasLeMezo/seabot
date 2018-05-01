@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
       pose_msg.east = sensor.get_east();
       pose_msg.north = sensor.get_north();
       pose_pub.publish(pose_msg);
+      ros::spinOnce();
     }
 
     loop_rate.sleep();

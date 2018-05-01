@@ -5,7 +5,7 @@ Thruster::Thruster(){
 }
 
 Thruster::~Thruster(){
-  write_cmd(1500, 1500);
+  write_cmd(MOTOR_PWM_STOP, MOTOR_PWM_STOP);
   close(m_file);
 }
 

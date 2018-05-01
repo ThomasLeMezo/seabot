@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
     pressure_pub.publish(pressure_msg);
     humidity_pub.publish(humidity_msg);
 
+    ros::spinOnce();
     loop_rate.sleep();
   }
 

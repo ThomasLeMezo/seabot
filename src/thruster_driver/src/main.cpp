@@ -4,8 +4,10 @@
 #include <ros/ros.h>
 
 #include "thruster.h"
-#include "thruster_driver/Velocity.h"
 #include "thruster_driver/Engine.h"
+#include "thruster_driver/Velocity.h"
+
+#include "std_srvs/SetBool.h"
 
 using namespace std;
 float linear_velocity = 0.0;
@@ -13,9 +15,21 @@ float angular_velocity = 0.0;
 bool state_idle = false;
 float K = 100;
 
+Thruster t;
+
 void velocity_callback(const thruster_driver::Velocity::ConstPtr& msg){
   linear_velocity = msg->linear;
   angular_velocity = msg->angular;
+}
+
+
+bool engine_enable(std_srvs::SetBool::Request  &req,
+         std_srvs::SetBool::Response &res){
+  state_idle = req.data;
+  res.success = true;
+  t.write_cmd(MOTOR_PWM_STOP, MOTOR_PWM_STOP);
+
+  return true;
 }
 
 int main(int argc, char *argv[])
@@ -34,8 +48,10 @@ int main(int argc, char *argv[])
   ros::Publisher cmd_pub = n.advertise<thruster_driver::Engine>("engine", 1);
   thruster_driver::Engine cmd_msg;
 
+  // Service (ON/OFF)
+  ros::ServiceServer service = n.advertiseService("engine_enable", engine_enable);
+
   // Sensor initialization
-  Thruster t;
   t.i2c_open();
 
   ros::Rate loop_rate(frequency);
@@ -50,8 +66,8 @@ int main(int argc, char *argv[])
       u_left /=n;
       u_right /=n;
 
-      unsigned short int cmd_left = u_left*K;
-      unsigned short int cmd_right = u_right*K;
+      unsigned short int cmd_left = u_left*K + MOTOR_PWM_STOP;
+      unsigned short int cmd_right = u_right*K + MOTOR_PWM_STOP;
 
       t.write_cmd(cmd_left, cmd_right);
 

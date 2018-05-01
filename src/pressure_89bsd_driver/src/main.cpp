@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     temperature_pub.publish(temperature_msg);
     pressure_pub.publish(pressure_msg);
 
+    ros::spinOnce();
     loop_rate.sleep();
   }
 
