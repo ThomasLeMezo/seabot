@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
   roscpp
+  rospy
   sensor_msgs
   std_msgs
   std_srvs
@@ -105,7 +106,7 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	INCLUDE_DIRS include src
+        INCLUDE_DIRS include
 #  LIBRARIES pressure_89bsd_driver
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
