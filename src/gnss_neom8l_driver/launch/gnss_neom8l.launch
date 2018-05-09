@@ -1,5 +1,5 @@
 <launch>
-  <node name="gnss" pkg="gnss_neom8l_driver" type="gnss_neom8l_node">
+  <node name="gnss" pkg="gnss_neom8l_driver" type="gnss_neom8l_node" output="screen">
         <param name="frequency" value="20.0" />
   </node>
 </launch>

@@ -46,7 +46,7 @@ public:
 
 private:
 
-  int m_file;
+  int m_file = 0;
   const int m_i2c_addr = 0x77;
   const char* m_i2c_periph = "/dev/i2c-1";
   const float m_p_min = 0.0; // In Bar
@@ -63,7 +63,8 @@ private:
 
 inline int Pressure_89BSD::get_D1(){
   i2c_smbus_write_byte(m_file, CMD_ADC_CONV_D1_4096);
-  usleep(SLEEP_4096); // max 9.04ms for 4096
+//  usleep(SLEEP_4096); // max 9.04ms for 4096
+  ros::Duration(0.01).sleep();
   unsigned char buff[3] = {0, 0, 0};
   if (i2c_smbus_read_block_data(m_file, CMD_ADC_READ, buff)!=3){
       ROS_WARN("[Pressure_89BSD] Error Reading D1");
@@ -75,7 +76,8 @@ inline int Pressure_89BSD::get_D1(){
 
 inline int Pressure_89BSD::get_D2(){
   i2c_smbus_write_byte(m_file, CMD_ADC_CONV_D2_4096);
-  usleep(SLEEP_4096); // max 9.04ms for 4096
+//  usleep(SLEEP_4096); // max 9.04ms for 4096
+  ros::Duration(0.01).sleep();
   unsigned char buff[3] = {0, 0, 0};
   if (i2c_smbus_read_block_data(m_file, CMD_ADC_READ, buff)!=3){
       ROS_WARN("[Pressure_89BSD] Error Reading D1");

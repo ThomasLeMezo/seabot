@@ -27,28 +27,30 @@ Pressure_89BSD::Pressure_89BSD()
 }
 
 Pressure_89BSD::~Pressure_89BSD(){
-  close(m_file);
+  if(m_file !=0)
+    close(m_file);
 }
 
 int Pressure_89BSD::reset(){
   int res = i2c_smbus_write_byte(m_file, CMD_RESET);
-  usleep(30000); // 28ms reload for the sensor (?)
+  ros::Duration(0.03).sleep(); // 28ms reload for the sensor (?)
+//  usleep(30000);
   if (res < 0)
-    ROS_INFO("[Pressure_89BSD] error reset sensor");
+    ROS_WARN("[Pressure_89BSD] Error reseting sensor");
   else
-    ROS_INFO("[Pressure_89BSD] reset ok");
+    ROS_INFO("[Pressure_89BSD] Reset ok");
   return 0;
 }
 
 int Pressure_89BSD::i2c_open(){
   if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-    ROS_WARN("Failed to open the I2C bus");
-    exit(1);
+    ROS_WARN("Failed to open the I2C bus (%s)", m_i2c_periph);
+    return 1;
   }
 
   if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-    ROS_WARN("Failed to acquire bus access and/or talk to slave");
-    exit(1);
+    ROS_WARN("Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
+    return 1;
   }
   return 0;
 }
@@ -56,15 +58,19 @@ int Pressure_89BSD::i2c_open(){
 int Pressure_89BSD::init_sensor(){
   ROS_INFO("[Pressure_89BSD] Sensor initialization");
   reset();
+  int return_val = 0;
 
   unsigned char buff[2] = {0, 0};
   for(int i=0; i<7; i++){
-    const char add = CMD_PROM + (char) 2*(i+1);
-    if (i2c_smbus_read_block_data(m_file, add, buff)!=2)
-        ROS_WARN("[Pressure_89BSD] Error Reading");
+    __u8 add = CMD_PROM + (char) 2*(i+1);
+    if (i2c_smbus_read_block_data(m_file, add, buff)!=2){
+        ROS_WARN("[Pressure_89BSD] Error Reading 0x%X", add);
+        return_val = 1;
+    }
     m_prom[i] = (buff[0] << 8) | buff[1] << 0;
   }
-  ROS_INFO("[Pressure_89BSD] Sensor Read PROM OK");
+  if(return_val==0)
+    ROS_INFO("[Pressure_89BSD] Sensor Read PROM OK");
 
   m_C0 = bin2decs(m_prom[0]>>2,14);
   m_C1 = bin2decs(((m_prom[0] & 0x3)<<12) | (m_prom[1] >> 4), 14);
@@ -77,7 +83,6 @@ int Pressure_89BSD::init_sensor(){
   m_A1 = bin2decs(((m_prom[5] & 0xFF) << 2) | (m_prom[6]>>14), 10);
   m_A2 = bin2decs(((m_prom[5] >> 3) & 0x3FF), 10);
 
-  ROS_INFO("[Pressure_89BSD] Sensor Compute PROM OK");
   ROS_INFO("[Pressure_89BSD] C0 = %d", m_C0);
   ROS_INFO("[Pressure_89BSD] C1 = %d", m_C1);
   ROS_INFO("[Pressure_89BSD] C2 = %d", m_C2);
@@ -90,7 +95,7 @@ int Pressure_89BSD::init_sensor(){
   ROS_INFO("[Pressure_89BSD] A1 = %d", m_A1);
   ROS_INFO("[Pressure_89BSD] A2 = %d", m_A2);
 
-  return 0;
+  return return_val;
 }
 
 int Pressure_89BSD::measure(){

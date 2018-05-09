@@ -13,9 +13,7 @@
   <build_depend>message_generation</build_depend>
   
   <depend>roscpp</depend>
-  <depend>rospy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
-  <depend>std_srvs</depend>
   <depend>message_runtime</depend>
 </package>

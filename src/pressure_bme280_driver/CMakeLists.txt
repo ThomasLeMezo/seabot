@@ -7,12 +7,10 @@ project(pressure_bme280_driver)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED
+find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
-  std_srvs
-  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
