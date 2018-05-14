@@ -22,7 +22,7 @@ void user_delay_ms(uint32_t period){
 int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
   int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-  if (i2c_smbus_read_block_data(file, reg_addr, reg_data)!=len)
+  if (i2c_smbus_read_i2c_block_data(file, reg_addr, len, reg_data)!=len)
     rslt = 1;
   return rslt;
 }
