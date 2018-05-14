@@ -63,7 +63,7 @@ int Pressure_89BSD::init_sensor(){
   unsigned char buff[2] = {0, 0};
   for(int i=0; i<7; i++){
     __u8 add = CMD_PROM + (char) 2*(i+1);
-    if (i2c_smbus_read_block_data(m_file, add, buff)!=2){
+    if (i2c_smbus_read_i2c_block_data(m_file, add, 2, buff)!=2){
         ROS_WARN("[Pressure_89BSD] Error Reading 0x%X", add);
         return_val = 1;
     }
