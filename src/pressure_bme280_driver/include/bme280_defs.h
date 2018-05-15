@@ -158,6 +158,7 @@
 #define	BME280_SLEEP_MODE		UINT8_C(0x00)
 #define	BME280_FORCED_MODE		UINT8_C(0x01)
 #define	BME280_NORMAL_MODE		UINT8_C(0x03)
+#define BME280_CUSTOM_MODE      UINT8_C(0x1F)
 
 /**\name Macro to combine two 8 bit data's to form a 16 bit data */
 #define BME280_CONCAT_BYTES(msb, lsb)     (((uint16_t)msb << 8) | (uint16_t)lsb)

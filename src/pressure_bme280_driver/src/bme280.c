@@ -653,27 +653,32 @@ int8_t bme280_compensate_data(uint8_t sensor_comp, const struct bme280_uncomp_da
 {
 	int8_t rslt = BME280_OK;
 
-	if ((uncomp_data != NULL) && (comp_data != NULL) && (calib_data != NULL)) {
-		/* Initialize to zero */
-		comp_data->temperature = 0;
-		comp_data->pressure = 0;
-		comp_data->humidity = 0;
-		/* If pressure or temperature component is selected */
-		if (sensor_comp & (BME280_PRESS | BME280_TEMP | BME280_HUM)) {
-			/* Compensate the temperature data */
-			comp_data->temperature = compensate_temperature(uncomp_data, calib_data);
-		}
-		if (sensor_comp & BME280_PRESS) {
-			/* Compensate the pressure data */
-			comp_data->pressure = compensate_pressure(uncomp_data, calib_data);
-		}
-		if (sensor_comp & BME280_HUM) {
-			/* Compensate the humidity data */
-			comp_data->humidity = compensate_humidity(uncomp_data, calib_data);
-		}
-	} else {
-		rslt = BME280_E_NULL_PTR;
-	}
+    if ((uncomp_data != NULL) && (comp_data != NULL) && (calib_data != NULL)) {
+        /* Initialize to zero */
+        comp_data->temperature = 0;
+        comp_data->pressure = 0;
+        comp_data->humidity = 0;
+        /* If pressure or temperature component is selected */
+        if (sensor_comp & (BME280_PRESS | BME280_TEMP | BME280_HUM)) {
+            /* Compensate the temperature data */
+            comp_data->temperature = compensate_temperature(uncomp_data, calib_data);
+        }
+        if (sensor_comp & BME280_PRESS) {
+            /* Compensate the pressure data */
+            comp_data->pressure = compensate_pressure(uncomp_data, calib_data);
+        }
+        if (sensor_comp & BME280_HUM) {
+            /* Compensate the humidity data */
+            comp_data->humidity = compensate_humidity(uncomp_data, calib_data);
+        }
+    } else {
+        rslt = BME280_E_NULL_PTR;
+    }
+
+    // Debug
+//    comp_data->temperature = uncomp_data->temperature;
+//    comp_data->pressure = uncomp_data->pressure;
+//    comp_data->humidity = uncomp_data->humidity;
 
 	return rslt;
 }
@@ -884,23 +889,29 @@ static int8_t reload_device_settings(const struct bme280_settings *settings, con
 static double compensate_temperature(const struct bme280_uncomp_data *uncomp_data,
 						struct bme280_calib_data *calib_data)
 {
-	double var1;
-	double var2;
-	double temperature;
-	double temperature_min = -40;
-	double temperature_max = 85;
+    double var1;
+    double var2;
+    double temperature;
+    double temperature_min = -40;
+    double temperature_max = 85;
 
-	var1 = ((double)uncomp_data->temperature) / 16384.0 - ((double)calib_data->dig_T1) / 1024.0;
-	var1 = var1 * ((double)calib_data->dig_T2);
-	var2 = (((double)uncomp_data->temperature) / 131072.0 - ((double)calib_data->dig_T1) / 8192.0);
-	var2 = (var2 * var2) * ((double)calib_data->dig_T3);
-	calib_data->t_fine = (int32_t)(var1 + var2);
-	temperature = (var1 + var2) / 5120.0;
+    var1 = ((double)uncomp_data->temperature) / 16384.0 - ((double)calib_data->dig_T1) / 1024.0;
+    var1 = var1 * ((double)calib_data->dig_T2);
+    var2 = (((double)uncomp_data->temperature) / 131072.0 - ((double)calib_data->dig_T1) / 8192.0);
+    var2 = (var2 * var2) * ((double)calib_data->dig_T3);
+    calib_data->t_fine = (int32_t)(var1 + var2);
+    temperature = (var1 + var2) / 5120.0;
 
-	if (temperature < temperature_min)
-		temperature = temperature_min;
-	else if (temperature > temperature_max)
-		temperature = temperature_max;
+    if (temperature < temperature_min)
+        temperature = temperature_min;
+    else if (temperature > temperature_max)
+        temperature = temperature_max;
+
+//    int var1 = ((((int)(uncomp_data->temperature>>3)-(int)(calib_data->dig_T1<<1)))*(int)(calib_data->dig_T2)) >> 11;
+//    int var2 = (((((int)(uncomp_data->temperature>>4) - (int)(calib_data->dig_T1)) * ((int)(uncomp_data->temperature>>4) - (int)(calib_data->dig_T1))) >> 12) * (calib_data->dig_T3)) >> 14;
+//    int t_fine = var1+var2;
+//    double temperature = (float)(((t_fine * 5) + 128) >> 8)/100.0;
+
 
 	return temperature;
 }
