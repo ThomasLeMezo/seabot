@@ -30,7 +30,7 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
   int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-  if (i2c_smbus_write_block_data(file, reg_addr, len, reg_data)<0)
+  if (i2c_smbus_write_i2c_block_data(file, reg_addr, len, reg_data)<0)
     rslt = 1;
   return rslt;
 }
@@ -97,11 +97,11 @@ int main(int argc, char *argv[])
   struct bme280_data comp_data;
 
   /* Recommended mode of operation: Indoor navigation */
-  dev.settings.osr_h = BME280_OVERSAMPLING_8X;
-  dev.settings.osr_p = BME280_OVERSAMPLING_8X; // 16X
-  dev.settings.osr_t = BME280_OVERSAMPLING_8X; // 2X
-  dev.settings.filter = BME280_FILTER_COEFF_OFF; // 16
-  dev.settings.standby_time = BME280_STANDBY_TIME_1_MS;
+  dev.settings.osr_h = BME280_OVERSAMPLING_1X;
+  dev.settings.osr_p = BME280_OVERSAMPLING_16X; // 16X
+  dev.settings.osr_t = BME280_OVERSAMPLING_2X; // 2X
+  dev.settings.filter = BME280_FILTER_COEFF_16; // 16
+  dev.settings.standby_time = BME280_STANDBY_TIME_125_MS;
 
 //	settings_sel = BME280_OSR_PRESS_SEL;
 //  settings_sel |= BME280_OSR_TEMP_SEL;
