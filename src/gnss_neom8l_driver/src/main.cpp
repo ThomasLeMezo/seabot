@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 
   // Sensor init
   NeoM8L sensor;
+  sensor.i2c_open();
 
   // Loop with sensor reading
   sensor_msgs::NavSatFix navSatFix_msg;
@@ -39,8 +40,8 @@ int main(int argc, char *argv[])
 
     if(navSatFix_msg.latitude != sensor.get_nmea_info().lat || navSatFix_msg.longitude != sensor.get_nmea_info().lon){
       navSatFix_msg.altitude = sensor.get_nmea_info().elv;
-      navSatFix_msg.latitude = sensor.get_nmea_info().lat;
-      navSatFix_msg.longitude = sensor.get_nmea_info().lon;
+      navSatFix_msg.latitude = sensor.get_nmea_info().lat/100;
+      navSatFix_msg.longitude = sensor.get_nmea_info().lon/100;
       navSatFix_msg.status.status = sensor.get_nmea_info().sig;
       navSatFix_msg.header.stamp = ros::Time::now();
 

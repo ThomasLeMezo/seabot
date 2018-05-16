@@ -103,17 +103,13 @@ int Pressure_89BSD::measure(){
   get_D1();
   get_D2();
 
-  double x = (double)m_D2/(double)(2<<24);
+  double x = m_D2/(double)(2<<23);
   m_temperature = m_A0/3.0+2.0*m_A1*x+2.0*m_A2*x*x;
 
-  ROS_INFO("[Pressure_89BSD] D1 = %lu", m_D1);
-  ROS_INFO("[Pressure_89BSD] D2 = %lu", m_D2);
-  ROS_INFO("[Pressure_89BSD] x = %f", x);
-
-  double top = m_D1 + m_C0*(double)(2<<Q0) + m_C3*(double)(2<<Q3)*x + m_C4*(double)(2<<Q4)*x*x;
-  double bot = m_C1*(double)(2<<Q1) + m_C5*(double)(2<<Q5)*x + m_C6*(double)(2<<Q6)*x*x;
+  double top = m_D1 + m_C0*(2<<(Q0-1)) + m_C3*(2<<(Q3-1))*x + m_C4*(2<<(Q4-1))*x*x;
+  double bot = m_C1*(2<<(Q1-1)) + m_C5*(2<<(Q5-1))*x + m_C6*(2<<(Q6-1))*x*x;
   double y = top/bot;
-  double z = (2<<Q2)/(double)((2<<24));
+  double z = (2<<(Q2-1))/(double)((2<<(24-1)));
 
   double p = (1.0-m_C2*z)*y+m_C2*z*y*y;
 
