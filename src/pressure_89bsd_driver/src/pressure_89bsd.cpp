@@ -82,7 +82,7 @@ int Pressure_89BSD::init_sensor(){
   m_C6 = bin2decs(((prom[4] >> 2) & 0x3FF), 10);
   m_A0 = bin2decs(((prom[4] & 0x3) << 8) | (prom[5]>>8), 10);
   m_A1 = bin2decs(((prom[5] & 0xFF) << 2) | (prom[6]>>14), 10);
-  m_A2 = bin2decs(((prom[5] >> 3) & 0x3FF), 10);
+  m_A2 = bin2decs(((prom[6] >> 4) & 0x3FF), 10);
 
   ROS_INFO("[Pressure_89BSD] C0 = %d", m_C0);
   ROS_INFO("[Pressure_89BSD] C1 = %d", m_C1);
@@ -105,6 +105,7 @@ int Pressure_89BSD::measure(){
 
   double x = m_D2/(double)(1<<24);
   m_temperature = m_A0/3.0+2.0*m_A1*x+2.0*m_A2*x*x;
+//  ROS_INFO("x = %lf", x);
 
   double top = m_D1 + m_C0*(1<<Q0) + m_C3*(1<<Q3)*x + m_C4*(1<<Q4)*x*x;
   double bot = m_C1*(1<<Q1) + m_C5*(1<<Q5)*x + m_C6*(1<<Q6)*x*x;
