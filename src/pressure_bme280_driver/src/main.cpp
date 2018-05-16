@@ -93,14 +93,14 @@ int main(int argc, char *argv[])
   ROS_INFO("[Pressure BME280] dig_H5 = %i", dev.calib_data.dig_H5);
   ROS_INFO("[Pressure BME280] dig_H6 = %i", dev.calib_data.dig_H6);
 
-  uint32_t settings_sel;
+  uint8_t settings_sel;
   struct bme280_data comp_data;
 
   /* Recommended mode of operation: Indoor navigation */
-  dev.settings.osr_h = BME280_OVERSAMPLING_2X;
-  dev.settings.osr_p = BME280_OVERSAMPLING_2X; // 16X
-  dev.settings.osr_t = BME280_OVERSAMPLING_2X; // 2X
-  dev.settings.filter = BME280_FILTER_COEFF_16; // 16
+  dev.settings.osr_h = BME280_OVERSAMPLING_8X;
+  dev.settings.osr_p = BME280_OVERSAMPLING_8X; // 16X
+  dev.settings.osr_t = BME280_OVERSAMPLING_8X; // 2X
+  dev.settings.filter = BME280_FILTER_COEFF_OFF; // 16
   dev.settings.standby_time = BME280_STANDBY_TIME_1_MS;
 
 //	settings_sel = BME280_OSR_PRESS_SEL;
@@ -110,8 +110,9 @@ int main(int argc, char *argv[])
 //  settings_sel |= BME280_FILTER_SEL;
   settings_sel = BME280_ALL_SETTINGS_SEL;
 
-//  rslt = bme280_set_sensor_settings(settings_sel, &dev);
-//  rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
+  rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
+  rslt = bme280_set_sensor_settings(settings_sel, &dev);
+
   dev.delay_ms(70);
 
   //  - int32_t for temperature with the units 100 * °C

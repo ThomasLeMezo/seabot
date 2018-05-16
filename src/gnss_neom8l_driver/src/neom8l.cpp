@@ -58,6 +58,7 @@ int NeoM8L::read_data(){
 
   if(nb_byte>1024)
     nb_byte = 1024;
+  ROS_INFO("[NEOM8L] nb_bytes=%u", nb_byte);
 
   unsigned char buff[nb_byte];
   i2c_smbus_read_i2c_block_data(m_file, 0xFF, nb_byte,buff);

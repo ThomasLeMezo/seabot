@@ -59,6 +59,7 @@ int Pressure_89BSD::init_sensor(){
   ROS_INFO("[Pressure_89BSD] Sensor initialization");
   reset();
   int return_val = 0;
+  u_int16_t  prom[7];
 
   unsigned char buff[2] = {0, 0};
   for(int i=0; i<7; i++){
@@ -67,21 +68,21 @@ int Pressure_89BSD::init_sensor(){
         ROS_WARN("[Pressure_89BSD] Error Reading 0x%X", add);
         return_val = 1;
     }
-    m_prom[i] = (buff[0] << 8) | buff[1] << 0;
+    prom[i] = (buff[0] << 8) | buff[1] << 0;
   }
   if(return_val==0)
     ROS_INFO("[Pressure_89BSD] Sensor Read PROM OK");
 
-  m_C0 = bin2decs(m_prom[0]>>2,14);
-  m_C1 = bin2decs(((m_prom[0] & 0x3)<<12) | (m_prom[1] >> 4), 14);
-  m_C2 = bin2decs(((m_prom[1] & 0xF)<<6) | (m_prom[2] >> 10), 10);
-  m_C3 = bin2decs((m_prom[2] & 0x3FF), 10);
-  m_C4 = bin2decs((m_prom[3] >> 6), 10);
-  m_C5 = bin2decs(((m_prom[3] & 0x1F) << 4) | (m_prom[4]>>12), 10);
-  m_C6 = bin2decs(((m_prom[4] >> 2) & 0x3FF), 10);
-  m_A0 = bin2decs(((m_prom[4] & 0x3) << 8) | (m_prom[5]>>8), 10);
-  m_A1 = bin2decs(((m_prom[5] & 0xFF) << 2) | (m_prom[6]>>14), 10);
-  m_A2 = bin2decs(((m_prom[5] >> 3) & 0x3FF), 10);
+  m_C0 = bin2decs(prom[0]>>2,14);
+  m_C1 = bin2decs(((prom[0] & 0x3)<<12) | (prom[1] >> 4), 14);
+  m_C2 = bin2decs(((prom[1] & 0xF)<<6) | (prom[2] >> 10), 10);
+  m_C3 = bin2decs((prom[2] & 0x3FF), 10);
+  m_C4 = bin2decs((prom[3] >> 6), 10);
+  m_C5 = bin2decs(((prom[3] & 0x3F) << 4) | (prom[4]>>12), 10);
+  m_C6 = bin2decs(((prom[4] >> 2) & 0x3FF), 10);
+  m_A0 = bin2decs(((prom[4] & 0x3) << 8) | (prom[5]>>8), 10);
+  m_A1 = bin2decs(((prom[5] & 0xFF) << 2) | (prom[6]>>14), 10);
+  m_A2 = bin2decs(((prom[5] >> 3) & 0x3FF), 10);
 
   ROS_INFO("[Pressure_89BSD] C0 = %d", m_C0);
   ROS_INFO("[Pressure_89BSD] C1 = %d", m_C1);
@@ -102,11 +103,15 @@ int Pressure_89BSD::measure(){
   get_D1();
   get_D2();
 
-  double x = m_D2/(2<<24);
+  double x = (double)m_D2/(double)(2<<24);
   m_temperature = m_A0/3.0+2.0*m_A1*x+2.0*m_A2*x*x;
 
-  double top = m_D1 + m_C0*(2<<Q0) + m_C3*(2<<Q3)*x + m_C4*(2<<Q4)*x*x;
-  double bot = m_C1*(2<<Q1) + m_C5*(2<<Q5)*x + m_C6*(2<<Q6)*x*x;
+  ROS_INFO("[Pressure_89BSD] D1 = %lu", m_D1);
+  ROS_INFO("[Pressure_89BSD] D2 = %lu", m_D2);
+  ROS_INFO("[Pressure_89BSD] x = %f", x);
+
+  double top = m_D1 + m_C0*(double)(2<<Q0) + m_C3*(double)(2<<Q3)*x + m_C4*(double)(2<<Q4)*x*x;
+  double bot = m_C1*(double)(2<<Q1) + m_C5*(double)(2<<Q5)*x + m_C6*(double)(2<<Q6)*x*x;
   double y = top/bot;
   double z = (2<<Q2)/(double)((2<<24));
 

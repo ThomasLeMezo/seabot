@@ -52,7 +52,6 @@ private:
   const float m_p_min = 0.0; // In Bar
   const float m_p_max = 6.0; // In Bar
 
-  u_int16_t  m_prom[7];
   int16_t m_C0, m_C1, m_C2, m_C3, m_C4, m_C5, m_C6, m_A0, m_A1, m_A2;
 
   unsigned long m_D1, m_D2;
