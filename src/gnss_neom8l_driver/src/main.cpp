@@ -38,20 +38,24 @@ int main(int argc, char *argv[])
     // ToDo
     sensor.read_data();
 
-    if(navSatFix_msg.latitude != sensor.get_nmea_info().lat || navSatFix_msg.longitude != sensor.get_nmea_info().lon){
+    if(sensor.get_time_data()  != sensor.get_nmea_info().utc.sec){
+      sensor.convert_data();
+
+      // Lat Long
       navSatFix_msg.altitude = sensor.get_nmea_info().elv;
-      navSatFix_msg.latitude = sensor.get_nmea_info().lat/100;
-      navSatFix_msg.longitude = sensor.get_nmea_info().lon/100;
+      navSatFix_msg.latitude = sensor.get_lat();
+      navSatFix_msg.longitude = sensor.get_lon();
       navSatFix_msg.status.status = sensor.get_nmea_info().sig;
       navSatFix_msg.header.stamp = ros::Time::now();
-
       navSatFix_pub.publish(navSatFix_msg);
 
-      // Proj4 transform to Local frame
-      sensor.convert_local_frame();
+      // Local frame
       pose_msg.east = sensor.get_east();
       pose_msg.north = sensor.get_north();
+      pose_msg.time_month = sensor.get_time_month();
       pose_pub.publish(pose_msg);
+
+      sensor.update_time_data(); // To enable next message
       ros::spinOnce();
     }
 

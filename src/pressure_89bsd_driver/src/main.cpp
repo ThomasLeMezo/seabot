@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     p1.measure();
     temperature_msg.temperature = p1.get_temperature();
     temperature_msg.header.stamp = ros::Time::now();
-    pressure_msg.fluid_pressure = p1.get_pression();
+    pressure_msg.fluid_pressure = p1.get_pression()/100.0;
     pressure_msg.header.stamp = temperature_msg.header.stamp;
 
     temperature_pub.publish(temperature_msg);
