@@ -114,5 +114,5 @@ int Pressure_89BSD::measure(){
 
   double p = (1.0-m_C2*z)*y+m_C2*z*y*y;
 
-  m_pressure = ((p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN)*1.0e5;
+  m_pressure = ((p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN);
 }

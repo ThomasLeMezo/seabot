@@ -19,17 +19,6 @@ NeoM8L::NeoM8L(){
 
 }
 
-void NeoM8L::convert_local_frame(){
-  // Warning : x <-> lon and y <-> lat
-  double x = m_info.lon * DEG_TO_RAD;
-  double y = m_info.lat * DEG_TO_RAD;
-
-  pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, NULL );
-  m_east = x;
-  m_north = y;
-}
-
-
 NeoM8L::~NeoM8L(){
   close(m_file);
 }
@@ -74,4 +63,26 @@ int NeoM8L::read_data(){
     else
       break;
   }
+}
+
+double degMinSec2Deg(const double & val){
+  double degree = trunc(val/1e2);
+  double min = trunc((val/1e2-degree)*1e2);
+  double sec = val - trunc(val);
+  return degree + (min+sec/60.0)/60.0;
+}
+
+void NeoM8L::convert_data(){
+  // [degree][min].[sec/60]
+  m_lat = degMinSec2Deg(m_info.lat);
+  m_lon = degMinSec2Deg(m_info.lon);
+
+  // Warning : x <-> lon and y <-> lat
+  double x = m_lon; // Longitude
+  double y = m_lat; // Latitude
+  pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, NULL);
+  m_east = x;
+  m_north = y;
+
+  m_time_month = m_info.utc.sec + (m_info.utc.min+ (m_info.utc.hour + m_info.utc.day*24)*60)*60;
 }
