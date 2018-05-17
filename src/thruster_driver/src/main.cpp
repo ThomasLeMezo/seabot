@@ -22,7 +22,6 @@ void velocity_callback(const thruster_driver::Velocity::ConstPtr& msg){
   angular_velocity = msg->angular;
 }
 
-
 bool engine_enable(std_srvs::SetBool::Request  &req,
          std_srvs::SetBool::Response &res){
   state_idle = req.data;

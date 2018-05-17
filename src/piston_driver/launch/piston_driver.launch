@@ -1,0 +1,5 @@
+<launch>
+  <node name="piston_node" pkg="piston_driver" type="piston_node" output="screen">
+  	<param name="frequency" value="1" />
+  </node>
+</launch>

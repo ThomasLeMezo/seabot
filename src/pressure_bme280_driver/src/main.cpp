@@ -167,15 +167,18 @@ int main(int argc, char *argv[])
     dev.settings.filter = BME280_FILTER_COEFF_16; // 16
     dev.settings.standby_time = BME280_STANDBY_TIME_125_MS;
 
-    //	settings_sel = BME280_OSR_PRESS_SEL;
-    //  settings_sel |= BME280_OSR_TEMP_SEL;
-    //  settings_sel |= BME280_OSR_HUM_SEL;
-    //  settings_sel |= BME280_STANDBY_SEL;
-    //  settings_sel |= BME280_FILTER_SEL;
-    settings_sel = BME280_ALL_SETTINGS_SEL;
+    settings_sel = BME280_OSR_PRESS_SEL;
+    settings_sel |= BME280_OSR_TEMP_SEL;
+    settings_sel |= BME280_OSR_HUM_SEL;
+    settings_sel |= BME280_STANDBY_SEL;
+    settings_sel |= BME280_FILTER_SEL;
 
     rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
     rslt = bme280_set_sensor_settings(settings_sel, &dev);
+
+    uint8_t sensor_mode;
+    int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
+    ROS_INFO("[Pressure BME280] Sensor Mode = %ui | reading result = %i", sensor_mode, result);
 
     dev.delay_ms(70);
 
