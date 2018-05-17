@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
   // Parameters
   ros::NodeHandle n_private("~");
-  double frequency = n_private.param<double>("frequency", 5.0);
+  double frequency = n_private.param<double>("frequency", 20.0);
 
   // Publishers
   ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>("fix", 1);
