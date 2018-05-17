@@ -18,8 +18,8 @@ int main(int argc, char *argv[])
   ros::NodeHandle n;
 
   // Parameters
-  ros::NodeHandle n_private("~");
-  double frequency = n_private.param<double>("frequency", 20.0);
+//  ros::NodeHandle n_private("~");
+//  double frequency = n_private.param<double>("frequency", 20.0);
 
   // Publishers
   ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>("fix", 1);
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
   sensor_msgs::NavSatFix navSatFix_msg;
   gnss_neom8l_driver::PoseCartesian pose_msg;
 
-  ros::Rate loop_rate(frequency);
+//  ros::Rate loop_rate(frequency);
   while (ros::ok()){
     // ToDo
     sensor.read_data();
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
       ros::spinOnce();
     }
 
-    loop_rate.sleep();
+    usleep(10000);
   }
 
   return 0;

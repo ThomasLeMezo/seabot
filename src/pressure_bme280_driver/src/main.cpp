@@ -92,6 +92,7 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 #ifdef DEBUG_MODE
         printf("Unable to send data\n");
 #endif
+        ROS_WARN("UNABLE TO SEND DATA");
         return 1;
     }
 

@@ -39,14 +39,14 @@ int NeoM8L::i2c_open(){
 
 int NeoM8L::read_data(){
   // Number of byte available
-  unsigned char buff_nb_byte[2];
+//  unsigned char buff_nb_byte[2];
 //   i2c_smbus_read_i2c_block_data : issue with kernel < 2.6.23 (?)
 //   i2c_smbus_read_block_data is limited to 32bit (SMBUS protocol), => use the "i2c" version
-  i2c_smbus_read_i2c_block_data(m_file, 0xFD, 2, buff_nb_byte); // OxFD, 0xFE (16 bit)
-  unsigned int nb_byte = (buff_nb_byte[0] << 8) | buff_nb_byte[1] << 0; // test if i2c_smbus_write_word_data works ?
+//  i2c_smbus_read_i2c_block_data(m_file, 0xFD, 2, buff_nb_byte); // OxFD, 0xFE (16 bit)
+//  unsigned int nb_byte = (buff_nb_byte[0] << 8) | buff_nb_byte[1] << 0; // test if i2c_smbus_write_word_data works ?
 
 //  if(nb_byte>32)
-    nb_byte = 32;
+  unsigned int nb_byte = 32;
 
   uint8_t buff[nb_byte];
   i2c_smbus_read_i2c_block_data(m_file, 0xFF, nb_byte,buff);
