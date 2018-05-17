@@ -45,7 +45,7 @@ int NeoM8L::read_data(){
   i2c_smbus_read_i2c_block_data(m_file, 0xFD, 2, buff_nb_byte); // OxFD, 0xFE (16 bit)
   unsigned int nb_byte = (buff_nb_byte[0] << 8) | buff_nb_byte[1] << 0; // test if i2c_smbus_write_word_data works ?
 
-  if(nb_byte>32)
+//  if(nb_byte>32)
     nb_byte = 32;
 
   uint8_t buff[nb_byte];

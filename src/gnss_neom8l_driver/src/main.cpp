@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     // ToDo
     sensor.read_data();
 
-    if(sensor.get_time_data()  != sensor.get_nmea_info().utc.sec){
+    if(sensor.get_time_data() != sensor.get_nmea_info().utc.sec){
       sensor.convert_data();
 
       // Lat Long
