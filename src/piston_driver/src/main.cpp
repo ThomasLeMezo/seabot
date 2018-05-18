@@ -7,26 +7,44 @@
 
 #include "piston.h"
 #include "piston_driver/PosePiston.h"
+#include "piston_driver/PistonSpeed.h"
 
 using namespace std;
 
 Piston p;
-bool enable_motor = false;
+bool state_start = false;
 uint16_t cmd_position_piston = 0;
 uint16_t new_cmd_position_piston = 0;
 
 bool piston_enable(std_srvs::SetBool::Request  &req,
          std_srvs::SetBool::Response &res){
-  if(req.data = true){
+  if(req.data == true)
+    p.set_piston_enable(true);
+  else
+    p.set_piston_enable(false);
+
+  res.success = true;
+  return true;
+}
+
+bool piston_start(std_srvs::SetBool::Request  &req,
+         std_srvs::SetBool::Response &res){
+  if(req.data == true){
     p.set_piston_start();
-    enable_motor = true;
+    state_start = true;
   }
   else{
     p.set_piston_stop();
-    enable_motor = false;
+    state_start = false;
   }
 
   res.success = true;
+  return true;
+}
+
+bool piston_speed(piston_driver::PistonSpeed::Request  &req,
+         piston_driver::PistonSpeed::Response &res){
+    p.set_piston_speed(req.speed);
   return true;
 }
 
@@ -44,7 +62,9 @@ int main(int argc, char *argv[])
   double frequency = n_private.param<double>("frequency", 5.0);
 
   // Service (ON/OFF)
-  ros::ServiceServer service = n.advertiseService("piston_enable", piston_enable);
+  ros::ServiceServer service_enable = n.advertiseService("piston_enable", piston_enable);
+  ros::ServiceServer service_start = n.advertiseService("piston_start", piston_start);
+  ros::ServiceServer service_speed = n.advertiseService("piston_speed", piston_speed);
 
   // Subscriber
   ros::Subscriber position_sub = n.subscribe("cmd_position_piston", 1, position_callback);
@@ -60,15 +80,15 @@ int main(int argc, char *argv[])
   while (ros::ok()){
     ros::spinOnce();
 
-    if(cmd_position_piston != new_cmd_position_piston){
-      cmd_position_piston = new_cmd_position_piston;
-      p.set_piston_position(cmd_position_piston);
-    }
-
-    if(enable_motor){
+    if(state_start){
       position_msg.position = p.get_piston_position();
       position_msg.header.stamp = ros::Time::now();
       position_pub.publish(position_msg);
+
+      if(cmd_position_piston != new_cmd_position_piston){
+        cmd_position_piston = new_cmd_position_piston;
+        p.set_piston_position(cmd_position_piston);
+      }
     }
 
     loop_rate.sleep();

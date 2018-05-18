@@ -5,20 +5,20 @@ Piston::Piston(){
 }
 
 Piston::~Piston(){
-  close(m_file);
+    close(m_file);
 }
 
 int Piston::i2c_open(){
-  if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-    ROS_WARN("Failed to open the I2C bus");
-    exit(1);
-  }
+    if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
+        ROS_WARN("Failed to open the I2C bus");
+        exit(1);
+    }
 
-  if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-    ROS_WARN("Failed to acquire bus access and/or talk to slave");
-    exit(1);
-  }
-  return 0;
+    if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
+        ROS_WARN("Failed to acquire bus access and/or talk to slave");
+        exit(1);
+    }
+    return 0;
 }
 
 /*
@@ -46,110 +46,80 @@ int Piston::i2c_open(){
 */
 
 void Piston::set_piston_start() const{
-  __u8 buff[2];
-  buff[0] = I2C_PISTON_BLANK_VALUE;
-  buff[1] = 0x01;
-  i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    __u8 buff[2];
+    buff[0] = I2C_PISTON_BLANK_VALUE;
+    buff[1] = 0x01;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
 void Piston::set_piston_stop() const{
-  __u8 buff[2];
-  buff[0] = I2C_PISTON_BLANK_VALUE;
-  buff[1] = 0x00;
-  i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    __u8 buff[2];
+    buff[0] = I2C_PISTON_BLANK_VALUE;
+    buff[1] = 0x00;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
 void Piston::set_piston_full_exit() const{
-  __u8 buff[2];
-  buff[0] = I2C_PISTON_BLANK_VALUE;
-  buff[1] = 0x02;
-  i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    __u8 buff[2];
+    buff[0] = I2C_PISTON_BLANK_VALUE;
+    buff[1] = 0x02;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
 void Piston::set_piston_full_retract() const{
-  __u8 buff[2];
-  buff[0] = I2C_PISTON_BLANK_VALUE;
-  buff[1] = 0x03;
-  i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    __u8 buff[2];
+    buff[0] = I2C_PISTON_BLANK_VALUE;
+    buff[1] = 0x03;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
 void Piston::set_piston_speed(const uint16_t &speed) const{
-  __u8 buff[2];
-  buff[0] = speed >> 8;
-  buff[1] = speed & 0xFF;
-  i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_SPEED, 2, buff);
+    __u8 buff[2];
+    buff[0] = speed >> 8;
+    buff[1] = speed & 0xFF;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_SPEED, 2, buff);
 }
 
 void Piston::set_piston_position(const uint16_t &position) const{
-  __u8 buff[2];
-  buff[0] = position >> 8;
-  buff[1] = position & 0xFF;
-  i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_MOVE, 2, buff);
+    __u8 buff[2];
+    buff[0] = position >> 8;
+    buff[1] = position & 0xFF;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_MOVE, 2, buff);
 }
 
+void Piston::set_piston_enable(const bool &val) const{
+    __u8 buff[2];
+    buff[0] = I2C_PISTON_BLANK_VALUE;
+    buff[1] = val?0x06:0x07;
+    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+}
 
 uint16_t Piston::get_piston_position(){
-  __u8 reg_addr[3], reg_data[2];
-  reg_addr[0] = I2C_PISTON_REQUEST;
-  reg_addr[1] = I2C_PISTON_BLANK_VALUE;
-  reg_addr[2] = 0x08;
+    uint8_t buff[2];
+    i2c_smbus_read_i2c_block_data(m_file, 0x04, 2,buff);
 
-  struct i2c_rdwr_ioctl_data packets;
-  struct i2c_msg messages[2];
-  /*
-     * In order to read a register, we first do a "dummy write" by writing
-     * 0 bytes to the register we want to read from.  This is similar to
-     * the packet in set_i2c_register, except it's 1 byte rather than 2.
-     */
-  messages[0].addr = m_i2c_addr;
-  messages[0].flags = 0;
-  messages[0].len = 3;
-  messages[0].buf = (char*)&reg_addr;
-
-  /* The data will get returned in this structure */
-  messages[1].addr = m_i2c_addr;
-  messages[1].flags = I2C_M_RD/* | I2C_M_NOSTART*/;
-  messages[1].len = 2;
-  messages[1].buf = (char*)&reg_data;
-
-  /* Send the request to the kernel and get the result back */
-  packets.msgs = messages;
-  packets.nmsgs = 2;
-  ioctl(m_file, I2C_RDWR, &packets);
-
-  return (reg_data[0]<<8 | reg_data[1]);
+    return (buff[0]<<8 | buff[1]);
 }
 
-uint16_t Piston::get_piston_full_exit_position(){
-  __u8 reg_addr[3], reg_data[2];
-  reg_addr[0] = I2C_PISTON_REQUEST;
-  reg_addr[1] = I2C_PISTON_BLANK_VALUE;
-  reg_addr[2] = 0x06;
+uint16_t Piston::get_piston_switch_exit_position(){
+    uint8_t buff[2];
+    i2c_smbus_read_i2c_block_data(m_file, 0x06, 2,buff);
 
-  struct i2c_rdwr_ioctl_data packets;
-  struct i2c_msg messages[2];
-  /*
-     * In order to read a register, we first do a "dummy write" by writing
-     * 0 bytes to the register we want to read from.  This is similar to
-     * the packet in set_i2c_register, except it's 1 byte rather than 2.
-     */
-  messages[0].addr = m_i2c_addr;
-  messages[0].flags = 0;
-  messages[0].len = 3;
-  messages[0].buf = (char*)&reg_addr;
+    return (buff[0]<<8 | buff[1]);
+}
 
-  /* The data will get returned in this structure */
-  messages[1].addr = m_i2c_addr;
-  messages[1].flags = I2C_M_RD/* | I2C_M_NOSTART*/;
-  messages[1].len = 2;
-  messages[1].buf = (char*)&reg_data;
+uint16_t Piston::get_piston_switch_retract_position(){
+    uint8_t buff[2];
+    i2c_smbus_read_i2c_block_data(m_file, 0x08, 2,buff);
 
-  /* Send the request to the kernel and get the result back */
-  packets.msgs = messages;
-  packets.nmsgs = 2;
-  ioctl(m_file, I2C_RDWR, &packets);
+    return (buff[0]<<8 | buff[1]);
+}
 
-  return (reg_data[0]<<8 | reg_data[1]);
+uint16_t Piston::get_piston_state(){
+    uint8_t buff[2];
+    i2c_smbus_read_i2c_block_data(m_file, 0x012, 2,buff);
+
+    return (buff[0]<<8 | buff[1]);
 }
 
 

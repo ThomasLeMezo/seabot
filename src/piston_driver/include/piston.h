@@ -18,7 +18,6 @@
 #define I2C_PISTON_MOVE 0xFE
 #define I2C_PISTON_SPEED 0xAB
 #define I2C_PISTON_CMD 0xEE
-#define I2C_PISTON_REQUEST 0x00
 #define I2C_PISTON_BLANK_VALUE 0xAA
 
 /*
@@ -59,9 +58,12 @@ public:
   void set_piston_full_retract() const;
   void set_piston_speed(const uint16_t &speed) const;
   void set_piston_position(const uint16_t &position) const;
+  void set_piston_enable(const bool &val) const;
 
   uint16_t get_piston_position();
-  uint16_t get_piston_full_exit_position();
+  uint16_t get_piston_switch_exit_position();
+  uint16_t get_piston_switch_retract_position();
+  uint16_t get_piston_state();
 
   void write_cmd(const unsigned short &left, const unsigned short &right) const;
 
