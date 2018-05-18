@@ -62,16 +62,18 @@ int main(int argc, char *argv[])
   double frequency = n_private.param<double>("frequency", 5.0);
 
   // Service (ON/OFF)
-  ros::ServiceServer service_enable = n.advertiseService("piston_enable", piston_enable);
-  ros::ServiceServer service_start = n.advertiseService("piston_start", piston_start);
-  ros::ServiceServer service_speed = n.advertiseService("piston_speed", piston_speed);
+  ros::ServiceServer service_enable = n.advertiseService("enable", piston_enable);
+  ros::ServiceServer service_start = n.advertiseService("start", piston_start);
+  ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
 
   // Subscriber
   ros::Subscriber position_sub = n.subscribe("cmd_position_piston", 1, position_callback);
 
   // Publisher
-  ros::Publisher position_pub = n.advertise<piston_driver::PosePiston>("position_piston", 1);
+  ros::Publisher position_pub = n.advertise<piston_driver::PosePiston>("position", 1);
   piston_driver::PosePiston position_msg;
+  ros::Publisher state_pub = n.advertise<std_msgs::UInt16>("state", 1);
+  std_msgs::UInt16 state_msg;
 
   // Sensor initialization
   p.i2c_open();
@@ -90,6 +92,9 @@ int main(int argc, char *argv[])
         p.set_piston_position(cmd_position_piston);
       }
     }
+
+    state_msg.data = p.get_piston_state();
+    state_pub.publish(state_msg);
 
     loop_rate.sleep();
   }
