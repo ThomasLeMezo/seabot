@@ -98,28 +98,28 @@ uint16_t Piston::get_piston_position(){
     uint8_t buff[2];
     i2c_smbus_read_i2c_block_data(m_file, 0x04, 2,buff);
 
-    return (buff[0]<<8 | buff[1]);
+    return (buff[1]<<8 | buff[0]);
 }
 
 uint16_t Piston::get_piston_switch_exit_position(){
     uint8_t buff[2];
     i2c_smbus_read_i2c_block_data(m_file, 0x06, 2,buff);
 
-    return (buff[0]<<8 | buff[1]);
+    return (buff[1]<<8 | buff[0]);
 }
 
 uint16_t Piston::get_piston_switch_retract_position(){
     uint8_t buff[2];
     i2c_smbus_read_i2c_block_data(m_file, 0x08, 2,buff);
 
-    return (buff[0]<<8 | buff[1]);
+    return (buff[1]<<8 | buff[0]);
 }
 
 uint16_t Piston::get_piston_state(){
     uint8_t buff[2];
     i2c_smbus_read_i2c_block_data(m_file, 0x012, 2,buff);
 
-    return (buff[0]<<8 | buff[1]);
+    return (buff[1]<<8 | buff[0]);
 }
 
 
