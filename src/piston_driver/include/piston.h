@@ -54,18 +54,32 @@ public:
 
   void set_piston_start() const;
   void set_piston_stop() const;
-  void set_piston_full_exit() const;
-  void set_piston_full_retract() const;
   void set_piston_speed(const uint16_t &speed) const;
   void set_piston_position(const uint16_t &position) const;
   void set_piston_enable(const bool &val) const;
+  void set_piston_reset() const;
 
-  uint16_t get_piston_position();
-  uint16_t get_piston_switch_exit_position();
-  uint16_t get_piston_switch_retract_position();
-  uint16_t get_piston_state();
+  const uint16_t& get_piston_position();
+  const bool& get_piston_switch_out();
+  const bool& get_piston_switch_in();
+  const uint16_t& get_piston_state();
+  const bool& get_piston_system_on();
+  const bool& get_piston_motor_on();
+  const bool& get_piston_enable_on();
+  const uint16_t& get_piston_position_set_point();
+  void update_piston_all_data();
 
   void write_cmd(const unsigned short &left, const unsigned short &right) const;
+
+public:
+  uint16_t m_position = 0;
+  bool m_switch_out = false;
+  bool m_switch_in = false;
+  uint16_t m_sate = 0;
+  bool m_system_on = false;
+  bool m_motor_on = true;
+  bool m_enable_on = true;
+  uint16_t m_position_set_point = 0;
 
 private:
   int m_file;

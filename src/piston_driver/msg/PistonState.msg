@@ -1,0 +1,9 @@
+std_msgs/Header header
+uint16 position
+bool switch_out
+bool switch_in
+uint16 sate
+bool system_on
+bool motor_on
+bool enable_on
+uint16 position_set_point

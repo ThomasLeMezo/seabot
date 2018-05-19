@@ -18,8 +18,9 @@ int main(int argc, char *argv[])
   ros::NodeHandle n;
 
   // Parameters
-//  ros::NodeHandle n_private("~");
-//  double frequency = n_private.param<double>("frequency", 20.0);
+  ros::NodeHandle n_private("~");
+  double offset_east = n_private.param<double>("offset_east", 0.0);
+  double offset_north = n_private.param<double>("offset_north", 0.0);
 
   // Publishers
   ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>("fix", 1);
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
 
   // Sensor init
   NeoM8L sensor;
-  sensor.i2c_open();
+//  sensor.i2c_open();
 
   // Loop with sensor reading
   sensor_msgs::NavSatFix navSatFix_msg;
@@ -36,7 +37,12 @@ int main(int argc, char *argv[])
 //  ros::Rate loop_rate(frequency);
   while (ros::ok()){
     // ToDo
-    sensor.read_data();
+//    sensor.read_data();
+    sensor.convert_data(); // Debug
+    pose_msg.east = sensor.get_east();
+    pose_msg.north = sensor.get_north();
+    pose_msg.time_month = sensor.get_time_month();
+    pose_pub.publish(pose_msg);
 
     if(sensor.get_time_data() != sensor.get_nmea_info().utc.sec){
       sensor.convert_data();
@@ -50,8 +56,8 @@ int main(int argc, char *argv[])
       navSatFix_pub.publish(navSatFix_msg);
 
       // Local frame
-      pose_msg.east = sensor.get_east();
-      pose_msg.north = sensor.get_north();
+      pose_msg.east = sensor.get_east() - offset_east;
+      pose_msg.north = sensor.get_north() - offset_north;
       pose_msg.time_month = sensor.get_time_month();
       pose_pub.publish(pose_msg);
 

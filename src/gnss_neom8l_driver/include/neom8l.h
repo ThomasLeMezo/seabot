@@ -112,7 +112,7 @@ private:
 
   projPJ pj_lambert, pj_latlong;
   double m_east, m_north;
-  double m_lat, m_lon;
+  double m_lat, m_lon, m_elv;
 
   unsigned int m_time_month=0;
   int m_time_data = 0; // =sec of the gnss time

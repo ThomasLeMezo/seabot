@@ -66,21 +66,19 @@ int NeoM8L::read_data(){
 }
 
 double degMinSec2Deg(const double & val){
-  double degree = trunc(val/1e2);
-  double min = trunc((val/1e2-degree)*1e2);
-  double sec = val - trunc(val);
-  return degree + (min+sec/60.0)/60.0;
+  double degree = trunc(val/100.0);
+  double min = val-degree*100.0;
+  return degree + min/60.0;
 }
 
 void NeoM8L::convert_data(){
-  // [degree][min].[sec/60]
   m_lat = degMinSec2Deg(m_info.lat);
   m_lon = degMinSec2Deg(m_info.lon);
 
-  // Warning : x <-> lon and y <-> lat
-  double x = m_lon; // Longitude
-  double y = m_lat; // Latitude
-  pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, NULL);
+  // Warning : x <-> lon and y <-> lat & in radian !!
+  double x = m_lon*M_PI/180.0; // Longitude
+  double y = m_lat*M_PI/180.0; // Latitude
+  pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, nullptr);
   m_east = x;
   m_north = y;
 

@@ -4,10 +4,12 @@
 #include <ros/ros.h>
 #include <std_srvs/SetBool.h>
 #include <std_msgs/UInt16.h>
+#include <std_srvs/Empty.h>
 
 #include "piston.h"
-#include "piston_driver/PosePiston.h"
+#include "piston_driver/PistonPose.h"
 #include "piston_driver/PistonSpeed.h"
+#include "piston_driver/PistonState.h"
 
 using namespace std;
 
@@ -24,6 +26,12 @@ bool piston_enable(std_srvs::SetBool::Request  &req,
     p.set_piston_enable(false);
 
   res.success = true;
+  return true;
+}
+
+bool piston_reset(std_srvs::Empty::Request  &req,
+         std_srvs::Empty::Response &res){
+    p.set_piston_reset();
   return true;
 }
 
@@ -65,15 +73,14 @@ int main(int argc, char *argv[])
   ros::ServiceServer service_enable = n.advertiseService("enable", piston_enable);
   ros::ServiceServer service_start = n.advertiseService("start", piston_start);
   ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
+  ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
 
   // Subscriber
   ros::Subscriber position_sub = n.subscribe("cmd_position_piston", 1, position_callback);
 
   // Publisher
-  ros::Publisher position_pub = n.advertise<piston_driver::PosePiston>("position", 1);
-  piston_driver::PosePiston position_msg;
-  ros::Publisher state_pub = n.advertise<std_msgs::UInt16>("state", 1);
-  std_msgs::UInt16 state_msg;
+  ros::Publisher state_pub = n.advertise<piston_driver::PistonState>("state", 1);
+  piston_driver::PistonState state_msg;
 
   // Sensor initialization
   p.i2c_open();
@@ -83,17 +90,22 @@ int main(int argc, char *argv[])
     ros::spinOnce();
 
     if(state_start){
-      position_msg.position = p.get_piston_position();
-      position_msg.header.stamp = ros::Time::now();
-      position_pub.publish(position_msg);
-
       if(cmd_position_piston != new_cmd_position_piston){
-        cmd_position_piston = new_cmd_position_piston;
         p.set_piston_position(cmd_position_piston);
+        cmd_position_piston = new_cmd_position_piston;
       }
     }
 
-    state_msg.data = p.get_piston_state();
+    p.update_piston_all_data();
+    state_msg.header.stamp = ros::Time::now();
+    state_msg.position = p.m_position;
+    state_msg.switch_out = p.m_switch_out;
+    state_msg.switch_in = p.m_switch_in;
+    state_msg.sate = p.m_sate;
+    state_msg.system_on = p.m_system_on;
+    state_msg.motor_on = p.m_motor_on;
+    state_msg.enable_on = p.m_enable_on;
+    state_msg.position_set_point = p.m_position_set_point;
     state_pub.publish(state_msg);
 
     loop_rate.sleep();

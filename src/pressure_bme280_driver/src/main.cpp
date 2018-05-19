@@ -36,67 +36,12 @@ void user_delay_ms(uint32_t period){
     usleep(period*1000);
 }
 
-int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
-{
-    struct i2c_rdwr_ioctl_data packets;
-    struct i2c_msg messages[2];
-
-    /*
-         * In order to read a register, we first do a "dummy write" by writing
-         * 0 bytes to the register we want to read from.  This is similar to
-         * the packet in set_i2c_register, except it's 1 byte rather than 2.
-         */
-    messages[0].addr = dev_id;
-    messages[0].flags = 0;
-    messages[0].len = 1;
-    messages[0].buf = (char*)&reg_addr;
-
-    /* The data will get returned in this structure */
-    messages[1].addr = dev_id;
-    messages[1].flags = I2C_M_RD/* | I2C_M_NOSTART*/;
-    messages[1].len = len;
-    messages[1].buf = (char*)reg_data;
-
-    /* Send the request to the kernel and get the result back */
-    packets.msgs = messages;
-    packets.nmsgs = 2;
-    if (ioctl(file, I2C_RDWR, &packets) < 0) {
-#ifdef DEBUG_MODE
-        printf("Unable to send/receive data\n");
-#endif
-        return 1;
-    }
-
-    return 0;
+int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len){
+  return i2c_smbus_read_i2c_block_data(file, reg_addr, len, reg_data) != len;
 }
 
-int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
-{
-    struct i2c_rdwr_ioctl_data packets;
-    struct i2c_msg messages[1];
-
-    uint8_t buff[len + 1];
-    buff[0] = reg_addr;
-    for (uint16_t i = 0; i < len; i++)
-        buff[i + 1] = reg_data[i];
-
-    messages[0].addr = dev_id;
-    messages[0].flags = 0;
-    messages[0].len = len + 1;
-    messages[0].buf = (char*)buff;
-
-    /* Transfer the i2c packets to the kernel and verify it worked */
-    packets.msgs = messages;
-    packets.nmsgs = 1;
-    if (ioctl(file, I2C_RDWR, &packets) < 0) {
-#ifdef DEBUG_MODE
-        printf("Unable to send data\n");
-#endif
-        ROS_WARN("UNABLE TO SEND DATA");
-        return 1;
-    }
-
-    return 0;
+int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len){
+  return i2c_smbus_write_i2c_block_data(file, reg_addr, len, reg_data);
 }
 
 int main(int argc, char *argv[])
@@ -198,15 +143,14 @@ int main(int argc, char *argv[])
     ros::Rate loop_rate(frequency);
     while (ros::ok())
     {
-
         //      rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
         //	  dev.delay_ms(40);
         /* Wait for the measurement to complete */
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
-        temperature_msg.temperature = comp_data.temperature;
-        pressure_msg.fluid_pressure =  comp_data.pressure;
-        humidity_msg.relative_humidity = comp_data.humidity;
+        temperature_msg.temperature = comp_data.temperature/100.0;
+        pressure_msg.fluid_pressure =  comp_data.pressure/100.0;
+        humidity_msg.relative_humidity = comp_data.humidity/1024.0;
 
         temperature_msg.header.stamp = ros::Time::now();
         pressure_msg.header.stamp = temperature_msg.header.stamp;

@@ -101,15 +101,15 @@
 #endif
 /********************************************************/
 
-#ifndef BME280_FLOAT_ENABLE
-#define BME280_FLOAT_ENABLE
-#endif
+//#ifndef BME280_FLOAT_ENABLE
+//#define BME280_FLOAT_ENABLE
+//#endif
 
-#ifndef BME280_FLOAT_ENABLE
-#ifndef BME280_64BIT_ENABLE
-#define BME280_64BIT_ENABLE
-#endif
-#endif
+//#ifndef BME280_FLOAT_ENABLE
+//#ifndef BME280_64BIT_ENABLE
+//#define BME280_64BIT_ENABLE
+//#endif
+//#endif
 
 #ifndef TRUE
 #define TRUE                UINT8_C(1)
