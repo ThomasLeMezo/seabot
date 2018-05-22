@@ -7,7 +7,6 @@
 #include <std_srvs/Empty.h>
 
 #include "piston.h"
-#include "piston_driver/PistonPose.h"
 #include "piston_driver/PistonSpeed.h"
 #include "piston_driver/PistonState.h"
 
