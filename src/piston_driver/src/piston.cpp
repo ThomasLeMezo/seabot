@@ -101,8 +101,8 @@ const bool& Piston::get_piston_switch_in(){
 }
 
 const uint16_t& Piston::get_piston_state(){
-    m_sate = i2c_smbus_read_byte_data(m_file, 0x04);
-    return m_sate;
+    m_state = i2c_smbus_read_byte_data(m_file, 0x04);
+    return m_state;
 }
 
 const bool &Piston::get_piston_system_on(){
@@ -134,7 +134,7 @@ void Piston::update_piston_all_data(){
   m_position = buff[0] << 8 | buff[1];
   m_switch_out = buff[2];
   m_switch_in = buff[3];
-  m_sate = buff[4];
+  m_state = buff[4];
   m_system_on = buff[5];
   m_motor_on = buff[6];
   m_enable_on = buff[7];
