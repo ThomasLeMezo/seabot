@@ -129,7 +129,7 @@ const uint16_t& Piston::get_piston_position_set_point(){
 
 void Piston::update_piston_all_data(){
   uint8_t buff[10];
-  i2c_smbus_read_i2c_block_data(m_file, 0x00, 10,buff);
+  i2c_smbus_read_i2c_block_data(m_file, 0x00, 12,buff);
 
   m_position = buff[0] << 8 | buff[1];
   m_switch_out = buff[2];
@@ -139,6 +139,7 @@ void Piston::update_piston_all_data(){
   m_motor_on = buff[6];
   m_enable_on = buff[7];
   m_position_set_point = buff[8] << 8 | buff[9];
+  m_motor_speed = buff[10] << 8 | buff[11];
 
 }
 

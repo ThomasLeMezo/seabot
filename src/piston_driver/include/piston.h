@@ -75,11 +75,12 @@ public:
   uint16_t m_position = 0;
   bool m_switch_out = false;
   bool m_switch_in = false;
-  uint16_t m_sate = 0;
+  uint16_t m_state = 0;
   bool m_system_on = false;
   bool m_motor_on = true;
   bool m_enable_on = true;
   uint16_t m_position_set_point = 0;
+  uint16_t m_motor_speed = 0;
 
 private:
   int m_file;

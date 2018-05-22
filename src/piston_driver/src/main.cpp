@@ -100,11 +100,12 @@ int main(int argc, char *argv[])
     state_msg.position = p.m_position;
     state_msg.switch_out = p.m_switch_out;
     state_msg.switch_in = p.m_switch_in;
-    state_msg.sate = p.m_sate;
+    state_msg.state = p.m_state;
     state_msg.system_on = p.m_system_on;
     state_msg.motor_on = p.m_motor_on;
     state_msg.enable_on = p.m_enable_on;
     state_msg.position_set_point = p.m_position_set_point;
+    state_msg.motor_speed = p.m_motor_speed;
     state_pub.publish(state_msg);
 
     loop_rate.sleep();
