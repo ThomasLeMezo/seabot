@@ -29,7 +29,7 @@ public:
 
 private:
   int m_file;
-  const int m_i2c_addr = 0x38;
+  const int m_i2c_addr = 0x20;
   const char* m_i2c_periph = "/dev/i2c-1";
 };
 
