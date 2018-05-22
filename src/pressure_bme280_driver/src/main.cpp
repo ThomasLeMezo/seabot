@@ -121,9 +121,9 @@ int main(int argc, char *argv[])
 //    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
 //    rslt = bme280_set_sensor_settings(settings_sel, &dev);
 
-    uint8_t sensor_mode;
-    int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
-    ROS_INFO("[Pressure BME280] Sensor Mode = %ui | reading result = %i", sensor_mode, result);
+//    uint8_t sensor_mode;
+//    int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
+//    ROS_INFO("[Pressure BME280] Sensor Mode = %ui | reading result = %i", sensor_mode, result);
 
     dev.delay_ms(70);
 
