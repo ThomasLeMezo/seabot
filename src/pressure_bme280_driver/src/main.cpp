@@ -8,6 +8,8 @@
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/RelativeHumidity.h>
 
+#include <pressure_bme280_driver/Bme280Data.h>
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -54,9 +56,7 @@ int main(int argc, char *argv[])
     double frequency = n_private.param<double>("frequency", 2.0);
 
     // Publishers
-    ros::Publisher temperature_pub = n.advertise<sensor_msgs::Temperature>("temperature_int", 1);
-    ros::Publisher pressure_pub = n.advertise<sensor_msgs::FluidPressure>("pressure_int", 1);
-    ros::Publisher humidity_pub = n.advertise<sensor_msgs::RelativeHumidity>("humidity_int", 1);
+    ros::Publisher pub = n.advertise<pressure_bme280_driver::Bme280Data>("sensor_internal", 1);
 
     // Sensor initialization
     struct bme280_dev dev;
@@ -118,8 +118,8 @@ int main(int argc, char *argv[])
     settings_sel |= BME280_STANDBY_SEL;
     settings_sel |= BME280_FILTER_SEL;
 
-    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
-    rslt = bme280_set_sensor_settings(settings_sel, &dev);
+//    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
+//    rslt = bme280_set_sensor_settings(settings_sel, &dev);
 
     uint8_t sensor_mode;
     int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
@@ -134,9 +134,7 @@ int main(int argc, char *argv[])
     //       If this macro is disabled, Then the unit is in Pascal
 
     // Loop with sensor reading
-    sensor_msgs::Temperature temperature_msg;
-    sensor_msgs::FluidPressure pressure_msg;
-    sensor_msgs::RelativeHumidity humidity_msg;
+    pressure_bme280_driver::Bme280Data msg;
 
     ROS_INFO("[Pressure BME280] Start Reading data");
 
@@ -148,17 +146,11 @@ int main(int argc, char *argv[])
         /* Wait for the measurement to complete */
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
-        temperature_msg.temperature = comp_data.temperature/100.0;
-        pressure_msg.fluid_pressure =  comp_data.pressure/100.0;
-        humidity_msg.relative_humidity = comp_data.humidity/1024.0;
-
-        temperature_msg.header.stamp = ros::Time::now();
-        pressure_msg.header.stamp = temperature_msg.header.stamp;
-        humidity_msg.header.stamp = temperature_msg.header.stamp;
-
-        temperature_pub.publish(temperature_msg);
-        pressure_pub.publish(pressure_msg);
-        humidity_pub.publish(humidity_msg);
+        msg.temperature = comp_data.temperature/100.0;
+        msg.pressure =  comp_data.pressure/100.0;
+        msg.humidity = comp_data.humidity/1024.0;
+        msg.header.stamp = ros::Time::now();
+        pub.publish(msg);
 
         ros::spinOnce();
         loop_rate.sleep();

@@ -49,12 +49,11 @@ find_package(catkin REQUIRED
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+# Generate messages in the 'msg' folder
+ add_message_files(
+   FILES
+   bsdData.msg
+ )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -70,11 +69,11 @@ find_package(catkin REQUIRED
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+# Generate added messages and services with any dependencies listed here
+ generate_messages(
+   DEPENDENCIES
+   std_msgs  # Or other packages containing msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -108,7 +107,7 @@ find_package(catkin REQUIRED
 catkin_package(
         INCLUDE_DIRS include
 #  LIBRARIES pressure_89bsd_driver
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -152,6 +151,7 @@ add_executable(pressure_89bsd_node
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(pressure_89bsd_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
