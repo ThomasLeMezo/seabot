@@ -81,8 +81,8 @@ void print_settings(struct bme280_dev &dev){
 
 void print_sensor_mode(struct bme280_dev &dev){
     uint8_t sensor_mode;
-    int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
-    ROS_INFO("[Pressure BME280] Sensor Mode = %i | reading result = %i", sensor_mode, result);
+    bme280_get_sensor_mode(&sensor_mode, &dev);
+    ROS_INFO("[Pressure BME280] Sensor Mode = %i", sensor_mode);
 }
 
 int main(int argc, char *argv[])
@@ -138,11 +138,10 @@ int main(int argc, char *argv[])
     rslt = bme280_set_sensor_settings(settings_sel, &dev);
     print_settings(dev);
 
-    print_sensor_mode(dev);
     rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
     print_sensor_mode(dev);
 
-    dev.delay_ms(70);
+    ros::Duration(1.5).sleep(); // Sleep to activate Normal Mode
 
     // Loop with sensor reading
     ROS_INFO("[Pressure BME280] Start Reading data");
@@ -150,11 +149,7 @@ int main(int argc, char *argv[])
     pressure_bme280_driver::Bme280Data msg;
 
     ros::Rate loop_rate(frequency);
-    while (ros::ok())
-    {
-        //      rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, &dev);
-        //	  dev.delay_ms(40);
-        /* Wait for the measurement to complete */
+    while (ros::ok()){
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
         msg.temperature = comp_data.temperature;
