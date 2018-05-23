@@ -342,6 +342,14 @@ static void parse_device_settings(const uint8_t *reg_data, struct bme280_setting
  */
 static int8_t reload_device_settings(const struct bme280_settings *settings, const struct bme280_dev *dev);
 
+/**
+ * @brief write_power_mode
+ * @param sensor_mode
+ * @param dev
+ * @return
+ */
+static int8_t write_power_mode(uint8_t sensor_mode, const struct bme280_dev *dev);
+
 /****************** Global Function Definitions *******************************/
 
 /*!

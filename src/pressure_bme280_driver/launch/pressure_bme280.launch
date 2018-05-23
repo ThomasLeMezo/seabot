@@ -1,5 +1,5 @@
 <launch>
-  <node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="pressure_bme280_node" output="screen">
+  <node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen">
   	<param name="frequency" value="5.0" />
   </node>
 </launch>

@@ -46,9 +46,48 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
   return i2c_smbus_write_i2c_block_data(file, reg_addr, len, reg_data);
 }
 
+void print_calib_settings(struct bme280_dev &dev){
+    ROS_INFO("[Pressure BME280] dig_T1 = %i", dev.calib_data.dig_T1);
+    ROS_INFO("[Pressure BME280] dig_T2 = %i", dev.calib_data.dig_T2);
+    ROS_INFO("[Pressure BME280] dig_T3 = %i", dev.calib_data.dig_T3);
+
+    ROS_INFO("[Pressure BME280] dig_P1 = %i", dev.calib_data.dig_P1);
+    ROS_INFO("[Pressure BME280] dig_P2 = %i", dev.calib_data.dig_P2);
+    ROS_INFO("[Pressure BME280] dig_P3 = %i", dev.calib_data.dig_P3);
+    ROS_INFO("[Pressure BME280] dig_P4 = %i", dev.calib_data.dig_P4);
+    ROS_INFO("[Pressure BME280] dig_P5 = %i", dev.calib_data.dig_P5);
+    ROS_INFO("[Pressure BME280] dig_P6 = %i", dev.calib_data.dig_P6);
+    ROS_INFO("[Pressure BME280] dig_P7 = %i", dev.calib_data.dig_P7);
+    ROS_INFO("[Pressure BME280] dig_P8 = %i", dev.calib_data.dig_P8);
+    ROS_INFO("[Pressure BME280] dig_P9 = %i", dev.calib_data.dig_P9);
+
+    ROS_INFO("[Pressure BME280] dig_H1 = %i", dev.calib_data.dig_H1);
+    ROS_INFO("[Pressure BME280] dig_H2 = %i", dev.calib_data.dig_H2);
+    ROS_INFO("[Pressure BME280] dig_H3 = %i", dev.calib_data.dig_H3);
+    ROS_INFO("[Pressure BME280] dig_H4 = %i", dev.calib_data.dig_H4);
+    ROS_INFO("[Pressure BME280] dig_H5 = %i", dev.calib_data.dig_H5);
+    ROS_INFO("[Pressure BME280] dig_H6 = %i", dev.calib_data.dig_H6);
+}
+
+void print_settings(struct bme280_dev &dev){
+    ROS_INFO("[Pressure BME280] dev_id = %i", dev.dev_id);
+    ROS_INFO("[Pressure BME280] chip_id = %i", dev.chip_id);
+    ROS_INFO("[Pressure BME280] settings.filter = %i", dev.settings.filter);
+    ROS_INFO("[Pressure BME280] settings.osr_h = %i", dev.settings.osr_h);
+    ROS_INFO("[Pressure BME280] settings.osr_p = %i", dev.settings.osr_p);
+    ROS_INFO("[Pressure BME280] settings.osr_t = %i", dev.settings.osr_t);
+    ROS_INFO("[Pressure BME280] settings.standby_time = %i", dev.settings.standby_time);
+}
+
+void print_sensor_mode(struct bme280_dev &dev){
+    uint8_t sensor_mode;
+    int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
+    ROS_INFO("[Pressure BME280] Sensor Mode = %i | reading result = %i", sensor_mode, result);
+}
+
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "pressure_89bsd");
+    ros::init(argc, argv, "pressure_bme280");
     ros::NodeHandle n;
 
     // Parameters
@@ -80,63 +119,35 @@ int main(int argc, char *argv[])
     dev.delay_ms = user_delay_ms;
 
     rslt = bme280_init(&dev); // Get Calib data
-
-    ROS_INFO("[Pressure BME280] dig_T1 = %i", dev.calib_data.dig_T1);
-    ROS_INFO("[Pressure BME280] dig_T2 = %i", dev.calib_data.dig_T2);
-    ROS_INFO("[Pressure BME280] dig_T3 = %i", dev.calib_data.dig_T3);
-
-    ROS_INFO("[Pressure BME280] dig_P1 = %i", dev.calib_data.dig_P1);
-    ROS_INFO("[Pressure BME280] dig_P2 = %i", dev.calib_data.dig_P2);
-    ROS_INFO("[Pressure BME280] dig_P3 = %i", dev.calib_data.dig_P3);
-    ROS_INFO("[Pressure BME280] dig_P4 = %i", dev.calib_data.dig_P4);
-    ROS_INFO("[Pressure BME280] dig_P5 = %i", dev.calib_data.dig_P5);
-    ROS_INFO("[Pressure BME280] dig_P6 = %i", dev.calib_data.dig_P6);
-    ROS_INFO("[Pressure BME280] dig_P7 = %i", dev.calib_data.dig_P7);
-    ROS_INFO("[Pressure BME280] dig_P8 = %i", dev.calib_data.dig_P8);
-    ROS_INFO("[Pressure BME280] dig_P9 = %i", dev.calib_data.dig_P9);
-
-    ROS_INFO("[Pressure BME280] dig_H1 = %i", dev.calib_data.dig_H1);
-    ROS_INFO("[Pressure BME280] dig_H2 = %i", dev.calib_data.dig_H2);
-    ROS_INFO("[Pressure BME280] dig_H3 = %i", dev.calib_data.dig_H3);
-    ROS_INFO("[Pressure BME280] dig_H4 = %i", dev.calib_data.dig_H4);
-    ROS_INFO("[Pressure BME280] dig_H5 = %i", dev.calib_data.dig_H5);
-    ROS_INFO("[Pressure BME280] dig_H6 = %i", dev.calib_data.dig_H6);
-
-    uint8_t settings_sel;
-    struct bme280_data comp_data;
+    print_calib_settings(dev);
 
     /* Recommended mode of operation: Indoor navigation */
     dev.settings.osr_h = BME280_OVERSAMPLING_1X;
-    dev.settings.osr_p = BME280_OVERSAMPLING_16X; // 16X
+    dev.settings.osr_p = BME280_OVERSAMPLING_2X; // 16X
     dev.settings.osr_t = BME280_OVERSAMPLING_2X; // 2X
-    dev.settings.filter = BME280_FILTER_COEFF_16; // 16
+    dev.settings.filter = BME280_FILTER_COEFF_2; // 16
     dev.settings.standby_time = BME280_STANDBY_TIME_125_MS;
 
+    uint8_t settings_sel;
     settings_sel = BME280_OSR_PRESS_SEL;
     settings_sel |= BME280_OSR_TEMP_SEL;
     settings_sel |= BME280_OSR_HUM_SEL;
     settings_sel |= BME280_STANDBY_SEL;
     settings_sel |= BME280_FILTER_SEL;
 
-//    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
-//    rslt = bme280_set_sensor_settings(settings_sel, &dev);
+    rslt = bme280_set_sensor_settings(settings_sel, &dev);
+    print_settings(dev);
 
-//    uint8_t sensor_mode;
-//    int8_t result = bme280_get_sensor_mode(&sensor_mode, &dev);
-//    ROS_INFO("[Pressure BME280] Sensor Mode = %ui | reading result = %i", sensor_mode, result);
+    print_sensor_mode(dev);
+    rslt = bme280_set_sensor_mode(BME280_NORMAL_MODE, &dev);
+    print_sensor_mode(dev);
 
     dev.delay_ms(70);
 
-    //  - int32_t for temperature with the units 100 * °C
-    //  - uint32_t for humidity with the units 1024 * % relative humidity
-    //  - uint32_t for pressure
-    //       If macro "BME280_64BIT_ENABLE" is enabled, which it is by default, the unit is 100 * Pascal
-    //       If this macro is disabled, Then the unit is in Pascal
-
     // Loop with sensor reading
-    pressure_bme280_driver::Bme280Data msg;
-
     ROS_INFO("[Pressure BME280] Start Reading data");
+    struct bme280_data comp_data;
+    pressure_bme280_driver::Bme280Data msg;
 
     ros::Rate loop_rate(frequency);
     while (ros::ok())
@@ -146,9 +157,9 @@ int main(int argc, char *argv[])
         /* Wait for the measurement to complete */
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
 
-        msg.temperature = comp_data.temperature/100.0;
+        msg.temperature = comp_data.temperature;
         msg.pressure =  comp_data.pressure/100.0;
-        msg.humidity = comp_data.humidity/1024.0;
+        msg.humidity = comp_data.humidity;
         msg.header.stamp = ros::Time::now();
         pub.publish(msg);
 
