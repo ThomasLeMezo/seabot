@@ -8,6 +8,9 @@
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/RelativeHumidity.h>
 
+#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/publisher.h>
+
 #include <pressure_bme280_driver/Bme280Data.h>
 
 #include <stdio.h>
@@ -33,6 +36,7 @@
 using namespace std;
 
 int file;
+struct bme280_data comp_data;
 
 void user_delay_ms(uint32_t period){
     usleep(period*1000);
@@ -85,10 +89,35 @@ void print_sensor_mode(struct bme280_dev &dev){
     ROS_INFO("[Pressure BME280] Sensor Mode = %i", sensor_mode);
 }
 
+void pressure_diagnostic(diagnostic_updater::DiagnosticStatusWrapper &stat){
+  if(comp_data.pressure>800){
+    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "High Pressure detected %f", comp_data.pressure);
+  }
+  else if(comp_data.pressure<600){
+    stat.summaryf(diagnostic_msgs::DiagnosticStatus::WARN, "Low Pressure detected %f", comp_data.pressure);
+  }
+  else{
+    stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Pressure OK");
+  }
+
+  // add and addf are used to append key-value pairs.
+  stat.add("Internal Pressure", comp_data.pressure);
+}
+
 int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "pressure_bme280");
     ros::NodeHandle n;
+
+    // Diagnostics
+    diagnostic_updater::Updater updater;
+    updater.setHardwareID("none");
+
+    double min_freq = 0.5;
+    double max_freq = 5;
+    diagnostic_updater::HeaderlessTopicDiagnostic pub1_freq("sensor_internal", updater,
+        diagnostic_updater::FrequencyStatusParam(&min_freq, &max_freq, 0.1, 10));
+    updater.add("Internal Pressure Analysis", pressure_diagnostic);
 
     // Parameters
     ros::NodeHandle n_private("~");
@@ -145,7 +174,6 @@ int main(int argc, char *argv[])
 
     // Loop with sensor reading
     ROS_INFO("[Pressure BME280] Start Reading data");
-    struct bme280_data comp_data;
     pressure_bme280_driver::Bme280Data msg;
 
     ros::Rate loop_rate(frequency);
@@ -157,7 +185,9 @@ int main(int argc, char *argv[])
         msg.humidity = comp_data.humidity;
         msg.header.stamp = ros::Time::now();
         pub.publish(msg);
+        pub1_freq.tick();
 
+        updater.update();
         ros::spinOnce();
         loop_rate.sleep();
     }

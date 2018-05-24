@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   std_srvs
   message_generation
+  diagnostic_updater
 )
 
 ## System dependencies are found with CMake's conventions

@@ -10,12 +10,12 @@ Piston::~Piston(){
 
 int Piston::i2c_open(){
     if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-        ROS_WARN("Failed to open the I2C bus");
+        ROS_WARN("[Piston_driver] Failed to open the I2C bus");
         exit(1);
     }
 
     if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-        ROS_WARN("Failed to acquire bus access and/or talk to slave");
+        ROS_WARN("[Piston_driver] Failed to acquire bus access and/or talk to slave");
         exit(1);
     }
     return 0;
@@ -29,46 +29,46 @@ int Piston::i2c_open(){
 * octet1 = 0xEE --> correspond à une consigne de marche,arret,mise en butee (sur 1 octets)
 */
 
-void Piston::set_piston_start() const{
+uint32_t Piston::set_piston_start() const{
     __u8 buff[2];
     buff[0] = I2C_PISTON_BLANK_VALUE;
     buff[1] = 0x01;
-    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
-void Piston::set_piston_stop() const{
+uint32_t Piston::set_piston_stop() const{
     __u8 buff[2];
     buff[0] = I2C_PISTON_BLANK_VALUE;
     buff[1] = 0x00;
-    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
-void Piston::set_piston_reset() const{
+uint32_t Piston::set_piston_reset() const{
     __u8 buff[2];
     buff[0] = I2C_PISTON_BLANK_VALUE;
     buff[1] = 0x02;
-    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
-void Piston::set_piston_speed(const uint16_t &speed) const{
+uint32_t Piston::set_piston_speed(const uint16_t &speed) const{
     __u8 buff[2];
     buff[0] = speed >> 8;
     buff[1] = speed & 0xFF;
-    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_SPEED, 2, buff);
+    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_SPEED, 2, buff);
 }
 
-void Piston::set_piston_position(const uint16_t &position) const{
+uint32_t Piston::set_piston_position(const uint16_t &position) const{
     __u8 buff[2];
     buff[0] = position >> 8;
     buff[1] = position & 0xFF;
-    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_MOVE, 2, buff);
+    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_MOVE, 2, buff);
 }
 
-void Piston::set_piston_enable(const bool &val) const{
+uint32_t Piston::set_piston_enable(const bool &val) const{
     __u8 buff[2];
     buff[0] = I2C_PISTON_BLANK_VALUE;
     buff[1] = val?0x06:0x07;
-    i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
 }
 
 // 0x00: nb_pulse & 0xFF;
@@ -129,7 +129,9 @@ const uint16_t& Piston::get_piston_position_set_point(){
 
 void Piston::update_piston_all_data(){
   uint8_t buff[10];
-  i2c_smbus_read_i2c_block_data(m_file, 0x00, 12,buff);
+  if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 12,buff) != 12){
+    ROS_WARN("[Piston_driver] I2C Bus Failure");
+  }
 
   m_position = buff[0] << 8 | buff[1];
   m_switch_out = buff[2];

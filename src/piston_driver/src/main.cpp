@@ -16,6 +16,7 @@ Piston p;
 bool state_start = false;
 uint16_t cmd_position_piston = 0;
 uint16_t new_cmd_position_piston = 0;
+bool state_emergency = false;
 
 bool piston_enable(std_srvs::SetBool::Request  &req,
                    std_srvs::SetBool::Response &res){
@@ -55,6 +56,21 @@ bool piston_speed(piston_driver::PistonSpeed::Request  &req,
     return true;
 }
 
+bool piston_emergency(std_srvs::SetBool::Request  &req,
+                  std_srvs::SetBool::Response &res){
+    if(req.data == true){
+      new_cmd_position_piston = 0;
+      p.set_piston_position(0);
+      state_emergency = true;
+    }
+    else{
+        state_emergency = false;
+    }
+
+    res.success = true;
+    return true;
+}
+
 void position_callback(const std_msgs::UInt16::ConstPtr& msg){
     new_cmd_position_piston = msg->data;
 }
@@ -74,6 +90,8 @@ int main(int argc, char *argv[])
     ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
     ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
 
+    ros::ServiceServer service_emergency = n.advertiseService("emergency", piston_emergency);
+
     // Subscriber
     ros::Subscriber position_sub = n.subscribe("cmd_position_piston", 1, position_callback);
 
@@ -88,11 +106,10 @@ int main(int argc, char *argv[])
     while (ros::ok()){
         ros::spinOnce();
 
-        if(state_start){
+        if(state_start && state_emergency==false){
             if(cmd_position_piston != new_cmd_position_piston){
                 cmd_position_piston = new_cmd_position_piston;
                 p.set_piston_position(cmd_position_piston);
-
             }
         }
 

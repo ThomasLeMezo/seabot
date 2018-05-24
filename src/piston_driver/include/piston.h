@@ -52,12 +52,12 @@ public:
 
   int i2c_open();
 
-  void set_piston_start() const;
-  void set_piston_stop() const;
-  void set_piston_speed(const uint16_t &speed) const;
-  void set_piston_position(const uint16_t &position) const;
-  void set_piston_enable(const bool &val) const;
-  void set_piston_reset() const;
+  uint32_t set_piston_start() const;
+  uint32_t set_piston_stop() const;
+  uint32_t set_piston_speed(const uint16_t &speed) const;
+  uint32_t set_piston_position(const uint16_t &position) const;
+  uint32_t set_piston_enable(const bool &val) const;
+  uint32_t set_piston_reset() const;
 
   const uint16_t& get_piston_position();
   const bool& get_piston_switch_out();
