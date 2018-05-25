@@ -59,14 +59,14 @@ public:
   uint32_t set_piston_enable(const bool &val) const;
   uint32_t set_piston_reset() const;
 
-  const uint16_t& get_piston_position();
-  const bool& get_piston_switch_out();
-  const bool& get_piston_switch_in();
-  const uint16_t& get_piston_state();
-  const bool& get_piston_system_on();
-  const bool& get_piston_motor_on();
-  const bool& get_piston_enable_on();
-  const uint16_t& get_piston_position_set_point();
+//  const uint16_t& get_piston_position();
+//  const bool& get_piston_switch_out();
+//  const bool& get_piston_switch_in();
+//  const uint16_t& get_piston_state();
+//  const bool& get_piston_system_on();
+//  const bool& get_piston_motor_on();
+//  const bool& get_piston_enable_on();
+//  const uint16_t& get_piston_position_set_point();
   void update_piston_all_data();
 
   void write_cmd(const unsigned short &left, const unsigned short &right) const;
