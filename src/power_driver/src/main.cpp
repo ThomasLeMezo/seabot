@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
   power_driver::Battery battery_msg;
 
   // Service (ON/OFF)
-  n.advertiseService("led_enable", led_enable);
+  ros::ServiceServer service_led = n.advertiseService("led_enable", led_enable);
 
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
