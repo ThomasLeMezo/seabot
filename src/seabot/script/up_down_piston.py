@@ -4,10 +4,12 @@ import rospy
 from std_msgs.msg import UInt16
 
 def talker():
-    pub = rospy.Publisher('/piston/cmd_position_piston', UInt16, queue_size=1)
     rospy.init_node('up_down_piston_node', anonymous=True)
+    pub = rospy.Publisher('/piston/position_set_point', UInt16, queue_size=1)
 
-    rate = rospy.Rate(1.0/30.0)
+    delta_time = rospy.get_param('~delta_time', 30.0)
+    sleep_time = rospy.Duration(delta_time)
+
     down = True
     target_position = 0
     while not rospy.is_shutdown():
@@ -19,7 +21,7 @@ def talker():
             down=True
 
         pub.publish(target_position)
-        rate.sleep()
+        rospy.sleep(sleep_time)
 
 if __name__ == '__main__':
     try:

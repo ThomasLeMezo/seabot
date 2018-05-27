@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     ros::ServiceServer service_emergency = n.advertiseService("emergency", piston_emergency);
 
     // Subscriber
-    ros::Subscriber position_sub = n.subscribe("cmd_position_piston", 1, position_callback);
+    ros::Subscriber position_sub = n.subscribe("position_set_point", 1, position_callback);
 
     // Publisher
     ros::Publisher state_pub = n.advertise<piston_driver::PistonState>("state", 1);
