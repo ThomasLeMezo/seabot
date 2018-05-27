@@ -31,12 +31,13 @@ int main(int argc, char *argv[])
   ros::Rate loop_rate(frequency);
   while (ros::ok())
   {
-    p1.measure();
-    msg.temperature = p1.get_temperature();
-    msg.pressure = p1.get_pression();
-    msg.header.stamp = ros::Time::now();
+    if(p1.measure() == true){
+      msg.temperature = p1.get_temperature();
+      msg.pressure = p1.get_pression();
+      msg.header.stamp = ros::Time::now();
 
-    pub.publish(msg);
+      pub.publish(msg);
+    }
 
     ros::spinOnce();
     loop_rate.sleep();

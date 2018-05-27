@@ -34,7 +34,7 @@ public:
   int init_sensor();
   int get_value();
 
-  int measure();
+  bool measure();
 
   int reset();
 
@@ -55,6 +55,7 @@ private:
   int16_t m_C0, m_C1, m_C2, m_C3, m_C4, m_C5, m_C6, m_A0, m_A1, m_A2;
 
   unsigned long m_D1, m_D2;
+  bool m_valid_data = false;
 
   double m_pressure, m_temperature;
 
@@ -63,12 +64,14 @@ private:
 inline int Pressure_89BSD::get_D1(){
   i2c_smbus_write_byte(m_file, CMD_ADC_CONV_D1_4096);
 //  usleep(SLEEP_4096); // max 9.04ms for 4096
-  ros::Duration(0.01).sleep();
+  ros::Duration(0.02).sleep();
   unsigned char buff[3] = {0, 0, 0};
   if (i2c_smbus_read_i2c_block_data(m_file, CMD_ADC_READ, 3, buff)!=3){
       ROS_WARN("[Pressure_89BSD] Error Reading D1");
-      return 1;
+      m_valid_data = false;
+      return -1;
   }
+  m_valid_data = true;
   m_D1 = (buff[0] << 16) | (buff[1] << 8) | buff[2];
   return 0;
 }
@@ -76,12 +79,14 @@ inline int Pressure_89BSD::get_D1(){
 inline int Pressure_89BSD::get_D2(){
   i2c_smbus_write_byte(m_file, CMD_ADC_CONV_D2_4096);
 //  usleep(SLEEP_4096); // max 9.04ms for 4096
-  ros::Duration(0.01).sleep();
+  ros::Duration(0.02).sleep();
   unsigned char buff[3] = {0, 0, 0};
   if (i2c_smbus_read_i2c_block_data(m_file, CMD_ADC_READ, 3, buff)!=3){
-      ROS_WARN("[Pressure_89BSD] Error Reading D1");
-      return 1;
+      ROS_WARN("[Pressure_89BSD] Error Reading D2");
+      m_valid_data = false;
+      return -1;
   }
+  m_valid_data = true;
   m_D2 = (buff[0] << 16) | (buff[1] << 8) | buff[2];
   return 0;
 }

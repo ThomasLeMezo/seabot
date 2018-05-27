@@ -16,10 +16,10 @@
 using namespace std;
 
 int16_t bin2decs(u_int16_t val, size_t nb_bit){
-    if((val & 0b1<<(nb_bit-1))==0)
-        return val;
-    else
-        return (val-(1<<(nb_bit)));
+  if((val & 0b1<<(nb_bit-1))==0)
+    return val;
+  else
+    return (val-(1<<(nb_bit)));
 }
 
 Pressure_89BSD::Pressure_89BSD()
@@ -34,7 +34,7 @@ Pressure_89BSD::~Pressure_89BSD(){
 int Pressure_89BSD::reset(){
   int res = i2c_smbus_write_byte(m_file, CMD_RESET);
   ros::Duration(0.03).sleep(); // 28ms reload for the sensor (?)
-//  usleep(30000);
+  //  usleep(30000);
   if (res < 0)
     ROS_WARN("[Pressure_89BSD] Error reseting sensor");
   else
@@ -65,8 +65,8 @@ int Pressure_89BSD::init_sensor(){
   for(int i=0; i<7; i++){
     __u8 add = CMD_PROM + (char) 2*(i+1);
     if (i2c_smbus_read_i2c_block_data(m_file, add, 2, buff)!=2){
-        ROS_WARN("[Pressure_89BSD] Error Reading 0x%X", add);
-        return_val = 1;
+      ROS_WARN("[Pressure_89BSD] Error Reading 0x%X", add);
+      return_val = 1;
     }
     prom[i] = (buff[0] << 8) | buff[1] << 0;
   }
@@ -99,20 +99,26 @@ int Pressure_89BSD::init_sensor(){
   return return_val;
 }
 
-int Pressure_89BSD::measure(){
+bool Pressure_89BSD::measure(){
   get_D1();
   get_D2();
 
-  double x = m_D2/(double)(1<<24);
-  m_temperature = m_A0/3.0+2.0*m_A1*x+2.0*m_A2*x*x;
-//  ROS_INFO("x = %lf", x);
+  if(m_valid_data = true){
+    double x = m_D2/(double)(1<<24);
+    m_temperature = m_A0/3.0+2.0*m_A1*x+2.0*m_A2*x*x;
+    //  ROS_INFO("x = %lf", x);
 
-  double top = m_D1 + m_C0*(1<<Q0) + m_C3*(1<<Q3)*x + m_C4*(1<<Q4)*x*x;
-  double bot = m_C1*(1<<Q1) + m_C5*(1<<Q5)*x + m_C6*(1<<Q6)*x*x;
-  double y = top/bot;
-  double z = (1<<Q2)/(double)(1<<24);
+    double top = m_D1 + m_C0*(1<<Q0) + m_C3*(1<<Q3)*x + m_C4*(1<<Q4)*x*x;
+    double bot = m_C1*(1<<Q1) + m_C5*(1<<Q5)*x + m_C6*(1<<Q6)*x*x;
+    double y = top/bot;
+    double z = (1<<Q2)/(double)(1<<24);
 
-  double p = (1.0-m_C2*z)*y+m_C2*z*y*y;
+    double p = (1.0-m_C2*z)*y+m_C2*z*y*y;
 
-  m_pressure = ((p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN);
+    m_pressure = ((p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN);
+    return true;
+  }
+  else{
+    return false;
+  }
 }
