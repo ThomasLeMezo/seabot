@@ -30,24 +30,15 @@ int Piston::i2c_open(){
 */
 
 uint32_t Piston::set_piston_start() const{
-    __u8 buff[2];
-    buff[0] = I2C_PISTON_BLANK_VALUE;
-    buff[1] = 0x01;
-    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, 0x01);
 }
 
 uint32_t Piston::set_piston_stop() const{
-    __u8 buff[2];
-    buff[0] = I2C_PISTON_BLANK_VALUE;
-    buff[1] = 0x00;
-    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, 0x00);
 }
 
 uint32_t Piston::set_piston_reset() const{
-    __u8 buff[2];
-    buff[0] = I2C_PISTON_BLANK_VALUE;
-    buff[1] = 0x02;
-    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, 0x02);
 }
 
 uint32_t Piston::set_piston_speed(const uint16_t &speed) const{
@@ -65,10 +56,7 @@ uint32_t Piston::set_piston_position(const uint16_t &position) const{
 }
 
 uint32_t Piston::set_piston_enable(const bool &val) const{
-    __u8 buff[2];
-    buff[0] = I2C_PISTON_BLANK_VALUE;
-    buff[1] = val?0x06:0x07;
-    return i2c_smbus_write_i2c_block_data(m_file, I2C_PISTON_CMD, 2, buff);
+    return i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, val?0x05:0x06);
 }
 
 // 0x00: nb_pulse & 0xFF;
@@ -129,29 +117,29 @@ uint32_t Piston::set_piston_enable(const bool &val) const{
 
 void Piston::update_piston_all_data(){
   uint8_t buff[12];
-  if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 12,buff) != 12){
+  if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 7,buff) != 7){
     ROS_WARN("[Piston_driver] I2C Bus Failure");
   }
 
-  m_position = buff[0] << 8 | buff[1];
-  m_switch_out = buff[2];
-  m_switch_in = buff[3];
-  m_state = buff[4];
-  m_system_on = buff[5];
-  m_motor_on = buff[6];
-  m_enable_on = buff[7];
-  m_position_set_point = buff[8] << 8 | buff[9];
-  m_motor_speed = buff[10] << 8 | buff[11];
-
 //  m_position = buff[0] << 8 | buff[1];
-//  m_switch_out = buff[2] & 0b1;
-//  m_switch_in = (buff[2] >> 1) & 0b1;
-//  m_state = (buff[2] >> 2) & 0b11;
-//  m_system_on = (buff[2] >> 4) & 0b1;
-//  m_motor_on = (buff[2] >> 5) & 0b1;
-//  m_enable_on = (buff[2] >> 6) & 0b1;
-//  m_position_set_point = buff[3] << 8 | buff[4];
-//  m_motor_speed = buff[5] << 8 | buff[6];
+//  m_switch_out = buff[2];
+//  m_switch_in = buff[3];
+//  m_state = buff[4];
+//  m_system_on = buff[5];
+//  m_motor_on = buff[6];
+//  m_enable_on = buff[7];
+//  m_position_set_point = buff[8] << 8 | buff[9];
+//  m_motor_speed = buff[10] << 8 | buff[11];
+
+  m_position = buff[1] << 8 | buff[0];
+  m_switch_out = buff[2] & 0b1;
+  m_switch_in = (buff[2] >> 1) & 0b1;
+  m_state = (buff[2] >> 2) & 0b11;
+  m_system_on = (buff[2] >> 4) & 0b1;
+  m_motor_on = (buff[2] >> 5) & 0b1;
+  m_enable_on = (buff[2] >> 6) & 0b1;
+  m_position_set_point = buff[4] << 8 | buff[3];
+  m_motor_speed = buff[6] << 8 | buff[5];
 
 }
 

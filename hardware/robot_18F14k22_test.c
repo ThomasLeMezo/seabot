@@ -36,14 +36,14 @@ Hardware:
   pin 14    RC2
   pin 15    RC1
   pin 16    RC0 ---> LED 1
-  pin 17    RA2/INT2/T0CKI---> sortie de l'opto HOA0901 SORTIE A sur entrée de comptage du TIMER0
+  pin 17    RA4/INT2/T0CKI---> sortie de l'opto HOA0901 SORTIE A sur entrée de comptage du TIMER0
   pin 18    RA1/INT1 ---> interrupteur de butée de rentrée sur entrée INT1 (avec PULL UP)
   pin 19    RA0/INT0 ---> interrupteur de butée de sortie sur entrée INT0 (avec PULL UP)
   pin 20    VSS Alim 0V
 */
 
 sbit SA at RA2_bit;
-sbit SB at RA3_bit;
+sbit SB at RA4_bit;
 sbit LED1 at RC0_bit;
 
 #define ADDRESS_I2C 0x70; //adresse I2C du circuit, 0x38 sous linux
@@ -71,136 +71,59 @@ unsigned char state = IDLE;
 unsigned char old_state = IDLE;
 
 // I2C
-unsigned short rxbuffer_I2C_Octet1 = 0;
-unsigned short rxbuffer_I2C_Octet2 = 0;
-unsigned short rxbuffer_I2C_Octet3 = 0;
+#define SIZE_RX_BUFFER 3
+unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short j = 0;
 unsigned short nb_tx_octet = 0;
-char i = 0;
+unsigned short nb_rx_octet = 0;
 
-/**************************************************************************************************
-* Fonction pour convertir les données I2C transmises du maître
-* Le maître transmet deux octets à suivre:
-* octet1 = 0xFE --> correspond à une consigne de position, suivit de la valeur de la position à atteindre
-                    sur deux octets
-                    
-* octet1 = 0xAB --> correspond à une consigne de vitesse, suivit de la valeur de la vitesse
-                    sur deux octets
-                    
-* octet1 = 0xEE --> correspond à une consigne de marche,arret,mise en butee (sur 1 octets)
-* valeur 0xAA 0x00: arret
-* valeur 0xAA 0x01: marche
-* valeur 0xAA 0x02: mise en butee butee de sortie
-* valeur 0xAA 0x03: mise en butee butee de rentree
-* valeur 0xAA 0x04: mise en marche du moteur
-* valeur 0xAA 0x05: arret du moteur
-*
-*
-* exemple: le maitre transmet les trames suivantes
+void i2c_read_data_from_buffer(){
 
-Consigne d'arret:
-I2C1_Start();
-I2C1_Write(0x70);   // send byte via I2C  (device address + W) adresse 0x42
-I2C1_Write(0xEE);  //  consigne
-I2C1_Write(0xAA);
-I2C1_Write(0x00);  // on arrete le systeme
-I2C1_Stop();
-
-Consigne de position:
-I2C1_Start();
-I2C1_Write(0x70);   // send byte via I2C  (device address + W) adresse 0x42
-I2C1_Write(0xFE);   // consigne de deplacement
-I2C1_Write(0x01);
-I2C1_Write(0x90);  // 0x0190 --> 400 --> on va à la position 171
-I2C1_Stop();
-
-Demande de position:
-I2C1_Start();
-I2C1_Write(0x70);   // send byte via I2C  (device address + W) adresse 0x42
-I2C1_Write(0x00);   // demande d'info
-I2C1_Write(0xAA);
-I2C1_Write(0x08);  // on retourne la valeur du nombre d'impulsions
-I2C1_Stop();
-
-
-* exemple: commande sous linux
-
-i2cdetect -y 1 pour la raspberry
-i2cdetect -y 2 pour la pcduino
-
-adresse du circuit 0x70 --> 0111 0000
-un i2cget ou un i2cset postionne le dernier bit à 1, suivant une lecture ou écriture
-
-0011 1000 --> 0x38
-
-i2cset -y 1 0x38 0xFE 0x00 0x00 i --> correspond à une consigne de position, suivit de la valeur de la position à atteindre
-                                      sur deux octets
-i2cset -y 1 0x38 0xAB 0x00 0x00 i --> correspond à une consigne de vitesse, suivit de la valeur de la vitesse
-                                      sur deux octets
-i2cset -y 1 0x38 0xEE 0x00 0x00 i --> arret du moteur
-i2cset -y 1 0x38 0xEE 0x00 0x01 i --> marche du moteur
-i2cset -y 1 0x38 0xEE 0x00 0x02 i --> mise en butee butee de sortie
-i2cset -y 1 0x38 0xEE 0x00 0x03 i --> mise en butee butee de rentree
-i2cset -y 1 0x38 0xEE 0x00 0x04 i --> mise en marche du moteur
-i2cset -y 1 0x38 0xEE 0x00 0x05 i --> arret du moteur
-
-i2cget -y 1 0x38 0x04 w --> valeur NB impulsions  sur 2 octets
-i2cget -y 1 0x38 0x06 w --> valeur de la butée de sortie  sur 2 octets
-i2cget -y 1 0x38 0x08 w --> valeur de la butée de rentrée sur 2 octets
-
-
-* exemple: commande sous proteus
-
-S 0X70 0XEE 0X00 0X00 P --> arret du moteur
-S 0X70 0XEE 0X00 0X01 P --> marche du moteur
-S 0X70 0XEE 0X00 0X02 P --> mise en butee butee de sortie
-S 0X70 0XEE 0X00 0X03 P --> mise en butee butee de rentree
-S 0X70 0XEE 0X00 0X04 P --> mise en marche du moteur
-S 0X70 0XEE 0X00 0X05 P --> arret du moteur
-
-S 0X70 0XFE 0X00 0X03 P --> correspond à une consigne de Position, va en position 3
-S 0X70 0XFE 0X00 0X64 P --> correspond à une consigne de Position, va en position 100
-S 0X70 0XFE 0X10 0XAB P --> correspond à une consigne de Position, va en position 427
-
-**************************************************************************************************/
-
-void i2c_decode(){
-    if (rxbuffer_I2C_Octet1 == 0xFE){ // consigne de postion
-        position_set_point = 4*((rxbuffer_I2C_Octet2 << 8) | rxbuffer_I2C_Octet3);
-        new_position_set_point = 1;
-    }
-    else if (rxbuffer_I2C_Octet1 == 0xAB){ // consigne de vitesse
-        motor_speed = (rxbuffer_I2C_Octet2 << 8) | rxbuffer_I2C_Octet3;
-    }
-    else if (rxbuffer_I2C_Octet1 == 0xEE){ // consigne de: marche,arret,mise en butee
-        switch (rxbuffer_I2C_Octet3){
-        case 0:
-            system_on = 0;
-            break; // on arrete le systeme
-        case 1:
-            system_on = 1;
-            break; // on met en marche le systeme
-        case 2:
-            state = RESET_OUT;
+    switch(rxbuffer_tab[0]){
+        case 0xFE:  // consigne de postion
+            position_set_point = 4*((rxbuffer_tab[1] << 8) | rxbuffer_tab[2]);
+            new_position_set_point = 1;
             break;
-        case 3:
-            // ToDo
+
+        case 0xAB:  // consigne de vitesse
+            motor_speed = (rxbuffer_tab[1] << 8) | rxbuffer_tab[2];
             break;
-        case 4:
-            motor_on = 1;
-            break;
-        case 5:
-            motor_on = 0;
-            break;
-        case 6:
-            RC6_bit = 1;
-            break;
-        case 7:
-            RC6_bit = 0;
+
+        case 0xEE:  // consigne de: marche,arret,mise en butee
+            switch (rxbuffer_tab[1]){
+                case 0:
+                    system_on = 0;
+                    break; // on arrete le systeme
+                case 1:
+                    system_on = 1;
+                    break; // on met en marche le systeme
+                case 2:
+                    state = RESET_OUT;
+                    break;
+                case 3:
+                    motor_on = 1;
+                    break;
+                case 4:
+                    motor_on = 0;
+                    break;
+                case 5:
+                    RC6_bit = 1;
+                    break;
+                case 6:
+                    RC6_bit = 0;
+                    break;
+                case 7:
+                    LED1 = 0;
+                    break;
+                case 8:
+                    LED1 = 1;
+                    break;
+                default:
+                    break;
+            }
             break;
         default:
             break;
-        }
     }
 }
 
@@ -208,44 +131,34 @@ void i2c_decode(){
  * @brief Fonction qui créer la trame I2C
  * @param num
  */
-void i2c_trame(unsigned short nb_tx_octet){
+void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 
-    switch(rxbuffer_I2C_Octet1+nb_tx_octet){
+    switch(rxbuffer_tab[0]+nb_tx_octet){
     case 0x00:
-        SSPBUF = nb_pulse >> 8;
-        break;
-    case 0x01:
         SSPBUF = nb_pulse & 0xFF;
         break;
+    case 0x01:
+        SSPBUF = nb_pulse >> 8;
+        break;
     case 0x02:
-        SSPBUF = butee_out;
+        SSPBUF = (butee_out & 0b0) 
+                | ((butee_in & 0b0)<<1) 
+                | ((state & 0b11) <<2) 
+                | ((system_on & 0b0) <<4) 
+                | ((motor_on & 0b0) << 5) 
+                | ((RC6_bit & 0b0) << 6);
         break;
     case 0x03:
-        SSPBUF = butee_in;
-        break;
-    case 0x04:
-        SSPBUF = state;
-        break;
-    case 0x05:
-        SSPBUF = system_on;
-        break;
-    case 0x06:
-        SSPBUF = motor_on;
-        break;
-    case 0x07:
-        SSPBUF = RC6_bit;
-        break;
-    case 0x08:
-        SSPBUF = position_set_point >> 8;
-        break;
-    case 0x09:
         SSPBUF = position_set_point & 0xFF;
         break;
-    case 0x0A:
-        SSPBUF = motor_speed >> 8;
+    case 0x04:
+        SSPBUF = position_set_point >> 8;
         break;
-    case 0x0B:
+    case 0x05:
         SSPBUF = motor_speed & 0xFF;
+        break;
+    case 0x06:
+        SSPBUF = motor_speed >> 8;
         break;
     default:
         SSPBUF = 0x00;
@@ -362,6 +275,7 @@ void read_optical_fork(){
 void init_i2C(){
     SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
     SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
+    SSPCON1.SSPEN = 1;
     // bit 3-0 SSPM3:SSPM0: I2C Firmware Controlled Master mode,
     // 7-bit address with START and STOP bit interrupts enabled
     // bit 4 CKP: 1 = Enable clock
@@ -369,12 +283,8 @@ void init_i2C(){
     // pins as the source of the serial port pins
 
     SSPCON2 = 0x00;
-    SSPSTAT=0x00;
-
-    SSPCON1.SSPEN = 1;
-
-    SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode
-    // (100 kHz and 1 MHz)
+    SSPSTAT=0x00;   
+    SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz)
     SSPSTAT.CKE = 1; // 1 = Input levels conform to SMBus spec
 
     PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
@@ -382,16 +292,6 @@ void init_i2C(){
     // a transmission/reception has taken place.
     PIR2.BCLIF = 0;
 }
-
-/**
- * @brief Mise en marche du TIMER3
- */
-//void set_timer3_on(){
-//    T3CON.TMR3ON = 1;
-//    TMR3H = 0x3C;
-//    TMR3L = 0xB0;
-//    compteur1 = 0;
-//}
 
 /**
  * @brief Initialisation des entrées sorties du PIC
@@ -406,9 +306,10 @@ void init_io(){
     TRISA0_bit = 1; // RA0 en entrée
     TRISA1_bit = 1; // RA1 en entrée
     TRISA2_bit = 1; // RA2 en entrée
-    //TRISA3_bit = 1; // RA3 en entrée  // toujours en entrée MCLR/VPP
+    // TRISA3_bit = 1; // RA3 en entrée  // toujours en entrée MCLR/VPP
 
-    TRISA4_bit = 0; // RA4 en sortie
+    TRISA4_bit = 1; // RA4 en sortie
+
     TRISA5_bit = 0; // RA5 en sortie
 
     INTCON2.RABPU = 0; // PORTA and PORTB Pull-up Enable bit
@@ -601,63 +502,37 @@ void interrupt(){
  */
 void interrupt_low(){
     // Interruption sur le bus I2C, le bus est en esclave
+    // Interruption sur Start & Stop
+
     if (PIR1.SSPIF){  // I2C Interrupt
+        if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
+            if (SSPSTAT.BF == 1){
+                i2c_write_data_to_buffer(nb_tx_octet);                
+                nb_tx_octet++;
+            }
+            else{
+                nb_tx_octet = 0;
+            }
+        }
+        else{ //****** recieve data from master ****** //
+            if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
+                if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
+                    if(nb_rx_octet < SIZE_RX_BUFFER)
+                        rxbuffer_tab[nb_rx_octet] = SSPBUF;
+                    nb_rx_octet++;
+                }
+            }
+            else{ // At the end of the communication
+                i2c_read_data_from_buffer();
+                nb_rx_octet = 0;
+            }
+        }
+
+        SSPCON.SSPOV = 0; // In case the buffer was not read (reset overflow)
+        SSPCON1.CKP = 1;
         PIR1.SSPIF = 0; // reset SSP interrupt flag
-
-        //******  transmit data to master ****** //
-        if (SSPSTAT.R_W == 1){   // Read/Write bit Information, Read request from master
-            i2c_trame(nb_tx_octet);
-            nb_tx_octet++;
-            j = SSPBUF;
-            SSPCON1.CKP = 1;        // Release SCL line
-            return;
-        }
-        if (SSPSTAT.BF == 0){ // Buffer Full Status bit, Data transmit complete, SSPBUF is empty
-            j = SSPBUF;        // Nothing in buffer so exit
-            SSPCON1.CKP = 1;
-            return;
-        }
-
-        //****** recieve data from master ****** //
-        if (SSPSTAT.R_W == 0){
-            if (SSPSTAT.D_A == 0){
-                j = SSPBUF;
-                SSPCON1.CKP = 1;
-                i=0;
-            }
-            if (SSPSTAT.D_A == 1){    //1 = Indicates that the last byte received or transmitted was data
-                if(i==0){
-                    rxbuffer_I2C_Octet1 = 0;
-                    rxbuffer_I2C_Octet1 = SSPBUF;  // get data octet1
-                    i++;
-                }
-                else if(i==1){
-                    rxbuffer_I2C_Octet2 = 0;
-                    rxbuffer_I2C_Octet2 = SSPBUF;  // get data octet2
-                    i++;
-                }
-                else if(i==2){
-                    rxbuffer_I2C_Octet3 = 0;
-                    rxbuffer_I2C_Octet3 = SSPBUF;  // get data octet3
-                    i++;
-                }
-
-                i2c_decode();
-
-                j = SSPBUF;       // read buffer to clear flag [address]
-                SSPCON1.CKP = 1;
-                return;
-            }
-        }
-
-        if (PIR2.BCLIF){
-            j = SSPBUF;
-            PIR2.BCLIF = 0;
-            SSPCON1.CKP = 1;
-        }
-
-        j = SSPBUF;     // read buffer to clear flag [address]
-        nb_tx_octet = 0;
     }
-    PIR1.SSPIF = 0; // reset SSP interrupt flag
+    
+    if (PIR2.BCLIF)
+        PIR2.BCLIF = 0;
 }
