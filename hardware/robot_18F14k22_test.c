@@ -42,6 +42,8 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
+#pragma config XINST = OFF // Extended Instruction Set (Disabled)
+
 sbit SA at RA2_bit;
 sbit SB at RA4_bit;
 sbit LED1 at RC0_bit;
@@ -135,18 +137,18 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 
     switch(rxbuffer_tab[0]+nb_tx_octet){
     case 0x00:
-        SSPBUF = nb_pulse & 0xFF;
+        SSPBUF = (unsigned char)nb_pulse;
         break;
     case 0x01:
-        SSPBUF = nb_pulse >> 8;
+        SSPBUF = (unsigned char)(nb_pulse >> 8);
         break;
     case 0x02:
-        SSPBUF = (butee_out & 0b0) 
-                | ((butee_in & 0b0)<<1) 
+        SSPBUF = (butee_out & 0b1)
+                | ((butee_in & 0b1)<<1)
                 | ((state & 0b11) <<2) 
-                | ((system_on & 0b0) <<4) 
-                | ((motor_on & 0b0) << 5) 
-                | ((RC6_bit & 0b0) << 6);
+                | ((system_on & 0b1) <<4)
+                | ((motor_on & 0b1) << 5)
+                | ((RC6_bit & 0b1) << 6);
         break;
     case 0x03:
         SSPBUF = position_set_point & 0xFF;
@@ -155,10 +157,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         SSPBUF = position_set_point >> 8;
         break;
     case 0x05:
-        SSPBUF = motor_speed & 0xFF;
-        break;
-    case 0x06:
-        SSPBUF = motor_speed >> 8;
+        SSPBUF = motor_speed;
         break;
     default:
         SSPBUF = 0x00;
@@ -432,7 +431,6 @@ void main(){
                 UART1_Write(255);
                 UART1_Write(rxbuffer_tab[1]);
                 UART1_Write(rxbuffer_tab[2]);
-
                 //position_set_point = 4*((rxbuffer_I2C_Octet2 << 8) | rxbuffer_I2C_Octet3);
                 new_position_set_point=0;
             }
@@ -505,14 +503,12 @@ void interrupt_low(){
     // Interruption sur Start & Stop
 
     if (PIR1.SSPIF){  // I2C Interrupt
+    
         if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
-            if (SSPSTAT.BF == 1){
-                i2c_write_data_to_buffer(nb_tx_octet);                
-                nb_tx_octet++;
-            }
-            else{
-                nb_tx_octet = 0;
-            }
+            i2c_write_data_to_buffer(nb_tx_octet);
+            nb_tx_octet++;
+            delay_us(10);
+            SSPCON1.CKP = 1;
         }
         else{ //****** recieve data from master ****** //
             if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
@@ -521,15 +517,19 @@ void interrupt_low(){
                         rxbuffer_tab[nb_rx_octet] = SSPBUF;
                     nb_rx_octet++;
                 }
+                else{
+                     nb_tx_octet = 0;
+                     nb_rx_octet = 0;
+                }
             }
             else{ // At the end of the communication
                 i2c_read_data_from_buffer();
-                nb_rx_octet = 0;
             }
+            j = SSPBUF;
         }
 
-        SSPCON1.SSPOV = 0; // In case the buffer was not read (reset overflow)
-        SSPCON1.CKP = 1;
+        //SSPCON1.SSPOV = 0; // In case the buffer was not read (reset overflow)
+        //SSPCON1.CKP = 1;
         PIR1.SSPIF = 0; // reset SSP interrupt flag
     }
     
