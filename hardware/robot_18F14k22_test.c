@@ -430,8 +430,8 @@ void main(){
             if (new_position_set_point == 1){
                 UART1_Write(255);
                 UART1_Write(255);
-                UART1_Write(rxbuffer_I2C_Octet2);
-                UART1_Write(rxbuffer_I2C_Octet3);
+                UART1_Write(rxbuffer_tab[1]);
+                UART1_Write(rxbuffer_tab[2]);
 
                 //position_set_point = 4*((rxbuffer_I2C_Octet2 << 8) | rxbuffer_I2C_Octet3);
                 new_position_set_point=0;
@@ -528,7 +528,7 @@ void interrupt_low(){
             }
         }
 
-        SSPCON.SSPOV = 0; // In case the buffer was not read (reset overflow)
+        SSPCON1.SSPOV = 0; // In case the buffer was not read (reset overflow)
         SSPCON1.CKP = 1;
         PIR1.SSPIF = 0; // reset SSP interrupt flag
     }

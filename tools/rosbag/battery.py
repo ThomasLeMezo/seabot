@@ -1,7 +1,7 @@
 import rosbag
 import numpy as np
 import matplotlib.pyplot as plt
-from gmplot import gmplot
+# from gmplot import gmplot
 import yaml
 
 bag = rosbag.Bag('2018-06-15-17-36-53.bag', 'r')

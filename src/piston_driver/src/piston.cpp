@@ -117,7 +117,7 @@ uint32_t Piston::set_piston_enable(const bool &val) const{
 
 void Piston::update_piston_all_data(){
   uint8_t buff[12];
-  if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 7,buff) != 7){
+  if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 6,buff) != 6){
     ROS_WARN("[Piston_driver] I2C Bus Failure");
   }
 
@@ -139,7 +139,7 @@ void Piston::update_piston_all_data(){
   m_motor_on = (buff[2] >> 5) & 0b1;
   m_enable_on = (buff[2] >> 6) & 0b1;
   m_position_set_point = buff[4] << 8 | buff[3];
-  m_motor_speed = buff[6] << 8 | buff[5];
+  m_motor_speed = buff[5];
 
 }
 

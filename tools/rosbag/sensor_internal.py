@@ -2,7 +2,7 @@ import rospy
 import rosbag
 import numpy as np
 import matplotlib.pyplot as plt
-from gmplot import gmplot
+# from gmplot import gmplot
 import yaml
 
 bag = rosbag.Bag('2018-06-15-17-36-53.bag', 'r')
@@ -18,7 +18,7 @@ humidity = []
 for topic, msg, t in bag.read_messages(topics="/sensor_internal", start_time=startTime):
 	if(msg.pressure > 500):
 		time.append(t.to_sec())
-		pressure.append(msg.pressure)
+		pressure.append(msg.pressure/(msg.temperature + 273.15))
 		temperature.append(msg.temperature)
 		humidity.append(msg.humidity)
 
