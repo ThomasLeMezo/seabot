@@ -15,7 +15,9 @@
 
 #include <ros/ros.h>
 
-#define ADC_BATTERY_LEVEL_CONV 0.01509434
+// 150/(150+330)
+// 5V = 1024
+#define ADC_BATTERY_LEVEL_CONV 0.015625
 
 class Power
 {
