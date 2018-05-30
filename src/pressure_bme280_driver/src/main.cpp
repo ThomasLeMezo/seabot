@@ -34,6 +34,9 @@
 #include <linux/i2c-dev.h>
 
 using namespace std;
+double m_pressure = 0.0;
+double m_temperature = 0.0;
+double m_humidity = 0.0;
 
 int file;
 struct bme280_data comp_data;
@@ -91,10 +94,10 @@ void print_sensor_mode(struct bme280_dev &dev){
 
 void pressure_diagnostic(diagnostic_updater::DiagnosticStatusWrapper &stat){
   if(comp_data.pressure>800){
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "High Pressure detected %f", comp_data.pressure);
+    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "High Pressure detected %f", m_pressure);
   }
   else if(comp_data.pressure<600){
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::WARN, "Low Pressure detected %f", comp_data.pressure);
+    stat.summaryf(diagnostic_msgs::DiagnosticStatus::WARN, "Low Pressure detected %f", m_pressure);
   }
   else{
     stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Pressure OK");
@@ -179,10 +182,13 @@ int main(int argc, char *argv[])
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
+        m_pressure = comp_data.pressure/100.0;
+        m_humidity = comp_data.humidity;
+        m_temperature = comp_data.temperature;
 
-        msg.temperature = comp_data.temperature;
-        msg.pressure =  comp_data.pressure/100.0;
-        msg.humidity = comp_data.humidity;
+        msg.temperature = m_temperature;
+        msg.pressure = m_pressure;
+        msg.humidity = m_humidity;
         msg.header.stamp = ros::Time::now();
         pub.publish(msg);
         pub1_freq.tick();

@@ -23,6 +23,10 @@ piston_position = 0
 
 depth_set_point = 1.25
 
+coeff_Frottement = 0.5*Cx*S_Cx*rho_eau/m
+coeff_acc_drone = g*V_drone*rho_eau/m - g
+coeff_V_piston = g*rho_eau/m
+
 def callback_pressure(data):
     pressure = data.pressure
     pressure_velocity = data.pressure_velocity
@@ -54,7 +58,12 @@ def regulation_node():
         
         V_piston = piston_position*tick_to_volume
         ## Command law
-        target_position += np.sign(-(g-(g*((V_drone+V_piston)*rho_eau/m)+0.5*Cx*S_Cx*velocity*abs(velocity)*rho_eau/m))+2*velocity+(depth_set_point-depth))
+        target_position += np.sign(coeff_acc_drone + coeff_V_piston*V_piston - coeff_Frottement*velocity*abs(velocity) + 2*velocity + (depth_set_point-depth))
+
+        if(target_position<0):
+            target_position = 0
+        if(target_position>1200):
+            target_position = 1200
 
         pub.publish(target_position)
         rate.sleep()

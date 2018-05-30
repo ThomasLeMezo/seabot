@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   // Diagnostics
   diagnostic_updater::Updater updater;
   updater.setHardwareID("none");
-  double min_freq = 0.5;
+  double min_freq = 0.15;
   double max_freq = 5;
   diagnostic_updater::HeaderlessTopicDiagnostic battery_pub_freq("battery", updater,
       diagnostic_updater::FrequencyStatusParam(&min_freq, &max_freq, 0.1, 10));
