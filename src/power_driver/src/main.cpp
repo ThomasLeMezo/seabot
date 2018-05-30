@@ -11,8 +11,8 @@
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/publisher.h>
 
-#define THRESHOLD_LIPO_3S_MAX 12.0
-#define THRESHOLD_LIPO_3S_FIRST 12.2
+#define THRESHOLD_LIPO_3S_MAX 10.4
+#define THRESHOLD_LIPO_3S_FIRST 9.9
 
 using namespace std;
 

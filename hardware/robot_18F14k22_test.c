@@ -80,7 +80,6 @@ unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 
 void i2c_read_data_from_buffer(){
-
     switch(rxbuffer_tab[0]){
         case 0xFE:  // consigne de postion
             position_set_point = 4*((rxbuffer_tab[1] << 8) | rxbuffer_tab[2]);
@@ -306,8 +305,7 @@ void init_io(){
     TRISA1_bit = 1; // RA1 en entrée
     TRISA2_bit = 1; // RA2 en entrée
     // TRISA3_bit = 1; // RA3 en entrée  // toujours en entrée MCLR/VPP
-
-    TRISA4_bit = 1; // RA4 en sortie
+    TRISA4_bit = 1; // RA4 en entrée
 
     TRISA5_bit = 0; // RA5 en sortie
 
@@ -528,8 +526,6 @@ void interrupt_low(){
             j = SSPBUF;
         }
 
-        //SSPCON1.SSPOV = 0; // In case the buffer was not read (reset overflow)
-        //SSPCON1.CKP = 1;
         PIR1.SSPIF = 0; // reset SSP interrupt flag
     }
     
