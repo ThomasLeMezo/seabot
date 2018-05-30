@@ -14,6 +14,7 @@
 #include <fcntl.h>
 
 #include <ros/ros.h>
+#include <deque>
 
 
 #define CMD_RESET 0x1E // reset command
@@ -44,6 +45,12 @@ public:
   double get_pression();
   double get_temperature();
 
+  void set_pressure_memory_size(const size_t &pressure_memory_size);
+
+  void estimate_pressure_speed();
+
+  double get_pressure_velocity() const;
+
 private:
 
   int m_file = 0;
@@ -57,7 +64,9 @@ private:
   unsigned long m_D1, m_D2;
   bool m_valid_data = false;
 
-  double m_pressure, m_temperature;
+  double m_pressure, m_temperature, m_pressure_velocity;
+  std::deque<double> m_pressure_memory;
+  size_t m_pressure_memory_size = 6;
 
 };
 
@@ -97,6 +106,14 @@ inline double Pressure_89BSD::get_pression(){
 
 inline double Pressure_89BSD::get_temperature(){
   return m_temperature;
+}
+
+inline void Pressure_89BSD::set_pressure_memory_size(const size_t &pressure_memory_size){
+    m_pressure_memory_size = pressure_memory_size;
+}
+
+inline double Pressure_89BSD::get_pressure_velocity() const{
+    return m_pressure_velocity;
 }
 
 int16_t bin2decs(u_int16_t val, size_t nb_bit);

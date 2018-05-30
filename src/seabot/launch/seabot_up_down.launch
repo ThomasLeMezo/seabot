@@ -19,7 +19,7 @@
 	</node>
 
 	<node name="up_down_piston_node" pkg="seabot" type="up_down_piston.py" output="screen" respawn="true">
-		<param name="delta_time" value="30.0" />
+        <param name="delta_time" value="180.0" />
 	</node>
 
 </launch>

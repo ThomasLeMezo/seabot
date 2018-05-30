@@ -10,7 +10,7 @@ import rosbag
 import yaml
 
 
-bag = rosbag.Bag('2018-06-15-17-36-53.bag', 'r')
+bag = rosbag.Bag('2018-06-15-20-33-53.bag', 'r')
 print(bag)
 
 startTime = rospy.Time.from_sec(bag.get_start_time() + 130)
@@ -20,9 +20,9 @@ pressure = []
 temperature = []
 
 for topic, msg, t in bag.read_messages(topics="/sensor_external", start_time=startTime):
-	if(msg.temperature > 0 and msg.temperature < 50 and msg.pressure < 1.3 and msg.pressure > 0):
+	if(msg.temperature > 0 and msg.temperature < 50 and msg.pressure < 6 and msg.pressure > 0):
 		time.append(t.to_sec() - bag.get_start_time())
-		pressure.append(msg.pressure)
+		pressure.append((msg.pressure-1.08)*10.0)
 		temperature.append(msg.temperature)
 
 bag.close()
