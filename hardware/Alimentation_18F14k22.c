@@ -62,6 +62,14 @@ unsigned short compteur2 = 0;
 unsigned short compteur3 = 0;
 unsigned short i = 0;
 
+// ILS
+#define ILS_CPT_TIME 4
+unsigned short ils_cpt = 4;
+bool ils_removed = true;
+
+// State Machine
+enum power_state {IDLE,POWER_ON,SLEEP};
+
 // Batteries
 unsigned int battery_voltage[4];
 bool battery_voltage_default[4];
@@ -135,8 +143,10 @@ i2cget -y 2 0x39 0x03 w --> on demande la valeur de la tension de la batterie 3
 void i2c_read_data_from_buffer(){
     switch(rxbuffer_tab[0]){
     case 0x01:  // alimentation
-        ALIM = rxbuffer_tab[1] & 0b1;
-        POWER = rxbuffer_tab[1] & 0b1;
+        if(rxbuffer_tab[1] == 0)
+            state = IDLE;
+        else
+            state = POWER_ON;   
         break;
     case 0x02:  // led power
         if(rxbuffer_tab[1] == 0){
@@ -383,6 +393,51 @@ void main(){
         read_batteries_voltage();
         analyze_batteries_voltage();
 
+        switch (state){
+            case IDLE: // Idle state
+                ALIM = 0;
+
+                if(ILS==0){ // Magnet detected
+                    ils_cpt--;
+                    LED1=1;
+                }
+                else{
+                    ils_cpt = ILS_CPT_TIME;
+                    LED1=0;
+                    ils_removed = true;
+                }
+
+                if(ils_removed && ils_cpt == 0){
+                    ils_cpt = ILS_CPT_TIME;
+                    state = POWER_ON;
+                    ils_removed = false;
+                }
+                break;
+            case POWER_ON:
+                ALIM = 1;
+
+                if(ILS==0){ // Magnet detected
+                    ils_cpt--;
+                    LED1=1;
+                }
+                else{
+                    ils_cpt = ILS_CPT_TIME;
+                    LED1=0;
+                    ils_removed = true;
+                }
+                if(ils_removed && ils_cpt == 0){
+                    ils_cpt = ILS_CPT_TIME;
+                    state = IDLE;
+                    ils_removed = false;
+                }
+
+                break;
+            case SLEEP:
+
+                break;
+            default:
+                break;
+        }
         delay_ms(500);
     }
 }
@@ -434,31 +489,6 @@ void interrupt(){
     /// ********************** ILS  ********************** //
     // Interruption sur l'entrée INT2/RA2, detection d'ouverture de l'ILS
     if(INTCON3.INT2IF == 1) {
-        delay_ms(800);
-
-        if (ILS == 0){
-
-            if (POWER == 0){
-                POWER = 1;
-                T0CON = 0x06;
-                T0CON = 0x86; // TIMER0 ON time 1 secondes
-                TMR0H = 0x0B;
-                TMR0L = 0xDC;
-                LED1=0;
-            }
-            else if (POWER == 1){
-                POWER = 0;
-                T0CON = 0x05;
-                T0CON = 0x85; // TIMER0 ON time 2 secondes
-                TMR0H = 0x0B;
-                TMR0L = 0xDC;
-                LED1=1;
-            }
-            ALIM =~ ALIM;
-
-            delay_ms(400);
-
-        }
         INTCON3.INT2IF = 0;
     }
 
