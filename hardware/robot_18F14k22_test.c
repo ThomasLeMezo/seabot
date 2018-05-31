@@ -57,7 +57,8 @@ unsigned short butee_out = 0;
 unsigned short butee_in = 0;
 
 // Motor
-unsigned short motor_speed = 127; // 2 octets
+unsigned short motor_speed_in = 50; // 2 octets
+unsigned short motor_speed_out = 50; // 2 octets
 unsigned short motor_current_speed = 127; // 2 octets
 
 // Regulation
@@ -86,8 +87,11 @@ void i2c_read_data_from_buffer(){
             new_position_set_point = 1;
             break;
 
-        case 0xAB:  // consigne de vitesse
-            motor_speed = (rxbuffer_tab[1] << 8) | rxbuffer_tab[2];
+        case 0xAB:  // consigne de vitesse in
+            motor_speed_in = (rxbuffer_tab[1] << 8) | rxbuffer_tab[2];
+            break;
+        case 0xAC:  // consigne de vitesse out
+            motor_speed_out = (rxbuffer_tab[1] << 8) | rxbuffer_tab[2];
             break;
 
         case 0xEE:  // consigne de: marche,arret,mise en butee
@@ -156,7 +160,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         SSPBUF = position_set_point >> 8;
         break;
     case 0x05:
-        SSPBUF = motor_speed;
+        SSPBUF = motor_current_speed;
         break;
     default:
         SSPBUF = 0x00;
@@ -386,8 +390,6 @@ void main(){
     UART1_Init(115200);
     delay_ms(100);
 
-    motor_speed = 50;
-
     while(1){
         // Global actions
         read_butee();
@@ -414,7 +416,7 @@ void main(){
                 LED1 = 1;
             }
             else{
-                set_motor_cmd_out(motor_speed);
+                set_motor_cmd_out(motor_speed_out);
             }
 
             break;
@@ -437,9 +439,9 @@ void main(){
             error = position_set_point - nb_pulse;
 
             if(error > 0)
-                set_motor_cmd_in(motor_speed);
+                set_motor_cmd_in(motor_speed_in);
             else if(error < 0)
-                set_motor_cmd_out(motor_speed);
+                set_motor_cmd_out(motor_speed_out);
             else // position reached
                 set_motor_cmd_stop();
 
