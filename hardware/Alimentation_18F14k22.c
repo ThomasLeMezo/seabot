@@ -62,7 +62,6 @@ unsigned short compteur2 = 0;
 unsigned short compteur3 = 0;
 unsigned short i = 0;
 
-
 // Batteries
 unsigned int battery_voltage[4];
 bool battery_voltage_default[4];
@@ -467,11 +466,13 @@ void interrupt(){
     /// ************************************************** //
     /// ********************** TIMERS  ******************* //
 
-    // Interruption du TIMER0
+    // Interruption du TIMER0 (1 ou 2 s)
     if (TMR0IF_bit){
 
-        if (POWER==1) T0CON = 0x86; // TIMER0 ON time 2 secondes
-        else if (POWER==0) T0CON = 0x85; // TIMER0 ON time 1 secondes
+        if (POWER==1)
+          T0CON = 0x86; // TIMER0 ON time 2 secondes
+        else
+          T0CON = 0x85; // TIMER0 ON time 1 secondes
 
         TMR0H = 0x0B;
         TMR0L = 0xDC;
@@ -486,7 +487,7 @@ void interrupt(){
     }
 
 
-    // Interruption du TIMER1
+    // Interruption du TIMER1 (100 ms) => battery default
     if (TMR1IF_bit){
 
         TMR1H = 0x77;
