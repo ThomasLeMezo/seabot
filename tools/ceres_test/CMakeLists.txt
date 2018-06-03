@@ -9,7 +9,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(PACKAGE_NAME      ceres-test)
 set(PACKAGE_VERSION "0.1")
 project(${PACKAGE_NAME})
+set(CMAKE_BUILD_TYPE DEBUG)
 
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -O0 -Wno-reorder -Wno-unknown-pragmas")
+
+find_package(Boost REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 # find_package(LAPACK QUIET)
