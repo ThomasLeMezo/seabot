@@ -114,6 +114,8 @@ void Pressure_89BSD::estimate_pressure_speed(){
         k++;
     }
     after /= k;
+    double new_velocity = after - before;
+    m_pressure_acceleration = new_velocity - m_pressure_velocity;
     m_pressure_velocity = after - before;
 }
 

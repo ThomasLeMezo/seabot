@@ -51,6 +51,8 @@ public:
 
   double get_pressure_velocity() const;
 
+  double get_pressure_acceleration() const;
+
 private:
 
   int m_file = 0;
@@ -64,7 +66,10 @@ private:
   unsigned long m_D1, m_D2;
   bool m_valid_data = false;
 
-  double m_pressure, m_temperature, m_pressure_velocity;
+  double m_pressure, m_temperature;
+  double m_pressure_velocity = 0.0;
+  double m_pressure_acceleration = 0.0;
+
   std::deque<double> m_pressure_memory;
   size_t m_pressure_memory_size = 6;
 
@@ -114,6 +119,10 @@ inline void Pressure_89BSD::set_pressure_memory_size(const size_t &pressure_memo
 
 inline double Pressure_89BSD::get_pressure_velocity() const{
     return m_pressure_velocity;
+}
+
+inline double Pressure_89BSD::get_pressure_acceleration() const{
+    return m_pressure_acceleration;
 }
 
 int16_t bin2decs(u_int16_t val, size_t nb_bit);

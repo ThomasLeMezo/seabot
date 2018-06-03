@@ -94,11 +94,9 @@ unsigned trame_I2C = 0;
 **************************************************************************************************/
 
 void Moteur_stop(){
-
-     new_val_compteur1 = 150; // moteur 1 stop
-     new_val_compteur2 = 150; // moteur 2 stop
-     new_val_compteur3 = 150; // moteur 3 stop
-
+  new_val_compteur1 = 150; // moteur 1 stop
+  new_val_compteur2 = 150; // moteur 2 stop
+  new_val_compteur3 = 150; // moteur 3 stop
 }
 
 
@@ -235,16 +233,6 @@ void Convertion_I2C(){
 
      }
    }
-}
-
-/**************************************************************************************************
-* Fonction de temporisation
-**************************************************************************************************/
-
-void Tempo() {
-
-     delay_ms(40);
-
 }
 
 

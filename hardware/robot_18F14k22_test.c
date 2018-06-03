@@ -1,8 +1,5 @@
 /*  PIC18F14K22  mikroC PRO for PIC v6.4
-
-
 Oscillateur interne sur quartz 16MHZ
-
 
 * 20/04 essai sur carte finale
 * 24/04 essai du retour d'info (NB impulsions et butées), bon fonctionnement
