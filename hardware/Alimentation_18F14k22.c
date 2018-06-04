@@ -357,19 +357,21 @@ void main(){
 
   //UART1_Init(9600);
 
-  TMR0IE_bit = 1;  //Enable TIMER0
-  TMR3IE_bit = 1;  //Enable TIMER3
+  INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
+  //priority interrupt source
 
-  PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
+  IPR1.SSPIP = 0; //Master Synchronous Serial Port Interrupt Priority bit, low priority
+  RCON.IPEN = 1;  //Enable priority levels on interrupts
+  INTCON.GIEH = 1; //enable all high-priority interrupts
+  INTCON.GIEL = 1; //enable all low-priority interrupts
+
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
-  IPR1.SSPIP = 0;
-
+  TMR0IE_bit = 1;  //Enable TIMER0
+  TMR3IE_bit = 1;  //Enable TIMER3
   TMR3ON_bit = 1; // Start TIMER3
   TMR0ON_bit = 1; // Start TIMER1
-  
-
 
   while(1){
     read_batteries_voltage();
@@ -456,6 +458,47 @@ void main(){
   }
 }
 
+
+/**
+ * @brief interrupt_low
+ */
+void interrupt_low(){
+    // Interruption sur le bus I2C, le bus est en esclave
+    // Interruption sur Start & Stop
+
+    if (PIR1.SSPIF){  // I2C Interrupt
+    
+        if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
+            i2c_write_data_to_buffer(nb_tx_octet);
+            nb_tx_octet++;
+            delay_us(10);
+            SSPCON1.CKP = 1;
+        }
+        else{ //****** recieve data from master ****** //
+            if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
+                if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
+                    if(nb_rx_octet < SIZE_RX_BUFFER)
+                        rxbuffer_tab[nb_rx_octet] = SSPBUF;
+                    nb_rx_octet++;
+                }
+                else{
+                     nb_tx_octet = 0;
+                     nb_rx_octet = 0;
+                }
+            }
+            else{ // At the end of the communication
+                i2c_read_data_from_buffer();
+            }
+            tmp_rx = SSPBUF;
+        }
+
+        PIR1.SSPIF = 0; // reset SSP interrupt flag
+    }
+    
+    if (PIR2.BCLIF)
+        PIR2.BCLIF = 0;
+}
+
 /**
  * @brief interrupt
  * Fonction de gestion des interruptions:
@@ -463,42 +506,6 @@ void main(){
  * interruption sur le bus I2C
  */
 void interrupt(){
-
-  /// ************************************************** //
-  /// ********************** I2C  ********************** //
-
-  if (PIR1.SSPIF){  // I2C Interrupt
-
-    if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
-      i2c_write_data_to_buffer(nb_tx_octet);
-      nb_tx_octet++;
-      delay_us(10);
-      SSPCON1.CKP = 1;
-    }
-    else{ //****** recieve data from master ****** //
-      if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
-        if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data
-          if(nb_rx_octet < SIZE_RX_BUFFER)
-            rxbuffer_tab[nb_rx_octet] = SSPBUF;
-          nb_rx_octet++;
-        }
-        else{
-          nb_tx_octet = 0;
-          nb_rx_octet = 0;
-        }
-      }
-      else{ // At the end of the communication
-        i2c_read_data_from_buffer();
-      }
-      tmp_rx = SSPBUF;
-    }
-
-    PIR1.SSPIF = 0; // reset SSP interrupt flag
-  }
-  if (PIR2.BCLIF)
-    PIR2.BCLIF = 0;
-
-
   /// ************************************************** //
   /// ********************** TIMERS  ******************* //
 

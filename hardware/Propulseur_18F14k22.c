@@ -134,7 +134,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 /**
  * @brief initialisation de l'I2C en mode esclave
  */
-void init_i2C(){
+void init_i2c(){
     SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
     SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
     SSPCON1.SSPEN = 1;
@@ -180,32 +180,6 @@ void init_timer1(){
   TMR1IE_bit = 0;
   INTCON = 0xC0;
 }
-
-/**
- * @brief init_timer2
- * Fonction d'initialisation du TIMER2
- * Prescaler 1:1; Postscaler 1:2; TMR2 Preload = 199; Actual Interrupt Time : 10 us
- */
-//void init_timer2(){
-//  T2CON = 0x08;
-//  TMR2IE_bit = 0;
-//  PR2 = 79;
-//  INTCON = 0xC0;
-//}
-
-/**
- * @brief init_timer3
- * Fonction d'initialisation du TIMER3
- * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 10 US
- */
-//void init_timer3(){
-//  T3CON = 0x00;
-//  TMR3IF_bit = 0;
-//  TMR3H = 0xFF;
-//  TMR3L = 0x84;
-//  TMR3IE_bit = 0;
-//  INTCON = 0xC0;
-//}
 
 /**
  * @brief init_io
