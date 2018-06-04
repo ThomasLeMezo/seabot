@@ -38,11 +38,11 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 
 */
 
-sbit BAT1 at LATC.B0; // entrée de controle de tension BAT1
-sbit BAT2 at LATC.B1; // entrée de controle de tension BAT2
-sbit BAT3 at LATC.B2; // entrée de controle de tension BAT2
-sbit BAT4 at LATC.B3; // entrée de controle de tension BAT2
-sbit ILS at LATA.B2; //  entrée de l'ILS
+sbit BAT1 at PORTC.B0; // entrée de controle de tension BAT1
+sbit BAT2 at PORTC.B1; // entrée de controle de tension BAT2
+sbit BAT3 at PORTC.B2; // entrée de controle de tension BAT2
+sbit BAT4 at PORTC.B3; // entrée de controle de tension BAT2
+sbit ILS at PORTA.B2; //  entrée de l'ILS
 
 sbit LED1 at LATA.B1; // sortie LED1
 sbit LED at LATA.B0; // sortie LED
@@ -60,25 +60,26 @@ unsigned short nb_rx_octet = 0;
 // ILS
 #define ILS_CPT_TIME 4
 unsigned short ils_cpt = 4;
-bool ils_removed = true;
+unsigned short ils_removed = 1;
 
 // State Machine
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
+unsigned short state = IDLE;
 
 // Batteries
 #define WARNING_LOW_VOLTAGE 665 // 0.015625 (quantum) / 10.4 (min tension)
 unsigned int battery_voltage[4];
-bool battery_global_default = false;
+unsigned short battery_global_default = 0;
 
 // Flasher LED
-bool start_led_puissance = false;
+unsigned short start_led_puissance = 0;
 unsigned short led_puissance_delay = 20; // 100ms * val (default = 2s)
 unsigned short cpt_led_puissance = 20;
 
 // Led
 unsigned short led_delay = 100;
 unsigned short cpt_led = 100;
-bool set_led_on = false;
+unsigned short set_led_on = 0;
 
 // Sleep mode
 unsigned char time_to_start[3] = {1, 0, 0}; // hour, min, sec
@@ -87,8 +88,11 @@ unsigned char time_to_stop = 60; // in sec (max 255 sec)
 unsigned char default_time_to_start[3] = {1, 0, 0};
 unsigned char default_time_to_stop = 60;
 
-bool start_time_to_stop = false;
-bool start_time_to_power_on = false;
+unsigned short start_time_to_stop = 0;
+unsigned short start_time_to_power_on = 0;
+unsigned short start_time_to_start = 0;
+
+unsigned short k = 0;
 
 /**
  * @brief i2c_read_data_from_buffer
@@ -105,7 +109,7 @@ void i2c_read_data_from_buffer(){
       break;
     case 0x02:
       time_to_stop = default_time_to_stop;  // Go to Sleep mode
-      start_time_to_stop = true;
+      start_time_to_stop = 1;
       state = WAIT_TO_SLEEP;
       break;
     default:
@@ -113,11 +117,11 @@ void i2c_read_data_from_buffer(){
     }
   case 0x01:  // led power
     if(rxbuffer_tab[1] == 0){
-      start_led_puissance = true;
+      start_led_puissance = 1;
       LED_PUISSANCE = 0;
     }
     else
-      start_led_puissance = false;
+      start_led_puissance = 0;
     break;
   case 0x02:
     led_puissance_delay = rxbuffer_tab[1];
@@ -193,10 +197,12 @@ void read_batteries_voltage(){
  * 9v totalement déchargé
  */
 void analyze_batteries_voltage(){
-  battery_global_default = false;
-  for(unsigned short i=0; i<4; i++){
-    if(battery_voltage[i] < WARNING_LOW_VOLTAGE)
-      battery_global_default = true;
+     unsigned short l = 0;
+  battery_global_default = 0;
+
+  for(l=0; l<4; l++){
+    if(battery_voltage[l] < WARNING_LOW_VOLTAGE)
+      battery_global_default = 1;
   }
 }
 
@@ -299,6 +305,7 @@ void init_io(){
   // NVCFG = 00; PVCFG = 00;
 
   TRISA = 0xFF;
+  //TRISA1_bit = 1; // RA1 en entrée
   TRISA0_bit = 0; // RA0 en sortie
   TRISA2_bit = 1; // RA2 en entrée
   TRISA4_bit = 0; // RA4 en sortie
@@ -307,8 +314,9 @@ void init_io(){
   TRISA1_bit = 0; // RA1 en sortie
 
   INTCON2.RABPU = 0; // PORTA and PORTB Pull-up Enable bit
+  //WPUA.WPUA1 = 1; // Pull-up enabled sur RA2, sur inter de butée basse
   WPUA.WPUA2 = 1; // Pull-up enabled sur RA2, sur inter de butée basse
-
+  
   TRISB4_bit = 1; // RB4 en entrée
   TRISB6_bit = 1; // RB6 en entrée
 
@@ -341,9 +349,9 @@ void main(){
   LED1 = 0;
   LED_PUISSANCE = 0; // sortie LED de puissance
   ALIM = 0; // sortie MOSFET de puissance, commande de l'alimentation
-  battery_global_default = false;
+  battery_global_default = 0;
 
-  UART1_Init(9600);
+  //UART1_Init(9600);
 
   TMR0IE_bit = 1;  //Enable TIMER0
   TMR3IE_bit = 1;  //Enable TIMER3
@@ -352,69 +360,78 @@ void main(){
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
+  IPR1.SSPIP = 0;
+
   TMR3ON_bit = 1; // Start TIMER3
   TMR0ON_bit = 1; // Start TIMER1
+  
+
 
   while(1){
     read_batteries_voltage();
     analyze_batteries_voltage();
-
+    
+    //UART1_Write(state);
+    
     switch (state){
     case IDLE: // Idle state
       ALIM = 0;
-      led_delay = 100;
+      led_delay = 50;
 
       if(ILS==0){ // Magnet detected
         ils_cpt--;
-        set_led_on = true;
+        set_led_on = 1;
       }
       else{
         ils_cpt = ILS_CPT_TIME;
-        set_led_on = false;
-        ils_removed = true;
+        set_led_on = 0;
+        ils_removed = 1;
       }
 
-      if(ils_removed && ils_cpt == 0){
+      if(ils_removed == 1 && ils_cpt == 0){
         ils_cpt = ILS_CPT_TIME;
         state = POWER_ON;
-        ils_removed = false;
+        ils_removed = 0;
+        set_led_on = 0;
       }
       break;
 
     case POWER_ON:
       ALIM = 1;
-      if(battery_global_default)
+      if(battery_global_default == 1)
         led_delay = 5; // 0.5 sec
       else
-        led_delay = 50; // 5 sec
+        led_delay = 20; // 5 sec
 
       if(ILS==0){ // Magnet detected
         ils_cpt--;
-        set_led_on = true;
+        set_led_on = 1;
       }
       else{
         ils_cpt = ILS_CPT_TIME;
-        set_led_on = false;
-        ils_removed = true;
+        set_led_on = 0;
+        ils_removed = 1;
       }
 
-      if(ils_removed && ils_cpt == 0){
+      if(ils_removed == 1 && ils_cpt == 0){
         ils_cpt = ILS_CPT_TIME;
         state = IDLE;
-        ils_removed = false;
+        ils_removed = 0;
+        set_led_on = 0;
       }
 
       break;
 
     case WAIT_TO_SLEEP:
+
       ALIM = 1;
       led_delay = 20;
-      start_time_to_stop = true;
+      start_time_to_stop = 1;
       if(time_to_stop==0){
-        start_time_to_stop = false;
-        for(size_t k=0; k<3; k++)
+        start_time_to_stop = 0;
+        for(k=0; k<3; k++)
           time_to_start[k] = default_time_to_start[k];
-        start_time_to_start = true;
+        start_time_to_start = 1;
         state = SLEEP;
       }
       break;
@@ -424,7 +441,7 @@ void main(){
       led_delay = 600;
       if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
         state = POWER_ON;
-        start_time_to_start = false;
+        start_time_to_start = 0;
       }
       break;
     default:
@@ -485,7 +502,7 @@ void interrupt(){
   if (TMR0IF_bit){
 
     // To Do
-    if(start_time_to_start){
+    if(start_time_to_start == 1){
       if(time_to_start[2]>0){
         time_to_start[2]--;
       }
@@ -503,7 +520,7 @@ void interrupt(){
       }
     }
 
-    if(start_time_to_stop){
+    if(start_time_to_stop == 1){
       if(time_to_stop>0)
         time_to_stop--;
     }
@@ -514,7 +531,7 @@ void interrupt(){
   // Interruption du TIMER3 (Led Puissance)
   if (TMR3IF_bit){
     // LED Puissance
-    if(start_led_puissance){
+    if(start_led_puissance == 1){
       if (cpt_led_puissance > 0){
         LED_PUISSANCE = 0;
         cpt_led_puissance--;
@@ -529,7 +546,7 @@ void interrupt(){
     }
 
     // LED
-    if(set_led_on) // For ILS
+    if(set_led_on == 1) // For ILS
       LED = 1;
     else{
       if (cpt_led > 0){
