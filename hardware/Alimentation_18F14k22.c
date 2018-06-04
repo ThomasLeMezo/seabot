@@ -115,25 +115,25 @@ void i2c_read_data_from_buffer(){
     default:
       break;
     }
+    break;
   case 0x01:  // led power
-    if(rxbuffer_tab[1] == 0){
-      start_led_puissance = 1;
-      LED_PUISSANCE = 0;
-    }
-    else
+    if(rxbuffer_tab[1] == 0)
       start_led_puissance = 0;
+    else
+      start_led_puissance = 1;
+    LED_PUISSANCE = 0;
     break;
   case 0x02:
     led_puissance_delay = rxbuffer_tab[1];
     break;
   case 0x03:
-    default_time_to_start[0] = rxbuffer_tab[1]; // sec
+    default_time_to_start[0] = rxbuffer_tab[1]; // hours
     break;
   case 0x04:
     default_time_to_start[1] = rxbuffer_tab[1]; // min
     break;
   case 0x05:
-    default_time_to_start[2] = rxbuffer_tab[1]; // hours
+    default_time_to_start[2] = rxbuffer_tab[1]; // sec
     break;
   case 0x06:
     default_time_to_stop = rxbuffer_tab[1]; // sec
@@ -175,6 +175,10 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     break;
   case 0x08:
     SSPBUF = start_led_puissance;
+    break;
+  case 0x09:
+    SSPBUF = state;
+    break;
   default:
     SSPBUF = 0x00;
     break;
@@ -425,7 +429,7 @@ void main(){
     case WAIT_TO_SLEEP:
 
       ALIM = 1;
-      led_delay = 20;
+      led_delay = 1;
       start_time_to_stop = 1;
       if(time_to_stop==0){
         start_time_to_stop = 0;
@@ -525,6 +529,8 @@ void interrupt(){
         time_to_stop--;
     }
 
+    TMR0H = 0x0B;
+    TMR0L = 0xDC;
     TMR0IF_bit = 0;
   }
 
@@ -559,6 +565,8 @@ void interrupt(){
       }
     }
 
+    TMR3H = 0x3C;
+    TMR3L = 0xB0;
     TMR3IF_bit = 0;
   }
 }

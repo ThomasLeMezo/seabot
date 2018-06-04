@@ -254,10 +254,8 @@ void main(){
   //UART1_Init(115200);
   LATC = 0;
 
-  for (int i=0; i< 90; i++){  // Tempo de 45 secondes pour faire monter Linux sur la carte PCDUINO
-    LED =~ LED;
-    delay_ms(500);
-  }
+  LED = 1
+  delay_ms(1000);
 
   TMR0IE_bit = 1;
   TMR1IE_bit = 1;
@@ -319,7 +317,7 @@ void interrupt_low(){
             else{ // At the end of the communication
                 i2c_read_data_from_buffer();
             }
-            j = SSPBUF;
+            tmp_rx = SSPBUF;
         }
 
         PIR1.SSPIF = 0; // reset SSP interrupt flag
@@ -341,12 +339,12 @@ void interrupt(){
   /// ********************** TIMERS  ******************* //
 
   // Interruption TIMER1 toutes les 10us
-  if (TMR1IE_bit && TMR1IF_bit){
+  if (TMR1IF_bit){
 
     if(cpt_global==0){
-      MOT1 = 1;
-      MOT2 = 1;
-      MOT3 = 1;
+      MOT1 = 0;
+      MOT2 = 0;
+      MOT3 = 0;
       cpt_global = cmd_global;
 
       cpt_motor_1 = cmd_motor_1;
@@ -359,23 +357,24 @@ void interrupt(){
 
     // MOT 1
     if(cpt_motor_1==0)
-      MOT1 = 0;
+      MOT1 = 1;
     else
       cpt_motor_1--;
     
     // MOT 2
     if(cpt_motor_2==0)
-      MOT2 = 0;
+      MOT2 = 1;
     else
       cpt_motor_2--;
 
     // MOT 3
     if(cpt_motor_3==0)
-      MOT3 = 0;
+      MOT3 = 1;
     else
       cpt_motor_3--;
 
-    TMR1H = 0xFF; //(necessary ?)
+
+    TMR1H = 0xFF;
     TMR1L = 0x80;
     TMR1IF_bit = 0;
   }
