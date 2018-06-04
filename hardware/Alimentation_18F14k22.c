@@ -94,44 +94,49 @@ bool start_time_to_power_on = false;
  * @brief i2c_read_data_from_buffer
  */
 void i2c_read_data_from_buffer(){
-    switch(rxbuffer_tab[0]){
-    case 0x00:  // alimentation
-        switch(rxbuffer_tab[1]){
-          case 0x00:
-            state = IDLE;
-            break;
-          case 0x01:
-            state = POWER_ON;
-            break;
-          case 0x02:
-            time_to_stop = default_time_to_stop;  // Go to Sleep mode
-            start_time_to_stop = true;
-            state = WAIT_TO_SLEEP;
-            break;
-          default:
-            break;
-        }
-    case 0x01:  // led power
-        if(rxbuffer_tab[1] == 0){
-          start_led_puissance = true;
-          LED_PUISSANCE = 0;
-        }
-        else
-          start_led_puissance = false;
-        break;
+  switch(rxbuffer_tab[0]){
+  case 0x00:  // alimentation
+    switch(rxbuffer_tab[1]){
+    case 0x00:
+      state = IDLE;
+      break;
+    case 0x01:
+      state = POWER_ON;
+      break;
     case 0x02:
-        led_puissance_delay = rxbuffer_tab[1];
-    case 0x03:
-        default_time_to_start[0] = rxbuffer_tab[1]; // sec
-    case 0x04:
-        default_time_to_start[1] = rxbuffer_tab[1]; // min
-    case 0x05:
-        default_time_to_start[2] = rxbuffer_tab[1]; // hours
-    case 0x06:
-        default_time_to_stop = rxbuffer_tab[1]; // sec
+      time_to_stop = default_time_to_stop;  // Go to Sleep mode
+      start_time_to_stop = true;
+      state = WAIT_TO_SLEEP;
+      break;
     default:
-        break;
+      break;
     }
+  case 0x01:  // led power
+    if(rxbuffer_tab[1] == 0){
+      start_led_puissance = true;
+      LED_PUISSANCE = 0;
+    }
+    else
+      start_led_puissance = false;
+    break;
+  case 0x02:
+    led_puissance_delay = rxbuffer_tab[1];
+    break;
+  case 0x03:
+    default_time_to_start[0] = rxbuffer_tab[1]; // sec
+    break;
+  case 0x04:
+    default_time_to_start[1] = rxbuffer_tab[1]; // min
+    break;
+  case 0x05:
+    default_time_to_start[2] = rxbuffer_tab[1]; // hours
+    break;
+  case 0x06:
+    default_time_to_stop = rxbuffer_tab[1]; // sec
+    break;
+  default:
+    break;
+  }
 }
 
 /**
@@ -139,47 +144,47 @@ void i2c_read_data_from_buffer(){
  * @param nb_tx_octet
  */
 void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
-    switch(rxbuffer_tab[0]+nb_tx_octet){
-    case 0x00:
-        SSPBUF = battery_voltage[0];
-        break;
-    case 0x01:
-        SSPBUF = battery_voltage[0] >> 8;
-        break;
-    case 0x02:
-        SSPBUF = battery_voltage[1];
-        break;
-    case 0x03:
-        SSPBUF = battery_voltage[1] >> 8;
-        break;
-    case 0x04:
-        SSPBUF = battery_voltage[2];
-        break;
-    case 0x05:
-        SSPBUF = battery_voltage[2] >> 8;
-        break;
-    case 0x06:
-        SSPBUF = battery_voltage[3];
-        break;
-    case 0x07:
-        SSPBUF = battery_voltage[3] >> 8;
-        break;
-    case 0x08:
-        SSPBUF = start_led_puissance;
-    default:
-        SSPBUF = 0x00;
-        break;
-    }
+  switch(rxbuffer_tab[0]+nb_tx_octet){
+  case 0x00:
+    SSPBUF = battery_voltage[0];
+    break;
+  case 0x01:
+    SSPBUF = battery_voltage[0] >> 8;
+    break;
+  case 0x02:
+    SSPBUF = battery_voltage[1];
+    break;
+  case 0x03:
+    SSPBUF = battery_voltage[1] >> 8;
+    break;
+  case 0x04:
+    SSPBUF = battery_voltage[2];
+    break;
+  case 0x05:
+    SSPBUF = battery_voltage[2] >> 8;
+    break;
+  case 0x06:
+    SSPBUF = battery_voltage[3];
+    break;
+  case 0x07:
+    SSPBUF = battery_voltage[3] >> 8;
+    break;
+  case 0x08:
+    SSPBUF = start_led_puissance;
+  default:
+    SSPBUF = 0x00;
+    break;
+  }
 }
 
 /**
  * @brief read batteries voltage
  */
 void read_batteries_voltage(){
-    battery_voltage[0] = ADC_Get_Sample(4);   // Get 10-bit results of AD conversion AN4 batterie 1
-    battery_voltage[1] = ADC_Get_Sample(5);   // Get 10-bit results of AD conversion AN5 batterie 2
-    battery_voltage[2] = ADC_Get_Sample(6);   // Get 10-bit results of AD conversion AN6 batterie 3
-    battery_voltage[3] = ADC_Get_Sample(7);   // Get 10-bit results of AD conversion AN7 batterie 4
+  battery_voltage[0] = ADC_Get_Sample(4);   // Get 10-bit results of AD conversion AN4 batterie 1
+  battery_voltage[1] = ADC_Get_Sample(5);   // Get 10-bit results of AD conversion AN5 batterie 2
+  battery_voltage[2] = ADC_Get_Sample(6);   // Get 10-bit results of AD conversion AN6 batterie 3
+  battery_voltage[3] = ADC_Get_Sample(7);   // Get 10-bit results of AD conversion AN7 batterie 4
 }
 
 /**
@@ -188,35 +193,35 @@ void read_batteries_voltage(){
  * 9v totalement déchargé
  */
 void analyze_batteries_voltage(){
-    battery_global_default = false;
-    for(unsigned short i=0; i<4; i++){
-        if(battery_voltage[i] < WARNING_LOW_VOLTAGE)
-            battery_global_default = true;
-    }
+  battery_global_default = false;
+  for(unsigned short i=0; i<4; i++){
+    if(battery_voltage[i] < WARNING_LOW_VOLTAGE)
+      battery_global_default = true;
+  }
 }
 
 /**
  * @brief initialisation de l'I2C en mode esclave
  */
 void init_i2c(){
-    SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
-    SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
-    SSPCON1.SSPEN = 1;
-    // bit 3-0 SSPM3:SSPM0: I2C Firmware Controlled Master mode,
-    // 7-bit address with START and STOP bit interrupts enabled
-    // bit 4 CKP: 1 = Enable clock
-    // bit 5 SSPEN: Enables the serial port and configures the SDA and SCL
-    // pins as the source of the serial port pins
+  SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
+  SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
+  SSPCON1.SSPEN = 1;
+  // bit 3-0 SSPM3:SSPM0: I2C Firmware Controlled Master mode,
+  // 7-bit address with START and STOP bit interrupts enabled
+  // bit 4 CKP: 1 = Enable clock
+  // bit 5 SSPEN: Enables the serial port and configures the SDA and SCL
+  // pins as the source of the serial port pins
 
-    SSPCON2 = 0x00;
-    SSPSTAT=0x00;
-    SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz)
-    SSPSTAT.CKE = 1; // 1 = Input levels conform to SMBus spec
+  SSPCON2 = 0x00;
+  SSPSTAT=0x00;
+  SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz)
+  SSPSTAT.CKE = 1; // 1 = Input levels conform to SMBus spec
 
-    PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
-    PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
-    // a transmission/reception has taken place.
-    PIR2.BCLIF = 0;
+  PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
+  PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
+  // a transmission/reception has taken place.
+  PIR2.BCLIF = 0;
 }
 
 /**
@@ -236,11 +241,11 @@ void init_i2c(){
  * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
  */
 void init_timer0(){
-    //T0CON = 0x86; // TIMER0 ON time 2s
-    T0CON = 0x85; // TIMER0 ON (1 s)
-    TMR0H = 0x0B;
-    TMR0L = 0xDC;
-    TMR0IE_bit = 0;
+  //T0CON = 0x86; // TIMER0 ON time 2s
+  T0CON = 0x85; // TIMER0 ON (1 s)
+  TMR0H = 0x0B;
+  TMR0L = 0xDC;
+  TMR0IE_bit = 0;
 }
 
 /**
@@ -274,11 +279,11 @@ void init_timer0(){
  * Prescaler 1:8; TMR1 Preload = 15536; Actual Interrupt Time : 100 ms
  */
 void init_timer3(){
-    T3CON = 0x30;
-    TMR3IF_bit = 0;
-    TMR3H = 0x3C;
-    TMR3L = 0xB0;
-    TMR3IE_bit = 0;
+  T3CON = 0x30;
+  TMR3IF_bit = 0;
+  TMR3H = 0x3C;
+  TMR3L = 0xB0;
+  TMR3IE_bit = 0;
 }
 
 /**
@@ -286,35 +291,35 @@ void init_timer3(){
  * Initialisation des entrées sorties du PIC
  */
 void init_io(){
-    ANSEL = 0xF0;  // Set RC0,RC1,RC2,RC3 to analog (AN4,AN5,AN6,AN7)
+  ANSEL = 0xF0;  // Set RC0,RC1,RC2,RC3 to analog (AN4,AN5,AN6,AN7)
 
-    CM1CON0 = 0x00; // Not using the comparators
-    CM2CON0 = 0x00;
+  CM1CON0 = 0x00; // Not using the comparators
+  CM2CON0 = 0x00;
 
-    // NVCFG = 00; PVCFG = 00;
+  // NVCFG = 00; PVCFG = 00;
 
-    TRISA = 0xFF;
-    TRISA0_bit = 0; // RA0 en sortie
-    TRISA2_bit = 1; // RA2 en entrée
-    TRISA4_bit = 0; // RA4 en sortie
-    TRISA5_bit = 0; // RA5 en sortie
+  TRISA = 0xFF;
+  TRISA0_bit = 0; // RA0 en sortie
+  TRISA2_bit = 1; // RA2 en entrée
+  TRISA4_bit = 0; // RA4 en sortie
+  TRISA5_bit = 0; // RA5 en sortie
 
-    TRISA1_bit = 0; // RA1 en sortie
+  TRISA1_bit = 0; // RA1 en sortie
 
-    INTCON2.RABPU = 0; // PORTA and PORTB Pull-up Enable bit
-    WPUA.WPUA2 = 1; // Pull-up enabled sur RA2, sur inter de butée basse
+  INTCON2.RABPU = 0; // PORTA and PORTB Pull-up Enable bit
+  WPUA.WPUA2 = 1; // Pull-up enabled sur RA2, sur inter de butée basse
 
-    TRISB4_bit = 1; // RB4 en entrée
-    TRISB6_bit = 1; // RB6 en entrée
+  TRISB4_bit = 1; // RB4 en entrée
+  TRISB6_bit = 1; // RB6 en entrée
 
-    TRISB5_bit = 1; // RB5 en entrée
-    TRISB7_bit = 0; // RB6 en sortie
+  TRISB5_bit = 1; // RB5 en entrée
+  TRISB7_bit = 0; // RB6 en sortie
 
-    TRISC = 0xFF;
-    TRISC0_bit = 1; // RC0 en entree voie AN4
-    TRISC1_bit = 1; // RC1 en entree voie AN5
-    TRISC2_bit = 1; // RC2 en entree voie AN6
-    TRISC3_bit = 1; // RC3 en entree voie AN7
+  TRISC = 0xFF;
+  TRISC0_bit = 1; // RC0 en entree voie AN4
+  TRISC1_bit = 1; // RC1 en entree voie AN5
+  TRISC2_bit = 1; // RC2 en entree voie AN6
+  TRISC3_bit = 1; // RC3 en entree voie AN7
 }
 
 
@@ -322,112 +327,112 @@ void init_io(){
  * @brief main
  */
 void main(){
-    // Oscillateur interne de 16Mhz
-    OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
+  // Oscillateur interne de 16Mhz
+  OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
 
-    init_io(); // Initialisation des I/O
-    init_i2c(); // Initialisation de l'I2C en esclave
-    init_timer0(); // Initialisation du TIMER0 toutes les 2 secondes
-    init_timer3(); // Initialisation du TIMER3 toutes les 100ms
+  init_io(); // Initialisation des I/O
+  init_i2c(); // Initialisation de l'I2C en esclave
+  init_timer0(); // Initialisation du TIMER0 toutes les 2 secondes
+  init_timer3(); // Initialisation du TIMER3 toutes les 100ms
 
-    ADC_Init();
+  ADC_Init();
 
-    LED = 0; // sortie LED
-    LED1 = 0;
-    LED_PUISSANCE = 0; // sortie LED de puissance
-    ALIM = 0; // sortie MOSFET de puissance, commande de l'alimentation
-    battery_global_default = false;
+  LED = 0; // sortie LED
+  LED1 = 0;
+  LED_PUISSANCE = 0; // sortie LED de puissance
+  ALIM = 0; // sortie MOSFET de puissance, commande de l'alimentation
+  battery_global_default = false;
 
-    UART1_Init(9600);
+  UART1_Init(9600);
 
-    TMR0IE_bit = 1;  //Enable TIMER0
-    TMR3IE_bit = 1;  //Enable TIMER3
+  TMR0IE_bit = 1;  //Enable TIMER0
+  TMR3IE_bit = 1;  //Enable TIMER3
 
-    PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
-    INTCON.GIE = 1; // Global Interrupt Enable bit
-    INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
+  PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
+  INTCON.GIE = 1; // Global Interrupt Enable bit
+  INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
-    TMR3ON_bit = 1; // Start TIMER3
-    TMR0ON_bit = 1; // Start TIMER1
+  TMR3ON_bit = 1; // Start TIMER3
+  TMR0ON_bit = 1; // Start TIMER1
 
-    while(1){
-        read_batteries_voltage();
-        analyze_batteries_voltage();
+  while(1){
+    read_batteries_voltage();
+    analyze_batteries_voltage();
 
-        switch (state){
-            case IDLE: // Idle state
-                ALIM = 0;
-                led_delay = 100;
+    switch (state){
+    case IDLE: // Idle state
+      ALIM = 0;
+      led_delay = 100;
 
-                if(ILS==0){ // Magnet detected
-                    ils_cpt--;
-                    set_led_on = true;
-                }
-                else{
-                    ils_cpt = ILS_CPT_TIME;
-                    set_led_on = false;
-                    ils_removed = true;
-                }
+      if(ILS==0){ // Magnet detected
+        ils_cpt--;
+        set_led_on = true;
+      }
+      else{
+        ils_cpt = ILS_CPT_TIME;
+        set_led_on = false;
+        ils_removed = true;
+      }
 
-                if(ils_removed && ils_cpt == 0){
-                    ils_cpt = ILS_CPT_TIME;
-                    state = POWER_ON;
-                    ils_removed = false;
-                }
-                break;
+      if(ils_removed && ils_cpt == 0){
+        ils_cpt = ILS_CPT_TIME;
+        state = POWER_ON;
+        ils_removed = false;
+      }
+      break;
 
-            case POWER_ON:
-                ALIM = 1;
-                if(battery_global_default)
-                  led_delay = 5; // 0.5 sec  
-                else
-                  led_delay = 50; // 5 sec
+    case POWER_ON:
+      ALIM = 1;
+      if(battery_global_default)
+        led_delay = 5; // 0.5 sec
+      else
+        led_delay = 50; // 5 sec
 
-                if(ILS==0){ // Magnet detected
-                    ils_cpt--;
-                    set_led_on = true;
-                }
-                else{
-                    ils_cpt = ILS_CPT_TIME;
-                    set_led_on = false;
-                    ils_removed = true;
-                }
+      if(ILS==0){ // Magnet detected
+        ils_cpt--;
+        set_led_on = true;
+      }
+      else{
+        ils_cpt = ILS_CPT_TIME;
+        set_led_on = false;
+        ils_removed = true;
+      }
 
-                if(ils_removed && ils_cpt == 0){
-                    ils_cpt = ILS_CPT_TIME;
-                    state = IDLE;
-                    ils_removed = false;
-                }
+      if(ils_removed && ils_cpt == 0){
+        ils_cpt = ILS_CPT_TIME;
+        state = IDLE;
+        ils_removed = false;
+      }
 
-                break;
+      break;
 
-            case WAIT_TO_SLEEP:
-                ALIM = 1;
-                led_delay = 20;
-                start_time_to_stop = true;
-                if(time_to_stop==0){
-                  start_time_to_stop = false;
-                  for(size_t k=0; k<3; k++)
-                    time_to_start[k] = default_time_to_start[k];
-                  start_time_to_start = true;
-                  state = SLEEP;
-                }
-              break;
+    case WAIT_TO_SLEEP:
+      ALIM = 1;
+      led_delay = 20;
+      start_time_to_stop = true;
+      if(time_to_stop==0){
+        start_time_to_stop = false;
+        for(size_t k=0; k<3; k++)
+          time_to_start[k] = default_time_to_start[k];
+        start_time_to_start = true;
+        state = SLEEP;
+      }
+      break;
 
-            case SLEEP:
-                ALIM = 0;
-                led_delay = 600;
-                if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
-                  state = POWER_ON;
-                  start_time_to_start = false;
-                }
-                break;
-            default:
-                state = POWER_ON;
-                break;
-        }
-        delay_ms(500);
+    case SLEEP:
+      ALIM = 0;
+      led_delay = 600;
+      if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
+        state = POWER_ON;
+        start_time_to_start = false;
+      }
+      break;
+    default:
+      state = POWER_ON;
+      break;
     }
+    delay_ms(500);
+  }
 }
 
 /**
@@ -438,108 +443,105 @@ void main(){
  */
 void interrupt(){
 
-    /// ************************************************** //
-    /// ********************** I2C  ********************** //
+  /// ************************************************** //
+  /// ********************** I2C  ********************** //
 
-    if (PIR1.SSPIF){  // I2C Interrupt
+  if (PIR1.SSPIF){  // I2C Interrupt
 
-        if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
-            i2c_write_data_to_buffer(nb_tx_octet);
-            nb_tx_octet++;
-            delay_us(10);
-            SSPCON1.CKP = 1;
-        }
-        else{ //****** recieve data from master ****** //
-            if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
-                if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data
-                    if(nb_rx_octet < SIZE_RX_BUFFER)
-                        rxbuffer_tab[nb_rx_octet] = SSPBUF;
-                    nb_rx_octet++;
-                }
-                else{
-                    nb_tx_octet = 0;
-                    nb_rx_octet = 0;
-                }
-            }
-            else{ // At the end of the communication
-                i2c_read_data_from_buffer();
-            }
-            tmp_rx = SSPBUF;
-        }
-
-        PIR1.SSPIF = 0; // reset SSP interrupt flag
+    if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
+      i2c_write_data_to_buffer(nb_tx_octet);
+      nb_tx_octet++;
+      delay_us(10);
+      SSPCON1.CKP = 1;
     }
-    if (PIR2.BCLIF)
-        PIR2.BCLIF = 0;
-
-
-    /// ************************************************** //
-    /// ********************** TIMERS  ******************* //
-
-    // Interruption du TIMER0 (1 s) (cpt to start/stop)
-    if (TMR0IF_bit){
-
-        // To Do
-      if(start_time_to_start){
-        if(time_to_start[2]>0){
-          time_to_start[2]--;
+    else{ //****** recieve data from master ****** //
+      if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
+        if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data
+          if(nb_rx_octet < SIZE_RX_BUFFER)
+            rxbuffer_tab[nb_rx_octet] = SSPBUF;
+          nb_rx_octet++;
         }
         else{
-          if(time_to_start[1]>0){
-            time_to_start[1]--;
-            time_to_start[2]=59;
-          }
-          else{
-            if(time_to_start[0]>0){
+          nb_tx_octet = 0;
+          nb_rx_octet = 0;
+        }
+      }
+      else{ // At the end of the communication
+        i2c_read_data_from_buffer();
+      }
+      tmp_rx = SSPBUF;
+    }
+
+    PIR1.SSPIF = 0; // reset SSP interrupt flag
+  }
+  if (PIR2.BCLIF)
+    PIR2.BCLIF = 0;
+
+
+  /// ************************************************** //
+  /// ********************** TIMERS  ******************* //
+
+  // Interruption du TIMER0 (1 s) (cpt to start/stop)
+  if (TMR0IF_bit){
+
+    // To Do
+    if(start_time_to_start){
+      if(time_to_start[2]>0){
+        time_to_start[2]--;
+      }
+      else{
+        if(time_to_start[1]>0){
+          time_to_start[1]--;
+          time_to_start[2]=59;
+        }
+        else{
+          if(time_to_start[0]>0){
             time_to_start[0]--;
             time_to_start[1]=59;
-            }
           }
         }
       }
+    }
 
-      if(start_time_to_stop){
-        if(time_to_stop>0)
-          time_to_stop--;
+    if(start_time_to_stop){
+      if(time_to_stop>0)
+        time_to_stop--;
+    }
+
+    TMR0IF_bit = 0;
+  }
+
+  // Interruption du TIMER3 (Led Puissance)
+  if (TMR3IF_bit){
+    // LED Puissance
+    if(start_led_puissance){
+      if (cpt_led_puissance > 0){
+        LED_PUISSANCE = 0;
+        cpt_led_puissance--;
       }
-
-        TMR0IF_bit = 0;
+      else{
+        LED_PUISSANCE = 1;
+        cpt_led_puissance=led_puissance_delay;
+      }
+    }
+    else{
+      LED_PUISSANCE = 0;
     }
 
-    // Interruption du TIMER3 (Led Puissance)
-    if (TMR3IF_bit){
-        // LED Puissance
-        if(start_led_puissance){
-          if (cpt_led_puissance > 0){
-            LED_PUISSANCE = 0;
-            cpt_led_puissance--;
-          }
-          else{
-              LED_PUISSANCE = 1;
-              cpt_led_puissance=led_puissance_delay;
-          }
-        }
-        else{
-          LED_PUISSANCE = 0;
-        }
-          
-        // LED
-        if(set_led_on) // For ILS
-          LED = 1;
-        else{
-          if (cpt_led > 0){
-            LED = 0;
-            cpt_led--;
-          }
-          else{
-            LED = 1;
-            cpt_led=led_delay;
-          }
-        }
-
-        // Restart the timer
-        TMR3H = 0x3C;
-        TMR3L = 0xB0;
-        TMR3IF_bit = 0;
+    // LED
+    if(set_led_on) // For ILS
+      LED = 1;
+    else{
+      if (cpt_led > 0){
+        LED = 0;
+        cpt_led--;
+      }
+      else{
+        LED = 1;
+        cpt_led=led_delay;
+      }
     }
+
+    TMR3IF_bit = 0;
+  }
 }

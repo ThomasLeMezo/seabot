@@ -10,7 +10,7 @@ import rosbag
 import yaml
 
 
-bag = rosbag.Bag('2018-06-15-17-36-53.bag', 'r')
+bag = rosbag.Bag('2018-06-15-20-33-53.bag', 'r')
 print(bag)
 
 startTime = rospy.Time.from_sec(bag.get_start_time())

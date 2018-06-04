@@ -116,7 +116,7 @@ uint32_t Piston::set_piston_enable(const bool &val) const{
 //}
 
 void Piston::update_piston_all_data(){
-  uint8_t buff[12];
+  uint8_t buff[6];
   if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 6,buff) != 6){
     ROS_WARN("[Piston_driver] I2C Bus Failure");
   }

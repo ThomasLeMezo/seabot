@@ -18,22 +18,28 @@ startTime = rospy.Time.from_sec(bag.get_start_time() + 130)
 time = []
 pressure = []
 temperature = []
+pressure_velocity = []
 
 for topic, msg, t in bag.read_messages(topics="/sensor_external", start_time=startTime):
 	if(msg.temperature > 0 and msg.temperature < 50 and msg.pressure < 6 and msg.pressure > 0):
 		time.append(t.to_sec() - bag.get_start_time())
 		pressure.append((msg.pressure-1.08)*10.0)
 		temperature.append(msg.temperature)
+		# pressure_velocity.append(msg.pressure_velocity)
 
 bag.close()
 
 plt.subplot(211)
-plt.ylabel("pressure")
-plt.plot(time,signal.medfilt(pressure, 3))
+plt.ylabel("depth")
+plt.plot(time,signal.medfilt(pressure, 1))
 
 plt.subplot(212)
 plt.ylabel("temperature")
-plt.plot(time,signal.medfilt(temperature, 3))
+plt.plot(time,temperature)
+
+# plt.subplot(313)
+# plt.ylabel("depth_velocity")
+# plt.plot(time,signal.medfilt(pressure_velocity, 3))
 
 plt.show()
 
