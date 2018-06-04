@@ -15,7 +15,7 @@
 
 #include <ros/ros.h>
 
-#define MOTOR_PWM_STOP 1500
+#define MOTOR_PWM_STOP 150
 
 class Thruster
 {
@@ -41,14 +41,9 @@ private:
 inline void Thruster::write_cmd(const unsigned short int &left, const unsigned short int &right) const{
   unsigned char buff[2];
   // Left Engine
-  buff[0] = left >> 8;
-  buff[1] = left & 0xFF;
-  i2c_smbus_write_i2c_block_data(m_file, 0x01, 2, buff);
-
-  // Right Engine
-  buff[0] = right >> 8;
-  buff[1] = right & 0xFF;
-  i2c_smbus_write_i2c_block_data(m_file, 0x02, 2, buff);
+  buff[0] = left;
+  buff[1] = right;
+  i2c_smbus_write_i2c_block_data(m_file, 0x00, 2, buff);
 }
 
 #endif // THRUSTER_H

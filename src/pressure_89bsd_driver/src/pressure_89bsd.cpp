@@ -99,26 +99,6 @@ int Pressure_89BSD::init_sensor(){
     return return_val;
 }
 
-void Pressure_89BSD::estimate_pressure_speed(){
-    double before, after;
-    size_t deque_size = m_pressure_memory.size();
-    size_t k=0;
-    for(size_t i=0; i<deque_size/2; i++){
-        before += m_pressure_memory[i];
-        k++;
-    }
-    before /= k;
-    k=0;
-    for(size_t i=deque_size/2; i<deque_size; i++){
-        after += m_pressure_memory[i];
-        k++;
-    }
-    after /= k;
-    double new_velocity = after - before;
-    m_pressure_acceleration = new_velocity - m_pressure_velocity;
-    m_pressure_velocity = after - before;
-}
-
 bool Pressure_89BSD::measure(){
     get_D1();
     get_D2();
@@ -137,13 +117,7 @@ bool Pressure_89BSD::measure(){
 
         m_pressure = ((p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN);
 
-        if(m_temperature > 0.0 && m_temperature < 50 && m_pressure>0.7 && m_pressure<10.0){
-            if(m_pressure_memory.size()>m_pressure_memory_size)
-                m_pressure_memory.pop_front();
-            m_pressure_memory.push_back(m_pressure);
-            estimate_pressure_speed();
-        }
-        else{
+        if(m_temperature < 0.0 || m_temperature > 50 || m_pressure<0.7 || m_pressure>10.0){
             m_valid_data = false;
             ROS_WARN("[Pressure_89BSD] Data out of range (p=%f t=%f)", m_pressure, m_temperature);
             return false;

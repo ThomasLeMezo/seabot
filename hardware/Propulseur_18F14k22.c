@@ -157,29 +157,35 @@ void init_i2c(){
 
 /**
  * @brief init_timer0
- * Fonction d'initialisation du TIMER0
- * 2 s
+ * Fonction d'initialisation du TIMER0 => 10us pour 16 MHz
+ * 10 s
  */
 void init_timer0(){
-  T0CON = 0x86; // TIMER0 ON (2 s)
-  TMR0H = 0x0B;
-  TMR0L = 0xDC;
+  T0CON.T0CS = 0;  // bit 5  TMR0 Clock Source Select bit...0 = Internal Clock (CLKO) 1 = Transition on T0CKI pin
+  T0CON.T0SE = 0;  // bit 4 TMR0 Source Edge Select bit 0 = low/high 1 = high/low
+  T0CON.PSA = 1;   // bit 3  Prescaler Assignment bit...0 = Prescaler is assigned to the WDT
+  T0CON.PS2 = 0;   // bits 2-0  PS2:PS0: Prescaler Rate Select bits
+  T0CON.PS1 = 0;
+  T0CON.PS0 = 0;
+
+  TMR0H = 0x00;
+  TMR0L = 0xD8;
   TMR0IE_bit = 0;
 }
 
-/**
- * @brief init_timer1
- * Fonction d'initialisation du TIMER1
- * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 10 us
- */
-void init_timer1(){
-  T1CON = 0x00;
-  TMR1IF_bit = 0;
-  TMR1H = 0xFF;
-  TMR1L = 0x80;
-  TMR1IE_bit = 0;
-  INTCON = 0xC0;
-}
+// *
+//  * @brief init_timer1
+//  * Fonction d'initialisation du TIMER1
+//  * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 10 us
+ 
+// void init_timer1(){
+//   T1CON = 0x00;
+//   TMR1IF_bit = 0;
+//   TMR1H = 0xFF;
+//   TMR1L = 0x80;
+//   TMR1IE_bit = 0;
+//   INTCON = 0xC0;
+// }
 
 /**
  * @brief init_io
@@ -232,12 +238,12 @@ void main(){
   delay_ms(1000);
 
   TMR0IE_bit = 1;
-  TMR1IE_bit = 1;
+  // TMR1IE_bit = 1;
   //TMR2IE_bit = 1;
   //TMR3IE_bit = 1;
 
   TMR0ON_bit = 1; // Start TIMER0
-  TMR1ON_bit = 1; // Start TIMER1
+  // TMR1ON_bit = 1; // Start TIMER1
 
   INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
   //priority interrupt source
@@ -313,7 +319,7 @@ void interrupt(){
   /// ********************** TIMERS  ******************* //
 
   // Interruption TIMER1 toutes les 10us
-  if (TMR1IF_bit){
+  if (TMR0IF_bit){
 
     if(cpt_global==0){
       MOT1 = 0;
@@ -327,30 +333,26 @@ void interrupt(){
     }
     else{
       cpt_global--;
+
+      // MOT 1
+      if(cpt_motor_1==0)
+        MOT1 = 1;
+      else
+        cpt_motor_1--;
+      
+      // MOT 2
+      if(cpt_motor_2==0)
+        MOT2 = 1;
+      else
+        cpt_motor_2--;
+
+      // MOT 3
+      if(cpt_motor_3==0)
+        MOT3 = 1;
+      else
+        cpt_motor_3--;
     }
 
-    // MOT 1
-    if(cpt_motor_1==0)
-      MOT1 = 1;
-    else
-      cpt_motor_1--;
-    
-    // MOT 2
-    if(cpt_motor_2==0)
-      MOT2 = 1;
-    else
-      cpt_motor_2--;
-
-    // MOT 3
-    if(cpt_motor_3==0)
-      MOT3 = 1;
-    else
-      cpt_motor_3--;
-
-
-    TMR1H = 0xFF;
-    TMR1L = 0x80;
-    TMR1IF_bit = 0;
+    TMR0IF_bit = 0;
   }
-
 }

@@ -33,8 +33,6 @@ int main(int argc, char *argv[]){
         if(p1.measure() == true){
             msg.temperature = p1.get_temperature();
             msg.pressure = p1.get_pression();
-            msg.pressure_velocity = p1.get_pressure_velocity();
-            msg.pressure_acceleration = p1.get_pressure_acceleration();
             msg.header.stamp = ros::Time::now();
 
             pub.publish(msg);
