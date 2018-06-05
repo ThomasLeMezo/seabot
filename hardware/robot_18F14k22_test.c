@@ -73,7 +73,7 @@ unsigned char old_state = IDLE;
 // I2C
 #define SIZE_RX_BUFFER 3
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short j = 0;
+unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 
