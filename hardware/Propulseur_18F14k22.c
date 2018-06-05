@@ -67,19 +67,17 @@ sbit MOT3 at LATC.B2; // sorties de commande moteur 3
 sbit LED at LATA.B2; // sortie LED
 
 // Motor
-unsigned char cmd_motor_1 = 150;
-unsigned char cmd_motor_2 = 150;
-unsigned char cmd_motor_3 = 150;
-unsigned short int cmd_global = 2000;
+unsigned short cmd_motor[3] = {150, 150, 150};
+unsigned int cmd_global = 2000;
 
 unsigned char cpt_motor_1 = 0;
 unsigned char cpt_motor_2 = 0;
 unsigned char cpt_motor_3 = 0;
-unsigned char cpt_global = 2000;
+unsigned int cpt_global = 2000;
 
 // I2C
-#define ADDRESS_I2C 0x70;
-#define SIZE_RX_BUFFER 3
+#define ADDRESS_I2C 0x40;
+#define SIZE_RX_BUFFER 4
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
@@ -89,27 +87,19 @@ unsigned short nb_rx_octet = 0;
  * @brief i2c_read_data_from_buffer
  */
 void i2c_read_data_from_buffer(){
-  switch(rxbuffer_tab[0]){
-  case 0x00:  // motor 1
-    if(rxbuffer_tab[1]>=110 && rxbuffer_tab[1]<=190)
-      cmd_motor_1 = rxbuffer_tab[1];
-    else
-      cmd_motor_1 = 150;
-    break;
-  case 0x01:  // led power
-    if(rxbuffer_tab[1]>=110 && rxbuffer_tab[1]<=190)
-      cmd_motor_1 = rxbuffer_tab[1];
-    else
-      cmd_motor_1 = 150;
-    break;
-  case 0x02:
-    if(rxbuffer_tab[1]>=110 && rxbuffer_tab[1]<=190)
-      cmd_motor_1 = rxbuffer_tab[1];
-    else
-      cmd_motor_1 = 150;
-    break;
-  default:
-    break;
+  unsigned short k=0;
+  unsigned short nb_motor=0;
+  unsigned short offset = rxbuffer_tab[0];
+
+  for(k=1; k<nb_rx_octet; k++){
+    nb_motor = offset+k-1;
+
+    if(nb_motor<3){
+      if(rxbuffer_tab[k]>=110 && rxbuffer_tab[k]<=190)
+        cmd_motor[nb_motor] = rxbuffer_tab[k];
+      else
+        cmd_motor[nb_motor] = 150;
+    }
   }
 }
 
@@ -134,7 +124,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 /**
  * @brief initialisation de l'I2C en mode esclave
  */
-void init_i2c(){
+void init_i2C(){
     SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
     SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
     SSPCON1.SSPEN = 1;
@@ -155,37 +145,21 @@ void init_i2c(){
     PIR2.BCLIF = 0;
 }
 
-/**
- * @brief init_timer0
- * Fonction d'initialisation du TIMER0 => 10us pour 16 MHz
- * 10 s
- */
-void init_timer0(){
-  T0CON.T0CS = 0;  // bit 5  TMR0 Clock Source Select bit...0 = Internal Clock (CLKO) 1 = Transition on T0CKI pin
-  T0CON.T0SE = 0;  // bit 4 TMR0 Source Edge Select bit 0 = low/high 1 = high/low
-  T0CON.PSA = 1;   // bit 3  Prescaler Assignment bit...0 = Prescaler is assigned to the WDT
-  T0CON.PS2 = 0;   // bits 2-0  PS2:PS0: Prescaler Rate Select bits
-  T0CON.PS1 = 0;
-  T0CON.PS0 = 0;
 
-  TMR0H = 0x00;
-  TMR0L = 0xD8;
-  TMR0IE_bit = 0;
+/**
+ * @brief init_timer1
+ * Fonction d'initialisation du TIMER1
+ * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 10 us
+ */
+void init_timer1(){
+  T1CON = 0x01;
+  TMR1IF_bit = 0;
+  TMR1H = 255;
+  TMR1L = 136;
+  TMR1IE_bit = 0;
+  INTCON = 0xC0;
 }
 
-// *
-//  * @brief init_timer1
-//  * Fonction d'initialisation du TIMER1
-//  * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 10 us
- 
-// void init_timer1(){
-//   T1CON = 0x00;
-//   TMR1IF_bit = 0;
-//   TMR1H = 0xFF;
-//   TMR1L = 0x80;
-//   TMR1IE_bit = 0;
-//   INTCON = 0xC0;
-// }
 
 /**
  * @brief init_io
@@ -226,24 +200,14 @@ void main(){
 
   init_io(); // Initialisation des I/O
   init_i2c(); // Initialisation de l'I2C en esclave
-  init_timer0(); // Initialisation du TIMER0 toutes les 20 ms
   init_timer1(); // Initialisation du TIMER1 toutes les 1us
-  //init_timer2(); // Initialisation du TIMER2 toutes les 1us
-  //init_timer3(); // Initialisation du TIMER3 toutes les 1us
 
-  //UART1_Init(115200);
+  UART1_Init(115200);
   LATC = 0;
 
-  LED = 1
-  delay_ms(1000);
+  TMR1IE_bit = 1;
 
-  TMR0IE_bit = 1;
-  // TMR1IE_bit = 1;
-  //TMR2IE_bit = 1;
-  //TMR3IE_bit = 1;
-
-  TMR0ON_bit = 1; // Start TIMER0
-  // TMR1ON_bit = 1; // Start TIMER1
+  TMR1ON_bit = 1; // Start TIMER1
 
   INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
   //priority interrupt source
@@ -256,8 +220,12 @@ void main(){
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
+  LED = 1;
+  delay_ms(2000);
+
+
   while(1){
-    if(cmd_motor_1 != 150 || cmd_motor_2 != 150 || cmd_motor_3 != 150)
+    if(cmd_motor[0] != 150 || cmd_motor[1] != 150 || cmd_motor[2] != 150)
       LED = 1;
     else
       LED = 0;
@@ -291,11 +259,12 @@ void interrupt_low(){
                 }
                 else{
                      nb_tx_octet = 0;
-                     nb_rx_octet = 0;
                 }
             }
             else{ // At the end of the communication
-                i2c_read_data_from_buffer();
+                if(nb_rx_octet>0)
+                    i2c_read_data_from_buffer();
+                nb_rx_octet = 0;
             }
             tmp_rx = SSPBUF;
         }
@@ -310,49 +279,52 @@ void interrupt_low(){
 
 /**
  * @brief interrupt
- * Fonction de gestion des interruptions:
- * interruption sur TIMER3 interruptions tous les 100ms pour visu STATE0(tous les 500ms)
- * interruption sur le bus I2C
  */
 void interrupt(){
   /// ************************************************** //
   /// ********************** TIMERS  ******************* //
 
   // Interruption TIMER1 toutes les 10us
-  if (TMR0IF_bit){
+  if (TMR1IF_bit){
 
     if(cpt_global==0){
-      MOT1 = 0;
-      MOT2 = 0;
-      MOT3 = 0;
+      MOT1 = 1;
+      MOT2 = 1;
+      MOT3 = 1;
       cpt_global = cmd_global;
 
-      cpt_motor_1 = cmd_motor_1;
-      cpt_motor_2 = cmd_motor_2;
-      cpt_motor_3 = cmd_motor_3;
+      cpt_motor_1 = cmd_motor[0];
+      cpt_motor_2 = cmd_motor[1];
+      cpt_motor_3 = cmd_motor[2];
+
     }
+
     else{
       cpt_global--;
 
       // MOT 1
-      if(cpt_motor_1==0)
-        MOT1 = 1;
-      else
-        cpt_motor_1--;
-      
-      // MOT 2
-      if(cpt_motor_2==0)
-        MOT2 = 1;
-      else
-        cpt_motor_2--;
+    if(cpt_motor_1==0)
+      MOT1 = 0;
+    else
+      cpt_motor_1--;
 
-      // MOT 3
-      if(cpt_motor_3==0)
-        MOT3 = 1;
-      else
-        cpt_motor_3--;
+    // MOT 2
+    if(cpt_motor_2==0)
+      MOT2 = 0;
+    else
+      cpt_motor_2--;
+
+    // MOT 3
+    if(cpt_motor_3==0)
+      MOT3 = 0;
+    else
+      cpt_motor_3--;
+
     }
 
-    TMR0IF_bit = 0;
+    TMR1H = 255;
+    TMR1L = 136;
+    TMR1IF_bit = 0;
   }
+
 }

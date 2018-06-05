@@ -483,11 +483,12 @@ void interrupt_low(){
                 }
                 else{
                      nb_tx_octet = 0;
-                     nb_rx_octet = 0;
                 }
             }
             else{ // At the end of the communication
-                i2c_read_data_from_buffer();
+                if(nb_rx_octet>0)
+                    i2c_read_data_from_buffer();
+                nb_rx_octet = 0;
             }
             tmp_rx = SSPBUF;
         }

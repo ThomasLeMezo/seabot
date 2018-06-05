@@ -516,13 +516,14 @@ void interrupt_low(){
                 }
                 else{
                      nb_tx_octet = 0;
-                     nb_rx_octet = 0;
                 }
             }
             else{ // At the end of the communication
-                i2c_read_data_from_buffer();
+                if(nb_rx_octet>0)
+                    i2c_read_data_from_buffer();
+                nb_rx_octet = 0;
             }
-            j = SSPBUF;
+            tmp_rx = SSPBUF;
         }
 
         PIR1.SSPIF = 0; // reset SSP interrupt flag
