@@ -7,10 +7,10 @@ from piston_driver.srv import *
 def talker():
     rospy.init_node('up_down_piston_node', anonymous=True)
 
-    rospy.wait_for_service('piston/position')
-    rospy.wait_for_service('piston/start')
-    piston_position = rospy.ServiceProxy('piston/position', PistonPosition)
-    start_piston = rospy.ServiceProxy('piston/start', SetBool)
+    rospy.wait_for_service('/driver/piston/position')
+    rospy.wait_for_service('/driver/piston/start')
+    piston_position = rospy.ServiceProxy('/driver/piston/position', PistonPosition)
+    start_piston = rospy.ServiceProxy('/driver/piston/start', SetBool)
 
     delta_time = rospy.get_param('~delta_time', 180.0)
     sleep_time = rospy.Duration(delta_time)
