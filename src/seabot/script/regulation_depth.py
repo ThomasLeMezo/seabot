@@ -70,8 +70,8 @@ def regulation_node():
     piston_position_set_point = rospy.ServiceProxy('piston/position', PistonPosition)
     start_piston = rospy.ServiceProxy('piston/start', SetBool)
 
-    freq = rospy.get_param('frequency', 0.1)
-    rate = rospy.Rate(freq)
+    delta_time = rospy.get_param('~delta_time', 30.0)
+    sleep_time = rospy.Duration(delta_time)
 
     # Start the piston
     try:
@@ -104,7 +104,7 @@ def regulation_node():
         except rospy.ServiceException, e:
             rospy.logwarn("[Up and Down] Fail to call Piston set point");
 
-        rate.sleep()
+        rospy.sleep(sleep_time)
 
 if __name__ == '__main__':
     try:

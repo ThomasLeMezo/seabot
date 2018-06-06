@@ -13,7 +13,7 @@ using namespace std;
 float linear_velocity = 0.0;
 float angular_velocity = 0.0;
 bool state_idle = false;
-float K = 10;
+float K = 15;
 
 Thruster t;
 
