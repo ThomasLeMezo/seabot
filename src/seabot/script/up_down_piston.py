@@ -17,7 +17,7 @@ def talker():
 
     # Start the piston
     try:
-        resp1 = start_piston(true)
+        resp1 = start_piston(True)
     except rospy.ServiceException, e:
         rospy.logwarn("[Up and Down] Fail to call Piston start");
 

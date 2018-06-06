@@ -73,6 +73,8 @@ def regulation_node():
     delta_time = rospy.get_param('~delta_time', 30.0)
     sleep_time = rospy.Duration(delta_time)
 
+    time_start = rospy.Time()
+
     # Start the piston
     try:
         resp1 = start_piston(true)
@@ -98,6 +100,9 @@ def regulation_node():
             target_position_offset = 0
         if(target_position_offset>1200):
             target_position_offset = 1200
+
+        if((rospy.Time.now() - time_start).to_sec() > 600):
+            target_position_offset = 0
 
         try:
             resp = piston_position_set_point(target_position_offset)
