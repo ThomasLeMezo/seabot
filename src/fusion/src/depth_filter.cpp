@@ -52,7 +52,7 @@ int main(int argc, char *argv[]){
   ros::ServiceServer service_reset_zero_depth = n.advertiseService("zero_depth", handle_zero_depth);
 
   // Subscriber
-  ros::Subscriber pressure_sub = n.subscribe("/sensor_external", 1, pressure_callback);
+  ros::Subscriber pressure_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
 
   // Publisher
   ros::Publisher depth_pub = n.advertise<fusion::DepthPose>("depth", 1);

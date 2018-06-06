@@ -64,7 +64,7 @@ def handle_depth_set_point(req):
 def regulation_node():
     rospy.init_node('regulation_depth_node', anonymous=True)
 
-    sub_piston = rospy.Subscriber("/piston/state", PistonState, callback_piston, queue_size=1)
+    sub_piston = rospy.Subscriber("/driver//piston/state", PistonState, callback_piston, queue_size=1)
     sub_pressure = rospy.Subscriber("/fusion/depth", DepthPose, callback_fusionu_depth ,queue_size=1)
     pub_debug = rospy.Publisher("regulation", RegulationDebug, queue_size=1)
 
@@ -72,10 +72,10 @@ def regulation_node():
     ser_depth_set_point = rospy.Service('depth_set_point', DepthPoint, handle_depth_set_point)
 
 
-    rospy.wait_for_service('piston/position')
-    rospy.wait_for_service('piston/start')
-    piston_position_set_point = rospy.ServiceProxy('piston/position', PistonPosition)
-    start_piston = rospy.ServiceProxy('piston/start', SetBool)
+    rospy.wait_for_service('/driver/piston/position')
+    rospy.wait_for_service('/driver/piston/start')
+    piston_position_set_point = rospy.ServiceProxy('/driver/piston/position', PistonPosition)
+    start_piston = rospy.ServiceProxy('/driver/piston/start', SetBool)
 
     delta_time = rospy.get_param('~delta_time', 30.0)
     sleep_time = rospy.Duration(delta_time)
