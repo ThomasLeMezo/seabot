@@ -44,13 +44,13 @@ int Pressure_89BSD::reset(){
 
 int Pressure_89BSD::i2c_open(){
     if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-        ROS_WARN("Failed to open the I2C bus (%s)", m_i2c_periph);
-        return 1;
+        ROS_WARN("[Pressure_89BSD] Failed to open the I2C bus (%s)", m_i2c_periph);
+        exit(1);
     }
 
     if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-        ROS_WARN("Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
-        return 1;
+        ROS_WARN("[Pressure_89BSD] Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
+        exit(1);
     }
     return 0;
 }

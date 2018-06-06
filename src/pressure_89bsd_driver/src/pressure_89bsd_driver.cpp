@@ -4,7 +4,7 @@
 
 #include <ros/ros.h>
 
-#include <pressure_89bsd_driver/bsdData.h>
+#include <pressure_89bsd_driver/PressureBsdData.h>
 
 using namespace std;
 
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
     double frequency = n_private.param<double>("frequency", 5.0);
 
     // Publishers
-    ros::Publisher pub = n.advertise<pressure_89bsd_driver::bsdData>("sensor_external", 1);
+    ros::Publisher pub = n.advertise<pressure_89bsd_driver::PressureBsdData>("sensor_external", 1);
 
     // Sensor initialization
     Pressure_89BSD p1;
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
     p1.init_sensor();
 
     // Loop with sensor reading
-    pressure_89bsd_driver::bsdData msg;
+    pressure_89bsd_driver::PressureBsdData msg;
 
     ros::Rate loop_rate(frequency);
     while (ros::ok()){

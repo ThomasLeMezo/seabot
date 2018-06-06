@@ -12,12 +12,12 @@ Power::~Power(){
 
 int Power::i2c_open(){
     if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-        ROS_WARN("Failed to open the I2C bus");
+        ROS_WARN("[Power_driver] Failed to open the I2C bus (%s)", m_i2c_periph);
         exit(1);
     }
 
     if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-        ROS_WARN("Failed to acquire bus access and/or talk to slave");
+        ROS_WARN("[Power_driver] Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
         exit(1);
     }
     return 0;
@@ -37,7 +37,7 @@ void Power::enable_led(bool val) const{
 void Power::measure_battery(){
     uint8_t buff[8];
     if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 8,buff) != 8){
-        ROS_WARN("[Piston_driver] I2C Bus Failure");
+        ROS_WARN("[Power_driver] I2C Bus Failure");
     }
 
     m_level_battery[0] = (buff[0] | buff[1] << 8) * ADC_BATTERY_LEVEL_CONV;
