@@ -64,7 +64,7 @@ def handle_depth_set_point(req):
 def regulation_node():
     rospy.init_node('regulation_depth_node', anonymous=True)
 
-    sub_piston = rospy.Subscriber("/driver//piston/state", PistonState, callback_piston, queue_size=1)
+    sub_piston = rospy.Subscriber("/driver/piston/state", PistonState, callback_piston, queue_size=1)
     sub_pressure = rospy.Subscriber("/fusion/depth", DepthPose, callback_fusionu_depth ,queue_size=1)
     pub_debug = rospy.Publisher("regulation", RegulationDebug, queue_size=1)
 
