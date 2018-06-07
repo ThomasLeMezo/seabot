@@ -55,6 +55,7 @@ def callback_piston(data):
     piston_position = data.position
 
 def handle_depth_set_point(req):
+    global depth_set_point
     depth_set_point = req.depth
     return DepthPointResponse()
 
@@ -69,11 +70,13 @@ def regulation_node():
 
     rospy.wait_for_service('/driver/piston/position')
     rospy.wait_for_service('/driver/piston/start')
+    rospy.wait_for_service('/fusion/zero_depth')
     piston_position_set_point = rospy.ServiceProxy('/driver/piston/position', PistonPosition)
     start_piston = rospy.ServiceProxy('/driver/piston/start', SetBool)
+    fusion_zero_depth = rospy.ServiceProxy('fusion/zero_depth', Empty)
 
     delta_time = rospy.get_param('~delta_time', 1.0)
-    sleep_time = rospy.Duration(delta_time)
+    sleep_time = rospy.Duration(1.0)
 
     time_start = rospy.Time().now()
 
@@ -82,6 +85,12 @@ def regulation_node():
         resp1 = start_piston(True)
     except rospy.ServiceException, e:
         rospy.logwarn("[Depth Regulation] Fail to call Piston start");
+
+    try:
+        resp2 = fusion_zero_depth()
+    except rospy.ServiceException, e:
+        rospy.logwarn("[Depth Regulation] Fail to call Fusion Zero");
+
 
     target_position = 0
     while not rospy.is_shutdown():
@@ -94,13 +103,16 @@ def regulation_node():
         else:
             K = 50.0
 
-        target_position += (0.00001/tick_to_volume)*(-coeff_acc_drone - coeff_V_piston*V_piston - coeff_Frottement*velocity*abs(velocity) + K*velocity + (depth - depth_set_point))
+        target_position_tmp = target_position
+        target_position += (0.00000001/tick_to_volume)*(-coeff_acc_drone - coeff_V_piston*V_piston - coeff_Frottement*velocity*abs(velocity) + K*velocity + 100*(depth_set_point - depth))
 
         target_position_offset = round(target_position + offset_piston)
         if(target_position_offset<0):
             target_position_offset = 0
+            target_position = target_position_tmp
         if(target_position_offset>1200):
             target_position_offset = 1200
+            target_position = target_position_tmp
 
         if((rospy.Time.now() - time_start).to_sec() > 600):
             target_position_offset = 0
