@@ -52,7 +52,7 @@ bool piston_start(std_srvs::SetBool::Request  &req,
 
 bool piston_speed(piston_driver::PistonSpeed::Request  &req,
                   piston_driver::PistonSpeed::Response &res){
-  p.set_piston_speed(req.speed);
+  p.set_piston_speed(req.speed_in, req.speed_out);
   return true;
 }
 
@@ -87,13 +87,13 @@ int main(int argc, char *argv[]){
   double frequency = n_private.param<double>("frequency", 5.0);
 
   // Service (ON/OFF)
-  ros::ServiceServer service_enable = n.advertiseService("enable", piston_enable);
-  ros::ServiceServer service_start = n.advertiseService("start", piston_start);
-  ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
-  ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
 
   ros::ServiceServer service_piston = n.advertiseService("position", piston_position);
+  ros::ServiceServer service_start = n.advertiseService("start", piston_start);
+  ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
 
+  ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
+  ros::ServiceServer service_enable = n.advertiseService("enable", piston_enable);
   ros::ServiceServer service_emergency = n.advertiseService("emergency", piston_emergency);
 
   // Publisher
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]){
   while (ros::ok()){
     ros::spinOnce();
 
-    p.update_piston_all_data();
+    p.get_piston_all_data();
     state_msg.header.stamp = ros::Time::now();
     state_msg.position = p.m_position;
     state_msg.switch_out = p.m_switch_out;

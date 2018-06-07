@@ -93,10 +93,11 @@ void print_sensor_mode(struct bme280_dev &dev){
 }
 
 void pressure_diagnostic(diagnostic_updater::DiagnosticStatusWrapper &stat){
-  if(comp_data.pressure>800){
+  double val = m_pressure/(273.15+m_temperature);
+  if(val>2.7){ // => threshold at 800/(22+273.15)
     stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "High Pressure detected %f", m_pressure);
   }
-  else if(comp_data.pressure<600){
+  else if(m_pressure<600){
     stat.summaryf(diagnostic_msgs::DiagnosticStatus::WARN, "Low Pressure detected %f", m_pressure);
   }
   else{
@@ -120,7 +121,7 @@ int main(int argc, char *argv[])
     double max_freq = 5;
     diagnostic_updater::HeaderlessTopicDiagnostic pub1_freq("sensor_internal", updater,
         diagnostic_updater::FrequencyStatusParam(&min_freq, &max_freq, 0.1, 10));
-    updater.add("Internal Pressure Analysis", pressure_diagnostic);
+    updater.add("pressure_internal", pressure_diagnostic);
 
     // Parameters
     ros::NodeHandle n_private("~");

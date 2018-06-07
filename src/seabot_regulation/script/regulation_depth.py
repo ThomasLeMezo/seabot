@@ -39,7 +39,7 @@ depth = 0
 
 ### Piston
 piston_position = 0
-offset_piston = 1000
+offset_piston = 1130
 
 ### Asservissement
 K = 50.0

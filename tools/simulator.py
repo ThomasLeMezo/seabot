@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
 
 g = 9.81
-rho_eau = 1025.0 # kg/m3
+rho_eau = 1000.0 # kg/m3
 
 R_tube = 0.110/2.0
-L_tube = 0.65
-V = (R_tube**2)*pi * L_tube
+L_tube = 0.70
+V = (R_tube**2)*pi * L_tube + (0.03/2.0)**2*pi*0.30 # Antenna
 Cx=1.0
 S_Cx=(R_tube**2)*pi
 
@@ -18,7 +18,7 @@ S_piston = ((0.05/2.0)**2)*pi
 V_piston_max = 200 * tick_to_volume
 
 #################################################
-offset = -(40-61) * tick_to_volume
+offset = -(0) * tick_to_volume
 
 #################################################
 
@@ -47,7 +47,8 @@ def control(d0, d, ddot, V_piston):
 	 	K = 1000.0
 	return 0.000001*(-(g-g*((V_estime+V_piston)*rho_eau/m)-0.5*Cx*S_Cx*ddot*abs(ddot)*rho_eau/m)+K*ddot+(d-d0))
 
-x = np.zeros(3)
+# x = np.zeros(3)
+x = np.array([0.0, 0.0, 0.0])
 
 result_x = []
 result_u = []
@@ -55,13 +56,13 @@ result_t = []
 
 result_file = []
 
-d0 = 2.0
+d0 = 0.75
 
 dt=0.05
 t=0
 u=0
-delta_t_regulation = 30 # sec
-time_simulation = 60*60 # sec
+delta_t_regulation = 1 # sec
+time_simulation = 30 # sec
 
 for k in range(0, int(time_simulation/dt)):
 	t+=dt

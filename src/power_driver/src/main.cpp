@@ -7,6 +7,9 @@
 #include "power_driver/Battery.h"
 
 #include <std_srvs/SetBool.h>
+#include <std_srvs/Empty.h>
+#include "power_driver/FlashSpeed.h"
+#include "power_driver/SleepModeParam.h"
 
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/publisher.h>
@@ -18,10 +21,28 @@ using namespace std;
 
 Power p;
 
-bool led_enable(std_srvs::SetBool::Request  &req,
+bool flash_enable(std_srvs::SetBool::Request  &req,
          std_srvs::SetBool::Response &res){
-  p.enable_led(req.data);
+  p.set_flash_led(req.data);
   res.success = true;
+  return true;
+}
+
+bool flash_period(power_driver::FlashSpeed::Request  &req,
+         power_driver::FlashSpeed::Response &res){
+  p.set_flash_led_delay(req.period);
+  return true;
+}
+
+bool sleep_mode(std_srvs::Empty::Request  &req,
+         std_srvs::Empty::Response &res){
+  p.set_sleep_mode();
+  return true;
+}
+
+bool sleep_mode_param(power_driver::SleepModeParam::Request  &req,
+         power_driver::SleepModeParam::Response &res){
+  p.set_sleep_mode_countdown(req.hours, req.min, req.sec, req.sec_to_sleep);
   return true;
 }
 
@@ -45,10 +66,8 @@ void power_diagnostic(diagnostic_updater::DiagnosticStatusWrapper &stat, size_t 
   stat.add("Battery Level", val);
 }
 
-int main(int argc, char *argv[])
-{
-
-  ros::init(argc, argv, "thrusters");
+int main(int argc, char *argv[]){
+  ros::init(argc, argv, "power_node");
   ros::NodeHandle n;
 
   // Diagnostics
@@ -81,11 +100,14 @@ int main(int argc, char *argv[])
   power_driver::Battery battery_msg;
 
   // Service (ON/OFF)
-  ros::ServiceServer service_led = n.advertiseService("led_enable", led_enable);
+  ros::ServiceServer service_flash = n.advertiseService("flash_led", flash_enable);
+  ros::ServiceServer service_flash_period = n.advertiseService("flash_led_period", flash_period);
+  ros::ServiceServer service_sleep_mode = n.advertiseService("sleep_mode", sleep_mode);
+  ros::ServiceServer service_sleep_mode_param = n.advertiseService("sleep_mode_param", sleep_mode_param);
 
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
-    p.measure_battery();
+    p.get_batteries();
 
     battery_msg.battery1 = p.get_level_battery(0);
     battery_msg.battery2 = p.get_level_battery(1);

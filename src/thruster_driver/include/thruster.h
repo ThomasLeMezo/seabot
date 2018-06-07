@@ -33,7 +33,6 @@ private:
   const char* m_i2c_periph = "/dev/i2c-1";
 };
 
-
 // Max values
 //Stopped         1500 microseconds
 //Max forward     1900 microseconds

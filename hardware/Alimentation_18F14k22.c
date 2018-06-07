@@ -101,9 +101,6 @@ void i2c_read_data_from_buffer(){
   switch(rxbuffer_tab[0]){
   case 0x00:  // alimentation
     switch(rxbuffer_tab[1]){
-    case 0x00:
-      state = IDLE;
-      break;
     case 0x01:
       state = POWER_ON;
       break;

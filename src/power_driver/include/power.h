@@ -35,9 +35,37 @@ public:
    * @brief enable_led
    * @param val
    */
-  void enable_led(bool val) const;
+  void set_flash_led(const bool &val) const;
 
-  void measure_battery();
+  /**
+   * @brief set_flash_led_delay
+   * @param dt in 0.1 s (20 = 2s)
+   */
+  void set_flash_led_delay(const unsigned char &dt) const;
+
+  /**
+   * @brief set_sleep_mode
+   */
+  void set_sleep_mode() const;
+
+  /**
+   * @brief stop_sleep_mode
+   */
+  void stop_sleep_mode() const;
+
+  /**
+   * @brief set_sleep_mode_countdown
+   * @param hours
+   * @param min
+   * @param sec
+   * @param sec_to_stop
+   */
+  void set_sleep_mode_countdown(const unsigned char &hours, const unsigned char &min, const unsigned char &sec, const unsigned char &sec_to_stop=60) const;
+
+  /**
+   * @brief measure_battery
+   */
+  void get_batteries();
 
   const float &get_level_battery(size_t id) const;
 

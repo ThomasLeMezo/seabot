@@ -12,8 +12,10 @@
 using namespace std;
 float linear_velocity = 0.0;
 float angular_velocity = 0.0;
-bool state_idle = false;
-float K = 15;
+bool state_idle = true;
+
+unsigned short int max_cmd = 190;
+unsigned short int min_cmd = 110;
 
 Thruster t;
 
@@ -31,14 +33,14 @@ bool engine_enable(std_srvs::SetBool::Request  &req,
   return true;
 }
 
-int main(int argc, char *argv[])
-{
-  ros::init(argc, argv, "thrusters");
+int main(int argc, char *argv[]){
+  ros::init(argc, argv, "thruster_node");
   ros::NodeHandle n;
 
   // Parameters
   ros::NodeHandle n_private("~");
-  double frequency = n_private.param<double>("frequency", 20.0);
+  double frequency = n_private.param<double>("frequency", 10.0);
+  float coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 15);
 
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);
@@ -58,15 +60,20 @@ int main(int argc, char *argv[])
     ros::spinOnce();
 
     if(!state_idle){
-
       float u_left = linear_velocity + angular_velocity;
       float u_right = linear_velocity - angular_velocity;
-      float n = max((float)1.0, max(u_left, u_right));
-      u_left /=n;
-      u_right /=n;
 
-      unsigned short int cmd_left = u_left*K + MOTOR_PWM_STOP;
-      unsigned short int cmd_right = u_right*K + MOTOR_PWM_STOP;
+      unsigned short int cmd_left = u_left*coeff_cmd_to_pwm + MOTOR_PWM_STOP;
+      unsigned short int cmd_right = u_right*coeff_cmd_to_pwm + MOTOR_PWM_STOP;
+
+      if(cmd_left>max_cmd)
+        cmd_left = max_cmd;
+      if(cmd_left<min_cmd)
+        cmd_left = min_cmd;
+      if(cmd_right>max_cmd)
+        cmd_right = max_cmd;
+      if(cmd_right<min_cmd)
+        cmd_right = min_cmd;
 
       t.write_cmd(cmd_left, cmd_right);
 

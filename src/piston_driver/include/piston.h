@@ -16,7 +16,8 @@
 #include <ros/ros.h>
 
 #define I2C_PISTON_MOVE 0xFE
-#define I2C_PISTON_SPEED 0xAB
+#define I2C_PISTON_SPEED_IN 0xAB
+#define I2C_PISTON_SPEED_OUT 0xAC
 #define I2C_PISTON_CMD 0xEE
 #define I2C_PISTON_BLANK_VALUE 0xAA
 
@@ -47,28 +48,66 @@
 class Piston
 {
 public:
+  /**
+   * @brief Piston
+   */
   Piston();
+
+  /**
+   * @brief Piston
+   */
   ~Piston();
 
+  /**
+   * @brief i2c_open
+   * @return
+   */
   int i2c_open();
 
-  uint32_t set_piston_start() const;
-  uint32_t set_piston_stop() const;
-  uint32_t set_piston_speed(const uint16_t &speed) const;
-  uint32_t set_piston_position(const uint16_t &position) const;
-  uint32_t set_piston_enable(const bool &val) const;
-  uint32_t set_piston_reset() const;
+  /**
+   * @brief set_piston_start
+   */
+  void set_piston_start() const;
 
-//  const uint16_t& get_piston_position();
-//  const bool& get_piston_switch_out();
-//  const bool& get_piston_switch_in();
-//  const uint16_t& get_piston_state();
-//  const bool& get_piston_system_on();
-//  const bool& get_piston_motor_on();
-//  const bool& get_piston_enable_on();
-//  const uint16_t& get_piston_position_set_point();
+  /**
+   * @brief set_piston_stop
+   */
+  void set_piston_stop() const;
+
+  /**
+   * @brief set_piston_speed
+   * @param speed_in
+   * @param speed_out
+   */
+  void set_piston_speed(const uint16_t &speed_in, const uint16_t &speed_out) const;
+
+  /**
+   * @brief set_piston_position
+   * @param position
+   */
+  void set_piston_position(const uint16_t &position) const;
+
+  /**
+   * @brief set_piston_enable
+   * @param val
+   */
+  void set_piston_enable(const bool &val) const;
+
+  /**
+   * @brief set_piston_reset
+   */
+  void set_piston_reset() const;
+
+  /**
+   * @brief update_piston_all_data
+   */
   void update_piston_all_data();
 
+  /**
+   * @brief write_cmd
+   * @param left
+   * @param right
+   */
   void write_cmd(const unsigned short &left, const unsigned short &right) const;
 
 public:
