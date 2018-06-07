@@ -25,7 +25,7 @@
 	</group>
 	
 	<node name="depth_filter_node" pkg="fusion" type="depth_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-	  	<param name="delta_time" value="5" />
+        <param name="delta_time" value="1" />
 	  	<param name="pressure_to_depth" value="10.0" />
 	  	<param name="filter_size" value="3" />
 	  	<param name="velocity_delta_size" value="5" />

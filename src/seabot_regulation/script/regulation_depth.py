@@ -54,9 +54,6 @@ def callback_fusionu_depth(data):
 def callback_piston(data):
     piston_position = data.position
 
-def handle_zero_pressure(req):
-    return EmptyResponse()
-
 def handle_depth_set_point(req):
     depth_set_point = req.depth
     return DepthPointResponse()
@@ -68,9 +65,7 @@ def regulation_node():
     sub_pressure = rospy.Subscriber("/fusion/depth", DepthPose, callback_fusionu_depth ,queue_size=1)
     pub_debug = rospy.Publisher("regulation", RegulationDebug, queue_size=1)
 
-    ser_zero_pressure = rospy.Service('zero_pressure', Empty, handle_zero_pressure)
     ser_depth_set_point = rospy.Service('depth_set_point', DepthPoint, handle_depth_set_point)
-
 
     rospy.wait_for_service('/driver/piston/position')
     rospy.wait_for_service('/driver/piston/start')
