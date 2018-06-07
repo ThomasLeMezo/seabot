@@ -15,6 +15,7 @@ find_package(catkin REQUIRED
   std_msgs
   std_srvs
   message_generation
+  pressure_89bsd_driver
 )
 
 ## System dependencies are found with CMake's conventions
