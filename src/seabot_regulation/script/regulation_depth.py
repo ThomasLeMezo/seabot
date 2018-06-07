@@ -77,7 +77,7 @@ def regulation_node():
     piston_position_set_point = rospy.ServiceProxy('/driver/piston/position', PistonPosition)
     start_piston = rospy.ServiceProxy('/driver/piston/start', SetBool)
 
-    delta_time = rospy.get_param('~delta_time', 2.0)
+    delta_time = rospy.get_param('~delta_time', 1.0)
     sleep_time = rospy.Duration(delta_time)
 
     time_start = rospy.Time().now()
