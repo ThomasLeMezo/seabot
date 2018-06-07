@@ -14,6 +14,10 @@
 		<param name="frequency" value="5.0" />
 	</node>
 
+    <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="piston">
+      <param name="frequency" value="15" />
+    </node>
+
 	<node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true">
 		<param name="frequency" value="5.0" />
 	</node>

@@ -18,6 +18,10 @@
 		<param name="frequency" value="5.0" />
 	</node>
 
+    <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="piston">
+      <param name="frequency" value="15" />
+    </node>
+
 	<node name="up_down_piston_node" pkg="seabot_regulation" type="up_down_piston.py" output="screen" respawn="true">
         <param name="delta_time" value="180.0" />
 	</node>
