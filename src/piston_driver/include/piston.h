@@ -101,7 +101,7 @@ public:
   /**
    * @brief update_piston_all_data
    */
-  void update_piston_all_data();
+  void get_piston_all_data();
 
   /**
    * @brief write_cmd

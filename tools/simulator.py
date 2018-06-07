@@ -10,7 +10,7 @@ rho_eau = 1000.0 # kg/m3
 R_tube = 0.110/2.0
 L_tube = 0.70
 V = (R_tube**2)*pi * L_tube + (0.03/2.0)**2*pi*0.30 # Antenna
-Cx=1.0
+Cx=0.1
 S_Cx=(R_tube**2)*pi
 
 S_piston = ((0.05/2.0)**2)*pi
