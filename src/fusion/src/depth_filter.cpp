@@ -25,7 +25,8 @@ ros::Time time_pressure;
 
 bool handle_zero_depth(std_srvs::Empty::Request  &req,
                        std_srvs::Empty::Response &res){
-  zero_depth = depth;
+    if(!pressure_deque.empty())
+        zero_depth = pressure_deque[pressure_deque.size()-1];
   return true;
 }
 

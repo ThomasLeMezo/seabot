@@ -19,9 +19,9 @@
 			<param name="frequency" value="5.0" />
 		</node>
 
-        <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
+<!--        <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
           <param name="frequency" value="15" />
-        </node>
+        </node>-->
 	</group>
 	
 	<node name="depth_filter_node" pkg="fusion" type="depth_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
