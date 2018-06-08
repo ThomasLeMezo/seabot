@@ -94,6 +94,12 @@ public:
   void set_piston_enable(const bool &val) const;
 
   /**
+   * @brief set_led_enable
+   * @param val
+   */
+  void set_led_enable(const bool &val) const;
+
+  /**
    * @brief set_piston_reset
    */
   void set_piston_reset() const;
