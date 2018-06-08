@@ -12,7 +12,9 @@ import yaml
 from math import*
 
 
-bag = rosbag.Bag('2018-06-16-07-11-18.bag', 'r')
+# bag = rosbag.Bag('2018-06-16-07-11-18.bag', 'r')
+bag = rosbag.Bag('2018-06-16-07-29-11.bag', 'r')
+
 print(bag)
 
 startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)

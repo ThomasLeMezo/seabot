@@ -117,7 +117,7 @@ public:
   void write_cmd(const unsigned short &left, const unsigned short &right) const;
 
 public:
-  unsigned float m_position = 0;
+  float m_position = 0;
   bool m_switch_out = false;
   bool m_switch_in = false;
   uint16_t m_state = 0;

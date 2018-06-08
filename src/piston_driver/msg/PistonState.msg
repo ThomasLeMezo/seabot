@@ -1,5 +1,5 @@
 std_msgs/Header header
-uint16 position
+float32 position
 bool switch_out
 bool switch_in
 uint16 state
