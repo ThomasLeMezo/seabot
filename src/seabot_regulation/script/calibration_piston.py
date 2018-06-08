@@ -103,9 +103,9 @@ def regulation_node():
     rospy.loginfo("[Calibration] 1.5m depth Reached")
 
     # Wait until depth stabilized to bottom
-    # set_flash(True)
+    set_flash(True)
     rospy.sleep(45.0)
-    # set_flash(False)
+    set_flash(False)
 
     # Save bottom depth
     bottom_depth = depth

@@ -59,74 +59,72 @@ unsigned short motor_speed_out = 50; // 2 octets
 unsigned short motor_current_speed = 127; // 2 octets
 
 // Regulation
-unsigned short new_position_set_point = 0;
 int position_set_point = 0;
 signed int error = 0;
 
 // State machine
-int system_on = 0;
+int system_on = 1;
 unsigned short motor_on = 1;
 enum robot_state {IDLE,RESET_OUT,REGULATION};
-unsigned char state = IDLE;
-unsigned char old_state = IDLE;
+unsigned char state = RESET_OUT;
 
 // I2C
-#define SIZE_RX_BUFFER 3
+#define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 
+// Watchdog
+unsigned short watchdog_restart = 60;
+unsigned short watchdog_restart_default = 60; // 3 s
+
 void i2c_read_data_from_buffer(){
-    switch(rxbuffer_tab[0]){
-        case 0xFE:  // consigne de postion
-            position_set_point = 4*((rxbuffer_tab[1] << 8) | rxbuffer_tab[2]);
-            new_position_set_point = 1;
-            break;
+    unsigned short i = 0;
+    unsigned short nb_data = nb_rx_octet-1;
 
-        case 0xAB:  // consigne de vitesse in
-            motor_speed_in = (rxbuffer_tab[1] << 8) | rxbuffer_tab[2];
-            break;
-        case 0xAC:  // consigne de vitesse out
-            motor_speed_out = (rxbuffer_tab[1] << 8) | rxbuffer_tab[2];
-            break;
+    for(i=0; i<nb_data; i++){
+        switch(rxbuffer_tab[0]+i){
+            case 0x00:
+                system_on = (rxbuffer_tab[i+1]!=0x00);
+                break;
+            case 0x01:
+                state = RESET_OUT;
+                break;
+            case 0x02:
+                motor_on = (rxbuffer_tab[i+1]!=0x00);
+                break;
+            case 0x03:
+                RC6_bit = (rxbuffer_tab[i+1]!=0x00);
+                break;
+            case 0x04:
+                LED1 = (rxbuffer_tab[i+1]!=0x00);
+                break;
 
-        case 0xEE:  // consigne de: marche,arret,mise en butee
-            switch (rxbuffer_tab[1]){
-                case 0:
-                    system_on = 0;
-                    break; // on arrete le systeme
-                case 1:
-                    system_on = 1;
-                    break; // on met en marche le systeme
-                case 2:
-                    state = RESET_OUT;
-                    break;
-                case 3:
-                    motor_on = 1;
-                    break;
-                case 4:
-                    motor_on = 0;
-                    break;
-                case 5:
-                    RC6_bit = 1;
-                    break;
-                case 6:
-                    RC6_bit = 0;
-                    break;
-                case 7:
-                    LED1 = 0;
-                    break;
-                case 8:
-                    LED1 = 1;
-                    break;
-                default:
-                    break;
-            }
-            break;
-        default:
-            break;
+            case 0x10:  // consigne de postion
+                if(nb_data >= i+2){
+                    position_set_point = 4*((rxbuffer_tab[i+1] << 8) | rxbuffer_tab[i+2]);
+                    i++;
+                }
+                break;
+
+            case 0x12:  // consigne de vitesse in
+                if(nb_data >= i+2){
+                    motor_speed_in = (rxbuffer_tab[i+1] << 8) | rxbuffer_tab[i+2];
+                    i++;
+                }
+                break;
+            case 0x14:  // consigne de vitesse out
+                if(nb_data >= i+2){
+                    motor_speed_out = (rxbuffer_tab[i+1] << 8) | rxbuffer_tab[i+1];
+                    i++;
+                }
+                break;
+            default:
+                break;
+        }
     }
+    watchdog_restart = watchdog_restart_default;
 }
 
 /**
@@ -269,6 +267,18 @@ void read_optical_fork(){
 }
 
 /**
+ * @brief init_timer0
+ * Fonction d'initialisation du TIMER0
+ * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
+ */
+void init_timer0(){
+  T0CON = 0x85; // TIMER0 ON (1 s)
+  TMR0H = 0x0B;
+  TMR0L = 0xDC;
+  TMR0IE_bit = 0;
+}
+
+/**
  * @brief initialisation de l'I2C en mode esclave
  */
 void init_i2C(){
@@ -331,13 +341,13 @@ void init_io(){
     RC6_bit = 0;
 }
 
-void debug_uart(){
-    if(state != old_state){
-        UART1_Write(255);
-        UART1_Write(state);
-        old_state = state;
-    }
-}
+// void debug_uart(){
+//     if(state != old_state){
+//         UART1_Write(255);
+//         UART1_Write(state);
+//         old_state = state;
+//     }
+// }
 
 /**
  * @brief main
@@ -348,6 +358,7 @@ void main(){
 
     init_io(); // Initialisation des I/O
     init_i2C(); // Initialisation de l'I2C en esclave
+    init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
 
     // Initialisation de l'entrée d'interruption INT0 pour la butée haute
     INTCON2.INTEDG0 = 0; // Interrupt on falling edge
@@ -378,6 +389,9 @@ void main(){
     INTCON.GIE = 1; // Global Interrupt Enable bit
     INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
+    TMR0IE_bit = 1;  //Enable TIMER0
+    TMR0ON_bit = 1; // Start TIMER1
+
     PWM1_Init(10000);  // Fréquence du PWM à 10Khz
     RC6_bit = 0;  //Disable L6203
     CCPR1 = 50; // Rapport cyclique à 50%
@@ -394,13 +408,13 @@ void main(){
         // State machine
         switch (state){
         case IDLE: // Idle state
-            debug_uart();
+            // debug_uart();
             if(system_on == 1)
                 state = RESET_OUT;
             break;
 
         case RESET_OUT:
-            debug_uart();
+            //debug_uart();
 
             if (system_on == 0){
                 state = IDLE;
@@ -419,18 +433,8 @@ void main(){
             break;
 
         case REGULATION:
-            debug_uart();
+            //debug_uart();
             read_optical_fork();
-
-            // New Position set point is given by the I2C bus
-            if (new_position_set_point == 1){
-                UART1_Write(255);
-                UART1_Write(255);
-                UART1_Write(rxbuffer_tab[1]);
-                UART1_Write(rxbuffer_tab[2]);
-                //position_set_point = 4*((rxbuffer_I2C_Octet2 << 8) | rxbuffer_I2C_Octet3);
-                new_position_set_point=0;
-            }
 
             // Regulation
             error = position_set_point - nb_pulse;
@@ -490,6 +494,19 @@ void interrupt(){
         }
         INTCON3.INT1IF = 0;
     }
+
+    if (TMR0IF_bit){
+        // Watchdog
+        if(watchdog_restart>0)
+          watchdog_restart--;  
+        else{
+          position_set_point;
+        }
+
+        TMR0H = 0x0B;
+        TMR0L = 0xDC;
+        TMR0IF_bit = 0;
+    }
 }
 
 /**
@@ -510,17 +527,20 @@ void interrupt_low(){
         else{ //****** recieve data from master ****** //
             if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
                 if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
-                    if(nb_rx_octet < SIZE_RX_BUFFER)
+                    if(nb_rx_octet < SIZE_RX_BUFFER){
                         rxbuffer_tab[nb_rx_octet] = SSPBUF;
-                    nb_rx_octet++;
+                        nb_rx_octet++;
+                    }
                 }
                 else{
                      nb_tx_octet = 0;
                 }
             }
             else{ // At the end of the communication
-                if(nb_rx_octet>0)
+                if(nb_rx_octet>1)
                     i2c_read_data_from_buffer();
+                else
+                  SSPBUF = 0x00;
                 nb_rx_octet = 0;
             }
             tmp_rx = SSPBUF;

@@ -51,7 +51,7 @@ sbit ALIM at LATA.B5; // sortie MOSFET de puissance, commande de l'alimentation
 
 // I2C
 #define ADDRESS_I2C 0x72;
-#define SIZE_RX_BUFFER 3
+#define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
@@ -82,10 +82,10 @@ unsigned short cpt_led = 100;
 unsigned short set_led_on = 0;
 
 // Sleep mode
-unsigned char time_to_start[3] = {1, 0, 0}; // hour, min, sec
+unsigned char time_to_start[3] = {0, 0, 5}; // hour, min, sec
 unsigned char time_to_stop = 60; // in sec (max 255 sec)
 
-unsigned char default_time_to_start[3] = {1, 0, 0};
+unsigned char default_time_to_start[3] = {0, 0, 5}; // hour, min, sec
 unsigned char default_time_to_stop = 60;
 
 unsigned short start_time_to_stop = 0;
@@ -94,49 +94,54 @@ unsigned short start_time_to_start = 0;
 
 unsigned short k = 0;
 
+// Watchdog
+unsigned short watchdog_restart = 3600; // 3600 s = 1 hour
+unsigned short watchdog_restart_default = 3600;
+
 /**
  * @brief i2c_read_data_from_buffer
  */
 void i2c_read_data_from_buffer(){
-  switch(rxbuffer_tab[0]){
-  case 0x00:  // alimentation
-    switch(rxbuffer_tab[1]){
-    case 0x01:
-      state = POWER_ON;
+  unsigned short i = 0;
+
+  for(i=0; i<nb_rx_octet-1; i++){
+    switch(rxbuffer_tab[0]+i){
+    case 0x00:  // alimentation
+      switch(rxbuffer_tab[i+1]){
+        case 0x01:
+          state = POWER_ON;
+          break;
+        case 0x02:
+          time_to_stop = default_time_to_stop;  // Go to Sleep mode
+          start_time_to_stop = 1;
+          state = WAIT_TO_SLEEP;
+          break;
+        default:
+          break;
+      }
+      break;
+    case 0x01:  // led power
+      start_led_puissance = (rxbuffer_tab[i+1]!=0x00);
+      LED_PUISSANCE = 0;
       break;
     case 0x02:
-      time_to_stop = default_time_to_stop;  // Go to Sleep mode
-      start_time_to_stop = 1;
-      state = WAIT_TO_SLEEP;
+      led_puissance_delay = rxbuffer_tab[i+1];
+      break;
+    case 0x03:
+      default_time_to_start[0] = rxbuffer_tab[i+1]; // hours
+      break;
+    case 0x04:
+      default_time_to_start[1] = rxbuffer_tab[i+1]; // min
+      break;
+    case 0x05:
+      default_time_to_start[2] = rxbuffer_tab[i+1]; // sec
+      break;
+    case 0x06:
+      default_time_to_stop = rxbuffer_tab[i+1]; // sec
       break;
     default:
       break;
     }
-    break;
-  case 0x01:  // led power
-    if(rxbuffer_tab[1] == 0)
-      start_led_puissance = 0;
-    else
-      start_led_puissance = 1;
-    LED_PUISSANCE = 0;
-    break;
-  case 0x02:
-    led_puissance_delay = rxbuffer_tab[1];
-    break;
-  case 0x03:
-    default_time_to_start[0] = rxbuffer_tab[1]; // hours
-    break;
-  case 0x04:
-    default_time_to_start[1] = rxbuffer_tab[1]; // min
-    break;
-  case 0x05:
-    default_time_to_start[2] = rxbuffer_tab[1]; // sec
-    break;
-  case 0x06:
-    default_time_to_stop = rxbuffer_tab[1]; // sec
-    break;
-  default:
-    break;
   }
 }
 
@@ -180,6 +185,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     SSPBUF = 0x00;
     break;
   }
+  watchdog_restart = watchdog_restart_default;
 }
 
 /**
@@ -248,7 +254,6 @@ void init_i2c(){
  * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
  */
 void init_timer0(){
-  //T0CON = 0x86; // TIMER0 ON time 2s
   T0CON = 0x85; // TIMER0 ON (1 s)
   TMR0H = 0x0B;
   TMR0L = 0xDC;
@@ -341,7 +346,7 @@ void main(){
 
   init_io(); // Initialisation des I/O
   init_i2c(); // Initialisation de l'I2C en esclave
-  init_timer0(); // Initialisation du TIMER0 toutes les 2 secondes
+  init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
   init_timer3(); // Initialisation du TIMER3 toutes les 100ms
 
   ADC_Init();
@@ -366,9 +371,10 @@ void main(){
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
   TMR0IE_bit = 1;  //Enable TIMER0
+  TMR0ON_bit = 1; // Start TIMER1
+  
   TMR3IE_bit = 1;  //Enable TIMER3
   TMR3ON_bit = 1; // Start TIMER3
-  TMR0ON_bit = 1; // Start TIMER1
 
   while(1){
     read_batteries_voltage();
@@ -474,17 +480,20 @@ void interrupt_low(){
         else{ //****** recieve data from master ****** //
             if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
                 if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
-                    if(nb_rx_octet < SIZE_RX_BUFFER)
+                    if(nb_rx_octet < SIZE_RX_BUFFER){
                         rxbuffer_tab[nb_rx_octet] = SSPBUF;
-                    nb_rx_octet++;
+                        nb_rx_octet++;
+                    }
                 }
                 else{
                      nb_tx_octet = 0;
                 }
             }
             else{ // At the end of the communication
-                if(nb_rx_octet>0)
+                if(nb_rx_octet>1)
                     i2c_read_data_from_buffer();
+                else
+                  SSPBUF = 0x00;
                 nb_rx_octet = 0;
             }
             tmp_rx = SSPBUF;
@@ -507,7 +516,7 @@ void interrupt(){
   /// ************************************************** //
   /// ********************** TIMERS  ******************* //
 
-  // Interruption du TIMER0 (1 s) (cpt to start/stop)
+  // Interruption du TIMER0 (1 s) (cpt to start/stop + Watchdog)
   if (TMR0IF_bit){
 
     // To Do
@@ -533,6 +542,14 @@ void interrupt(){
       if(time_to_stop>0)
         time_to_stop--;
     }
+
+    // Watchdog
+    if(watchdog_restart>0)
+      watchdog_restart--;  
+    else{
+      state = WAIT_TO_SLEEP;
+    }
+    
 
     TMR0H = 0x0B;
     TMR0L = 0xDC;

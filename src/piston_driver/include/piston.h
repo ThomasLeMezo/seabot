@@ -18,7 +18,7 @@
 #define I2C_PISTON_MOVE 0xFE
 #define I2C_PISTON_SPEED_IN 0xAB
 #define I2C_PISTON_SPEED_OUT 0xAC
-#define I2C_PISTON_CMD 0xEE
+#define I2C_PISTON_CMD 0x00
 #define I2C_PISTON_BLANK_VALUE 0xAA
 
 /*
@@ -117,7 +117,7 @@ public:
   void write_cmd(const unsigned short &left, const unsigned short &right) const;
 
 public:
-  uint16_t m_position = 0;
+  unsigned float m_position = 0;
   bool m_switch_out = false;
   bool m_switch_in = false;
   uint16_t m_state = 0;

@@ -67,7 +67,8 @@ sbit MOT3 at LATC.B2; // sorties de commande moteur 3
 sbit LED at LATA.B2; // sortie LED
 
 // Motor
-unsigned short cmd_motor[3] = {150, 150, 150};
+#define MOTOR_CMD_STOP 150
+unsigned short cmd_motor[3] = {MOTOR_CMD_STOP, MOTOR_CMD_STOP, MOTOR_CMD_STOP};
 unsigned int cmd_global = 2000;
 
 unsigned char cpt_motor_1 = 0;
@@ -83,24 +84,28 @@ unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 
+// Watchdog
+unsigned short watchdog_restart = 3;
+unsigned short watchdog_restart_default = 3; // 3 s
+
 /**
  * @brief i2c_read_data_from_buffer
  */
 void i2c_read_data_from_buffer(){
   unsigned short k=0;
   unsigned short nb_motor=0;
-  unsigned short offset = rxbuffer_tab[0];
 
   for(k=1; k<nb_rx_octet; k++){
-    nb_motor = offset+k-1;
+    nb_motor = rxbuffer_tab[0] + k - 1;
 
     if(nb_motor<3){
       if(rxbuffer_tab[k]>=110 && rxbuffer_tab[k]<=190)
         cmd_motor[nb_motor] = rxbuffer_tab[k];
       else
-        cmd_motor[nb_motor] = 150;
+        cmd_motor[nb_motor] = MOTOR_CMD_STOP;
     }
   }
+  watchdog_restart = watchdog_restart_default;
 }
 
 /**
@@ -108,17 +113,18 @@ void i2c_read_data_from_buffer(){
  * @param nb_tx_octet
  */
 void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
-  switch(rxbuffer_tab[0]+nb_tx_octet){
-  case 0x00:
-    SSPBUF = 0x00;
-    break;
-  case 0x01:
-    SSPBUF = 0x00;
-    break;
-  default:
-    SSPBUF = 0x00;
-    break;
-  }
+  SSPBUF = 0x00;
+  // switch(rxbuffer_tab[0]+nb_tx_octet){
+  // case 0x00:
+  //   SSPBUF = 0x00;
+  //   break;
+  // case 0x01:
+  //   SSPBUF = 0x00;
+  //   break;
+  // default:
+  //   SSPBUF = 0x00;
+  //   break;
+  // }
 }
 
 /**
@@ -145,6 +151,17 @@ void init_i2C(){
     PIR2.BCLIF = 0;
 }
 
+/**
+ * @brief init_timer0
+ * Fonction d'initialisation du TIMER0
+ * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
+ */
+void init_timer0(){
+  T0CON = 0x85; // TIMER0 ON (1 s)
+  TMR0H = 0x0B;
+  TMR0L = 0xDC;
+  TMR0IE_bit = 0;
+}
 
 /**
  * @brief init_timer1
@@ -200,13 +217,16 @@ void main(){
 
   init_io(); // Initialisation des I/O
   init_i2c(); // Initialisation de l'I2C en esclave
+  init_timer0(); // Initi TIMER0 toutes les 1s
   init_timer1(); // Initialisation du TIMER1 toutes les 1us
 
   UART1_Init(115200);
   LATC = 0;
 
+  TMR0IE_bit = 1; //Enable TIMER0
+  TMR0ON_bit = 1; // Start TIMER0
+  
   TMR1IE_bit = 1;
-
   TMR1ON_bit = 1; // Start TIMER1
 
   INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
@@ -225,7 +245,7 @@ void main(){
 
 
   while(1){
-    if(cmd_motor[0] != 150 || cmd_motor[1] != 150 || cmd_motor[2] != 150)
+    if(cmd_motor[0] != MOTOR_CMD_STOP || cmd_motor[1] != MOTOR_CMD_STOP || cmd_motor[2] != MOTOR_CMD_STOP)
       LED = 1;
     else
       LED = 0;
@@ -253,17 +273,20 @@ void interrupt_low(){
         else{ //****** recieve data from master ****** //
             if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
                 if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
-                    if(nb_rx_octet < SIZE_RX_BUFFER)
+                    if(nb_rx_octet < SIZE_RX_BUFFER){
                         rxbuffer_tab[nb_rx_octet] = SSPBUF;
-                    nb_rx_octet++;
+                        nb_rx_octet++;
+                    }
                 }
                 else{
                      nb_tx_octet = 0;
                 }
             }
             else{ // At the end of the communication
-                if(nb_rx_octet>0)
+                if(nb_rx_octet>1)
                     i2c_read_data_from_buffer();
+                else
+                  SSPBUF = 0x00;
                 nb_rx_octet = 0;
             }
             tmp_rx = SSPBUF;
@@ -325,6 +348,21 @@ void interrupt(){
     TMR1H = 255;
     TMR1L = 136;
     TMR1IF_bit = 0;
+  }
+
+  if (TMR0IF_bit){
+    // Watchdog
+    if(watchdog_restart>0)
+      watchdog_restart--;  
+    else{
+      cmd_motor[0] = MOTOR_CMD_STOP;
+      cmd_motor[1] = MOTOR_CMD_STOP;
+      cmd_motor[2] = MOTOR_CMD_STOP;
+    }
+
+    TMR0H = 0x0B;
+    TMR0L = 0xDC;
+    TMR0IF_bit = 0;
   }
 
 }

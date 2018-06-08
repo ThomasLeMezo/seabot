@@ -115,8 +115,8 @@ int main(int argc, char *argv[]){
     battery_msg.battery4 = p.get_level_battery(3);
     battery_msg.header.stamp = ros::Time::now();
     battery_pub.publish(battery_msg);
-    battery_pub_freq.tick();
 
+    battery_pub_freq.tick();
     updater.update();
     ros::spinOnce();
     loop_rate.sleep();

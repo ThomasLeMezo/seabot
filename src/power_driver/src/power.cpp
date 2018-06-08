@@ -22,14 +22,14 @@ int Power::i2c_open(){
 }
 
 void Power::set_sleep_mode_countdown(const unsigned char &hours, const unsigned char &min, const unsigned char &sec, const unsigned char &sec_to_stop) const{
-  if(i2c_smbus_write_word_data(m_file, 0x03, hours)<0)
-    ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown hours");
-  if(i2c_smbus_write_word_data(m_file, 0x04, min)<0)
-    ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown min");
-  if(i2c_smbus_write_word_data(m_file, 0x05, sec)<0)
-    ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown sec");
-  if(i2c_smbus_write_word_data(m_file, 0x06, sec_to_stop)<0)
-    ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown sec_to_stop");
+  uint8_t buff[4];
+  buff[0] = hours;
+  buff[1] = min;
+  buff[2] = sec;
+  buff[3] = sec_to_stop;
+
+  if(i2c_smbus_write_i2c_block_data(m_file, 0x03, 4,buff)!=4)
+    ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown");
 }
 
 void Power::set_flash_led_delay(const unsigned char &dt) const{
