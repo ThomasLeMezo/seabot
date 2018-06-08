@@ -14,12 +14,16 @@
 		<param name="frequency" value="5.0" />
 	</node>
 
-<!--    <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
+    <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
       <param name="frequency" value="15" />
-    </node>-->
+    </node>
 
 	<node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true">
 		<param name="frequency" value="5.0" />
 	</node>
+
+	<node pkg="diagnostic_aggregator" type="aggregator_node" name="diag_agg" >
+        <rosparam command="load" file="$(find seabot_regulation)/diagnostic/seabot_analyzers.yaml" />
+       </node>
 
 </launch>
