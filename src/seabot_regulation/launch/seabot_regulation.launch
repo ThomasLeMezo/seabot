@@ -1,43 +1,10 @@
 <launch>
 
-        <node pkg="rosbag" type="record" name="record" output="screen" args="--all" respawn="true" respawn_delay="5"/>
+    <include file="$(find seabot_regulation)/launch/seabot_base.launch"/>
 
-        <group ns="driver">
-                <node name="power_node" pkg="power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
-                        <param name="frequency" value="0.2" />
-                </node>
-
-                <node name="piston_node" pkg="piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
-                        <param name="frequency" value="1" />
-                </node>
-
-                <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
-                        <param name="frequency" value="5.0" />
-                </node>
-
-                <node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true" respawn_delay="5">
-                        <param name="frequency" value="5.0" />
-                </node>
-
-                <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
-                  <param name="frequency" value="15" />
-                </node>
-        </group>
-
-        <node name="depth_filter_node" pkg="fusion" type="depth_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-        <param name="delta_time" value="1" />
-                <param name="pressure_to_depth" value="10.0" />
-                <param name="filter_size" value="3" />
-                <param name="velocity_delta_size" value="5" />
-                <param name="delta_time_velocity" value="1.0" />
-        </node>
-
-        <node name="regulation_depth" pkg="seabot_regulation" type="regulation_depth.py" output="screen" ns="regulation" respawn="true" respawn_delay="5">
-            <param name="delta_time" value="30.0" />
-        </node>
-
-       <node pkg="diagnostic_aggregator" type="aggregator_node" name="diag_agg" >
-        <rosparam command="load" file="$(find seabot_regulation)/diagnostic/seabot_analyzers.yaml" />
-       </node>
+    <node name="regulation_depth" pkg="seabot_regulation" type="regulation_depth.py" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+        <param name="delta_time" value="30.0" />
+    </node>
 
 </launch>
+

@@ -1,0 +1,23 @@
+<launch>
+        <group ns="driver">
+                <node name="power_node" pkg="power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
+                        <param name="frequency" value="0.2" />
+                </node>
+
+                <node name="piston_node" pkg="piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
+                        <param name="frequency" value="1" />
+                </node>
+
+                <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
+                        <param name="frequency" value="5.0" />
+                </node>
+
+                <node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true" respawn_delay="5">
+                        <param name="frequency" value="5.0" />
+                </node>
+
+                <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
+                  <param name="frequency" value="15" />
+                </node>
+        </group>
+</launch>
