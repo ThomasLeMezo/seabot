@@ -12,11 +12,11 @@ import yaml
 from math import*
 
 
-bag = rosbag.Bag('2018-06-16-03-27-18.bag', 'r')
+bag = rosbag.Bag('2018-06-16-07-11-18.bag', 'r')
 print(bag)
 
-startTime = rospy.Time.from_sec(bag.get_start_time()) + rospy.Duration(600)
-end_time = startTime + rospy.Duration(100)
+startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
+end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
 
 time_piston = []
 position = []

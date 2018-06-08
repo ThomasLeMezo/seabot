@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
+#include <std_srvs/Trigger.h>
 
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <fusion/DepthPose.h>
@@ -23,11 +24,15 @@ size_t filter_size = 3;
 deque<double> pressure_deque;
 ros::Time time_pressure;
 
-bool handle_zero_depth(std_srvs::Empty::Request  &req,
-                       std_srvs::Empty::Response &res){
-    if(!pressure_deque.empty())
+bool handle_zero_depth(std_srvs::Trigger::Request  &req,
+                       std_srvs::Trigger::Response &res){
+    if(!pressure_deque.empty()){
         zero_depth = pressure_deque[pressure_deque.size()-1];
-  return true;
+        res.success = true;
+    }
+    else
+        res.success = false;
+    return true;
 }
 
 void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& msg){

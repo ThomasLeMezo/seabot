@@ -12,7 +12,7 @@
 using namespace std;
 float linear_velocity = 0.0;
 float angular_velocity = 0.0;
-bool state_idle = true;
+bool state_enable = true;
 
 unsigned short int max_cmd = 190;
 unsigned short int min_cmd = 110;
@@ -26,7 +26,7 @@ void velocity_callback(const thruster_driver::Velocity::ConstPtr& msg){
 
 bool engine_enable(std_srvs::SetBool::Request  &req,
          std_srvs::SetBool::Response &res){
-  state_idle = req.data;
+  state_enable = req.data;
   res.success = true;
   t.write_cmd(MOTOR_PWM_STOP, MOTOR_PWM_STOP);
 
@@ -59,12 +59,12 @@ int main(int argc, char *argv[]){
   while (ros::ok()){
     ros::spinOnce();
 
-    if(!state_idle){
+    if(state_enable){
       float u_left = linear_velocity + angular_velocity;
       float u_right = linear_velocity - angular_velocity;
 
-      unsigned short int cmd_left = u_left*coeff_cmd_to_pwm + MOTOR_PWM_STOP;
-      unsigned short int cmd_right = u_right*coeff_cmd_to_pwm + MOTOR_PWM_STOP;
+      unsigned short int cmd_left = round(u_left*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
+      unsigned short int cmd_right = round(u_right*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
 
       if(cmd_left>max_cmd)
         cmd_left = max_cmd;
@@ -80,7 +80,6 @@ int main(int argc, char *argv[]){
       // Publish cmd send for loggin
       cmd_msg.left = cmd_left;
       cmd_msg.right = cmd_right;
-      cmd_msg.header.stamp = ros::Time::now();
       cmd_pub.publish(cmd_msg);
     }
 

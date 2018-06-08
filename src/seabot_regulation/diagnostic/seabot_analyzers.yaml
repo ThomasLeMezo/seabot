@@ -2,8 +2,8 @@ analyzers:
   pressure:
     type: GenericAnalyzer
     path: Pressure
-    name: ['pressure_internal']
+    contains: ['pressure_internal']
   batteries:
     type: GenericAnalyzer
     path: Battery
-    startswith: Battery
+    contains: ['power_node']

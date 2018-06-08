@@ -11,7 +11,8 @@ import yaml
 
 
 # bag = rosbag.Bag('2018-06-16-03-27-18.bag', 'r')
-bag = rosbag.Bag('2018-06-16-01-33-07.bag', 'r')
+# bag = rosbag.Bag('2018-06-16-01-33-07.bag', 'r')
+bag = rosbag.Bag('2018-06-16-07-29-11.bag', 'r')
 
 print(bag)
 
