@@ -52,7 +52,6 @@ int main(int argc, char *argv[]){
   pressure_to_depth = n_private.param<double>("pressure_to_depth", 10.0);
   filter_size = (size_t) n_private.param<int>("filter_size", 3);
   size_t velocity_delta_size = (size_t) n_private.param<int>("velocity_delta_size", 5);
-  double delta_time_velocity = n_private.param<double>("delta_time_velocity", 1.0);
 
   // Service
   ros::ServiceServer service_reset_zero_depth = n.advertiseService("zero_depth", handle_zero_depth);

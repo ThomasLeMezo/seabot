@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
       double x = longitude*M_PI/180.0; // Longitude
       double y = latitude*M_PI/180.0; // Latitude
       pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, nullptr);
-      msg_point.x = x;
-      msg_point.y = y;
+      msg_point.x = x + offset_east;
+      msg_point.y = y + offset_north;
       msg_point.z = altitude;
       new_data = false;
 
