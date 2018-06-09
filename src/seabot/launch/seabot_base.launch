@@ -2,7 +2,7 @@
 
     <node pkg="rosbag" type="record" name="record" output="screen" args="--all" respawn="true" respawn_delay="5"/>
 
-    <include file="$(find seabot_regulation)/launch/seabot_driver.launch"/>
+    <include file="$(find seabot)/launch/seabot_driver.launch"/>
 
     <node name="depth_filter_node" pkg="fusion" type="depth_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
     <param name="delta_time" value="1" />
@@ -13,7 +13,7 @@
     </node>
 
     <node pkg="diagnostic_aggregator" type="aggregator_node" name="diag_agg" >
-        <rosparam command="load" file="$(find seabot_regulation)/diagnostic/seabot_analyzers.yaml" />
+        <rosparam command="load" file="$(find seabot)/diagnostic/seabot_analyzers.yaml" />
     </node>
 
 </launch>

@@ -1,6 +1,6 @@
 <launch>
 
-    <include file="$(find seabot_regulation)/launch/seabot_base.launch"/>
+    <include file="$(find seabot)/launch/seabot_base.launch"/>
 
     <node name="regulation_depth" pkg="seabot_regulation" type="regulation_depth.py" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="delta_time" value="30.0" />

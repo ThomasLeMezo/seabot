@@ -105,7 +105,7 @@ void pressure_diagnostic(diagnostic_updater::DiagnosticStatusWrapper &stat){
   }
 
   // add and addf are used to append key-value pairs.
-  stat.add("Internal Pressure", comp_data.pressure);
+  stat.add("Internal Pressure", m_pressure);
 }
 
 int main(int argc, char *argv[])
