@@ -23,7 +23,7 @@ delta_volume_piston = 200 * tick_to_volume
 # Volume = tick_to_volume * 110
 
 #################################################
-offset = -50 * tick_to_volume
+offset = -0 * tick_to_volume
 
 #################################################
 
@@ -51,10 +51,13 @@ def f(x, u):
 	return y
 
 def control(d0, d, ddot, V_piston, u):
-	K = 200.0
+	global t_old, t
+	K = 150.0
 	# if(abs(d0-d)<0.1):
 	#  	K = 1000.0
-	cmd = -(-(g-g*((V_estime+V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m)+K*ddot+(d-d0))/20.0
+	K_factor = 0.1*(t-t_old)
+	t_old = t
+	cmd = -K_factor*(-(g-g*((V_estime+V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m)+K*ddot+(d-d0))
 	if(abs(u+cmd)<200):
 		# if((np.sign(cmd)==-1 and ddot<-0.06) or (np.sign(cmd)==1 and ddot>0.06)):
 		# 	return u
@@ -79,25 +82,33 @@ d0 = 0.75
 
 dt=0.05
 t=0
+t_old = t-dt
 u=0
-delta_t_regulation = 0.5 # sec
+delta_t_regulation = 1.0 # sec
 # time_simulation = 26 # sec
 time_simulation = 60*60 # sec
 
 for k in range(0, int(time_simulation/dt)):
 	t+=dt
 
-	if(t<10*60):
-		d0=2.0
-	elif(t>10*60 and t <30*60):
-		d0=15.0
-	elif(t>30*60 and t <45*60):
-		d0=10.0
-	elif(t>45*60 and t <60*60):
-		d0=5.0
+	# if(t<10*60):
+	# 	d0=2.0
+	# elif(t>10*60 and t <30*60):
+	# 	d0=15.0
+	# elif(t>30*60 and t <45*60):
+	# 	d0=10.0
+	# elif(t>45*60 and t <60*60):
+	# 	d0=5.0
 
-	if(t>40*60):
-		offset = +20 * tick_to_volume
+	if(t<15*60):
+		d0=0.5
+	elif(t<30*60):
+		d0=1.2
+	elif(t<45*60):
+		d0=0.0
+
+	# if(t>40*60):
+	# 	offset = +20 * tick_to_volume
 
 	d = x[0]
 	ddot = x[1]

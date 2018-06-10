@@ -3,20 +3,17 @@
     <include file="$(find seabot)/launch/seabot_base.launch"/>
 
     <node name="sliding_node" pkg="seabot_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
-        <param name="delta_time" value="30.0" />
+        <param name="g" value="9.81" />
+        <param name="rho_eau" value="1000.0" />
+        <param name="m" value="1000.0" />
+        <param name="C_f" value="0.08" />
+        <param name="tick_to_volume" value="1.431715402026599e-07" />
+        <param name="max_delta_tick" value="200" />
 
-          <param name="frequency" value="1.0" />
-		  <param name="offset" value="1040" />
-
-		  <param name="g" value="9.81" />
-		  <param name="rho_eau" value="1000.0" />
-		  <param name="m" value="1000.0" />
-		  <param name="C_f" value="0.08" />
-		  <param name="tick_to_volume" value="1.431715402026599e-07" />
-		  <param name="max_delta_tick" value="200" />
-
-		  <param name="K_factor" value="0,05" />
-		  <param name="K_velocity" value="200.0" />
+        <param name="frequency" value="1.0" />
+        <param name="offset" value="1040" />
+        <param name="K_factor" value="0.1" />
+        <param name="K_velocity" value="150.0" />
     </node>
 
     <node name="regulation_talker" pkg="seabot_regulation" type="regulation_talker.py" output="screen" respawn="true">

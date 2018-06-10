@@ -39,8 +39,8 @@ def talker():
   rospy.sleep(30.0)
 
   set_zero_depth()
-  set_depth(0.3, 5*60)
-  set_depth(1.2, 5*60)
+  set_depth(0.5, 10*60)
+  set_depth(1.2, 10*60)
   set_depth(0.0)
 
 if __name__ == '__main__':
