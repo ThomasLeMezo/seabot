@@ -3,41 +3,38 @@
 import rospy
 from std_srvs.srv import *
 from piston_driver.srv import *
+from piston_driver.msg import *
 
 def talker():
-    rospy.init_node('up_down_piston_node', anonymous=True)
+  rospy.init_node('up_down_piston_node', anonymous=True)
 
-    rospy.wait_for_service('/driver/piston/position')
-    rospy.wait_for_service('/driver/piston/start')
-    piston_position = rospy.ServiceProxy('/driver/piston/position', PistonPosition)
-    start_piston = rospy.ServiceProxy('/driver/piston/start', SetBool)
+  rospy.wait_for_service('/driver/piston/start')
+  start_piston = rospy.ServiceProxy('/driver/piston/start', SetBool)
 
-    delta_time = rospy.get_param('~delta_time', 180.0)
-    sleep_time = rospy.Duration(delta_time)
+  piston_position = rospy.Publisher('/driver/piston/position', PistonPosition, queue_size=1)
 
-    # Start the piston
-    try:
-        resp1 = start_piston(True)
-    except rospy.ServiceException, e:
-        rospy.logwarn("[Up and Down] Fail to call Piston start");
+  delta_time = rospy.get_param('~delta_time', 180.0)
+  sleep_time = rospy.Duration(delta_time)
 
-    down = True
-    target_position = 0
-    while not rospy.is_shutdown():
-        try:
-            if(down == True):
-                resp = piston_position(0)
-                down=False
-            else:
-                resp = piston_position(1200)
-                down=True
-        except rospy.ServiceException, e:
-            rospy.logwarn("[Up and Down] Fail to call Piston position");
+  # Start the piston
+  try:
+      resp1 = start_piston(True)
+  except rospy.ServiceException, e:
+      rospy.logwarn("[Up and Down] Fail to call Piston start");
 
-        rospy.sleep(sleep_time)
+  down = True
+  while not rospy.is_shutdown():
+    if(down == True):
+      piston_position.publish(0)
+      down=False
+    else:
+      piston_position.publish(1200)
+      down=True
+
+    rospy.sleep(sleep_time)
 
 if __name__ == '__main__':
-    try:
-        talker()
-    except rospy.ROSInterruptException:
-        pass
+  try:
+    talker()
+  except rospy.ROSInterruptException:
+    pass

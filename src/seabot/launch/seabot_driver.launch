@@ -5,7 +5,7 @@
                 </node>
 
                 <node name="piston_node" pkg="piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
-                        <param name="frequency" value="1" />
+                        <param name="frequency" value="2.0" />
                 </node>
 
                 <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
@@ -17,7 +17,7 @@
                 </node>
 
                 <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
-                  <param name="frequency" value="15" />
+                  <param name="frequency" value="15.0" />
                 </node>
 
                 <node name="gnss_node" pkg="nmea_navsat_driver" type="nmea_serial_driver.py" output="screen" respawn="true" respawn_delay="5">

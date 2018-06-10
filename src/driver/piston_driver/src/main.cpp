@@ -56,11 +56,9 @@ bool piston_speed(piston_driver::PistonSpeed::Request  &req,
   return true;
 }
 
-bool piston_position(piston_driver::PistonPosition::Request  &req,
-                     piston_driver::PistonPosition::Response &res){
+void position_callback(const piston_driver::PistonPosition::ConstPtr& msg){
   if(state_start && state_emergency==false)
-    p.set_piston_position(req.position);
-  return true;
+    p.set_piston_position(msg->position);
 }
 
 bool piston_emergency(std_srvs::SetBool::Request  &req,
@@ -87,8 +85,6 @@ int main(int argc, char *argv[]){
   double frequency = n_private.param<double>("frequency", 5.0);
 
   // Service (ON/OFF)
-
-  ros::ServiceServer service_piston = n.advertiseService("position", piston_position);
   ros::ServiceServer service_start = n.advertiseService("start", piston_start);
   ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
 
@@ -99,6 +95,9 @@ int main(int argc, char *argv[]){
   // Publisher
   ros::Publisher state_pub = n.advertise<piston_driver::PistonState>("state", 1);
   piston_driver::PistonState state_msg;
+
+  // Subscriber
+  ros::Subscriber piston_position_sub = n.subscribe("position", 1, position_callback);
 
   // Sensor initialization
   p.i2c_open();

@@ -52,13 +52,13 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   PistonState.msg
+  PistonPosition.msg
 )
 
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
    PistonSpeed.srv
-   PistonPosition.srv
  )
 
 ## Generate actions in the 'action' folder
