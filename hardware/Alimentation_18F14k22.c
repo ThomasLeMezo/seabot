@@ -122,7 +122,6 @@ void i2c_read_data_from_buffer(){
       break;
     case 0x01:  // led power
       start_led_puissance = (rxbuffer_tab[i+1]!=0x00);
-      LED_PUISSANCE = 0;
       break;
     case 0x02:
       led_puissance_delay = rxbuffer_tab[i+1];
@@ -238,17 +237,6 @@ void init_i2c(){
 }
 
 /**
- * @brief InitINT2
- * Fonction d'initialisation de l'entrée d'interruption INT2 pour la détection de fermeture/ouverture
- * de l'ILS, détection du front montant (ouverture de l'ILS).
- */
-// void init_io_ils(){
-//     INTCON2.INTEDG2 = 0; // Interrupt on falling edge
-//     INTCON3.INT2IE = 0; //Enables the INT2 external interrupt
-//     INTCON3.INT2IF = 0; // INT2 External Interrupt Flag bit
-// }
-
-/**
  * @brief init_timer0
  * Fonction d'initialisation du TIMER0
  * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
@@ -259,31 +247,6 @@ void init_timer0(){
   TMR0L = 0xDC;
   TMR0IE_bit = 0;
 }
-
-/**
- * @brief init_timer1
- * Fonction d'initialisation du TIMER1
- * Prescaler 1:8; TMR1 Preload = 15536; Actual Interrupt Time : 100 ms
- */
-// void init_timer1(){
-//     T1CON = 0x31;
-//     TMR1IF_bit = 0;
-//     TMR1H = 0x77;
-//     TMR1L = 0x48;
-//     TMR1IE_bit = 0;
-// }
-
-/**
- * @brief init_timer2
- * Fonction d'initialisation du TIMER2
- * Prescaler 1:1; Postscaler 1:2; TMR2 Preload = 199; Actual Interrupt Time : 10 us
- */
-// void init_timer2(){
-//     T2CON = 0x08;
-//     TMR2IE_bit = 0;
-//     PR2 = 79;
-//     INTCON = 0xC0;
-// }
 
 /**
  * @brief init_timer3
@@ -320,8 +283,7 @@ void init_io(){
   TRISA1_bit = 0; // RA1 en sortie
 
   INTCON2.RABPU = 0; // PORTA and PORTB Pull-up Enable bit
-  //WPUA.WPUA1 = 1; // Pull-up enabled sur RA2, sur inter de butée basse
-  WPUA.WPUA2 = 1; // Pull-up enabled sur RA2, sur inter de butée basse
+  WPUA.WPUA2 = 1; // Pull-up enabled sur RA2
   
   TRISB4_bit = 1; // RB4 en entrée
   TRISB6_bit = 1; // RB6 en entrée
@@ -361,16 +323,13 @@ void main(){
 
   delay_ms(1000);
 
-  INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
+  INTCON3.INT1IP = 0; //INT1 External Interrupt Priority bit, INT0 always a high
   //priority interrupt source
 
-  IPR1.SSPIP = 0; //Master Synchronous Serial Port Interrupt Priority bit, low priority
   RCON.IPEN = 1;  //Enable priority levels on interrupts
+  IPR1.SSPIP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0)
   INTCON.GIEH = 1; //enable all high-priority interrupts
   INTCON.GIEL = 1; //enable all low-priority interrupts
-
-  INTCON.GIE = 1; // Global Interrupt Enable bit
-  INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
   TMR0IE_bit = 1;  //Enable TIMER0
   TMR0ON_bit = 1; // Start TIMER1
@@ -464,54 +423,57 @@ void main(){
   }
 }
 
-
 /**
  * @brief interrupt_low
  */
 void interrupt_low(){
-    // Interruption sur le bus I2C, le bus est en esclave
-    // Interruption sur Start & Stop
+/// ************************************************** //
+    /// ********************** I2C     ******************* //
 
     if (PIR1.SSPIF){  // I2C Interrupt
-       TXREG = SSPSTAT.R_W;
-        if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
-           if (SSPSTAT.D_A == 1){
-              //TXREG = nb_tx_octet;
-              i2c_write_data_to_buffer(nb_tx_octet);
-              delay_us(10);
-              nb_tx_octet++;
-              SSPCON1.CKP = 1;
-            }
-            
-            if(SSPSTAT.P == 1){
-              nb_rx_octet = 0;
-            }
-        }
-        else{ //****** recieve data from master ****** //
-            if(SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
-                if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
-                    if(nb_rx_octet < SIZE_RX_BUFFER){
-                        rxbuffer_tab[nb_rx_octet] = SSPBUF;
-                        nb_rx_octet++;
-                    }
-                }
-                else{
-                     nb_tx_octet = 0;
-                     nb_rx_octet = 0;
-                     //TXREG = 0xFF;
-                }
-            }
-            
-            if(SSPSTAT.P == 1){
-                if(nb_rx_octet>1)
-                    i2c_read_data_from_buffer();
-                nb_rx_octet = 0;
-            }
 
-            tmp_rx = SSPBUF;
+      if ((SSPCON1.SSPOV) || (SSPCON1.WCOL)){ //If overflow or collision
+        tmp_rx = SSPBUF; // Read the previous value to clear the buffer
+        SSPCON1.SSPOV = 0; // Clear the overflow flag
+        SSPCON1.WCOL = 0; // Clear the collision bit
+        SSPCON1.CKP = 1;
+      }
+
+      //****** receiving data from master ****** //
+      if (SSPSTAT.R_W == 0){ // 0 = Write
+        if (SSPSTAT.D_A == 0){ // Address
+          nb_rx_octet = 0;
+        }
+        else{ // Data
+          if(SSPSTAT.BF == 1){  // There is data to be read
+            if(nb_rx_octet < SIZE_RX_BUFFER){
+              rxbuffer_tab[nb_rx_octet] = SSPBUF;
+              nb_rx_octet++;
+            }
+          }
+        }
+          
+        if(SSPSTAT.P == 1){
+            if(nb_rx_octet>1) // Case Command + Value(s)
+                i2c_read_data_from_buffer();
         }
 
-        PIR1.SSPIF = 0; // reset SSP interrupt flag
+        tmp_rx = SSPBUF;
+      }
+      //******  transmitting data to master ****** //
+      else{ 
+          if(SSPSTAT.D_A == 1){
+            i2c_write_data_to_buffer(nb_tx_octet);
+            delay_us(10);
+            nb_tx_octet++;
+            SSPCON1.CKP = 1;
+          }
+          else{
+            nb_tx_octet = 0;
+          }
+      }
+
+      PIR1.SSPIF = 0; // reset SSP interrupt flag
     }
     
     if (PIR2.BCLIF)
@@ -577,7 +539,7 @@ void interrupt(){
   }
 
   // Interruption du TIMER3 (Led Puissance)
-  if (TMR3IF_bit){
+  else if (TMR3IF_bit){
     // LED Puissance
     if(start_led_puissance == 1){
       if (cpt_led_puissance > 0){

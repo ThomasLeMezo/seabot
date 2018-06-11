@@ -259,41 +259,56 @@ void main(){
  * @brief interrupt_low
  */
 void interrupt_low(){
-    // Interruption sur le bus I2C, le bus est en esclave
-    // Interruption sur Start & Stop
+/// ************************************************** //
+    /// ********************** I2C     ******************* //
 
     if (PIR1.SSPIF){  // I2C Interrupt
-        if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
+
+      if ((SSPCON1.SSPOV) || (SSPCON1.WCOL)){ //If overflow or collision
+        tmp_rx = SSPBUF; // Read the previous value to clear the buffer
+        SSPCON1.SSPOV = 0; // Clear the overflow flag
+        SSPCON1.WCOL = 0; // Clear the collision bit
+        SSPCON1.CKP = 1;
+      }
+
+      //****** receiving data from master ****** //
+      if (SSPSTAT.R_W == 0){ // 0 = Write
+        if (SSPSTAT.D_A == 0){ // Address
+          nb_rx_octet = 0;
+        }
+        else{ // Data
+          if(SSPSTAT.BF == 1){  // There is data to be read
+            if(nb_rx_octet < SIZE_RX_BUFFER){
+              rxbuffer_tab[nb_rx_octet] = SSPBUF;
+              nb_rx_octet++;
+            }
+          }
+        }
+          
+        if(SSPSTAT.P == 1){
+            if(nb_rx_octet>1) // Case Command + Value(s)
+                i2c_read_data_from_buffer();
+        }
+
+        tmp_rx = SSPBUF;
+      }
+      //******  transmitting data to master ****** //
+      else{ 
+          if(SSPSTAT.D_A == 1){
             i2c_write_data_to_buffer(nb_tx_octet);
-            nb_tx_octet++;
             delay_us(10);
+            nb_tx_octet++;
             SSPCON1.CKP = 1;
-        }
-        else{ //****** recieve data from master ****** //
-            if(SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
-                if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
-                    if(nb_rx_octet < SIZE_RX_BUFFER){
-                        rxbuffer_tab[nb_rx_octet] = SSPBUF;
-                        nb_rx_octet++;
-                    }
-                }
-                else
-                     nb_tx_octet = 0;
-            }
-            
-            if(SSPSTAT.P == 1){
-                if(nb_rx_octet>1)
-                    i2c_read_data_from_buffer();
-                nb_rx_octet = 0;
-            }
+          }
+          else{
+            nb_tx_octet = 0;
+          }
+      }
 
-            tmp_rx = SSPBUF;
-        }
-
-        PIR1.SSPIF = 0; // reset SSP interrupt flag
+      PIR1.SSPIF = 0; // reset SSP interrupt flag
     }
     
-    if (PIR2.BCLIF)
+    else if (PIR2.BCLIF)
         PIR2.BCLIF = 0;
 }
 
@@ -317,30 +332,27 @@ void interrupt(){
       cpt_motor_1 = cmd_motor[0];
       cpt_motor_2 = cmd_motor[1];
       cpt_motor_3 = cmd_motor[2];
-
     }
-
     else{
       cpt_global--;
 
       // MOT 1
-    if(cpt_motor_1==0)
-      MOT1 = 0;
-    else
-      cpt_motor_1--;
+      if(cpt_motor_1==0)
+        MOT1 = 0;
+      else
+        cpt_motor_1--;
 
-    // MOT 2
-    if(cpt_motor_2==0)
-      MOT2 = 0;
-    else
-      cpt_motor_2--;
+      // MOT 2
+      if(cpt_motor_2==0)
+        MOT2 = 0;
+      else
+        cpt_motor_2--;
 
-    // MOT 3
-    if(cpt_motor_3==0)
-      MOT3 = 0;
-    else
-      cpt_motor_3--;
-
+      // MOT 3
+      if(cpt_motor_3==0)
+        MOT3 = 0;
+      else
+        cpt_motor_3--;
     }
 
     TMR1H = 255;
@@ -348,7 +360,7 @@ void interrupt(){
     TMR1IF_bit = 0;
   }
 
-  if (TMR0IF_bit){
+  else if (TMR0IF_bit){
     // Watchdog
     if(watchdog_restart>0)
       watchdog_restart--;  
