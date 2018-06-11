@@ -1,0 +1,5 @@
+<launch>
+  <node name="piston_node" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston">
+        <param name="frequency" value="2" />
+  </node>
+</launch>

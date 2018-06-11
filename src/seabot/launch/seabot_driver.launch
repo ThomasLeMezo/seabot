@@ -1,10 +1,10 @@
 <launch>
         <group ns="driver">
-                <node name="power_node" pkg="power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
+                <node name="power_node" pkg="seabot_power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
                         <param name="frequency" value="0.2" />
                 </node>
 
-                <node name="piston_node" pkg="piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
+                <node name="piston_node" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
                         <param name="frequency" value="2.0" />
                 </node>
 
@@ -16,7 +16,7 @@
                         <param name="frequency" value="5.0" />
                 </node>
 
-                <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="thruster">
+                <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster">
                   <param name="frequency" value="15.0" />
                 </node>
 

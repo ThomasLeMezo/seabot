@@ -1,6 +1,0 @@
-<launch>
-  <node name="thruster_node" pkg="thruster_driver" type="thruster_node" output="screen" ns="piston">
-  	<param name="frequency" value="15" />
-        <param name="coeff_cmd_to_pwm" value="15" />
-  </node>
-</launch>

@@ -2,14 +2,14 @@
 
 import rospy
 
-from piston_driver.msg import PistonState
+from seabot_piston_driver.msg import PistonState
 from std_msgs.msg import Float64MultiArray
-from fusion.msg import DepthPose
-from seabot_regulation.msg import RegulationDebug
+from seabot_fusion.msg import DepthPose
+from seabot_depth_regulation.msg import RegulationDebug
 
-from piston_driver.srv import PistonPosition
+from seabot_piston_driver.srv import PistonPosition
 from std_srvs.srv import *
-from seabot_regulation.srv import *
+from seabot_depth_regulation.srv import *
 
 import numpy as np
 from math import *

@@ -1,0 +1,5 @@
+<launch>
+  <node name="power_node" pkg="seabot_power_driver" type="power_node" output="screen">
+  	<param name="frequency" value="0.2" />
+  </node>
+</launch>

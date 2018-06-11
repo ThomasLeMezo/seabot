@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>seabot_fusion</name>
+  <version>0.0.0</version>
+  <description>The seabot fusion package</description>
+
+  <maintainer email="thomas.le_mezo@ensta-bretagne.org">Thomas Le Mézo</maintainer>
+  <!-- <url type="website">http://wiki.ros.org/pressure_89bsd_driver</url> -->
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>pressure_89bsd_driver</depend>
+  <depend>message_runtime</depend>
+
+  </package>
