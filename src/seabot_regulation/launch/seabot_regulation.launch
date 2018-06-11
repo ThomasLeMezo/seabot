@@ -17,6 +17,7 @@
     </node>
 
     <node name="regulation_talker" pkg="seabot_regulation" type="regulation_talker.py" output="screen" respawn="true">
+    </node>
 
 </launch>
 

@@ -95,8 +95,8 @@ unsigned short start_time_to_start = 0;
 unsigned short k = 0;
 
 // Watchdog
-unsigned short watchdog_restart = 3600; // 3600 s = 1 hour
-unsigned short watchdog_restart_default = 3600;
+unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
+unsigned int watchdog_restart_default = 3600;
 
 /**
  * @brief i2c_read_data_from_buffer
@@ -104,7 +104,7 @@ unsigned short watchdog_restart_default = 3600;
 void i2c_read_data_from_buffer(){
   unsigned short i = 0;
 
-  for(i=0; i<nb_rx_octet-1; i++){
+  for(i=0; i<(nb_rx_octet-1); i++){
     switch(rxbuffer_tab[0]+i){
     case 0x00:  // alimentation
       switch(rxbuffer_tab[i+1]){
@@ -357,7 +357,9 @@ void main(){
   ALIM = 0; // sortie MOSFET de puissance, commande de l'alimentation
   battery_global_default = 0;
 
-  //UART1_Init(9600);
+  UART1_Init(9600);
+
+  delay_ms(1000);
 
   INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
   //priority interrupt source
@@ -386,6 +388,7 @@ void main(){
     case IDLE: // Idle state
       ALIM = 0;
       led_delay = 50;
+      start_led_puissance = 0;
 
       if(ILS==0){ // Magnet detected
         ils_cpt--;
@@ -470,15 +473,22 @@ void interrupt_low(){
     // Interruption sur Start & Stop
 
     if (PIR1.SSPIF){  // I2C Interrupt
-    
+       TXREG = SSPSTAT.R_W;
         if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
-            i2c_write_data_to_buffer(nb_tx_octet);
-            nb_tx_octet++;
-            delay_us(10);
-            SSPCON1.CKP = 1;
+           if (SSPSTAT.D_A == 1){
+              //TXREG = nb_tx_octet;
+              i2c_write_data_to_buffer(nb_tx_octet);
+              delay_us(10);
+              nb_tx_octet++;
+              SSPCON1.CKP = 1;
+            }
+            
+            if(SSPSTAT.P == 1){
+              nb_rx_octet = 0;
+            }
         }
         else{ //****** recieve data from master ****** //
-            if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
+            if(SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
                 if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
                     if(nb_rx_octet < SIZE_RX_BUFFER){
                         rxbuffer_tab[nb_rx_octet] = SSPBUF;
@@ -487,15 +497,17 @@ void interrupt_low(){
                 }
                 else{
                      nb_tx_octet = 0;
+                     nb_rx_octet = 0;
+                     //TXREG = 0xFF;
                 }
             }
-            else{ // At the end of the communication
+            
+            if(SSPSTAT.P == 1){
                 if(nb_rx_octet>1)
                     i2c_read_data_from_buffer();
-                else
-                  SSPBUF = 0x00;
                 nb_rx_octet = 0;
             }
+
             tmp_rx = SSPBUF;
         }
 
@@ -544,10 +556,18 @@ void interrupt(){
     }
 
     // Watchdog
-    if(watchdog_restart>0)
-      watchdog_restart--;  
-    else{
-      state = WAIT_TO_SLEEP;
+    if(state != IDLE){
+      if(watchdog_restart>0)
+        watchdog_restart--;
+      else{
+       // hour, min, sec
+        default_time_to_start[0] = 0;
+        default_time_to_start[1] = 0;
+        default_time_to_start[2] = 2;
+        time_to_stop = 10;
+        state = WAIT_TO_SLEEP;
+        watchdog_restart = watchdog_restart_default;
+      }
     }
     
 

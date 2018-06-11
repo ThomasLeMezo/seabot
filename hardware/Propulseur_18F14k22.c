@@ -263,7 +263,6 @@ void interrupt_low(){
     // Interruption sur Start & Stop
 
     if (PIR1.SSPIF){  // I2C Interrupt
-    
         if (SSPSTAT.R_W == 1){   //******  transmit data to master ****** //
             i2c_write_data_to_buffer(nb_tx_octet);
             nb_tx_octet++;
@@ -271,24 +270,23 @@ void interrupt_low(){
             SSPCON1.CKP = 1;
         }
         else{ //****** recieve data from master ****** //
-            if (SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
+            if(SSPSTAT.BF == 1){ // Buffer is Full (transmit in progress)
                 if (SSPSTAT.D_A == 1){ //1 = Indicates that the last byte received or transmitted was data  
                     if(nb_rx_octet < SIZE_RX_BUFFER){
                         rxbuffer_tab[nb_rx_octet] = SSPBUF;
                         nb_rx_octet++;
                     }
                 }
-                else{
+                else
                      nb_tx_octet = 0;
-                }
             }
-            else{ // At the end of the communication
+            
+            if(SSPSTAT.P == 1){
                 if(nb_rx_octet>1)
                     i2c_read_data_from_buffer();
-                else
-                  SSPBUF = 0x00;
                 nb_rx_octet = 0;
             }
+
             tmp_rx = SSPBUF;
         }
 
@@ -358,6 +356,7 @@ void interrupt(){
       cmd_motor[0] = MOTOR_CMD_STOP;
       cmd_motor[1] = MOTOR_CMD_STOP;
       cmd_motor[2] = MOTOR_CMD_STOP;
+      watchdog_restart = watchdog_restart_default;
     }
 
     TMR0H = 0x0B;
