@@ -14,9 +14,6 @@ float linear_velocity = 0.0;
 float angular_velocity = 0.0;
 bool state_enable = true;
 
-unsigned short int max_cmd = 190;
-unsigned short int min_cmd = 110;
-
 Thruster t;
 
 void velocity_callback(const seabot_thruster_driver::Velocity::ConstPtr& msg){
@@ -40,7 +37,7 @@ int main(int argc, char *argv[]){
   // Parameters
   ros::NodeHandle n_private("~");
   double frequency = n_private.param<double>("frequency", 10.0);
-  float coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 15);
+  float coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 15.0);
 
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);
@@ -63,26 +60,28 @@ int main(int argc, char *argv[]){
       float u_left = linear_velocity + angular_velocity;
       float u_right = linear_velocity - angular_velocity;
 
-      unsigned short int cmd_left = round(u_left*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
-      unsigned short int cmd_right = round(u_right*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
+      uint8_t cmd_left = round(u_left*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
+      uint8_t cmd_right = round(u_right*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
 
-      if(cmd_left>max_cmd)
-        cmd_left = max_cmd;
-      if(cmd_left<min_cmd)
-        cmd_left = min_cmd;
-      if(cmd_right>max_cmd)
-        cmd_right = max_cmd;
-      if(cmd_right<min_cmd)
-        cmd_right = min_cmd;
+      if(cmd_left>MAX_PWM)
+        cmd_left = MAX_PWM;
+      if(cmd_left<MIN_PWM)
+        cmd_left = MIN_PWM;
+
+      if(cmd_right>MAX_PWM)
+        cmd_right = MAX_PWM;
+      if(cmd_right<MIN_PWM)
+        cmd_right = MIN_PWM;
 
       t.write_cmd(cmd_left, cmd_right);
 
       // Publish cmd send for loggin
-      cmd_msg.left = cmd_left;
+      cmd_msg.left = (float)cmd_left;
       cmd_msg.right = cmd_right;
       cmd_pub.publish(cmd_msg);
     }
 
+    ros::spinOnce();
     loop_rate.sleep();
   }
 

@@ -23,7 +23,7 @@ delta_volume_piston = 200 * tick_to_volume
 # Volume = tick_to_volume * 110
 
 #################################################
-offset = -0 * tick_to_volume
+offset = -40 * tick_to_volume
 
 #################################################
 
@@ -38,7 +38,7 @@ def f(x, u):
 	# Note : u => cmd in tick (inverted from volume variation)
 	y=np.zeros(3)
 	y[0] = x[1]
-	y[1] = g - g*((V+x[2]+offset)*rho_eau/m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau/m)
+	y[1] = g - g*((V+x[2])*rho_eau/m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau/m)
 	volume_target = -u*tick_to_volume
 	if(abs(x[2]-volume_target)<(7.6*tick_to_volume*dt)):
 		y[2]= (volume_target-x[2])/dt
@@ -52,12 +52,12 @@ def f(x, u):
 
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
-	K = 50.0
+	K = 150.0
 	# if(abs(d0-d)<0.1):
 	#  	K = 1000.0
-	K_factor = 0.1*(t-t_old)
+	K_factor = 0.3*(t-t_old)
 	t_old = t
-	cmd = -K_factor*(-(g-g*((V_estime+V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m)+K*ddot+(d-d0))
+	cmd = -K_factor*(-g*((V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K*ddot+(d-d0))
 	if(abs(u+cmd)<200):
 		# if((np.sign(cmd)==-1 and ddot<-0.06) or (np.sign(cmd)==1 and ddot>0.06)):
 		# 	return u

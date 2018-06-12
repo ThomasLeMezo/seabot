@@ -22,6 +22,18 @@ int Thruster::i2c_open(){
   return 0;
 }
 
+// Max values
+//Stopped         1500 microseconds
+//Max forward     1900 microseconds
+//Max reverse     1100 microseconds
+void Thruster::write_cmd(const uint8_t &left, const uint8_t &right) const{
+  uint8_t buff[2];
+  buff[0] = left;
+  buff[1] = right;
+  if(i2c_smbus_write_i2c_block_data(m_file, 0x00, 2, buff)!=2)
+    ROS_WARN("[Thruster_driver] I2C Bus Failure - Write cmd");
+}
+
 
 
 
