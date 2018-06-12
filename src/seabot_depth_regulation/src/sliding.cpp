@@ -74,8 +74,7 @@ int main(int argc, char *argv[]){
     if(depth_set_point>0.0){
       double V_piston = position * tick_to_volume;
       double cmd = -K_factor*dt*(-(g-g*(1+V_piston*rho_eau_m)-0.5*C_f*velocity*abs(velocity)*rho_eau_m)+K_velocity*velocity+(depth-depth_set_point));
-      if(abs(u+cmd)<200)
-        u+=cmd;
+      u+=cmd;
 
       if(abs(u)>max_delta_tick)
         u=copysign(max_delta_tick, u);

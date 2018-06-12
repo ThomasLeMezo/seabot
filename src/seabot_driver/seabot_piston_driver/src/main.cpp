@@ -13,7 +13,7 @@
 using namespace std;
 
 Piston p;
-bool state_start = false;
+bool state_start = true;
 uint16_t cmd_position_piston = 0;
 uint16_t new_cmd_position_piston = 0;
 bool state_emergency = false;

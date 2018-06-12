@@ -52,7 +52,7 @@ def f(x, u):
 
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
-	K = 150.0
+	K = 50.0
 	# if(abs(d0-d)<0.1):
 	#  	K = 1000.0
 	K_factor = 0.1*(t-t_old)

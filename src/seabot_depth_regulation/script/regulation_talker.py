@@ -6,17 +6,19 @@ from seabot_fusion.msg import *
 from std_srvs.srv import *
 
 def set_flash(enable):
-    try:
-        resp = flash_enable(enable)
-    except rospy.ServiceException, e:
-        rospy.logwarn("[Regulation_Talker] Fail to call Flash Enable");
+  global flash_enable
+  try:
+      resp = flash_enable(enable)
+  except rospy.ServiceException, e:
+      rospy.logwarn("[Regulation_Talker] Fail to call Flash Enable");
 
 def set_zero_depth():
-    try:
-        resp = fusion_zero_depth()
-        rospy.loginfo("[Regulation_Talker] Zero ")
-    except rospy.ServiceException, e:
-        rospy.logwarn("[Regulation_Talker] Fail to call Flash Enable");
+  global fusion_zero_depth
+  try:
+      resp = fusion_zero_depth()
+      rospy.loginfo("[Regulation_Talker] Zero ")
+  except rospy.ServiceException, e:
+      rospy.logwarn("[Regulation_Talker] Fail to call Zero Depth");
 
 def set_depth(val, duration=0):
   msg = DepthPose()
@@ -35,15 +37,19 @@ def talker():
   piston_position = rospy.Publisher('/regulation/depth_set_point', DepthPose, queue_size=1)
   rospy.wait_for_service('/fusion/zero_depth')
   rospy.wait_for_service('/driver/power/flash_led')
-  fusion_zero_depth = rospy.ServiceProxy('/fusion/zero_depth', Empty)
+  fusion_zero_depth = rospy.ServiceProxy('/fusion/zero_depth', Trigger)
   flash_enable = rospy.ServiceProxy('/driver/power/flash_led', SetBool)
 
   #Wait 30s before init
-  rospy.sleep(30.0)
-
+  rospy.loginfo("[Regulation_Talker] Wait 30 s")
+  rospy.sleep(3.0)
   set_zero_depth()
+  rospy.sleep(3.0)
+  rospy.loginfo("[Regulation_Talker] Depth 0.5")
   set_depth(0.5, 10*60)
+  rospy.loginfo("[Regulation_Talker] Depth 1.2")
   set_depth(1.2, 10*60)
+  rospy.loginfo("[Regulation_Talker] Depth 0.0")
   set_depth(0.0)
 
 if __name__ == '__main__':
