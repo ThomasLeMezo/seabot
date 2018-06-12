@@ -233,6 +233,7 @@ void init_i2c(){
   PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
   PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
   // a transmission/reception has taken place.
+  PIR2.BCLIE = 1;
   PIR2.BCLIF = 0;
 }
 
@@ -443,12 +444,16 @@ void interrupt_low(){
       if (SSPSTAT.R_W == 0){ // 0 = Write
         if (SSPSTAT.D_A == 0){ // Address
           nb_rx_octet = 0;
+          tmp_rx = SSPBUF;
         }
         else{ // Data
           if(SSPSTAT.BF == 1){  // There is data to be read
             if(nb_rx_octet < SIZE_RX_BUFFER){
               rxbuffer_tab[nb_rx_octet] = SSPBUF;
               nb_rx_octet++;
+            }
+            else{
+              tmp_rx = SSPBUF;
             }
           }
         }
@@ -457,27 +462,31 @@ void interrupt_low(){
             if(nb_rx_octet>1) // Case Command + Value(s)
                 i2c_read_data_from_buffer();
         }
-
-        tmp_rx = SSPBUF;
       }
       //******  transmitting data to master ****** //
       else{ 
-          if(SSPSTAT.D_A == 1){
-            i2c_write_data_to_buffer(nb_tx_octet);
-            delay_us(10);
-            nb_tx_octet++;
-            SSPCON1.CKP = 1;
-          }
-          else{
+          if(SSPSTAT.D_A == 0){
             nb_tx_octet = 0;
+            tmp_rx = SSPBUF;
+          }
+          i2c_write_data_to_buffer(nb_tx_octet);
+          SSPCON1.CKP = 1;
+          while(SSPSTAT.BF == 1){};
+          nb_tx_octet++;
+          if(SSPCON1.WCOL){
+            SSPCON1.WCOL = 0;
+            tmp_rx = SSPBUF;
           }
       }
-
-      PIR1.SSPIF = 0; // reset SSP interrupt flag
     }
     
-    if (PIR2.BCLIF)
+    if (PIR2.BCLIF){
         PIR2.BCLIF = 0;
+        tmp_rx = SSPBUF;
+        SSPCON1.CKP = 1;
+    }
+    
+    PIR1.SSPIF = 0; // reset SSP interrupt flag
 }
 
 /**
