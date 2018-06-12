@@ -84,6 +84,9 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   double frequency = n_private.param<double>("frequency", 5.0);
 
+  uint16_t speed_in = (uint16_t) n_private.param<int>("speed_in", 50);
+  uint16_t speed_out =(uint16_t) n_private.param<int>("speed_out", 50);
+
   // Service (ON/OFF)
   ros::ServiceServer service_start = n.advertiseService("start", piston_start);
   ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
@@ -101,6 +104,7 @@ int main(int argc, char *argv[]){
 
   // Sensor initialization
   p.i2c_open();
+  p.set_piston_speed(speed_in, speed_out);
 
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
