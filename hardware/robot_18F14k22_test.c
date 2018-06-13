@@ -515,54 +515,49 @@ void interrupt(){
  */
 void interrupt_low(){
 /// ************************************************** //
-    /// ********************** I2C     ******************* //
+    /// ********************** I2C ******************* //
 
     if (PIR1.SSPIF){  // I2C Interrupt
 
-      if ((SSPCON1.SSPOV) || (SSPCON1.WCOL)){ //If overflow or collision
-        tmp_rx = SSPBUF; // Read the previous value to clear the buffer
-        SSPCON1.SSPOV = 0; // Clear the overflow flag
-        SSPCON1.WCOL = 0; // Clear the collision bit
-        SSPCON1.CKP = 1;
-      }
+      if(SSPCON1.SSPOV || SSPCON1.WCOL){
+          SSPCON1.SSPOV = 0;
+          SSPCON1.WCOL = 0;
+          tmp_rx = SSPBUF;
+      }            
 
       //****** receiving data from master ****** //
-      if (SSPSTAT.R_W == 0){ // 0 = Write
+      // 0 = Write (master -> slave - reception)
+      if (SSPSTAT.R_W == 0){ 
         if (SSPSTAT.D_A == 0){ // Address
           nb_rx_octet = 0;
           tmp_rx = SSPBUF;
         }
         else{ // Data
-          if(SSPSTAT.BF == 1){  // There is data to be read
-            if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
-              nb_rx_octet++;
-            }
-            else{
-              tmp_rx = SSPBUF;
-            }
+          if(nb_rx_octet < SIZE_RX_BUFFER){
+            rxbuffer_tab[nb_rx_octet] = SSPBUF;
+            nb_rx_octet++;
+          }
+          else{
+            tmp_rx = SSPBUF;
           }
         }
           
-        if(SSPSTAT.P == 1){
-            if(nb_rx_octet>1) // Case Command + Value(s)
-                i2c_read_data_from_buffer();
+        if(SSPSTAT.P == 1 and nb_rx_octet>1){ // Case Command + Value(s)
+          i2c_read_data_from_buffer();
         }
       }
       //******  transmitting data to master ****** //
-      else{ 
+      // 1 = Read (slave -> master - transmission)
+      else{
           if(SSPSTAT.D_A == 0){
             nb_tx_octet = 0;
             tmp_rx = SSPBUF;
           }
+
+          // In both D_A case
           i2c_write_data_to_buffer(nb_tx_octet);
           SSPCON1.CKP = 1;
-          while(SSPSTAT.BF == 1){};
           nb_tx_octet++;
-          if(SSPCON1.WCOL){
-            SSPCON1.WCOL = 0;
-            tmp_rx = SSPBUF;
-          }
       }
     }
     

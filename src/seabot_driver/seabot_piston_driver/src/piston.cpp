@@ -1,4 +1,5 @@
 #include "piston.h"
+#include <unistd.h>
 
 Piston::Piston(){
 }
@@ -17,6 +18,7 @@ int Piston::i2c_open(){
         ROS_WARN("[Piston_driver] Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
         exit(1);
     }
+    usleep(100000);
     return 0;
 }
 

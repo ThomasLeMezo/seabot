@@ -52,14 +52,14 @@ sbit ALIM at LATA.B5; // sortie MOSFET de puissance, commande de l'alimentation
 // I2C
 #define ADDRESS_I2C 0x72;
 #define SIZE_RX_BUFFER 8
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+volatile unsigned short tmp_rx = 0;
+volatile unsigned short nb_tx_octet = 0;
+volatile unsigned short nb_rx_octet = 0;
 
 // ILS
 #define ILS_CPT_TIME 4
-unsigned short ils_cpt = 4;
+volatile unsigned short ils_cpt = 4;
 unsigned short ils_removed = 1;
 
 // State Machine
@@ -95,7 +95,7 @@ unsigned short start_time_to_start = 0;
 unsigned short k = 0;
 
 // Watchdog
-unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
+volatile unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
 unsigned int watchdog_restart_default = 3600;
 
 /**
@@ -405,6 +405,7 @@ void main(){
           time_to_start[k] = default_time_to_start[k];
         start_time_to_start = 1;
         state = SLEEP;
+        time_to_stop = default_time_to_stop;
       }
       break;
 
@@ -422,66 +423,6 @@ void main(){
     }
     delay_ms(500);
   }
-}
-
-/**
- * @brief interrupt_low
- */
-void interrupt_low(){
-/// ************************************************** //
-    /// ********************** I2C     ******************* //
-
-    if (PIR1.SSPIF){  // I2C Interrupt
-      //****** receiving data from master ****** //
-      if (SSPSTAT.R_W == 0){ // 0 = Write
-        if (SSPSTAT.D_A == 0){ // Address
-          nb_rx_octet = 0;
-          tmp_rx = SSPBUF;
-        }
-        else{ // Data
-          if(SSPSTAT.BF == 1){  // There is data to be read
-            if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
-              nb_rx_octet++;
-            }
-            else{
-              tmp_rx = SSPBUF;
-            }
-          }
-        }
-          
-        if(SSPSTAT.P == 1){
-            if(nb_rx_octet>1) // Case Command + Value(s)
-                i2c_read_data_from_buffer();
-        }
-
-        if(SSPCON1.SSPOV){
-          SSPCON1.SSPOV = 0;
-          tmp_rx = SSPBUF;
-        }
-      }
-      //******  transmitting data to master ****** //
-      else{ 
-          if(SSPSTAT.D_A == 0){
-            nb_tx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-          i2c_write_data_to_buffer(nb_tx_octet);
-          SSPCON1.CKP = 1;
-          while(SSPSTAT.BF == 1){};
-          nb_tx_octet++;
-          if(SSPCON1.WCOL)
-            SSPCON1.WCOL = 0;
-      }
-    }
-    
-    if (PIR2.BCLIF){
-        PIR2.BCLIF = 0;
-        tmp_rx = SSPBUF;
-        SSPCON1.CKP = 1;
-    }
-    
-    PIR1.SSPIF = 0; // reset SSP interrupt flag
 }
 
 /**
@@ -522,7 +463,7 @@ void interrupt(){
     }
 
     // Watchdog
-    if(state != IDLE){
+    if(state != IDLE && state != SLEEP){
       if(watchdog_restart>0)
         watchdog_restart--;
       else{
@@ -531,8 +472,8 @@ void interrupt(){
         default_time_to_start[1] = 0;
         default_time_to_start[2] = 2;
         time_to_stop = 10;
-        state = WAIT_TO_SLEEP;
         watchdog_restart = watchdog_restart_default;
+        state = WAIT_TO_SLEEP;
       }
     }
     
@@ -577,4 +518,64 @@ void interrupt(){
     TMR3L = 0xB0;
     TMR3IF_bit = 0;
   }
+}
+
+/**
+ * @brief interrupt_low
+ */
+void interrupt_low(){
+/// ************************************************** //
+    /// ********************** I2C ******************* //
+
+    if (PIR1.SSPIF){  // I2C Interrupt
+
+      if(SSPCON1.SSPOV || SSPCON1.WCOL){
+          SSPCON1.SSPOV = 0;
+          SSPCON1.WCOL = 0;
+          tmp_rx = SSPBUF;
+      }            
+
+      //****** receiving data from master ****** //
+      // 0 = Write (master -> slave - reception)
+      if (SSPSTAT.R_W == 0){ 
+        if (SSPSTAT.D_A == 0){ // Address
+          nb_rx_octet = 0;
+          tmp_rx = SSPBUF;
+        }
+        else{ // Data
+          if(nb_rx_octet < SIZE_RX_BUFFER){
+            rxbuffer_tab[nb_rx_octet] = SSPBUF;
+            nb_rx_octet++;
+          }
+          else{
+            tmp_rx = SSPBUF;
+          }
+        }
+          
+        if(SSPSTAT.P == 1 and nb_rx_octet>1){ // Case Command + Value(s)
+          i2c_read_data_from_buffer();
+        }
+      }
+      //******  transmitting data to master ****** //
+      // 1 = Read (slave -> master - transmission)
+      else{
+          if(SSPSTAT.D_A == 0){
+            nb_tx_octet = 0;
+            tmp_rx = SSPBUF;
+          }
+
+          // In both D_A case
+          i2c_write_data_to_buffer(nb_tx_octet);
+          SSPCON1.CKP = 1;
+          nb_tx_octet++;
+      }
+    }
+    
+    if (PIR2.BCLIF){
+        PIR2.BCLIF = 0;
+        tmp_rx = SSPBUF;
+        SSPCON1.CKP = 1;
+    }
+    
+    PIR1.SSPIF = 0; // reset SSP interrupt flag
 }
