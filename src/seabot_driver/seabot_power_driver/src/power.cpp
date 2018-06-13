@@ -9,15 +9,18 @@ Power::~Power(){
 }
 
 int Power::i2c_open(){
-  if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-    ROS_WARN("[Power_driver] Failed to open the I2C bus (%s)", m_i2c_periph);
+  m_file = open(m_i2c_periph,O_RDWR);
+  if (m_file < 0) {
+    ROS_WARN("[Piston_driver] Failed to open the I2C bus (%s) - %s", m_i2c_periph, strerror(m_file));
     exit(1);
   }
 
-  if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-    ROS_WARN("[Power_driver] Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
+  int rslt = ioctl(m_file,I2C_SLAVE,m_i2c_addr);
+  if (rslt < 0) {
+    ROS_WARN("[Piston_driver] Failed to acquire bus access and/or talk to slave (0x%X) - %s", I2C_SLAVE, strerror(rslt));
     exit(1);
   }
+  usleep(100000);
   return 0;
 }
 

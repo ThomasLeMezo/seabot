@@ -1,68 +1,69 @@
 #include "piston.h"
 #include <unistd.h>
+#include <errno.h>
 
 Piston::Piston(){
 }
 
 Piston::~Piston(){
-    close(m_file);
+  close(m_file);
 }
 
 int Piston::i2c_open(){
-    if ((m_file = open(m_i2c_periph,O_RDWR)) < 0) {
-        ROS_WARN("[Piston_driver] Failed to open the I2C bus (%s)", m_i2c_periph);
-        exit(1);
-    }
+  m_file = open(m_i2c_periph,O_RDWR);
+  if (m_file < 0) {
+    ROS_WARN("[Piston_driver] Failed to open the I2C bus (%s) - %s", m_i2c_periph, strerror(m_file));
+    exit(1);
+  }
 
-    if (ioctl(m_file,I2C_SLAVE,m_i2c_addr) < 0) {
-        ROS_WARN("[Piston_driver] Failed to acquire bus access and/or talk to slave (0x%X)", I2C_SLAVE);
-        exit(1);
-    }
-    usleep(100000);
-    return 0;
+  int rslt = ioctl(m_file,I2C_SLAVE,m_i2c_addr);
+  if (rslt < 0) {
+    ROS_WARN("[Piston_driver] Failed to acquire bus access and/or talk to slave (0x%X) - %s", I2C_SLAVE, strerror(rslt));
+    exit(1);
+  }
+  usleep(100000);
+  return 0;
 }
 
 void Piston::set_piston_start() const{
-    if(i2c_smbus_write_byte_data(m_file, 0x00, 0x01)<0)
-      ROS_WARN("[Piston_driver] I2C bus Failure - Piston Start");
+  if(i2c_smbus_write_byte_data(m_file, 0x00, 0x01)<0)
+    ROS_WARN("[Piston_driver] I2C bus Failure - Piston Start");
 }
 
 void Piston::set_piston_stop() const{
-    if(i2c_smbus_write_byte_data(m_file, 0x00, 0x00)<0)
-        ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
+  if(i2c_smbus_write_byte_data(m_file, 0x00, 0x00)<0)
+    ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
 }
 
 void Piston::set_piston_reset() const{
-    if(i2c_smbus_write_byte_data(m_file, 0x01, 0x01)<0)
-      ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
+  if(i2c_smbus_write_byte_data(m_file, 0x01, 0x01)<0)
+    ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
 }
 
 void Piston::set_led_enable(const bool &val) const{
-    if(i2c_smbus_write_byte_data(m_file, 0x04, val?0x01:0x00)<0)
-      ROS_WARN("[Piston_driver] I2C bus Failure - LED Enable");
+  if(i2c_smbus_write_byte_data(m_file, 0x04, val?0x01:0x00)<0)
+    ROS_WARN("[Piston_driver] I2C bus Failure - LED Enable");
 }
 
 void Piston::set_piston_enable(const bool &val) const{
-    if(i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, val?0x05:0x06)<0)
-      ROS_WARN("[Piston_driver] I2C bus Failure - Enable piston");
+  if(i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, val?0x05:0x06)<0)
+    ROS_WARN("[Piston_driver] I2C bus Failure - Enable piston");
 }
 
 void Piston::set_piston_speed(const uint16_t &speed_in, const uint16_t &speed_out) const{
-    __u8 buff[4];
-    buff[0] = speed_in >> 8;
-    buff[1] = speed_in;
-    buff[2] = speed_out >> 8;
-    buff[3] = speed_out;
-    if(i2c_smbus_write_i2c_block_data(m_file, 0x12, 4, buff)!=2)
-      ROS_WARN("[Piston_driver] I2C bus Failure - Set Speed In/Out");
+  __u8 buff[4];
+  buff[0] = speed_in;
+  buff[1] = speed_in >> 8;
+  buff[2] = speed_out;
+  buff[3] = speed_out >> 8;
+  if(i2c_smbus_write_i2c_block_data(m_file, 0x12, 4, buff)!=4)
+    ROS_WARN("[Piston_driver] I2C bus Failure - Set Speed In/Out");
 }
 
 void Piston::set_piston_position(const uint16_t &position) const{
-    __u8 buff[2];
-    buff[0] = position >> 8;
-    buff[1] = position & 0xFF;
-    if(i2c_smbus_write_i2c_block_data(m_file, 0x10, 2, buff)<0)
-      ROS_WARN("[Piston_driver] I2C bus Failure - Piston set position");
+  // S Addr Wr [A] Comm [A] DataLow [A] DataHigh [A] P
+  if(i2c_smbus_write_word_data(m_file, 0x10, position)<0)
+    ROS_WARN("[Piston_driver] I2C bus Failure - Piston set position %s", strerror(errno));
 }
 
 void Piston::get_piston_all_data(){
@@ -79,7 +80,6 @@ void Piston::get_piston_all_data(){
   m_enable_on = (buff[2] >> 6) & 0b1;
   m_position_set_point = buff[4] << 8 | buff[3];
   m_motor_speed = buff[5];
-
 }
 
 

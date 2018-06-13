@@ -103,20 +103,20 @@ void i2c_read_data_from_buffer(){
 
             case 0x10:  // consigne de postion
                 if(nb_data >= i+2){
-                    position_set_point = 4*((rxbuffer_tab[i+1] << 8) | rxbuffer_tab[i+2]);
+                    position_set_point = 4*(rxbuffer_tab[i+1] | (rxbuffer_tab[i+1] << 8));
                     i++;
                 }
                 break;
 
             case 0x12:  // consigne de vitesse in
                 if(nb_data >= i+2){
-                    motor_speed_in = (rxbuffer_tab[i+1] << 8) | rxbuffer_tab[i+2];
+                    motor_speed_in = rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8);
                     i++;
                 }
                 break;
             case 0x14:  // consigne de vitesse out
                 if(nb_data >= i+2){
-                    motor_speed_out = (rxbuffer_tab[i+1] << 8) | rxbuffer_tab[i+1];
+                    motor_speed_out = rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8);
                     i++;
                 }
                 break;
@@ -135,10 +135,10 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 
     switch(rxbuffer_tab[0]+nb_tx_octet){
     case 0x00:
-        SSPBUF = (unsigned char)nb_pulse;
+        SSPBUF = nb_pulse;
         break;
     case 0x01:
-        SSPBUF = (unsigned char)(nb_pulse >> 8);
+        SSPBUF = (nb_pulse >> 8);
         break;
     case 0x02:
         SSPBUF = (butee_out & 0b1)
@@ -149,13 +149,25 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
                 | ((RC6_bit & 0b1) << 6);
         break;
     case 0x03:
-        SSPBUF = position_set_point & 0xFF;
+        SSPBUF = position_set_point;
         break;
     case 0x04:
         SSPBUF = position_set_point >> 8;
         break;
     case 0x05:
         SSPBUF = motor_current_speed;
+        break;
+    case 0x06:
+        SSPBUF = motor_speed_in;
+        break;
+    case 0x07:
+        SSPBUF = motor_speed_in >> 8;
+        break;
+    case 0x08:
+        SSPBUF = motor_speed_out;
+        break;
+    case 0x09:
+        SSPBUF = motor_speed_out >> 8;
         break;
     default:
         SSPBUF = 0x00;

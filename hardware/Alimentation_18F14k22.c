@@ -398,12 +398,9 @@ void main(){
 
       ALIM = 1;
       led_delay = 1;
-      start_time_to_stop = 1;
       if(time_to_stop==0){
-        start_time_to_stop = 0;
         for(k=0; k<3; k++)
           time_to_start[k] = default_time_to_start[k];
-        start_time_to_start = 1;
         state = SLEEP;
         time_to_stop = default_time_to_stop;
       }
@@ -414,7 +411,6 @@ void main(){
       led_delay = 600;
       if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
         state = POWER_ON;
-        start_time_to_start = 0;
       }
       break;
     default:
@@ -439,7 +435,7 @@ void interrupt(){
   if (TMR0IF_bit){
 
     // To Do
-    if(start_time_to_start == 1){
+    if(state = SLEEP){
       if(time_to_start[2]>0){
         time_to_start[2]--;
       }
@@ -457,23 +453,24 @@ void interrupt(){
       }
     }
 
-    if(start_time_to_stop == 1){
+    if(state = WAIT_TO_SLEEP){
       if(time_to_stop>0)
         time_to_stop--;
     }
 
     // Watchdog
-    if(state != IDLE && state != SLEEP){
+    if(state == POWER_ON){
       if(watchdog_restart>0)
         watchdog_restart--;
       else{
        // hour, min, sec
         default_time_to_start[0] = 0;
         default_time_to_start[1] = 0;
-        default_time_to_start[2] = 2;
+        default_time_to_start[2] = 2; // 2s
         time_to_stop = 10;
-        watchdog_restart = watchdog_restart_default;
+        
         state = WAIT_TO_SLEEP;
+        watchdog_restart = watchdog_restart_default;
       }
     }
     
