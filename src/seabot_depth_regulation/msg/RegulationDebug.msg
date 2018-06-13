@@ -1,6 +1,6 @@
-float32 volume_piston
-float32 depth_set_point
-float32 K
-float32 target_position
-uint16 offset_piston
-uint16 target_position_offset
+float32 acceleration
+float32 velocity
+float32 depth_error
+float32 u
+float32 piston_set_point
+uint16 piston_set_point_offset

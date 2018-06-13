@@ -432,14 +432,6 @@ void interrupt_low(){
     /// ********************** I2C     ******************* //
 
     if (PIR1.SSPIF){  // I2C Interrupt
-
-      if ((SSPCON1.SSPOV) || (SSPCON1.WCOL)){ //If overflow or collision
-        tmp_rx = SSPBUF; // Read the previous value to clear the buffer
-        SSPCON1.SSPOV = 0; // Clear the overflow flag
-        SSPCON1.WCOL = 0; // Clear the collision bit
-        SSPCON1.CKP = 1;
-      }
-
       //****** receiving data from master ****** //
       if (SSPSTAT.R_W == 0){ // 0 = Write
         if (SSPSTAT.D_A == 0){ // Address
@@ -462,6 +454,11 @@ void interrupt_low(){
             if(nb_rx_octet>1) // Case Command + Value(s)
                 i2c_read_data_from_buffer();
         }
+
+        if(SSPCON1.SSPOV){
+          SSPCON1.SSPOV = 0;
+          tmp_rx = SSPBUF;
+        }
       }
       //******  transmitting data to master ****** //
       else{ 
@@ -473,10 +470,8 @@ void interrupt_low(){
           SSPCON1.CKP = 1;
           while(SSPSTAT.BF == 1){};
           nb_tx_octet++;
-          if(SSPCON1.WCOL){
+          if(SSPCON1.WCOL)
             SSPCON1.WCOL = 0;
-            tmp_rx = SSPBUF;
-          }
       }
     }
     
