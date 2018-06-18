@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
 
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
+        ros::spinOnce();
+
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
         m_pressure = comp_data.pressure/100.0;
         m_humidity = comp_data.humidity;
@@ -196,7 +198,6 @@ int main(int argc, char *argv[])
         pub1_freq.tick();
 
         updater.update();
-        ros::spinOnce();
         loop_rate.sleep();
     }
 

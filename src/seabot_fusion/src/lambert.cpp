@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
       pose_pub.publish(msg_point);
     }
 
-    ros::spinOnce();
     loop_rate.sleep();
   }
   return 0;

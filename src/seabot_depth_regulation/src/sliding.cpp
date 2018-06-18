@@ -101,8 +101,6 @@ int main(int argc, char *argv[]){
             position_msg.position = 0;
         }
         position_pub.publish(position_msg);
-
-        ros::spinOnce();
         loop_rate.sleep();
     }
 

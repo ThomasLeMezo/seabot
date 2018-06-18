@@ -30,6 +30,7 @@ int main(int argc, char *argv[]){
 
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
+        ros::spinOnce();
         if(p1.measure() == true){
             msg.temperature = p1.get_temperature();
             msg.pressure = p1.get_pression();
@@ -37,10 +38,7 @@ int main(int argc, char *argv[]){
 
             pub.publish(msg);
         }
+        loop_rate.sleep();
     }
-
-    ros::spinOnce();
-    loop_rate.sleep();
-
     return 0;
 }

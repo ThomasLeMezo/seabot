@@ -413,6 +413,7 @@ void main(){
         state = POWER_ON;
       }
       break;
+
     default:
       state = POWER_ON;
       break;
@@ -435,7 +436,7 @@ void interrupt(){
   if (TMR0IF_bit){
 
     // To Do
-    if(state = SLEEP){
+    if(state == SLEEP){
       if(time_to_start[2]>0){
         time_to_start[2]--;
       }
@@ -549,7 +550,7 @@ void interrupt_low(){
           }
         }
           
-        if(SSPSTAT.P == 1 and nb_rx_octet>1){ // Case Command + Value(s)
+        if(SSPSTAT.P == 1 && nb_rx_octet>1){ // Case Command + Value(s)
           i2c_read_data_from_buffer();
         }
       }

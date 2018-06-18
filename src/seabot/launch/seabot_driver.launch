@@ -16,7 +16,7 @@
                         <param name="frequency" value="5.0" />
                 </node>
 
-                <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster">
+<!--                <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster">
                   <param name="frequency" value="15.0" />
                 </node>
 
@@ -24,6 +24,6 @@
                   <param name="port" value="/dev/gps" />
                   <param name="baud" value="115200" />
                   <param name="useRMC" value="True" />
-                </node>
+                </node>-->
         </group>
 </launch>

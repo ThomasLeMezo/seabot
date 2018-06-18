@@ -81,7 +81,6 @@ int main(int argc, char *argv[]){
       cmd_pub.publish(cmd_msg);
     }
 
-    ros::spinOnce();
     loop_rate.sleep();
   }
 

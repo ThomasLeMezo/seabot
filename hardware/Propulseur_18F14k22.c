@@ -350,7 +350,7 @@ void interrupt_low(){
           }
         }
           
-        if(SSPSTAT.P == 1 and nb_rx_octet>1){ // Case Command + Value(s)
+        if(SSPSTAT.P == 1 && nb_rx_octet>1){ // Case Command + Value(s)
           i2c_read_data_from_buffer();
         }
       }
