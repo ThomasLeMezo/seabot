@@ -454,7 +454,7 @@ void interrupt(){
       }
     }
 
-    if(state = WAIT_TO_SLEEP){
+    if(state == WAIT_TO_SLEEP){
       if(time_to_stop>0)
         time_to_stop--;
     }
