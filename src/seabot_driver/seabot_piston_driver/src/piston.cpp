@@ -56,7 +56,7 @@ void Piston::set_piston_speed(const uint16_t &speed_in, const uint16_t &speed_ou
   buff[1] = speed_in >> 8;
   buff[2] = speed_out;
   buff[3] = speed_out >> 8;
-  if(i2c_smbus_write_i2c_block_data(m_file, 0x12, 4, buff)!=4)
+  if(i2c_smbus_write_i2c_block_data(m_file, 0x12, 4, buff)<0)
     ROS_WARN("[Piston_driver] I2C bus Failure - Set Speed In/Out");
 }
 
@@ -69,7 +69,7 @@ void Piston::set_piston_position(const uint16_t &position) const{
 void Piston::get_piston_all_data(){
   uint8_t buff[6];
   if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 6,buff) != 6)
-    ROS_WARN("[Piston_driver] I2C Bus Failure");
+    ROS_WARN("[Piston_driver] I2C Bus Failure - Read piston data");
 
   m_position = (buff[1] << 8 | buff[0])/4.0;
   m_switch_out = buff[2] & 0b1;

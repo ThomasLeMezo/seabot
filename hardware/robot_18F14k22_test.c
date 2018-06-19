@@ -103,7 +103,7 @@ void i2c_read_data_from_buffer(){
 
             case 0x10:  // consigne de postion
                 if(nb_data >= i+2){
-                    position_set_point = 4*(rxbuffer_tab[i+1] | (rxbuffer_tab[i+1] << 8));
+                    position_set_point = 4*(rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
                     i++;
                 }
                 break;
@@ -539,24 +539,29 @@ void interrupt_low(){
 
       //****** receiving data from master ****** //
       // 0 = Write (master -> slave - reception)
-      if (SSPSTAT.R_W == 0){ 
-        if (SSPSTAT.D_A == 0){ // Address
-          nb_rx_octet = 0;
-          tmp_rx = SSPBUF;
-        }
-        else{ // Data
-          if(nb_rx_octet < SIZE_RX_BUFFER){
-            rxbuffer_tab[nb_rx_octet] = SSPBUF;
-            nb_rx_octet++;
-          }
-          else{
+      if (SSPSTAT.R_W == 0){
+        if(SSPSTAT.P == 0){ 
+          if (SSPSTAT.D_A == 0){ // Address
+            nb_rx_octet = 0;
             tmp_rx = SSPBUF;
+          }
+          else{ // Data
+            if(nb_rx_octet < SIZE_RX_BUFFER){
+              rxbuffer_tab[nb_rx_octet] = SSPBUF;
+              nb_rx_octet++;
+            }
+            else{
+              tmp_rx = SSPBUF;
+            }
+          }
+        }
+        else{
+          if(nb_rx_octet>1){ // Case Command + Value(s)
+            i2c_read_data_from_buffer();
           }
         }
           
-        if(SSPSTAT.P == 1 && nb_rx_octet>1){ // Case Command + Value(s)
-          i2c_read_data_from_buffer();
-        }
+        
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
