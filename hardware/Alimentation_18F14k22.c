@@ -52,14 +52,14 @@ sbit ALIM at LATA.B5; // sortie MOSFET de puissance, commande de l'alimentation
 // I2C
 #define ADDRESS_I2C 0x72;
 #define SIZE_RX_BUFFER 8
-volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-volatile unsigned short tmp_rx = 0;
-volatile unsigned short nb_tx_octet = 0;
-volatile unsigned short nb_rx_octet = 0;
+unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+unsigned short tmp_rx = 0;
+unsigned short nb_tx_octet = 0;
+unsigned short nb_rx_octet = 0;
 
 // ILS
 #define ILS_CPT_TIME 4
-volatile unsigned short ils_cpt = 4;
+unsigned short ils_cpt = 4;
 unsigned short ils_removed = 1;
 
 // State Machine
@@ -95,7 +95,7 @@ unsigned short start_time_to_start = 0;
 unsigned short k = 0;
 
 // Watchdog
-volatile unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
+unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
 unsigned int watchdog_restart_default = 3600;
 
 /**
@@ -320,7 +320,7 @@ void main(){
   ALIM = 0; // sortie MOSFET de puissance, commande de l'alimentation
   battery_global_default = 0;
 
-  UART1_Init(9600);
+  UART1_Init(115200);
 
   delay_ms(1000);
 
@@ -554,13 +554,10 @@ void interrupt_low(){
             }
           }
         }
-        else{
-          if(nb_rx_octet>1){ // Case Command + Value(s)
+
+        if(SSPSTAT.P == 1 && nb_rx_octet>1){
             i2c_read_data_from_buffer();
-          }
         }
-          
-        
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)

@@ -352,13 +352,10 @@ void interrupt_low(){
             }
           }
         }
-        else{
-          if(nb_rx_octet>1){ // Case Command + Value(s)
+
+        if(SSPSTAT.P == 1 && nb_rx_octet>1){
             i2c_read_data_from_buffer();
-          }
         }
-          
-        
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)

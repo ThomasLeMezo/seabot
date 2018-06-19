@@ -45,7 +45,7 @@ sbit SA at RA2_bit;
 sbit SB at RA4_bit;
 sbit LED1 at RC0_bit;
 
-#define ADDRESS_I2C 0x70; //adresse I2C du circuit, 0x38 sous linux
+
 
 // Sensors
 unsigned short optical_state;
@@ -69,6 +69,7 @@ enum robot_state {IDLE,RESET_OUT,REGULATION};
 unsigned char state = RESET_OUT;
 
 // I2C
+#define ADDRESS_I2C 0x70; //adresse I2C du circuit, 0x38 sous linux
 #define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
@@ -556,13 +557,10 @@ void interrupt_low(){
             }
           }
         }
-        else{
-          if(nb_rx_octet>1){ // Case Command + Value(s)
+
+        if(SSPSTAT.P == 1 && nb_rx_octet>1){
             i2c_read_data_from_buffer();
-          }
         }
-          
-        
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
