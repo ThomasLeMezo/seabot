@@ -39,12 +39,14 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 */
 
 // I2C
-#define ADDRESS_I2C 0x39; // Linux Version
+const unsigned short ADDRESS_I2C = 0x39; // Linux Version
 #define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
+
+void init_i2c();
 
 sbit BAT1 at PORTC.B0; // entrée de controle de tension BAT1
 sbit BAT2 at PORTC.B1; // entrée de controle de tension BAT2

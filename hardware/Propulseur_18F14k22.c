@@ -56,12 +56,14 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 */
 
 // I2C
-#define ADDRESS_I2C 0x20;
+const unsigned short ADDRESS_I2C = 0x20;
 #define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
+
+void init_i2c();
 
 sbit MOT1 at LATC.B0; // sorties de commande moteur 1
 sbit MOT2 at LATC.B1; // sorties de commande moteur 2

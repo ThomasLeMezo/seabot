@@ -26,12 +26,14 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define ADDRESS_I2C 0x38 // linux I2C Adresse
+const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
+
+void init_i2c();
 
 sbit SA at RA2_bit;
 sbit SB at RA4_bit;
@@ -318,7 +320,7 @@ void main(){
     OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
 
     init_io(); // Initialisation des I/O
-    init_i2C(ADDRESS_I2C); // Initialisation de l'I2C en esclave
+    init_i2C(); // Initialisation de l'I2C en esclave
     init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
 
     // Initialisation de l'entrée d'interruption INT0 pour la butée haute
