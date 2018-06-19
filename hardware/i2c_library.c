@@ -95,6 +95,8 @@ void interrupt_low(){
   }
 }
 
+// http://www.microchip.com/forums/m14311.aspx
+
 // D/A   P    S  R/W  UA  BF  State
 //  X    0    1   0   0   0   Start
 //  0    0    1   0   0   1   Rcvd write address
@@ -103,3 +105,6 @@ void interrupt_low(){
 //  1    0    1   1   0   0   Ready for data to send to master
 //  1    Z    1   0   0   0   Data byte sent, master responded with NAK
 //  1    1    0   0   0   0   Stop
+// ("X" is 0 until any event which sets D/A. Thereafter it is always 1.)
+// ("Y" is usually 0, but may be 1 after the last byte is received if something delays the interrupt service.)
+// ("Z" is usually 0, but may be 1 if something delays the interrupt service.)
