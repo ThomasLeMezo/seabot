@@ -55,6 +55,13 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 */
 
+// I2C
+#define ADDRESS_I2C 0x20;
+#define SIZE_RX_BUFFER 8
+unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+unsigned short tmp_rx = 0;
+unsigned short nb_tx_octet = 0;
+unsigned short nb_rx_octet = 0;
 
 sbit MOT1 at LATC.B0; // sorties de commande moteur 1
 sbit MOT2 at LATC.B1; // sorties de commande moteur 2
@@ -72,9 +79,6 @@ unsigned char cpt_motor_1 = 0;
 unsigned char cpt_motor_2 = 0;
 unsigned char cpt_motor_3 = 0;
 unsigned int cpt_global = PWM_PERIOD;
-
-// I2C
-#define ADDRESS_I2C 0x20;
 
 // Watchdog
 unsigned short watchdog_restart = 3;
@@ -269,5 +273,103 @@ void interrupt(){
     TMR0H = 0x0B;
     TMR0L = 0xDC;
     TMR0IF_bit = 0;
+  }
+}
+
+/**
+ * @brief initialisation de l'I2C en mode esclave
+ */
+void init_i2c(){
+
+  // **** IO I2C **** //
+  TRISB4_bit = 1; // RB4 en entrée
+  TRISB6_bit = 1; // RB6 en entrée
+
+  // **** Interruptions **** //
+  PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
+  PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
+
+  PIR2.BCLIE = 1;
+  PIR2.BCLIF = 0;
+
+  // **** ADDRESS **** //
+  SSPADD = (ADDRESS_I2C << 1); // Address Register, Get address (7-1 bit). Lsb is read/write flag
+  SSPMSK = 0xFF; // A zero (‘0’) bit in the SSPMSK register has the effect of making
+                 // the corresponding bit in the SSPSR register a “don’t care”
+
+  // **** SSPSTAT **** //
+  SSPSTAT.SMP = 1; // Slew Rate Control bit
+  // 1 = Slew rate control disabled for standard Speed mode (100 kHz and 1 MHz)
+  // 0 = Slew rate control enabled for High-Speed mode (400 kHz)
+  SSPSTAT.CKE = 1; // // SMBusTM Select bit (1 = Enable SMBus specific inputs)
+
+  // **** SSPCON2 **** //
+  SSPCON2 = 0x00;
+  SSPCON2.GCEN = 0; // General Call Enable bit (0 = disabled)
+  SSPCON2.SEN = 1; // Start Condition Enable/Stretch Enable bit (1 = enabled)
+
+  // **** SSPCON1 **** //
+  SSPCON1.WCOL = 0; // Write Collision Detect bit
+  SSPCON1.SSPOV = 0; // Receive Overflow Indicator bit
+  SSPCON1.CKP = 1; // SCK Release Control bit (1=Release clock)
+  SSPCON1.SSPM3 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+  SSPCON1.SSPM2 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+  SSPCON1.SSPM1 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+  SSPCON1.SSPM0 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+
+  // (START the I2C Module)
+  SSPCON1.SSPEN = 1; // Synchronous Serial Port Enable bit
+}
+
+/**
+ * @brief interrupt_low
+ */
+void interrupt_low(){
+  if (PIR1.SSPIF){  // I2C Interrupt
+
+      if(SSPCON1.SSPOV || SSPCON1.WCOL){
+          SSPCON1.SSPOV = 0;
+          SSPCON1.WCOL = 0;
+          tmp_rx = SSPBUF;
+      }
+
+      //****** receiving data from master ****** //
+      // 0 = Write (master -> slave - reception)
+      if (SSPSTAT.R_W == 0){
+        if (SSPSTAT.D_A == 0){ // Address
+          nb_rx_octet = 0;
+          tmp_rx = SSPBUF;
+        }
+        else{ // Data
+          if(nb_rx_octet < SIZE_RX_BUFFER){
+            rxbuffer_tab[nb_rx_octet] = SSPBUF;
+            nb_rx_octet++;
+          }
+          else{
+            tmp_rx = SSPBUF;
+          }
+        }
+
+        if(nb_rx_octet>1){
+          Delay_us(30); // Wait P signal ?
+          if(SSPSTAT.P == 0)
+            i2c_read_data_from_buffer();
+        }
+      }
+      //******  transmitting data to master ****** //
+      // 1 = Read (slave -> master - transmission)
+      else{
+          if(SSPSTAT.D_A == 0){
+            nb_tx_octet = 0;
+            tmp_rx = SSPBUF;
+          }
+
+          // In both D_A case (transmit data after receive add)
+          i2c_write_data_to_buffer(nb_tx_octet);
+          nb_tx_octet++;
+      }
+
+    SSPCON1.CKP = 1;
+    PIR1.SSPIF = 0; // reset SSP interrupt flag
   }
 }
