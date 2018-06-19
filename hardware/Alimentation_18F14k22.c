@@ -332,6 +332,9 @@ void main(){
   INTCON.GIEH = 1; //enable all high-priority interrupts
   INTCON.GIEL = 1; //enable all low-priority interrupts
 
+  INTCON.GIE = 1; // Global Interrupt Enable bit
+  INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
+
   TMR0IE_bit = 1;  //Enable TIMER0
   TMR0ON_bit = 1; // Start TIMER1
   

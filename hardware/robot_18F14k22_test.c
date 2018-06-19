@@ -311,6 +311,7 @@ void init_i2C(){
     PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
     PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
     // a transmission/reception has taken place.
+    PIR2.BCLIE = 1;
     PIR2.BCLIF = 0;
 }
 
