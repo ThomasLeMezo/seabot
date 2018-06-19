@@ -38,6 +38,8 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 
 */
 
+#include "i2c_library.h"
+
 sbit BAT1 at PORTC.B0; // entrée de controle de tension BAT1
 sbit BAT2 at PORTC.B1; // entrée de controle de tension BAT2
 sbit BAT3 at PORTC.B2; // entrée de controle de tension BAT2
@@ -50,12 +52,7 @@ sbit LED_PUISSANCE at LATA.B4; // sortie LED de puissance
 sbit ALIM at LATA.B5; // sortie MOSFET de puissance, commande de l'alimentation
 
 // I2C
-#define ADDRESS_I2C 0x72;
-#define SIZE_RX_BUFFER 8
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+#define ADDRESS_I2C 0x39; // Linux Version
 
 // ILS
 #define ILS_CPT_TIME 4
@@ -213,31 +210,6 @@ void analyze_batteries_voltage(){
 }
 
 /**
- * @brief initialisation de l'I2C en mode esclave
- */
-void init_i2c(){
-  SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
-  SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
-  SSPCON1.SSPEN = 1;
-  // bit 3-0 SSPM3:SSPM0: I2C Firmware Controlled Master mode,
-  // 7-bit address with START and STOP bit interrupts enabled
-  // bit 4 CKP: 1 = Enable clock
-  // bit 5 SSPEN: Enables the serial port and configures the SDA and SCL
-  // pins as the source of the serial port pins
-
-  SSPCON2 = 0x00;
-  SSPSTAT=0x00;
-  SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz)
-  SSPSTAT.CKE = 1; // 1 = Input levels conform to SMBus spec
-
-  PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
-  PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
-  // a transmission/reception has taken place.
-  PIR2.BCLIE = 1;
-  PIR2.BCLIF = 0;
-}
-
-/**
  * @brief init_timer0
  * Fonction d'initialisation du TIMER0
  * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
@@ -285,9 +257,6 @@ void init_io(){
 
   INTCON2.RABPU = 0; // PORTA and PORTB Pull-up Enable bit
   WPUA.WPUA2 = 1; // Pull-up enabled sur RA2
-  
-  TRISB4_bit = 1; // RB4 en entrée
-  TRISB6_bit = 1; // RB6 en entrée
 
   TRISB5_bit = 1; // RB5 en entrée
   TRISB7_bit = 0; // RB6 en sortie
@@ -519,66 +488,4 @@ void interrupt(){
     TMR3L = 0xB0;
     TMR3IF_bit = 0;
   }
-}
-
-/**
- * @brief interrupt_low
- */
-void interrupt_low(){
-/// ************************************************** //
-    /// ********************** I2C ******************* //
-
-    if (PIR1.SSPIF){  // I2C Interrupt
-
-      if(SSPCON1.SSPOV || SSPCON1.WCOL){
-          SSPCON1.SSPOV = 0;
-          SSPCON1.WCOL = 0;
-          tmp_rx = SSPBUF;
-      }            
-
-      //****** receiving data from master ****** //
-      // 0 = Write (master -> slave - reception)
-      if (SSPSTAT.R_W == 0){
-        if(SSPSTAT.P == 0){ 
-          if (SSPSTAT.D_A == 0){ // Address
-            nb_rx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-          else{ // Data
-            if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
-              nb_rx_octet++;
-            }
-            else{
-              tmp_rx = SSPBUF;
-            }
-          }
-        }
-
-        if(SSPSTAT.P == 1 && nb_rx_octet>1){
-            i2c_read_data_from_buffer();
-        }
-      }
-      //******  transmitting data to master ****** //
-      // 1 = Read (slave -> master - transmission)
-      else{
-          if(SSPSTAT.D_A == 0){
-            nb_tx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-
-          // In both D_A case
-          i2c_write_data_to_buffer(nb_tx_octet);
-          SSPCON1.CKP = 1;
-          nb_tx_octet++;
-      }
-    }
-    
-    if (PIR2.BCLIF){
-        PIR2.BCLIF = 0;
-        tmp_rx = SSPBUF;
-        SSPCON1.CKP = 1;
-    }
-    
-    PIR1.SSPIF = 0; // reset SSP interrupt flag
 }

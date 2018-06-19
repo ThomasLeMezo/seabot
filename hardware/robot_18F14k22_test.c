@@ -1,19 +1,6 @@
 /*  PIC18F14K22  mikroC PRO for PIC v6.4
 Oscillateur interne sur quartz 16MHZ
 
-* 20/04 essai sur carte finale
-* 24/04 essai du retour d'info (NB impulsions et butées), bon fonctionnement
-        bug Consigne deux fois de suite nécessaire corrigé (conflit d'interruption
-        avec le TIMER3, arrêt du TIMER3)
-* 25/04 Bon fonctionnement sur un ensemble de consignes (ds les deux sens), la consigne est envoyé quand le
-        moteur est arrêter, au final on retrouve le bon nombre d'impulsions avec test6.py
-        Problème si sur un ensemble de consignes(avec changement en cours d'une Consigne, on perd des consigne) avec test7.py
-* 26/04 Essai de la lecture du capteur de fourche en polling ds l'état 3 (et non plus en interruption), pour
-        rendre l'I2C prioritaire, bon fonctionnement sur le programme test9.py
-* 27/04 Test sur le programme test9.py, ensemble de consignes ds les deux Sens (sans attendre la fin de la Consigne,
-        avec demande I2C du nombre d'impulsions pendant le deplacement, avec Consigne de départ identique à la Consigne
-        d'arrivée, pas de décalage d'impulsions.
-
 Hardware:
   18F14K22  DIP20,SOIC
   
@@ -45,8 +32,6 @@ sbit SA at RA2_bit;
 sbit SB at RA4_bit;
 sbit LED1 at RC0_bit;
 
-
-
 // Sensors
 unsigned short optical_state;
 int nb_pulse = 0;  // Nombre d'impulsions de la sortie de l'opto OPB461T11
@@ -69,12 +54,7 @@ enum robot_state {IDLE,RESET_OUT,REGULATION};
 unsigned char state = RESET_OUT;
 
 // I2C
-#define ADDRESS_I2C 0x70; //adresse I2C du circuit, 0x38 sous linux
-#define SIZE_RX_BUFFER 8
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+#define ADDRESS_I2C 0x38; // linux I2C Adresse
 
 // Watchdog
 unsigned short watchdog_restart = 60;
@@ -292,31 +272,6 @@ void init_timer0(){
 }
 
 /**
- * @brief initialisation de l'I2C en mode esclave
- */
-void init_i2C(){
-    SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
-    SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
-    SSPCON1.SSPEN = 1;
-    // bit 3-0 SSPM3:SSPM0: I2C Firmware Controlled Master mode,
-    // 7-bit address with START and STOP bit interrupts enabled
-    // bit 4 CKP: 1 = Enable clock
-    // bit 5 SSPEN: Enables the serial port and configures the SDA and SCL
-    // pins as the source of the serial port pins
-
-    SSPCON2 = 0x00;
-    SSPSTAT=0x00;   
-    SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz)
-    SSPSTAT.CKE = 1; // 1 = Input levels conform to SMBus spec
-
-    PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
-    PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
-    // a transmission/reception has taken place.
-    PIR2.BCLIE = 1;
-    PIR2.BCLIF = 0;
-}
-
-/**
  * @brief Initialisation des entrées sorties du PIC
  */
 void init_io(){
@@ -340,9 +295,7 @@ void init_io(){
     //WPUA.WPUA2 = 1; // Pull-up enabled sur RA2, sur sortie de l'opto HOA0901 (sortie collecteur ouvert)
     //WPUA.WPUA3 = 1; // Pull-up enabled sur RA3, sur sortie de l'opto HOA0901 (sortie collecteur ouvert)
 
-    TRISB4_bit = 1; // RB4 en entrée
     TRISB5_bit = 0; // RB5 en sortie
-    TRISB6_bit = 1; // RB6 en entrée
     TRISB7_bit = 0; // RB7 en sortie
 
     TRISC = 0xFF;
@@ -354,14 +307,6 @@ void init_io(){
 
     RC6_bit = 0;
 }
-
-// void debug_uart(){
-//     if(state != old_state){
-//         UART1_Write(255);
-//         UART1_Write(state);
-//         old_state = state;
-//     }
-// }
 
 /**
  * @brief main
@@ -469,6 +414,11 @@ void main(){
         default:
             break;
         }
+    
+        if(nb_rx_octet>1 && SSPSTAT.P == 1){
+          nb_rx_octet = 0;
+          i2c_read_data_from_buffer();
+        }
     }
 }
 
@@ -522,66 +472,4 @@ void interrupt(){
         TMR0L = 0xDC;
         TMR0IF_bit = 0;
     }
-}
-
-/**
- * @brief interrupt_low
- */
-void interrupt_low(){
-/// ************************************************** //
-    /// ********************** I2C ******************* //
-
-    if (PIR1.SSPIF){  // I2C Interrupt
-
-      if(SSPCON1.SSPOV || SSPCON1.WCOL){
-          SSPCON1.SSPOV = 0;
-          SSPCON1.WCOL = 0;
-          tmp_rx = SSPBUF;
-      }            
-
-      //****** receiving data from master ****** //
-      // 0 = Write (master -> slave - reception)
-      if (SSPSTAT.R_W == 0){
-        if(SSPSTAT.P == 0){ 
-          if (SSPSTAT.D_A == 0){ // Address
-            nb_rx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-          else{ // Data
-            if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
-              nb_rx_octet++;
-            }
-            else{
-              tmp_rx = SSPBUF;
-            }
-          }
-        }
-
-        if(SSPSTAT.P == 1 && nb_rx_octet>1){
-            i2c_read_data_from_buffer();
-        }
-      }
-      //******  transmitting data to master ****** //
-      // 1 = Read (slave -> master - transmission)
-      else{
-          if(SSPSTAT.D_A == 0){
-            nb_tx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-
-          // In both D_A case
-          i2c_write_data_to_buffer(nb_tx_octet);
-          SSPCON1.CKP = 1;
-          nb_tx_octet++;
-      }
-    }
-    
-    if (PIR2.BCLIF){
-        PIR2.BCLIF = 0;
-        tmp_rx = SSPBUF;
-        SSPCON1.CKP = 1;
-    }
-    
-    PIR1.SSPIF = 0; // reset SSP interrupt flag
 }

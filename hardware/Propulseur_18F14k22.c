@@ -38,8 +38,6 @@ Max forward     1900 microseconds
 Max reverse     1100 microseconds
 Signal Deadband    +/- 25 microseconds (centered around 1500 microseconds)
 
-
-
 1500us moteur stoppé
 <1500us moteur en arrière (vitesse max en arrière 1100us)
 >1500us moteur en avant (vitesse max en avant 1900us)
@@ -49,9 +47,7 @@ on prendra une fréquence de 50Hz, donc T = 20ms
 Utilisation de quatre Timer:
 
 TIMER0: Géneration de la période de 20ms
-TIMER1: Géneration d'une temporisation variable par pas de 10us, sortie MOT1 active
-TIMER2: Géneration d'une temporisation variable par pas de 10us, sortie MOT2 active
-TIMER3: Géneration d'une temporisation variable par pas de 10us, sortie MOT3 active
+TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 1500us --> 150 pas de 10us --> moteur stoppé
 1100us --> 110 pas de 10us --> moteur vitesse max en arrière
@@ -68,25 +64,21 @@ sbit LED at LATA.B2; // sortie LED
 
 // Motor
 #define MOTOR_CMD_STOP 150
+#define PWM_PERIOD 2000
 unsigned short cmd_motor[3] = {MOTOR_CMD_STOP, MOTOR_CMD_STOP, MOTOR_CMD_STOP};
-unsigned int cmd_global = 2000;
+
 
 unsigned char cpt_motor_1 = 0;
 unsigned char cpt_motor_2 = 0;
 unsigned char cpt_motor_3 = 0;
-unsigned int cpt_global = 2000;
+unsigned int cpt_global = PWM_PERIOD;
 
 // I2C
-#define ADDRESS_I2C 0x40;
-#define SIZE_RX_BUFFER 4
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+#define ADDRESS_I2C 0x20;
 
 // Watchdog
 unsigned short watchdog_restart = 3;
-unsigned short watchdog_restart_default = 3; // 3 s
+#define WATCHDOG_RESTART_DEFAULT 3 // 3 s
 
 /**
  * @brief i2c_read_data_from_buffer
@@ -105,7 +97,7 @@ void i2c_read_data_from_buffer(){
         cmd_motor[nb_motor] = MOTOR_CMD_STOP;
     }
   }
-  watchdog_restart = watchdog_restart_default;
+  watchdog_restart = WATCHDOG_RESTART_DEFAULT;
 }
 
 /**
@@ -114,42 +106,6 @@ void i2c_read_data_from_buffer(){
  */
 void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
   SSPBUF = 0x00;
-  // switch(rxbuffer_tab[0]+nb_tx_octet){
-  // case 0x00:
-  //   SSPBUF = 0x00;
-  //   break;
-  // case 0x01:
-  //   SSPBUF = 0x00;
-  //   break;
-  // default:
-  //   SSPBUF = 0x00;
-  //   break;
-  // }
-}
-
-/**
- * @brief initialisation de l'I2C en mode esclave
- */
-void init_i2C(){
-    SSPADD = ADDRESS_I2C; // Address Register, Get address (7bit). Lsb is read/write flag
-    SSPCON1 = 0x3E; // SYNC SERIAL PORT CONTROL REGISTER
-    SSPCON1.SSPEN = 1;
-    // bit 3-0 SSPM3:SSPM0: I2C Firmware Controlled Master mode,
-    // 7-bit address with START and STOP bit interrupts enabled
-    // bit 4 CKP: 1 = Enable clock
-    // bit 5 SSPEN: Enables the serial port and configures the SDA and SCL
-    // pins as the source of the serial port pins
-
-    SSPCON2 = 0x00;
-    SSPSTAT=0x00;   
-    SSPSTAT.SMP = 1; // 1 = Slew rate control disabled for standard speed mode (100 kHz and 1 MHz)
-    SSPSTAT.CKE = 1; // 1 = Input levels conform to SMBus spec
-
-    PIE1.SSPIE = 1; // Synchronous Serial Port Interrupt Enable bit
-    PIR1.SSPIF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
-    // a transmission/reception has taken place.
-    PIR2.BCLIE = 1;
-    PIR2.BCLIF = 0;
 }
 
 /**
@@ -184,7 +140,6 @@ void init_timer1(){
  * Initialisation des entrées sorties du PIC
  */
 void init_io(){
-
   ANSEL = 0xFF;
 
   CM1CON0 = 0x00; // Not using the comparators
@@ -200,8 +155,6 @@ void init_io(){
   INTCON.RABIE = 0;
   INTCON2.RABPU = 1; // PORTA and PORTB Pull-up disable bit
 
-  TRISB4_bit = 1; // RB4 en entrée
-  TRISB6_bit = 1; // RB6 en entrée
   TRISB5_bit = 0; // RB5 en sortie
   TRISB7_bit = 0; // RB7 en sortie
 
@@ -269,7 +222,7 @@ void interrupt(){
       MOT1 = 1;
       MOT2 = 1;
       MOT3 = 1;
-      cpt_global = cmd_global;
+      cpt_global = PWM_PERIOD;
 
       cpt_motor_1 = cmd_motor[0];
       cpt_motor_2 = cmd_motor[1];
@@ -310,73 +263,11 @@ void interrupt(){
       cmd_motor[0] = MOTOR_CMD_STOP;
       cmd_motor[1] = MOTOR_CMD_STOP;
       cmd_motor[2] = MOTOR_CMD_STOP;
-      watchdog_restart = watchdog_restart_default;
+      watchdog_restart = WATCHDOG_RESTART_DEFAULT;
     }
 
     TMR0H = 0x0B;
     TMR0L = 0xDC;
     TMR0IF_bit = 0;
   }
-}
-
-/**
- * @brief interrupt_low
- */
-void interrupt_low(){
-/// ************************************************** //
-    /// ********************** I2C ******************* //
-
-    if (PIR1.SSPIF){  // I2C Interrupt
-
-      if(SSPCON1.SSPOV || SSPCON1.WCOL){
-          SSPCON1.SSPOV = 0;
-          SSPCON1.WCOL = 0;
-          tmp_rx = SSPBUF;
-      }            
-
-      //****** receiving data from master ****** //
-      // 0 = Write (master -> slave - reception)
-      if (SSPSTAT.R_W == 0){
-        if(SSPSTAT.P == 0){ 
-          if (SSPSTAT.D_A == 0){ // Address
-            nb_rx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-          else{ // Data
-            if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
-              nb_rx_octet++;
-            }
-            else{
-              tmp_rx = SSPBUF;
-            }
-          }
-        }
-
-        if(SSPSTAT.P == 1 && nb_rx_octet>1){
-            i2c_read_data_from_buffer();
-        }
-      }
-      //******  transmitting data to master ****** //
-      // 1 = Read (slave -> master - transmission)
-      else{
-          if(SSPSTAT.D_A == 0){
-            nb_tx_octet = 0;
-            tmp_rx = SSPBUF;
-          }
-
-          // In both D_A case
-          i2c_write_data_to_buffer(nb_tx_octet);
-          SSPCON1.CKP = 1;
-          nb_tx_octet++;
-      }
-    }
-    
-    if (PIR2.BCLIF){
-        PIR2.BCLIF = 0;
-        tmp_rx = SSPBUF;
-        SSPCON1.CKP = 1;
-    }
-    
-    PIR1.SSPIF = 0; // reset SSP interrupt flag
 }
