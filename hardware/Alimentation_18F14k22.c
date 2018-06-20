@@ -555,24 +555,28 @@ void interrupt_low(){
       //****** receiving data from master ****** //
       // 0 = Write (master -> slave - reception)
       if (SSPSTAT.R_W == 0){
-        if (SSPSTAT.D_A == 0){ // Address
-          nb_rx_octet = 0;
-          tmp_rx = SSPBUF;
-        }
-        else{ // Data
-          if(nb_rx_octet < SIZE_RX_BUFFER){
-            rxbuffer_tab[nb_rx_octet] = SSPBUF;
-            nb_rx_octet++;
-          }
-          else{
+        if(SSPSTAT.P == 0){
+          if (SSPSTAT.D_A == 0){ // Address
+            nb_rx_octet = 0;
             tmp_rx = SSPBUF;
+          }
+          else{ // Data
+            if(nb_rx_octet < SIZE_RX_BUFFER){
+              rxbuffer_tab[nb_rx_octet] = SSPBUF;
+              nb_rx_octet++;
+            }
+            else{
+              tmp_rx = SSPBUF;
+            }
           }
         }
 
         if(nb_rx_octet>1){
           Delay_us(30); // Wait P signal ?
-          if(SSPSTAT.P == 0)
+          if(SSPSTAT.P == 1){
             i2c_read_data_from_buffer();
+            nb_rx_octet = 0;
+          }
         }
       }
       //******  transmitting data to master ****** //
