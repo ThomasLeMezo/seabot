@@ -38,6 +38,7 @@ void init_i2c();
 sbit SA at RA2_bit;
 sbit SB at RA4_bit;
 sbit LED1 at RC0_bit;
+sbit LED2 at RC2_bit;
 
 // Sensors
 unsigned short optical_state;
@@ -55,9 +56,8 @@ int position_set_point = 0;
 signed int error = 0;
 
 // State machine
-int system_on = 1;
 unsigned short motor_on = 1;
-enum robot_state {IDLE,RESET_OUT,REGULATION};
+enum robot_state {RESET_OUT,REGULATION};
 unsigned char state = RESET_OUT;
 
 // Watchdog
@@ -70,9 +70,6 @@ void i2c_read_data_from_buffer(){
 
     for(i=0; i<nb_data; i++){
         switch(rxbuffer_tab[0]+i){
-            case 0x00:
-                system_on = (rxbuffer_tab[i+1]!=0x00);
-                break;
             case 0x01:
                 state = RESET_OUT;
                 break;
@@ -128,10 +125,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     case 0x02:
         SSPBUF = (butee_out & 0b1)
                 | ((butee_in & 0b1)<<1)
-                | ((state & 0b11) <<2) 
-                | ((system_on & 0b1) <<4)
-                | ((motor_on & 0b1) << 5)
-                | ((RC6_bit & 0b1) << 6);
+                | ((state & 0b11) <<2)
+                | ((motor_on & 0b1) << 4)
+                | ((RC6_bit & 0b1) << 5);
         break;
     case 0x03:
         SSPBUF = position_set_point;
@@ -164,10 +160,14 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
  * @brief Lecture des valeurs des butees
  */
 void read_butee(){
-    if (RA0_bit == 0)
+    if (RA0_bit == 0){
         butee_out = 1;
-    else
+        LED1 = 1;
+    }
+    else{
         butee_out = 0;
+        LED1 = 0;
+    }
     if (RA1_bit == 0)
         butee_in = 1;
     else
@@ -190,7 +190,7 @@ void set_motor_cmd_stop(){
  */
 void set_motor_cmd(unsigned short speed){
 
-    if(system_on==0 || motor_on == 0 || (butee_out == 1 && speed >= 127) || (butee_in == 1 && speed <= 127)){
+    if(motor_on == 0 || (butee_out == 1 && speed >= 127) || (butee_in == 1 && speed <= 127)){
         set_motor_cmd_stop();
     }
     else if(motor_current_speed != speed){
@@ -304,6 +304,7 @@ void init_io(){
 
     TRISC = 0xFF;
     TRISC0_bit = 0; // RC0 en sortie
+    TRISC2_bit = 0; // RC0 en sortie
     TRISC4_bit = 0; // RC4 en sortie
     TRISC5_bit = 0; // RC5 en sortie
     TRISC6_bit = 0; // RC6 en sortie
@@ -370,34 +371,25 @@ void main(){
 
         // State machine
         switch (state){
-        case IDLE: // Idle state
-            // debug_uart();
-            if(system_on == 1)
-                state = RESET_OUT;
-            break;
-
         case RESET_OUT:
             //debug_uart();
+            LED2 = 1;
 
-            if (system_on == 0){
-                state = IDLE;
-            }
-            else if (butee_out == 1){ // Sortie complète
+            if (butee_out == 1){ // Sortie complète
                 state = REGULATION;
                 optical_state = SB<<1 | SA;  //  ou logique de RA3 et RA2, lecture du capteur pour initialiser la machine d'état
                 nb_pulse = 0; // Reset Nb pulse (The reset is also done in the interrupt function)
                 position_set_point = 0;
-                LED1 = 1;
             }
-            else{
+            else
                 set_motor_cmd_out(motor_speed_out);
-            }
 
             break;
 
         case REGULATION:
             //debug_uart();
             read_optical_fork();
+            LED2 = 0;
 
             // Regulation
             error = position_set_point - nb_pulse;
@@ -409,11 +401,6 @@ void main(){
             else // position reached
                 set_motor_cmd_stop();
 
-            // State machine
-            if(system_on == 0){
-                state = IDLE;
-                set_motor_cmd_stop();
-            }
             break;
         default:
             break;

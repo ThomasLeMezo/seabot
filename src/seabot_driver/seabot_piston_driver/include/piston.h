@@ -65,16 +65,6 @@ public:
   int i2c_open();
 
   /**
-   * @brief set_piston_start
-   */
-  void set_piston_start() const;
-
-  /**
-   * @brief set_piston_stop
-   */
-  void set_piston_stop() const;
-
-  /**
    * @brief set_piston_speed
    * @param speed_in
    * @param speed_out

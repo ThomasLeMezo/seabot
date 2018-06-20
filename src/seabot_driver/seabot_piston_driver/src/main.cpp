@@ -35,21 +35,6 @@ bool piston_reset(std_srvs::Empty::Request  &req,
   return true;
 }
 
-bool piston_start(std_srvs::SetBool::Request  &req,
-                  std_srvs::SetBool::Response &res){
-  if(req.data == true){
-    p.set_piston_start();
-    state_start = true;
-  }
-  else{
-    p.set_piston_stop();
-    state_start = false;
-  }
-
-  res.success = true;
-  return true;
-}
-
 bool piston_speed(seabot_piston_driver::PistonSpeed::Request  &req,
                   seabot_piston_driver::PistonSpeed::Response &res){
   p.set_piston_speed(req.speed_in, req.speed_out);
@@ -88,7 +73,6 @@ int main(int argc, char *argv[]){
   uint16_t speed_out =(uint16_t) n_private.param<int>("speed_out", 50);
 
   // Service (ON/OFF)
-  ros::ServiceServer service_start = n.advertiseService("start", piston_start);
   ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
 
   ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
@@ -116,7 +100,6 @@ int main(int argc, char *argv[]){
     state_msg.switch_out = p.m_switch_out;
     state_msg.switch_in = p.m_switch_in;
     state_msg.state = p.m_state;
-    state_msg.system_on = p.m_system_on;
     state_msg.motor_on = p.m_motor_on;
     state_msg.enable_on = p.m_enable_on;
     state_msg.position_set_point = p.m_position_set_point;

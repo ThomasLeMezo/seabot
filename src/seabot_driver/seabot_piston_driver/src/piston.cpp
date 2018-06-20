@@ -25,16 +25,6 @@ int Piston::i2c_open(){
   return 0;
 }
 
-void Piston::set_piston_start() const{
-  if(i2c_smbus_write_byte_data(m_file, 0x00, 0x01)<0)
-    ROS_WARN("[Piston_driver] I2C bus Failure - Piston Start");
-}
-
-void Piston::set_piston_stop() const{
-  if(i2c_smbus_write_byte_data(m_file, 0x00, 0x00)<0)
-    ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
-}
-
 void Piston::set_piston_reset() const{
   if(i2c_smbus_write_byte_data(m_file, 0x01, 0x01)<0)
     ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
@@ -75,9 +65,8 @@ void Piston::get_piston_all_data(){
   m_switch_out = buff[2] & 0b1;
   m_switch_in = (buff[2] >> 1) & 0b1;
   m_state = (buff[2] >> 2) & 0b11;
-  m_system_on = (buff[2] >> 4) & 0b1;
-  m_motor_on = (buff[2] >> 5) & 0b1;
-  m_enable_on = (buff[2] >> 6) & 0b1;
+  m_motor_on = (buff[2] >> 4) & 0b1;
+  m_enable_on = (buff[2] >> 5) & 0b1;
   m_position_set_point = buff[4] << 8 | buff[3];
   m_motor_speed = buff[5];
 }
