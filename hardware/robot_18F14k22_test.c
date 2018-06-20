@@ -418,11 +418,6 @@ void main(){
         default:
             break;
         }
-    
-        if(nb_rx_octet>1 && SSPSTAT.P == 1){
-          nb_rx_octet = 0;
-          i2c_read_data_from_buffer();
-        }
     }
 }
 
