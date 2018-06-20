@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
 
         double dt = (t-t_old).toSec();
         t_old = t;
-        if(depth_set_point>0.0){
+        if(depth_set_point>0.2){
             double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
             double a = -g*V_piston*rho_eau_m -0.5*C_f*velocity*abs(velocity)*rho_eau_m;
             double v = K_velocity*velocity;

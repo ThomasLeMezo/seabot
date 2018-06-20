@@ -13,7 +13,7 @@ m = 6.855 # kg
 # V = (R_tube**2)*pi * L_tube + (0.03/2.0)**2*pi*0.30 # Antenna
 V = m/rho_eau
 # C_f = 0.178549766657
-C_f = 0.08
+C_f = 0.07
 
 delta_volume_piston = 200 * tick_to_volume
 
@@ -50,14 +50,19 @@ def f(x, u):
 		y[2] = 0
 	return y
 
+# 1s / Kv 50 Kf 10
+# 1s / Kv 70 Kf 1
+
+delta_t_regulation = 1.0 # sec
+
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
-	K = 150.0
+	K_velocity = 100.0
 	# if(abs(d0-d)<0.1):
 	#  	K = 1000.0
-	K_factor = 0.3*(t-t_old)
+	K_factor = 0.5*(t-t_old)
 	t_old = t
-	cmd = -K_factor*(-g*((V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K*ddot+(d-d0))
+	cmd = -K_factor*(-g*((V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K_velocity*ddot+(d-d0))
 	if(abs(u+cmd)<200):
 		# if((np.sign(cmd)==-1 and ddot<-0.06) or (np.sign(cmd)==1 and ddot>0.06)):
 		# 	return u
@@ -84,9 +89,9 @@ dt=0.05
 t=0
 t_old = t-dt
 u=0
-delta_t_regulation = 1.0 # sec
+
 # time_simulation = 26 # sec
-time_simulation = 60*60 # sec
+time_simulation = 25*60 # sec
 
 for k in range(0, int(time_simulation/dt)):
 	t+=dt
@@ -100,11 +105,11 @@ for k in range(0, int(time_simulation/dt)):
 	# elif(t>45*60 and t <60*60):
 	# 	d0=5.0
 
-	if(t<15*60):
+	if(t<10*60):
 		d0=0.5
-	elif(t<30*60):
+	elif(t<20*60):
 		d0=1.2
-	elif(t<45*60):
+	elif(t<40*60):
 		d0=0.0
 
 	# if(t>40*60):

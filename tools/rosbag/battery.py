@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 # from gmplot import gmplot
 import yaml
 
-bag = rosbag.Bag('2018-06-15-20-33-53.bag', 'r')
+# bag = rosbag.Bag('2018-06-15-20-33-53.bag', 'r')
+bag = rosbag.Bag('2018-06-20-16-27-01.bag', 'r')
 print(bag)
 
 time = []
@@ -13,7 +14,7 @@ b2 = []
 b3 = []
 b4 = []
 
-for topic, msg, t in bag.read_messages(topics="/battery"):
+for topic, msg, t in bag.read_messages(topics="/driver/power/battery"):
 	time.append(t.to_sec())
 	# print(msg)
 	b1.append(msg.battery1)

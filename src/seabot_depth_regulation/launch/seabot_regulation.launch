@@ -10,13 +10,15 @@
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
         <param name="frequency" value="1.0" />
-        <param name="offset" value="700" />
-        <param name="max_delta_tick" value="400" />
-        <param name="K_factor" value="10.0" />
-        <param name="K_velocity" value="50" />
+        <param name="offset" value="865" />
+        <param name="max_delta_tick" value="350" />
+        <param name="K_factor" value="0.5" />
+        <param name="K_velocity" value="100.0" />
     </node>
 
-    <node name="regulation_talker" pkg="seabot_depth_regulation" type="regulation_talker.py" output="screen" respawn="true">
+<!-- Kf : 10, Kv: 50, freq:1-->
+
+    <node name="regulation_talker" pkg="seabot_depth_regulation" type="regulation_talker.py" output="screen" respawn="false">
     </node>
 
 </launch>

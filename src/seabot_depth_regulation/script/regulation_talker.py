@@ -45,12 +45,14 @@ def talker():
   rospy.sleep(3.0)
   set_zero_depth()
   rospy.sleep(3.0)
-  rospy.loginfo("[Regulation_Talker] Depth 0.5")
-  set_depth(0.5, 10*60)
-  rospy.loginfo("[Regulation_Talker] Depth 1.2")
-  set_depth(1.2, 10*60)
-  rospy.loginfo("[Regulation_Talker] Depth 0.0")
-  set_depth(0.0)
+
+  for i in range(20):
+    rospy.loginfo("[Regulation_Talker] Depth 0.5")
+    set_depth(0.5, 30*60)
+    rospy.loginfo("[Regulation_Talker] Depth 1.2")
+    set_depth(1.2, 30*60)
+    rospy.loginfo("[Regulation_Talker] Depth 0.0")
+    set_depth(0.0, 5*60)
 
 if __name__ == '__main__':
   try:
