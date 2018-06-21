@@ -67,7 +67,7 @@ void Piston::get_piston_all_data(){
   m_state = (buff[2] >> 2) & 0b11;
   m_motor_on = (buff[2] >> 4) & 0b1;
   m_enable_on = (buff[2] >> 5) & 0b1;
-  m_position_set_point = buff[4] << 8 | buff[3];
+  m_position_set_point = (buff[4] << 8 | buff[3])/4.0;
   m_motor_speed = buff[5];
 }
 

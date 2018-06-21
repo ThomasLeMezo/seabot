@@ -48,6 +48,7 @@ int main(int argc, char *argv[]){
     const double C_f = n_private.param<double>("C_f", 0.08);
     const double tick_to_volume = n_private.param<double>("tick_to_volume", 1.431715402026599e-07);
     const int max_delta_tick = n_private.param<int>("max_delta_tick", 200);
+    const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.63);
 
     const double K_factor = n_private.param<double>("K_factor", 0.1);
     const double K_velocity = n_private.param<double>("K_velocity", 150.0);
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]){
     seabot_depth_regulation::RegulationDebug debug_msg;
 
     double piston_set_point = 0.0;
+    double piston_set_point_offset = piston_set_point + offset;
     t = ros::Time::now();
     t_old = ros::Time::now() - ros::Duration(1);
 
@@ -87,7 +89,10 @@ int main(int argc, char *argv[]){
             if(abs(piston_set_point)>max_delta_tick)
                 piston_set_point=copysign(max_delta_tick, piston_set_point);
 
-            position_msg.position = round(piston_set_point + offset);
+            if(abs(piston_set_point_offset - (piston_set_point + offset))>hysteresis_piston)
+                piston_set_point_offset = round(piston_set_point + offset);
+
+            position_msg.position = piston_set_point_offset;
 
             debug_msg.acceleration = a;
             debug_msg.velocity = v;

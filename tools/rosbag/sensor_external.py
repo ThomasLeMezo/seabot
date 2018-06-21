@@ -12,7 +12,8 @@ import yaml
 
 # bag = rosbag.Bag('2018-06-16-03-27-18.bag', 'r')
 # bag = rosbag.Bag('2018-06-16-01-33-07.bag', 'r')
-bag = rosbag.Bag('2018-06-16-07-29-11.bag', 'r')
+# bag = rosbag.Bag('2018-06-16-07-29-11.bag', 'r')
+bag = rosbag.Bag('2018-06-20-17-44-25.bag', 'r')
 
 print(bag)
 
@@ -25,7 +26,7 @@ temperature = []
 pressure_velocity = []
 
 for topic, msg, t in bag.read_messages(topics="/driver/sensor_external", start_time=startTime, end_time=end_time):
-	if(msg.temperature > 0 and msg.temperature < 50 and msg.pressure < 6 and msg.pressure > 0):
+	# if(msg.temperature > 0 and msg.temperature < 50 and msg.pressure < 6 and msg.pressure > 0):
 		time.append(t.to_sec() - bag.get_start_time())
 		pressure.append((msg.pressure-1.08)*10.0)
 		temperature.append(msg.temperature)
