@@ -11,7 +11,8 @@
 
         <param name="frequency" value="1.0" />
         <param name="offset" value="865" />
-        <param name="max_delta_tick" value="350" />
+        <param name="min_tick" value="0" />
+        <param name="max_tick" value="1200" />
         <param name="K_factor" value="0.5" />
         <param name="K_velocity" value="100.0" />
         <param name="hysteresis_piston" value="0.63" />

@@ -2,7 +2,13 @@ imu_type: 7
 imu_frame: imu_link
 i2c_bus: 1 
 i2c_slave_address: 104
-fusion_type: 2
+fusion_type: 0
+
+publish_euler: True
+publish_magnetometer: True
+magnetic_declination:
+
+axis_rotation: 0
 
 mpu9250:
   #Sample Rates
@@ -21,9 +27,21 @@ mpu9250:
 calib:
   compass_min: [-1.0, -1.0, -1.0]
   compass_max: [1.0, 1.0, 1.0]
+
+  ellipsoid_offset: [-1.0, -1.0, -1.0]
+
+  ellipsoid_matrix0: [1.0, 0.0, 0.0]
+  ellipsoid_matrix1: [0.0, 1.0, 0.0]
+  ellipsoid_matrix2: [0.0, 0.0, 1.0]
   
   accel_min: [ -1.0, -1.0, -1.0]
   accel_max: [  1.0,  1.0,  1.0]
+
+  gyro_bias: [0.0, 0.0, 0.0]
+
+  mag_declination: -1.722
+
+
              
   
   

@@ -47,7 +47,8 @@ int main(int argc, char *argv[]){
     const double m = n_private.param<double>("m", 6.855);
     const double C_f = n_private.param<double>("C_f", 0.08);
     const double tick_to_volume = n_private.param<double>("tick_to_volume", 1.431715402026599e-07);
-    const int max_delta_tick = n_private.param<int>("max_delta_tick", 200);
+    const int min_tick = n_private.param<int>("min_tick", 0);
+    const int max_tick = n_private.param<int>("max_tick", 1200);
     const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.63);
 
     const double K_factor = n_private.param<double>("K_factor", 0.1);
@@ -86,14 +87,20 @@ int main(int argc, char *argv[]){
             double u = -K_factor*dt*(a + v + e);
             piston_set_point+=u;
 
-            if(abs(piston_set_point)>max_delta_tick)
-                piston_set_point=copysign(max_delta_tick, piston_set_point);
+            // Antiwindup like effect
+            if(piston_set_point < min_tick)
+              piston_set_point = min_tick;
+            if(piston_set_point > max_tick)
+              piston_set_point = max_tick;
 
+            // Hysteresis effect to limit move of the motor
             if(abs(piston_set_point_offset - (piston_set_point + offset))>hysteresis_piston)
                 piston_set_point_offset = round(piston_set_point + offset);
 
+            // Position set point
             position_msg.position = piston_set_point_offset;
 
+            // Debug msg
             debug_msg.acceleration = a;
             debug_msg.velocity = v;
             debug_msg.depth_error = e;
@@ -103,6 +110,7 @@ int main(int argc, char *argv[]){
             debug_pub.publish(debug_msg);
         }
         else{
+            // Position set point
             position_msg.position = 0;
         }
         position_pub.publish(position_msg);
