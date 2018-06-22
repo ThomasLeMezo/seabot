@@ -193,7 +193,6 @@ int main(int argc, char *argv[])
         msg.temperature = m_temperature;
         msg.pressure = m_pressure;
         msg.humidity = m_humidity;
-        msg.header.stamp = ros::Time::now();
         pub.publish(msg);
         pub1_freq.tick();
 

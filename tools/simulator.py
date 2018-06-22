@@ -13,7 +13,7 @@ m = 6.855 # kg
 # V = (R_tube**2)*pi * L_tube + (0.03/2.0)**2*pi*0.30 # Antenna
 V = m/rho_eau
 # C_f = 0.178549766657
-C_f = 0.12
+C_f = 0.2
 
 delta_volume_piston = 200 * tick_to_volume
 
@@ -98,7 +98,7 @@ t_old = t-dt
 u=0
 
 # time_simulation = 26 # sec
-time_simulation = 25*60 # sec
+time_simulation = 70*60 # sec
 
 for k in range(0, int(time_simulation/dt)):
 	t+=dt
@@ -112,11 +112,11 @@ for k in range(0, int(time_simulation/dt)):
 	# elif(t>45*60 and t <60*60):
 	# 	d0=5.0
 
-	if(t<10*60):
+	if(t<30*60):
 		d0=0.5
-	elif(t<20*60):
+	elif(t<60*60):
 		d0=1.2
-	elif(t<40*60):
+	elif(t<70*60):
 		d0=0.0
 
 	# if(t>40*60):

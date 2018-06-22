@@ -95,7 +95,6 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
 
     p.get_piston_all_data();
-    state_msg.header.stamp = ros::Time::now();
     state_msg.position = p.m_position;
     state_msg.switch_out = p.m_switch_out;
     state_msg.switch_in = p.m_switch_in;

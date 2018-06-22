@@ -1,4 +1,3 @@
-std_msgs/Header header
 float32 position
 bool switch_out
 bool switch_in

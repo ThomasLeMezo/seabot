@@ -6,7 +6,7 @@
         <param name="g" value="9.81" />
         <param name="rho_eau" value="1000.0" />
         <param name="m" value="6.855" />
-        <param name="C_f" value="0.08" />
+        <param name="C_f" value="0.12" />
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
         <param name="frequency" value="1.0" />
