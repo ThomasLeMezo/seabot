@@ -1,0 +1,29 @@
+imu_type: 7
+imu_frame: imu_link
+i2c_bus: 1 
+i2c_slave_address: 104
+fusion_type: 2
+
+mpu9250:
+  #Sample Rates
+  compass_sample_rate: 15
+  gyro_accel_sample_rate: 15
+  
+  #Accel
+  accel_low_pass_filter: 4
+  accel_full_scale_range: 16
+  
+  #Gyro
+  gyro_low_pass_filter: 3
+  gyro_full_scale_range: 16
+
+#Calibration
+calib:
+  compass_min: [-1.0, -1.0, -1.0]
+  compass_max: [1.0, 1.0, 1.0]
+  
+  accel_min: [ -1.0, -1.0, -1.0]
+  accel_max: [  1.0,  1.0,  1.0]
+             
+  
+  

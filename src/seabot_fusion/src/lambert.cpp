@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
   }
 
   // Publishers
-  ros::Subscriber navSatFix_sub = n.subscribe("/fix", 1, navSatFix_callback);
-  ros::Publisher pose_pub = n.advertise<geometry_msgs::Point>("/pose", 1);
+  ros::Subscriber navSatFix_sub = n.subscribe("/driver/fix", 1, navSatFix_callback);
+  ros::Publisher pose_pub = n.advertise<geometry_msgs::Point>("pose", 1);
 
   geometry_msgs::Point msg_point;
 
