@@ -21,7 +21,6 @@ int main(int argc, char *argv[]){
 
     // Sensor initialization
     Pressure_89BSD p1;
-    p1.set_pressure_memory_size(6);
     p1.i2c_open();
     p1.init_sensor();
 

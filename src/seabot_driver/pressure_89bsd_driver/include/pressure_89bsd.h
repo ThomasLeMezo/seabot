@@ -64,9 +64,6 @@ private:
 
   double m_pressure, m_temperature;
 
-  std::deque<double> m_pressure_memory;
-  size_t m_pressure_memory_size = 6;
-
 };
 
 inline int Pressure_89BSD::get_D1(){
@@ -105,10 +102,6 @@ inline double Pressure_89BSD::get_pression(){
 
 inline double Pressure_89BSD::get_temperature(){
   return m_temperature;
-}
-
-inline void Pressure_89BSD::set_pressure_memory_size(const size_t &pressure_memory_size){
-    m_pressure_memory_size = pressure_memory_size;
 }
 
 int16_t bin2decs(u_int16_t val, size_t nb_bit);

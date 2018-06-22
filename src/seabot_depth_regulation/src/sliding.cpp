@@ -14,6 +14,8 @@ using namespace std;
 double depth = 0;
 double velocity = 0;
 double piston_position = 0;
+bool piston_switch_in = false;
+bool piston_switch_out = false;
 
 double depth_set_point = 0.0;
 ros::Time t;
@@ -21,6 +23,8 @@ ros::Time t_old;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
     piston_position = msg->position;
+    piston_switch_in = msg->switch_in;
+    piston_switch_out = msg->switch_out;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
@@ -47,9 +51,7 @@ int main(int argc, char *argv[]){
     const double m = n_private.param<double>("m", 6.855);
     const double C_f = n_private.param<double>("C_f", 0.08);
     const double tick_to_volume = n_private.param<double>("tick_to_volume", 1.431715402026599e-07);
-    const int min_tick = n_private.param<int>("min_tick", 0);
-    const int max_tick = n_private.param<int>("max_tick", 1200);
-    const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.63);
+    const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
 
     const double K_factor = n_private.param<double>("K_factor", 0.1);
     const double K_velocity = n_private.param<double>("K_velocity", 150.0);
@@ -88,10 +90,9 @@ int main(int argc, char *argv[]){
             piston_set_point+=u;
 
             // Antiwindup like effect
-            if(piston_set_point < min_tick)
-              piston_set_point = min_tick;
-            if(piston_set_point > max_tick)
-              piston_set_point = max_tick;
+            if((piston_switch_out && (piston_set_point+offset)<piston_position) // To zero
+               || piston_switch_in && (piston_set_point+offset)>piston_position) // To max set point
+              piston_set_point = piston_position - offset;
 
             // Hysteresis effect to limit move of the motor
             if(abs(piston_set_point_offset - (piston_set_point + offset))>hysteresis_piston)
