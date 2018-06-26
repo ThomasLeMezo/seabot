@@ -91,8 +91,10 @@ int main(int argc, char *argv[]){
 
             // Antiwindup like effect
             if((piston_switch_out && (piston_set_point+offset)<piston_position) // To zero
-               || piston_switch_in && (piston_set_point+offset)>piston_position) // To max set point
+                    || piston_switch_in && (piston_set_point+offset)>piston_position){ // To max set point
               piston_set_point = piston_position - offset;
+              ROS_WARN("[Regulation] Antiwindup set");
+            }
 
             // Hysteresis effect to limit move of the motor
             if(abs(piston_set_point_offset - (piston_set_point + offset))>hysteresis_piston)

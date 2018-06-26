@@ -10,7 +10,10 @@ import rosbag
 import yaml
 
 
-bag = rosbag.Bag('bag/2018-06-21-14-02-06.bag', 'r')
+# bag = rosbag.Bag('bag/2018-06-21-14-02-06.bag', 'r')
+# bag = rosbag.Bag('bag/2018-06-26-15-29-06.bag', 'r')
+bag = rosbag.Bag('bag/2018-06-26-16-29-28.bag', 'r')
+
 print(bag)
 
 startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
@@ -160,13 +163,13 @@ bag.close()
 # plt.plot(time_regulation_debug,regulation_debug_acceleration)
 
 #################### Regulation 3 ####################
-plt.subplot(211)
-plt.ylabel("regulation_debug_piston_set_point")
-plt.plot(time_regulation_debug,regulation_debug_piston_set_point)
+# plt.subplot(211)
+# plt.ylabel("regulation_debug_piston_set_point")
+# plt.plot(time_regulation_debug,regulation_debug_piston_set_point)
 
-plt.subplot(212)
-plt.ylabel("fusion_depth")
-plt.plot(time_fusion_depth,fusion_depth)
+# plt.subplot(212)
+# plt.ylabel("fusion_depth")
+# plt.plot(time_fusion_depth,fusion_depth)
 
 #################### Fusion ####################
 
@@ -216,17 +219,21 @@ plt.plot(time_fusion_depth,fusion_depth)
 
 #################### Piston ####################
 
-# plt.subplot(311)
-# plt.ylabel("piston_state_position")
-# plt.plot(time_piston_state,piston_state_position)
+plt.subplot(411)
+plt.ylabel("position")
+plt.plot(time_piston_state,piston_state_position)
 
-# plt.subplot(312)
-# plt.ylabel("piston_state_position_set_point")
-# plt.plot(time_piston_state,piston_state_position_set_point)
+plt.subplot(412)
+plt.ylabel("set_point")
+plt.plot(time_piston_state,piston_state_position_set_point)
 
-# plt.subplot(313)
-# plt.ylabel("piston_state_switch_out (blue) / in (red)")
-# plt.plot(time_piston_state,piston_state_switch_out)
-# plt.plot(time_piston_state,piston_state_switch_int, 'r')
+plt.subplot(413)
+plt.ylabel("switch_out(b)in(r)")
+plt.plot(time_piston_state,piston_state_switch_out, 'b')
+plt.plot(time_piston_state,piston_state_switch_in, 'r')
+
+plt.subplot(414)
+plt.ylabel("depth")
+plt.plot(time_fusion_depth,fusion_depth)
 
 plt.show()

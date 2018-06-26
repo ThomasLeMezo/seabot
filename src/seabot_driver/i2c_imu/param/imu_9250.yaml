@@ -6,7 +6,6 @@ fusion_type: 0
 
 publish_euler: True
 publish_magnetometer: True
-magnetic_declination:
 
 axis_rotation: 0
 
@@ -34,8 +33,8 @@ calib:
   ellipsoid_matrix1: [0.0, 1.0, 0.0]
   ellipsoid_matrix2: [0.0, 0.0, 1.0]
   
-  accel_min: [ -1.0, -1.0, -1.0]
-  accel_max: [  1.0,  1.0,  1.0]
+  accel_min: [-1.0, -1.0, -1.0]
+  accel_max: [1.0,  1.0,  1.0]
 
   gyro_bias: [0.0, 0.0, 0.0]
 

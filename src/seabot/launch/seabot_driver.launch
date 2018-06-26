@@ -23,6 +23,6 @@
                 <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen">
                 </node>
 
-                <include file="$(find i2c_imu)/launch/mpu_9250_param.launch"/>
+<!--                <include file="$(find i2c_imu)/launch/mpu_9250_param.launch"/>-->
         </group>
 </launch>
