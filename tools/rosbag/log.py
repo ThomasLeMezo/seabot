@@ -10,9 +10,13 @@ from scipy import signal
 import numpy as np
 import matplotlib.pyplot as plt
 
+import sys
 from load_data import *
 
-load_bag('bag/2018-06-27-18-28-07.bag')
+if(len(sys.argv)<2):
+	sys.exit(0)
+
+load_bag(sys.argv[1])
 
  #####################################################
  ### PLOT
