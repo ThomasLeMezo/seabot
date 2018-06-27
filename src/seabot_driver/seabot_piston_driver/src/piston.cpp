@@ -64,7 +64,7 @@ void Piston::get_piston_all_data(){
 
   uint16_t position = (buff[1] << 8 | buff[0]);
   if(position > 32763)
-      m_position = -(65526-buff)/4.0;
+      m_position = -(65526-position)/4.0;
   else
       m_position = position/4.0;
 
