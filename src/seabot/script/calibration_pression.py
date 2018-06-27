@@ -17,7 +17,7 @@ from math import *
 depth = 0
 
 ### Piston
-start_piston_position = 600
+start_piston_position = 1000
 piston_position = 0
 
 ## ToDo : service reset zero pression + depth_set_point
@@ -55,6 +55,8 @@ def regulation_node():
     # sub_piston = rospy.Subscriber("/driver/piston/state", PistonState, callback_piston, queue_size=1)
     sub_pressure = rospy.Subscriber("/fusion/depth", DepthPose, callback_fusion_depth ,queue_size=1)
     piston_position_pub = rospy.Publisher('/driver/piston/position', PistonPosition, queue_size=1)
+
+    sub_pressure = rospy.Subscriber("/driver/power/battery", DepthPose, callback_fusion_depth ,queue_size=1)
     
     rospy.loginfo("[Calibration] Wait for Services")
     rospy.wait_for_service('/fusion/zero_depth')
@@ -69,38 +71,20 @@ def regulation_node():
     ########## Main
     ######################################################################
     
-    rospy.loginfo("[Calibration_piston] Wait 6 s")
     rospy.sleep(3.0)
     set_zero_depth()
-    set_flash(True)
     rospy.sleep(3.0)
-    set_flash(False)
-    for j in range(30):
-            set_piston_position(start_piston_position)
-            rospy.sleep(1.0)
 
-    set_flash(True)
-    rospy.sleep(3.0)
-    set_flash(False)
+    while(depth < 15.0):    
+        set_piston_position(start_piston_position)
+        rospy.sleep(1.0)
 
-    for i in range(3):
-        rospy.loginfo("[Calibration] Start Calibration %i", i)
-        for j in range(10):
-            set_piston_position(start_piston_position)
-            rospy.sleep(1.0)
-        while(depth > 0.3):
-            set_piston_position(start_piston_position)
-            rospy.sleep(1.0)
-        piston_position = start_piston_position
-        while(depth < 0.3):
-            rospy.sleep(1)
-            piston_position += 2
-            set_piston_position(piston_position)
-            
-        rospy.loginfo("[Calibration] Piston Position = %i", piston_position)
-        rospy.loginfo("[Calibration] depth = %f", depth)
-
-    set_piston_position(0)
+    while(depth > 1.0):
+        set_piston_position(0)
+        set_flash(True)
+        rospy.sleep(3.0)
+        set_flash(False)
+        rospy.sleep(57.0)
     
 
 if __name__ == '__main__':

@@ -4,19 +4,19 @@
 
     <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="g" value="9.81" />
-        <param name="rho_eau" value="1000.0" />
+        <param name="rho_eau" value="1020.0" />
         <param name="m" value="6.855" />
         <param name="C_f" value="0.12" />
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
         <param name="frequency" value="1.0" />
-        <param name="offset" value="865" />
+        <param name="offset" value="964" />
         <param name="K_factor" value="0.5" />
         <param name="K_velocity" value="100.0" />
         <param name="hysteresis_piston" value="0.6" />
     </node>
 
-<!-- Kf : 10, Kv: 50, freq:1, offset = 865 -->
+<!-- Kf : 10, Kv: 50, freq:1, offset = 865 / 964 -->
 
     <node name="regulation_talker" pkg="seabot_depth_regulation" type="regulation_talker.py" output="screen" respawn="false">
     </node>

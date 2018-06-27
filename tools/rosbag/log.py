@@ -12,7 +12,9 @@ import yaml
 
 # bag = rosbag.Bag('bag/2018-06-21-14-02-06.bag', 'r')
 # bag = rosbag.Bag('bag/2018-06-26-15-29-06.bag', 'r')
-bag = rosbag.Bag('bag/2018-06-26-16-29-28.bag', 'r')
+bag = rosbag.Bag('bag/2018-06-27-18-28-07.bag', 'r')
+
+
 
 print(bag)
 
@@ -76,6 +78,12 @@ regulation_debug_piston_set_point_offset = []
 time_regulation_set_point = []
 regulation_set_point_depth = []
 
+# /fusion/pose
+time_fusion_pose = []
+fusion_pose_x = []
+fusion_pose_y = []
+fusion_pose_z = []
+
 for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
 	if(topic=="/driver/piston/position"):
 		time_piston_position.append((t-startTime).to_sec())
@@ -132,6 +140,12 @@ for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
 	elif(topic=="/regulation/depth_set_point"):
 		time_regulation_set_point.append((t-startTime).to_sec())
 		regulation_set_point_depth.append(msg.depth)
+
+	elif(topic=="/fusion/pose"):
+		time_fusion_pose.append((t-startTime).to_sec())
+		fusion_pose_x.append(msg.x)
+		fusion_pose_y.append(msg.y)
+		fusion_pose_z.append(msg.z)
 
 
 bag.close()
@@ -217,23 +231,39 @@ bag.close()
 # plt.ylabel("sensor_internal_humidity")
 # plt.plot(time_sensor_internal,sensor_internal_humidity)
 
+#################### Sensor External ####################
+
+# plt.subplot(211)
+# plt.ylabel("sensor_external_pressure")
+# plt.plot(time_sensor_external,sensor_external_pressure)
+
+# plt.subplot(212)
+# plt.ylabel("sensor_external_temperature")
+# plt.plot(time_sensor_external,sensor_external_temperature)
+
 #################### Piston ####################
 
-plt.subplot(411)
-plt.ylabel("position")
-plt.plot(time_piston_state,piston_state_position)
+# plt.subplot(411)
+# plt.ylabel("position")
+# plt.plot(time_piston_state,piston_state_position)
 
-plt.subplot(412)
-plt.ylabel("set_point")
-plt.plot(time_piston_state,piston_state_position_set_point)
+# plt.subplot(412)
+# plt.ylabel("set_point")
+# plt.plot(time_piston_state,piston_state_position_set_point)
 
-plt.subplot(413)
-plt.ylabel("switch_out(b)in(r)")
-plt.plot(time_piston_state,piston_state_switch_out, 'b')
-plt.plot(time_piston_state,piston_state_switch_in, 'r')
+# plt.subplot(413)
+# plt.ylabel("switch_out(b)in(r)")
+# plt.plot(time_piston_state,piston_state_switch_out, 'b')
+# plt.plot(time_piston_state,piston_state_switch_in, 'r')
 
-plt.subplot(414)
-plt.ylabel("depth")
-plt.plot(time_fusion_depth,fusion_depth)
+# plt.subplot(414)
+# plt.ylabel("depth")
+# plt.plot(time_fusion_depth,fusion_depth)
+
+#################### Pose (GPS) ####################
+
+plt.ylabel("y")
+plt.xlabel("x")
+plt.plot(fusion_pose_x,fusion_pose_y)
 
 plt.show()
