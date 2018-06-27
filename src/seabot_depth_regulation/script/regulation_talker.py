@@ -41,7 +41,7 @@ def talker():
   flash_enable = rospy.ServiceProxy('/driver/power/flash_led', SetBool)
 
   #Wait 30s before init
-  rospy.loginfo("[Regulation_Talker] Wait 30 s")
+  rospy.loginfo("[Regulation_Talker] Wait 6 s")
   rospy.sleep(3.0)
   set_zero_depth()
   rospy.sleep(3.0)
