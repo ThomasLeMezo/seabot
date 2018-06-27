@@ -1,6 +1,7 @@
 #include "piston.h"
 #include <unistd.h>
 #include <errno.h>
+#include <climits>
 
 Piston::Piston(){
 }
@@ -61,7 +62,13 @@ void Piston::get_piston_all_data(){
   if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 6,buff) != 6)
     ROS_WARN("[Piston_driver] I2C Bus Failure - Read piston data");
 
-  m_position = (buff[1] << 8 | buff[0])/4.0;
+  uint16_t position = (buff[1] << 8 | buff[0]);
+  if(position > 32763)
+      m_position = -(65526-buff)/4.0;
+  else
+      m_position = position/4.0;
+
+//  m_position = (buff[1] << 8 | buff[0])/4.0;
   m_switch_out = buff[2] & 0b1;
   m_switch_in = (buff[2] >> 1) & 0b1;
   m_state = (buff[2] >> 2) & 0b11;

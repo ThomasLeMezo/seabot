@@ -88,6 +88,7 @@ int main(int argc, char *argv[]){
 
   // Sensor initialization
   p.i2c_open();
+  sleep(1); // 1s sleep (wait until i2c open)
   p.set_piston_speed(speed_in, speed_out);
 
   ros::Rate loop_rate(frequency);
