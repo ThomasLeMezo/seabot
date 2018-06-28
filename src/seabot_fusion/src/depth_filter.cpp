@@ -17,7 +17,7 @@ using namespace std;
 double zero_depth = 0.0;
 double depth = 0;
 deque<pair<double, ros::Time>> depth_memory;
-double velocity = 0;
+double velocity = 0.0;
 double pressure_to_depth = 10.0;
 int filter_median_size = 5;
 int filter_mean_width = 3;
@@ -56,6 +56,7 @@ int main(int argc, char *argv[]){
     pressure_to_depth = n_private.param<double>("pressure_to_depth", 10.0);
     filter_median_size = n_private.param<int>("filter_median_size", 10);
     filter_mean_width = n_private.param<int>("filter_mean_width", 3);
+    double velocity_limit = n_private.param<int>("velocity_limit", 0.5);
     size_t velocity_delta_size = (size_t) n_private.param<int>("velocity_delta_size", 5);
 
     // Service
@@ -91,8 +92,11 @@ int main(int argc, char *argv[]){
             depth = (depth_mean - zero_depth) * pressure_to_depth; // Take the median
 
             /// ************** Compute velocity ************** //
-            if(!depth_memory.empty())
+            if(!depth_memory.empty()){
                 velocity = (depth-depth_memory[0].first)/(time_pressure-depth_memory[0].second).toSec();
+                if(abs(velocity)>velocity_limit)
+                    velocity = std::copysign(velocity_limit, velocity);
+            }
 
             depth_memory.push_back(std::pair<double,ros::Time>(depth, time_pressure));
             if(depth_memory.size()>velocity_delta_size)

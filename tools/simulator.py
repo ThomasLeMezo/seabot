@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
 
 g = 9.81
-rho_eau = 1000.0 # kg/m3
-m = 6.855 # kg
+rho_eau = 1020.0 # kg/m3
+m = 8.810 # kg
 
 # R_tube = 0.110/2.0
 # L_tube = 0.70
@@ -65,7 +65,7 @@ def control(d0, d, ddot, V_piston, u):
 	K_factor = 0.5*(t-t_old)
 	t_old = t
 
-	d_noise = d+np.random.random_sample()*5*1e-3
+	# d_noise = d+np.random.random_sample()*5*1e-3
 
 	a = -g*V_piston*rho_eau_m
 
@@ -98,7 +98,7 @@ t_old = t-dt
 u=0
 
 # time_simulation = 26 # sec
-time_simulation = 70*60 # sec
+time_simulation = 120*60 # sec
 
 for k in range(0, int(time_simulation/dt)):
 	t+=dt
@@ -112,10 +112,10 @@ for k in range(0, int(time_simulation/dt)):
 	# elif(t>45*60 and t <60*60):
 	# 	d0=5.0
 
-	if(t<30*60):
-		d0=0.5
-	elif(t<60*60):
-		d0=1.2
+	if(t<60*60):
+		d0=5.0
+	elif(t<120*60):
+		d0=15.0
 	elif(t<70*60):
 		d0=0.0
 

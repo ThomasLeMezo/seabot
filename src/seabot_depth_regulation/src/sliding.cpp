@@ -56,6 +56,9 @@ int main(int argc, char *argv[]){
     const double K_factor = n_private.param<double>("K_factor", 0.1);
     const double K_velocity = n_private.param<double>("K_velocity", 150.0);
 
+    const double piston_position_min = n_private.param<double>("piston_position_min", 0.0);
+    const double piston_position_max = n_private.param<double>("piston_position_max", 1280.0);
+
     const double rho_eau_m = rho_eau/m;
 
     // Subscriber
@@ -89,12 +92,18 @@ int main(int argc, char *argv[]){
             double u = -K_factor*dt*(a + v + e);
             piston_set_point+=u;
 
-            // Antiwindup like effect
+            // Antiwindup for switch
             if((piston_switch_out && (piston_set_point+offset)<piston_position) // To zero
                     || piston_switch_in && (piston_set_point+offset)>piston_position){ // To max set point
               piston_set_point = piston_position - offset;
               ROS_WARN("[Regulation] Antiwindup set");
             }
+
+            // Min/Max antiwindup
+            if((piston_set_point + offset) < piston_position_min)
+                piston_set_point = piston_position_min - offset;
+            if((piston_set_point + offset) > piston_position_max)
+                piston_set_point = piston_position_max - offset;
 
             // Hysteresis effect to limit move of the motor
             if(abs(piston_set_point_offset - (piston_set_point + offset))>hysteresis_piston)

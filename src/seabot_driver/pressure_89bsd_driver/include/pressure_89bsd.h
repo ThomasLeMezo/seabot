@@ -69,7 +69,7 @@ private:
 inline int Pressure_89BSD::get_D1(){
   i2c_smbus_write_byte(m_file, CMD_ADC_CONV_D1_4096);
 //  usleep(SLEEP_4096); // max 9.04ms for 4096
-  ros::Duration(0.02).sleep();
+  ros::Duration(0.05).sleep();
   unsigned char buff[3] = {0, 0, 0};
   if (i2c_smbus_read_i2c_block_data(m_file, CMD_ADC_READ, 3, buff)!=3){
       ROS_WARN("[Pressure_89BSD] Error Reading D1");
@@ -84,7 +84,7 @@ inline int Pressure_89BSD::get_D1(){
 inline int Pressure_89BSD::get_D2(){
   i2c_smbus_write_byte(m_file, CMD_ADC_CONV_D2_4096);
 //  usleep(SLEEP_4096); // max 9.04ms for 4096
-  ros::Duration(0.02).sleep();
+  ros::Duration(0.05).sleep();
   unsigned char buff[3] = {0, 0, 0};
   if (i2c_smbus_read_i2c_block_data(m_file, CMD_ADC_READ, 3, buff)!=3){
       ROS_WARN("[Pressure_89BSD] Error Reading D2");

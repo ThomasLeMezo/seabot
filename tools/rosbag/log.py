@@ -36,6 +36,7 @@ dock_external_sensor = Dock("External Sensor")
 dock_regulation1 = Dock("Regulation 1")
 dock_regulation2 = Dock("Regulation 2")
 dock_regulation3 = Dock("Regulation 3")
+dock_fusion = Dock("Fusion")
 
 area.addDock(dock_battery)
 area.addDock(dock_piston, 'above', dock_battery)
@@ -45,6 +46,7 @@ area.addDock(dock_external_sensor, 'above', dock_battery)
 area.addDock(dock_regulation1, 'above', dock_battery)
 area.addDock(dock_regulation2, 'above', dock_battery)
 area.addDock(dock_regulation3, 'above', dock_battery)
+area.addDock(dock_fusion, 'above', dock_battery)
 
 #################### Regulation 1 ####################
 pg_regulation_u = pg.PlotWidget()
@@ -60,7 +62,7 @@ dock_regulation1.addWidget(pg_regulation_set_point)
 
 pg_regulation_depth = pg.PlotWidget()
 pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0))
-pg_regulation_depth.setLabel('left', "Depth")
+pg_regulation_depth.setLabel('left', "Depth", units="m")
 dock_regulation1.addWidget(pg_regulation_depth)
 
 pg_regulation_set_point.setXLink(pg_regulation_u)
@@ -70,12 +72,12 @@ pg_regulation_depth.setXLink(pg_regulation_u)
 
 pg_regulation_depth_error = pg.PlotWidget()
 pg_regulation_depth_error.plot(time_regulation_debug, regulation_debug_depth_error, pen=(255,0,0))
-pg_regulation_depth_error.setLabel('left', "Depth error")
+pg_regulation_depth_error.setLabel('left', "Depth error", units="m")
 dock_regulation2.addWidget(pg_regulation_depth_error)
 
 pg_regulation_depth1 = pg.PlotWidget()
 pg_regulation_depth1.plot(time_fusion_depth, fusion_depth, pen=(255,0,0))
-pg_regulation_depth1.setLabel('left', "Depth")
+pg_regulation_depth1.setLabel('left', "Depth", units="m")
 dock_regulation2.addWidget(pg_regulation_depth1)
 
 pg_regulation_depth1.setXLink(pg_regulation_depth_error)
@@ -84,17 +86,17 @@ pg_regulation_depth1.setXLink(pg_regulation_depth_error)
 
 pg_regulation_depth_error1 = pg.PlotWidget()
 pg_regulation_depth_error1.plot(time_regulation_debug, regulation_debug_depth_error, pen=(255,0,0))
-pg_regulation_depth_error1.setLabel('left', "Depth error factor")
+pg_regulation_depth_error1.setLabel('left', "Depth error factor", units="m")
 dock_regulation3.addWidget(pg_regulation_depth_error1)
 
 pg_regulation_velocity = pg.PlotWidget()
 pg_regulation_velocity.plot(time_regulation_debug, regulation_debug_velocity, pen=(255,0,0))
-pg_regulation_velocity.setLabel('left', "Velocity factor")
+pg_regulation_velocity.setLabel('left', "Velocity factor", units="m/s")
 dock_regulation3.addWidget(pg_regulation_velocity)
 
 pg_regulation_acceleration = pg.PlotWidget()
 pg_regulation_acceleration.plot(time_regulation_debug, regulation_debug_acceleration, pen=(255,0,0))
-pg_regulation_acceleration.setLabel('left', "Acceleration factor")
+pg_regulation_acceleration.setLabel('left', "Acceleration factor", units="m^2/s^2")
 dock_regulation3.addWidget(pg_regulation_acceleration)
 
 pg_regulation_velocity.setXLink(pg_regulation_depth_error1)
@@ -146,13 +148,13 @@ pg_internal_humidity.setXLink(pg_internal_pressure)
 #################### Sensor External ####################
 
 pg_external_pressure = pg.PlotWidget()
-pg_external_pressure.plot(time_sensor_external, sensor_external_pressure, pen=(255,0,0), symbol='+')
-pg_external_pressure.setLabel('left', "Pressure")
+pg_external_pressure.plot(time_sensor_external, sensor_external_pressure, pen=(255,0,0))
+pg_external_pressure.setLabel('left', "Pressure", units="bar")
 dock_external_sensor.addWidget(pg_external_pressure)
 
 pg_external_temperature = pg.PlotWidget()
-pg_external_temperature.plot(time_sensor_external, sensor_external_temperature, pen=(255,0,0), symbol='+')
-pg_external_temperature.setLabel('left', "Temperature")
+pg_external_temperature.plot(time_sensor_external, sensor_external_temperature, pen=(255,0,0))
+pg_external_temperature.setLabel('left', "Temperature", units="°C")
 dock_external_sensor.addWidget(pg_external_temperature)
 
 pg_external_temperature.setXLink(pg_external_pressure)
@@ -186,6 +188,20 @@ pg_piston_switch.setLabel('left', "Switch")
 dock_piston.addWidget(pg_piston_switch)
 
 pg_piston_switch.setXLink(pg_piston_state_position)
+
+#################### Fusion ####################
+
+pg_fusion_depth1 = pg.PlotWidget()
+pg_fusion_depth1.plot(time_fusion_depth, fusion_depth, pen=(255,0,0))
+pg_fusion_depth1.setLabel('left', "Depth", units="m")
+dock_fusion.addWidget(pg_fusion_depth1)
+
+pg_fusion_velocity = pg.PlotWidget()
+pg_fusion_velocity.plot(time_fusion_depth, fusion_velocity, pen=(255,0,0))
+pg_fusion_velocity.setLabel('left', "Velocity", units="m/s")
+dock_fusion.addWidget(pg_fusion_velocity)
+
+pg_fusion_velocity.setXLink(pg_fusion_depth1)
 
 #################### Pose (GPS) ####################
 

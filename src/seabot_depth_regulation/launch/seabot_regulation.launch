@@ -14,6 +14,9 @@
         <param name="K_factor" value="0.5" />
         <param name="K_velocity" value="100.0" />
         <param name="hysteresis_piston" value="0.6" />
+
+        <param name="piston_position_min" value="0.0" />
+        <param name="piston_position_max" value="1250.0" />
     </node>
 
 <!-- Kf : 10, Kv: 50, freq:1, offset = 865 / 964 -->
