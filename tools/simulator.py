@@ -33,11 +33,19 @@ offset = +100 * tick_to_volume
 
 ########## Simulation ##########
 dt=0.05
-time_simulation = 90*60 # sec
+time_simulation = 2*120*60 # sec
 
 depth_seafloor = 20.0
 
 #################################################
+
+def set_point_depth():
+	global d0, t
+	mod = (t/60.0)%120.0
+	if(mod<60.0):
+		d0=5.0
+	elif(mod<120.0):
+		d0=15.0
 
 V = m/rho_eau
 rho_eau_m = rho_eau /m
@@ -67,28 +75,19 @@ def f(x, u):
 
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
-	
-	# d_noise = d+np.random.random_sample()*5*1e-3
+
+	d_noise = d+np.random.random_sample()*1.1e-2 # noise around centimeter
 
 	a = -g*V_piston*rho_eau_m
 	cmd = -K_factor*(t-t_old)*(-g*((V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K_velocity*ddot+(d-d0))
 
 	t_old = t
-	# if(abs(u+cmd)<200):
-		# if((np.sign(cmd)==-1 and ddot<-0.06) or (np.sign(cmd)==1 and ddot>0.06)):
-		# 	return u
-		# else:
-		# 	return cmd+u
 	return cmd+u
-	# else:
-		# return u
 
 result_x = []
 result_u = []
 result_t = []
-
-result_file = []
-
+result_d0 = []
 
 t=0
 t_old = t-dt
@@ -97,24 +96,22 @@ u=0
 for k in range(0, int(time_simulation/dt)):
 	t+=dt
 
-	if(t<60*60):
-		d0=5.0
-	elif(t<120*60):
-		d0=15.0
-	elif(t<70*60):
-		d0=0.0
+	# Set point
+	set_point_depth()
 
-	# if(t>40*60):
-	# 	offset = +20 * tick_to_volume
-
+	## Compute cmd
 	d = x[0]
 	ddot = x[1]
 	V_piston = x[2]
 	if k % int((delta_t_regulation/dt)) == 0:
 		u = control(d0, d, ddot, V_piston, u)
 	u_round = round(u)
+
+	## Euler
 	dx = f(x, u_round)
 	x = x+dx*dt
+
+	## Simulation limits
 	if(abs(x[2])>delta_volume_piston):
 		x[2] = delta_volume_piston*np.sign(x[2])
 	if(x[0]>depth_seafloor):
@@ -123,22 +120,22 @@ for k in range(0, int(time_simulation/dt)):
 	if(x[0]<0.0):
 		x[0] = 0.0
 		x[1] = 0.0
+
+	## Save results
 	result_x.append(x)
 	result_u.append(u_round)
+	result_d0.append(d0)
 	result_t.append(t)
-	if(k%4==0 and k<10000*4 and abs(x[0]-d0)<1.0): # 30 min : 9000*4
-		result_file.append([dx[1]+np.random.random_sample()*0.01, x[1]+np.random.random_sample()*0.001, x[2]])
 
-# np.savetxt("data_dx.txt", np.transpose(result_file)[0], newline=",")
-# np.savetxt("data_x1.txt", np.transpose(result_file)[1], newline=",")
-# np.savetxt("data_x2.txt", np.transpose(result_file)[2], newline=",")
+################################################
+############### 	Plots	####################
+################################################
 
 plt.figure(1)
 plt.subplot(311)
 plt.ylabel('depth')
-plt.plot(result_t, np.transpose(result_x)[0])
-# ymin, ymax = plt.ylim()  # return the current xlim
-# plt.ylim(ymax, ymin)   # set the xlim to xmin, xmax
+plt.plot(result_t, np.transpose(result_x)[0], 'r')
+plt.plot(result_t, np.transpose(result_d0), 'b')
 
 plt.subplot(312)
 plt.ylabel('command (in tick)')
