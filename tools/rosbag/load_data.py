@@ -57,6 +57,10 @@ regulation_debug_piston_set_point = []
 regulation_debug_piston_set_point_offset = []
 
 # /regulation/depth_set_point
+time_regulation_depth_set_point = []
+regulation_depth_set_point = []
+
+# /regulation/depth_set_point
 time_regulation_set_point = []
 regulation_set_point_depth = []
 
@@ -65,6 +69,10 @@ time_fusion_pose = []
 fusion_pose_x = []
 fusion_pose_y = []
 fusion_pose_z = []
+
+# /driver/extended_fix
+time_extend_fix = []
+extend_fix_status = []
 
 # bag = rosbag.Bag('bag/2018-06-21-14-02-06.bag', 'r')
 # bag = rosbag.Bag('bag/2018-06-26-15-29-06.bag', 'r')
@@ -141,5 +149,12 @@ def load_bag(filename):
 			fusion_pose_y.append(msg.y)
 			fusion_pose_z.append(msg.z)
 
+		elif(topic=="/regulation/depth_set_point"):
+			time_regulation_depth_set_point.append((t-startTime).to_sec())
+			regulation_depth_set_point.append(msg.depth)
+
+		elif(topic=="/driver/extended_fix"):
+			time_extend_fix.append((t-startTime).to_sec())
+			extend_fix_status.append(msg.status.status)
 
 	bag.close()

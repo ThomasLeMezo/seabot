@@ -9,6 +9,7 @@
 #include "seabot_piston_driver/PistonSpeed.h"
 #include "seabot_piston_driver/PistonState.h"
 #include "seabot_piston_driver/PistonPosition.h"
+#include "seabot_piston_driver/PistonSpeedDebug.h"
 #include "seabot_fusion/DepthPose.h"
 
 using namespace std;
@@ -96,7 +97,9 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher state_pub = n.advertise<seabot_piston_driver::PistonState>("state", 1);
+  ros::Publisher speed_pub = n.advertise<seabot_piston_driver::PistonSpeedDebug>("speed", 1);
   seabot_piston_driver::PistonState state_msg;
+  seabot_piston_driver::PistonSpeedDebug speed_msg;
 
   // Subscriber
   ros::Subscriber piston_position_sub = n.subscribe("position", 1, position_callback);
@@ -133,6 +136,7 @@ int main(int argc, char *argv[]){
             p.set_piston_speed((uint16_t) speed_in, (uint16_t) speed_out);
             speed_in_last = speed_in;
             speed_out_last = speed_out;
+//            speed_msg.
         }
     }
 
@@ -141,3 +145,4 @@ int main(int argc, char *argv[]){
 
   return 0;
 }
+

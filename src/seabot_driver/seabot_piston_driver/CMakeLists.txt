@@ -53,6 +53,7 @@ add_message_files(
   FILES
   PistonState.msg
   PistonPosition.msg
+  PistonSpeedDebug.msg
 )
 
 ## Generate services in the 'srv' folder
