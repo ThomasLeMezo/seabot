@@ -9,6 +9,7 @@
 #include "seabot_piston_driver/PistonSpeed.h"
 #include "seabot_piston_driver/PistonState.h"
 #include "seabot_piston_driver/PistonPosition.h"
+#include "seabot_fusion/DepthPose.h"
 
 using namespace std;
 
@@ -17,6 +18,10 @@ bool state_start = true;
 uint16_t cmd_position_piston = 0;
 uint16_t new_cmd_position_piston = 0;
 bool state_emergency = false;
+double depth = 0;
+bool adaptative_speed = false;
+int speed_in_last = 50;
+int speed_out_last = 50;
 
 bool piston_enable(std_srvs::SetBool::Request  &req,
                    std_srvs::SetBool::Response &res){
@@ -61,6 +66,10 @@ bool piston_emergency(std_srvs::SetBool::Request  &req,
   return true;
 }
 
+void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
+    depth = msg->depth;
+}
+
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "piston");
   ros::NodeHandle n;
@@ -68,9 +77,15 @@ int main(int argc, char *argv[]){
   // Parameters
   ros::NodeHandle n_private("~");
   double frequency = n_private.param<double>("frequency", 5.0);
+  adaptative_speed = n_private.param<bool>("adaptative_speed", false);
+  double adaptative_coeff_slope_in = n_private.param<double>("adaptative_coeff_slope_in", 1.0/20.0);
+  double adaptative_coeff_offset_in = n_private.param<double>("adaptative_coeff_offset_in", 50.0);
+  double adaptative_coeff_slope_out = n_private.param<double>("adaptative_coeff_slope_out", 1.0/20.0);
+  double adaptative_coeff_offset_out = n_private.param<double>("adaptative_coeff_offset_out", 50.0);
 
-  uint16_t speed_in = (uint16_t) n_private.param<int>("speed_in", 50);
-  uint16_t speed_out =(uint16_t) n_private.param<int>("speed_out", 50);
+  const double max_speed = 126.0;
+  const double min_speed = 30.0;
+  const double nb_step = 5.0;
 
   // Service (ON/OFF)
   ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
@@ -85,16 +100,17 @@ int main(int argc, char *argv[]){
 
   // Subscriber
   ros::Subscriber piston_position_sub = n.subscribe("position", 1, position_callback);
+  ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
 
   // Sensor initialization
   p.i2c_open();
   sleep(1); // 1s sleep (wait until i2c open)
-  p.set_piston_speed(speed_in, speed_out);
 
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
 
+    // Piston state
     p.get_piston_all_data();
     state_msg.position = p.m_position;
     state_msg.switch_out = p.m_switch_out;
@@ -105,6 +121,20 @@ int main(int argc, char *argv[]){
     state_msg.position_set_point = p.m_position_set_point;
     state_msg.motor_speed = p.m_motor_speed;
     state_pub.publish(state_msg);
+
+    // Analyze depth
+    if(adaptative_speed){
+        int speed_in = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_in+adaptative_coeff_offset_in, max_speed), min_speed)*(nb_step/max_speed));
+        int speed_out = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_out+adaptative_coeff_offset_out, max_speed), min_speed)*(nb_step/max_speed));
+
+        // Hysteresis
+        if(abs(speed_in-speed_in_last)>(max_speed/nb_step)/2.0
+                || abs(speed_out-speed_out_last)>(max_speed/nb_step)/2.0){
+            p.set_piston_speed((uint16_t) speed_in, (uint16_t) speed_out);
+            speed_in_last = speed_in;
+            speed_out_last = speed_out;
+        }
+    }
 
     loop_rate.sleep();
   }

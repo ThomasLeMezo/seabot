@@ -56,7 +56,8 @@ dock_regulation1.addWidget(pg_regulation_u)
 
 pg_regulation_set_point = pg.PlotWidget()
 pg_regulation_set_point.plot(time_regulation_debug, regulation_debug_piston_set_point, pen=(255,0,0))
-pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255))
+if(len(regulation_debug_piston_set_point_offset)>1):
+	pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255))
 pg_regulation_set_point.setLabel('left', "set point")
 dock_regulation1.addWidget(pg_regulation_set_point)
 
@@ -154,7 +155,7 @@ dock_external_sensor.addWidget(pg_external_pressure)
 
 pg_external_temperature = pg.PlotWidget()
 pg_external_temperature.plot(time_sensor_external, sensor_external_temperature, pen=(255,0,0))
-pg_external_temperature.setLabel('left', "Temperature", units="°C")
+pg_external_temperature.setLabel('left', "Temperature", units="C")
 dock_external_sensor.addWidget(pg_external_temperature)
 
 pg_external_temperature.setXLink(pg_external_pressure)

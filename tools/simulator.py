@@ -13,7 +13,7 @@ m = 8.810 # kg
 # V = (R_tube**2)*pi * L_tube + (0.03/2.0)**2*pi*0.30 # Antenna
 V = m/rho_eau
 # C_f = 0.178549766657
-C_f = 0.2
+C_f = 0.02
 
 delta_volume_piston = 200 * tick_to_volume
 
@@ -25,7 +25,7 @@ rho_eau_m = rho_eau /m
 # Volume = tick_to_volume * 110
 
 #################################################
-offset = -40 * tick_to_volume
+offset = +100 * tick_to_volume
 
 #################################################
 
@@ -59,10 +59,10 @@ delta_t_regulation = 1.0 # sec
 
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
-	K_velocity = 100.0
+	K_velocity = 300.0
 	# if(abs(d0-d)<0.1):
 	#  	K = 1000.0
-	K_factor = 0.5*(t-t_old)
+	K_factor = 0.05*(t-t_old)
 	t_old = t
 
 	# d_noise = d+np.random.random_sample()*5*1e-3
@@ -70,14 +70,14 @@ def control(d0, d, ddot, V_piston, u):
 	a = -g*V_piston*rho_eau_m
 
 	cmd = -K_factor*(-g*((V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K_velocity*ddot+(d-d0))
-	if(abs(u+cmd)<200):
+	# if(abs(u+cmd)<200):
 		# if((np.sign(cmd)==-1 and ddot<-0.06) or (np.sign(cmd)==1 and ddot>0.06)):
 		# 	return u
 		# else:
 		# 	return cmd+u
-		return cmd+u
-	else:
-		return u
+	return cmd+u
+	# else:
+		# return u
 
 
 # x = np.zeros(3)
