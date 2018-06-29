@@ -10,7 +10,7 @@
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
         <param name="frequency" value="1.0" />
-        <param name="offset" value="964" />
+        <param name="offset" value="600" />
         <param name="K_factor" value="0.05" />
         <param name="K_velocity" value="300.0" />
         <param name="hysteresis_piston" value="0.6" />

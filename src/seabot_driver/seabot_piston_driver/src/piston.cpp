@@ -52,6 +52,7 @@ void Piston::set_piston_speed(const uint16_t &speed_in, const uint16_t &speed_ou
 }
 
 void Piston::set_piston_position(const uint16_t &position) const{
+    ROS_INFO("Piston : %i", position);
   // S Addr Wr [A] Comm [A] DataLow [A] DataHigh [A] P
   if(i2c_smbus_write_word_data(m_file, 0x10, position)<0)
     ROS_WARN("[Piston_driver] I2C bus Failure - Piston set position %s", strerror(errno));

@@ -31,7 +31,7 @@ void Power::set_sleep_mode_countdown(const unsigned char &hours, const unsigned 
   buff[2] = sec;
   buff[3] = sec_to_stop;
 
-  if(i2c_smbus_write_i2c_block_data(m_file, 0x03, 4,buff)!=4)
+  if(i2c_smbus_write_i2c_block_data(m_file, 0x03, 4,buff)<0)
     ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown");
 }
 

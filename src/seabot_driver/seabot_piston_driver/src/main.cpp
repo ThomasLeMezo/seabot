@@ -10,6 +10,7 @@
 #include "seabot_piston_driver/PistonState.h"
 #include "seabot_piston_driver/PistonPosition.h"
 #include "seabot_piston_driver/PistonSpeedDebug.h"
+#include "seabot_piston_driver/PistonVelocity.h"
 #include "seabot_fusion/DepthPose.h"
 
 using namespace std;
@@ -23,6 +24,7 @@ double depth = 0;
 bool adaptative_speed = false;
 int speed_in_last = 50;
 int speed_out_last = 50;
+uint16_t piston_set_point = 0;
 
 bool piston_enable(std_srvs::SetBool::Request  &req,
                    std_srvs::SetBool::Response &res){
@@ -48,8 +50,7 @@ bool piston_speed(seabot_piston_driver::PistonSpeed::Request  &req,
 }
 
 void position_callback(const seabot_piston_driver::PistonPosition::ConstPtr& msg){
-  if(state_start && state_emergency==false)
-    p.set_piston_position(msg->position);
+    piston_set_point = msg->position;
 }
 
 bool piston_emergency(std_srvs::SetBool::Request  &req,
@@ -98,12 +99,18 @@ int main(int argc, char *argv[]){
   // Publisher
   ros::Publisher state_pub = n.advertise<seabot_piston_driver::PistonState>("state", 1);
   ros::Publisher speed_pub = n.advertise<seabot_piston_driver::PistonSpeedDebug>("speed", 1);
+  ros::Publisher velocity_pub = n.advertise<seabot_piston_driver::PistonVelocity>("velocity", 1);
   seabot_piston_driver::PistonState state_msg;
   seabot_piston_driver::PistonSpeedDebug speed_msg;
+  seabot_piston_driver::PistonVelocity velocity_msg;
 
   // Subscriber
   ros::Subscriber piston_position_sub = n.subscribe("position", 1, position_callback);
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
+
+  ros::Time t_last_velocity, t_last_set_point;
+  double velocity = 0.0;
+  double position_last = 0.0;
 
   // Sensor initialization
   p.i2c_open();
@@ -125,6 +132,25 @@ int main(int argc, char *argv[]){
     state_msg.motor_speed = p.m_motor_speed;
     state_pub.publish(state_msg);
 
+    ros::Time t = ros::Time::now();
+
+    // Piston set point
+    if(state_start && state_emergency==false){
+        if((piston_set_point != p.m_position_set_point) || (t-t_last_set_point).toSec()>30.0){
+            p.set_piston_position(piston_set_point);
+            t_last_set_point = t;
+        }
+    }
+
+    double delta_t = (t - t_last_velocity).toSec();
+    if(delta_t > 1.0){
+        velocity = (p.m_position - position_last)/delta_t;
+        t_last_velocity = t;
+        position_last = p.m_position;
+        velocity_msg.velocity =velocity;
+        velocity_pub.publish(velocity_msg);
+    }
+
     // Analyze depth
     if(adaptative_speed){
         int speed_in = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_in+adaptative_coeff_offset_in, max_speed), min_speed)*(nb_step/max_speed));
@@ -136,7 +162,9 @@ int main(int argc, char *argv[]){
             p.set_piston_speed((uint16_t) speed_in, (uint16_t) speed_out);
             speed_in_last = speed_in;
             speed_out_last = speed_out;
-//            speed_msg.
+            speed_msg.speed_in = speed_in;
+            speed_msg.speed_out = speed_out;
+            speed_pub.publish(speed_msg);
         }
     }
 

@@ -105,7 +105,7 @@ int main(int argc, char *argv[]){
     ros::ServiceServer service_sleep_mode = n.advertiseService("sleep_mode", sleep_mode);
     ros::ServiceServer service_sleep_mode_param = n.advertiseService("sleep_mode_param", sleep_mode_param);
 
-    p.set_sleep_mode_countdown(15, 0, 0, 250);
+    p.set_sleep_mode_countdown(48, 0, 0, 250);
     ROS_INFO("[POWER] Set sleep mode to 15 hours");
 
     ros::Rate loop_rate(frequency);

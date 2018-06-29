@@ -5,15 +5,15 @@
                 </node>
 
                 <node name="piston_node" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
-                        <param name="frequency" value="2.0" />
+                        <param name="frequency" value="5.0" />
 <!--                        <param name="speed_in" value="50" />
                         <param name="speed_out" value="120" /-->>
 
                         <param name="adaptative_speed" value="true" />
-                        <param name="adaptative_coeff_slope_in" value="2.0" />
-                        <param name="adaptative_coeff_offset_in" value="50.0" />
-                        <param name="adaptative_coeff_slope_out" value="5.0" />
-                        <param name="adaptative_coeff_offset_out" value="50.0" />
+                        <param name="adaptative_coeff_slope_in" value="0.0" />
+                        <param name="adaptative_coeff_offset_in" value="40.0" />
+                        <param name="adaptative_coeff_slope_out" value="4.0" />
+                        <param name="adaptative_coeff_offset_out" value="40.0" />
                 </node>
 
                 <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">

@@ -1,1 +1,1 @@
-uint32 position
+uint16 position

@@ -55,8 +55,6 @@ def regulation_node():
     # sub_piston = rospy.Subscriber("/driver/piston/state", PistonState, callback_piston, queue_size=1)
     sub_pressure = rospy.Subscriber("/fusion/depth", DepthPose, callback_fusion_depth ,queue_size=1)
     piston_position_pub = rospy.Publisher('/driver/piston/position', PistonPosition, queue_size=1)
-
-    sub_pressure = rospy.Subscriber("/driver/power/battery", DepthPose, callback_fusion_depth ,queue_size=1)
     
     rospy.loginfo("[Calibration] Wait for Services")
     rospy.wait_for_service('/fusion/zero_depth')
