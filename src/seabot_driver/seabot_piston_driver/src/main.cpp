@@ -11,6 +11,7 @@
 #include "seabot_piston_driver/PistonPosition.h"
 #include "seabot_piston_driver/PistonSpeedDebug.h"
 #include "seabot_piston_driver/PistonVelocity.h"
+#include "seabot_piston_driver/PistonErrorInterval.h"
 #include "seabot_fusion/DepthPose.h"
 
 using namespace std;
@@ -24,7 +25,7 @@ double depth = 0;
 bool adaptative_speed = false;
 int speed_in_last = 50;
 int speed_out_last = 50;
-uint16_t piston_set_point = 0;
+__u16 piston_set_point = 0;
 
 bool piston_enable(std_srvs::SetBool::Request  &req,
                    std_srvs::SetBool::Response &res){
@@ -46,6 +47,12 @@ bool piston_reset(std_srvs::Empty::Request  &req,
 bool piston_speed(seabot_piston_driver::PistonSpeed::Request  &req,
                   seabot_piston_driver::PistonSpeed::Response &res){
   p.set_piston_speed(req.speed_in, req.speed_out);
+  return true;
+}
+
+bool piston_error_interval(seabot_piston_driver::PistonErrorInterval::Request  &req,
+                           seabot_piston_driver::PistonErrorInterval::Response &res){
+  p.set_error_interval(req.error_interval);
   return true;
 }
 
@@ -95,6 +102,8 @@ int main(int argc, char *argv[]){
   ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
   ros::ServiceServer service_enable = n.advertiseService("enable", piston_enable);
   ros::ServiceServer service_emergency = n.advertiseService("emergency", piston_emergency);
+
+  ros::ServiceServer service_error_interval = n.advertiseService("error_interval", piston_error_interval);
 
   // Publisher
   ros::Publisher state_pub = n.advertise<seabot_piston_driver::PistonState>("state", 1);

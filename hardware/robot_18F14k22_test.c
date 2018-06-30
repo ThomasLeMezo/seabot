@@ -54,6 +54,9 @@ unsigned short motor_current_speed = 127; // 2 octets
 // Regulation
 int position_set_point = 0;
 signed int error = 0;
+unsigned long int position_reached_max_value = 50000;
+unsigned long int position_reached_cpt = 0;
+unsigned short error_interval = 3;
 
 // State machine
 unsigned short motor_on = 1;
@@ -82,7 +85,9 @@ void i2c_read_data_from_buffer(){
             case 0x04:
                 LED1 = (rxbuffer_tab[i+1]!=0x00);
                 break;
-
+            case 0x05:
+                error_interval = rxbuffer_tab[i+1];
+                break;
             case 0x10:  // consigne de postion
                 if(nb_data >= i+2){
                     position_set_point = 4*(rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
@@ -192,8 +197,14 @@ void set_motor_cmd(unsigned short speed){
 
     if(motor_on == 0 || (butee_out == 1 && speed >= 127) || (butee_in == 1 && speed <= 127)){
         set_motor_cmd_stop();
+        if(position_reached_cpt>position_reached_max_value){
+          RC6_bit = 0;
+        }
+        else
+          position_reached_cpt++;
     }
     else if(motor_current_speed != speed){
+        position_reached_cpt = 0;
         motor_current_speed = speed;
         PWM1_Set_Duty(speed);
         CCP1CON=0b10001100; // Half-bridge output: P1A, P1B modulated with dead-band control
@@ -394,9 +405,9 @@ void main(){
             // Regulation
             error = position_set_point - nb_pulse;
 
-            if(error > 0)
+            if(error > error_interval)
                 set_motor_cmd_in(motor_speed_in);
-            else if(error < 0)
+            else if(error < error_interval)
                 set_motor_cmd_out(motor_speed_out);
             else // position reached
                 set_motor_cmd_stop();

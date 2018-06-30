@@ -1,0 +1,8 @@
+<launch>
+
+    <include file="$(find seabot)/launch/base.launch"/>
+
+    <node name="calibration_piston_motor" pkg="seabot" type="calibration_piston_motor.py" output="screen" ns="regulation">
+    </node>
+
+</launch>

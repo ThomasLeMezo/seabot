@@ -75,7 +75,7 @@ public:
    * @brief set_piston_position
    * @param position
    */
-  void set_piston_position(const uint16_t &position) const;
+  void set_piston_position(__u16 position) const;
 
   /**
    * @brief set_piston_enable
@@ -88,6 +88,12 @@ public:
    * @param val
    */
   void set_led_enable(const bool &val) const;
+
+  /**
+   * @brief set_error_interval
+   * @param val
+   */
+  void set_error_interval(const __u8 &val) const;
 
   /**
    * @brief set_piston_reset

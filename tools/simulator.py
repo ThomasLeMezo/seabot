@@ -8,24 +8,24 @@ tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
 g = 9.81
 rho_eau = 1020.0 # kg/m3
 m = 8.810 # kg
-C_f = 0.01
+C_f = 1.0
 # C_f = 0.02
 
 speed_in = 11.0
-speed_out = 1.0
+speed_out = 2.0
 
-delta_volume_piston = 600 * tick_to_volume
+delta_volume_piston = 1200 * tick_to_volume
 
 # Initial : position, velocity, piston volume
 x = np.array([0.0, 0.0, 0.0])
-offset_physical = -300 * tick_to_volume
+offset_physical = -0 * tick_to_volume
 # Speed : [0.16, 0.18] m/s for delta of 440 ticks
 # 2*440*tick_to_volume*9.81/(0.18**2)
 # => [0.04 0.06]
 
 ########## Drone regulation ##########
 # C_f_estim = C_f
-C_f_estim = 0.02
+C_f_estim = 0.1
 K_velocity = 300.0
 K_factor = 0.05
 delta_t_regulation = 1.0 # sec
@@ -36,6 +36,7 @@ offset = +0 * tick_to_volume
 dt=0.05
 time_simulation = 2*120*60 # sec
 
+delta_compression = 30*tick_to_volume # in delta_V / m
 depth_seafloor = 20.0
 
 #################################################
@@ -60,7 +61,7 @@ def f(x, u):
 	# Note : u => cmd in tick (inverted from volume variation)
 	y=np.zeros(3)
 	y[0] = x[1]
-	y[1] = g - g*((V+x[2]+offset_physical)*rho_eau/m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau/m)
+	y[1] = g - g*((V+x[2]+offset_physical-x[0]*delta_compression)*rho_eau/m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau/m)
 	volume_target = -u*tick_to_volume
 
 	if(volume_target < x[2]): # reduce volume => piston move in

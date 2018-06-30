@@ -1,6 +1,6 @@
 <launch>
 
-	<include file="$(find seabot)/launch/seabot_base.launch"/>
+  <include file="$(find seabot)/launch/base.launch"/>
 
 	<node name="up_down_piston_node" pkg="seabot_depth_regulation" type="up_down_piston.py" output="screen" respawn="true">
         <param name="delta_time" value="180.0" />

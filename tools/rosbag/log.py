@@ -30,6 +30,7 @@ win.setWindowTitle('Seabot log')
 
 dock_battery = Dock("Battery")
 dock_piston = Dock("Piston")
+dock_piston2 = Dock("Piston2")
 dock_depth = Dock("Depth")
 dock_internal_sensor = Dock("Internal Sensor")
 dock_external_sensor = Dock("External Sensor")
@@ -41,6 +42,7 @@ dock_gps = Dock("GPS")
 
 area.addDock(dock_battery)
 area.addDock(dock_piston, 'above', dock_battery)
+area.addDock(dock_piston2, 'above', dock_battery)
 area.addDock(dock_depth, 'above', dock_battery)
 area.addDock(dock_internal_sensor, 'above', dock_battery)
 area.addDock(dock_external_sensor, 'above', dock_battery)
@@ -198,6 +200,23 @@ pg_piston_switch.setLabel('left', "Switch")
 dock_piston.addWidget(pg_piston_switch)
 
 pg_piston_switch.setXLink(pg_piston_state_position)
+
+#################### Piston2 ####################
+
+pg_piston_state_position2 = pg.PlotWidget()
+pg_piston_state_position2.addLegend()
+pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
+pg_piston_state_position2.plot(time_piston_state, piston_state_position_set_point, pen=(0,0,255), name="set point")
+pg_piston_state_position2.setLabel('left', "Piston state position and set point")
+dock_piston2.addWidget(pg_piston_state_position2)
+
+pg_piston_speed = pg.PlotWidget()
+pg_piston_speed.addLegend()
+pg_piston_speed.plot(time_piston_state, np.array(piston_state_motor_speed).astype(int), pen=(255,0,0), name="speed")
+pg_piston_speed.setLabel('left', "Speed")
+dock_piston2.addWidget(pg_piston_speed)
+
+pg_piston_speed.setXLink(pg_piston_state_position2)
 
 #################### Fusion ####################
 
