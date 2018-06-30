@@ -4,7 +4,8 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.console
 from pyqtgraph.dockarea import *
-
+import datetime
+from PyQt4.QtCore import QTime, QTimer
 
 from scipy import signal
 import numpy as np
@@ -17,6 +18,18 @@ if(len(sys.argv)<2):
 	sys.exit(0)
 
 load_bag(sys.argv[1])
+
+class TimeAxisItem(pg.AxisItem):
+    def __init__(self, *args, **kwargs):
+        super(TimeAxisItem, self).__init__(*args, **kwargs)
+
+    def tickStrings(self, values, scale, spacing):
+        return [int2dt(value).strftime("%Hh%Mmn%Ss") for value in values]
+
+def int2dt(ts):
+    # if not ts:
+    #     return datetime.datetime.utcfromtimestamp(ts) # workaround fromtimestamp bug (1)
+    return(datetime.datetime.fromtimestamp(ts-3600.0))
 
  #####################################################
  ### PLOT
@@ -171,14 +184,15 @@ pg_fusion_depth = pg.PlotWidget()
 pg_fusion_depth.addLegend()
 pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
 pg_fusion_depth.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
-pg_fusion_depth	.setLabel('left', "Depth", units="m")
+pg_fusion_depth.setLabel('left', "Depth", units="m")
 dock_depth.addWidget(pg_fusion_depth)
 
-pg_piston_state_position2 = pg.PlotWidget()
+pg_piston_state_position2 = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
 pg_piston_state_position2.addLegend()
 pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
 pg_piston_state_position2.plot(time_piston_state, piston_state_position_set_point, pen=(0,0,255), name="set point")
 pg_piston_state_position2.setLabel('left', "Piston state position")
+# pg_piston_state_position2.setLabel('bottom', "Time", units="s")
 dock_depth.addWidget(pg_piston_state_position2)
 
 pg_piston_state_position2.setXLink(pg_fusion_depth)

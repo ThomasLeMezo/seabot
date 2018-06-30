@@ -11,10 +11,11 @@ m = 8.810 # kg
 C_f = 1.0
 # C_f = 0.02
 
-speed_in = 11.0
-speed_out = 2.0
+speed_in = 14.0 #
+speed_out = 10.0 # Check ok ?
 
-delta_volume_piston = 1200 * tick_to_volume
+volume_piston_max = 700 * tick_to_volume
+volume_piston_min = -(1200-700) * tick_to_volume
 
 # Initial : position, velocity, piston volume
 x = np.array([0.0, 0.0, 0.0])
@@ -25,12 +26,12 @@ offset_physical = -0 * tick_to_volume
 
 ########## Drone regulation ##########
 # C_f_estim = C_f
-C_f_estim = 0.1
+C_f_estim = C_f
 K_velocity = 300.0
 K_factor = 0.05
 delta_t_regulation = 1.0 # sec
 
-offset = +0 * tick_to_volume
+offset = -0 * tick_to_volume
 
 ########## Simulation ##########
 dt=0.05
@@ -81,9 +82,12 @@ def control(d0, d, ddot, V_piston, u):
 	d_noise = d+np.random.random_sample()*1.1e-2 # noise around centimeter
 
 	a = -g*V_piston*rho_eau_m
-	cmd = -K_factor*(t-t_old)*(-g*((V_piston+offset)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K_velocity*ddot+(d-d0))
+	cmd = -K_factor*(t-t_old)*(-g*((V_piston+offset-d_noise*delta_compression)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K_velocity*ddot+(d-d0))
 
 	t_old = t
+	# if(abs(d-d0)<0.3):
+	# 	return u
+	# else:
 	return cmd+u
 
 result_x = []
@@ -114,8 +118,10 @@ for k in range(0, int(time_simulation/dt)):
 	x = x+dx*dt
 
 	## Simulation limits
-	if(abs(x[2])>delta_volume_piston):
-		x[2] = delta_volume_piston*np.sign(x[2])
+	if(x[2]>volume_piston_max):
+		x[2] = volume_piston_max
+	if(x[2]<volume_piston_min):
+		x[2] = volume_piston_min
 	if(x[0]>depth_seafloor):
 		x[0] = depth_seafloor
 		x[1] = 0.0

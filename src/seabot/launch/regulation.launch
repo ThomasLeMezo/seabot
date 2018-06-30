@@ -5,7 +5,7 @@
     <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="g" value="9.81" />
         <param name="rho_eau" value="1020.0" />
-        <param name="m" value="6.855" />
+        <param name="m" value="8.810" />
         <param name="C_f" value="0.02" />
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 

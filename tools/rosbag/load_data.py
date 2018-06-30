@@ -86,7 +86,20 @@ def load_bag(filename):
 	startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
 	end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
 
-	for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
+	for topic, msg, t in bag.read_messages(topics=["/driver/piston/position",\
+													"/driver/piston/state",\
+													"/driver/power/battery",\
+													"/driver/sensor_external",\
+													"/driver/sensor_internal",\
+													"/driver/thruster/engine",\
+													"/fusion/depth",\
+													"/regulation/debug",\
+													"/regulation/depth_set_point",\
+													"/fusion/pose",\
+													"/regulation/depth_set_point",\
+													"/driver/extended_fix"],\
+													start_time=startTime,\
+													end_time=end_time):
 		if(topic=="/driver/piston/position"):
 			time_piston_position.append((t-startTime).to_sec())
 			piston_position.append(msg.position)
