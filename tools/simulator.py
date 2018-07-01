@@ -30,7 +30,7 @@ offset_physical = -0 * tick_to_volume
 ########## Drone regulation ##########
 # C_f_estim = C_f
 C_f_estim = 0.1
-K_velocity = 100.0
+K_velocity = 300.0
 K_e = 1.0
 K_factor = 1.0
 delta_t_regulation = 1.0 # sec

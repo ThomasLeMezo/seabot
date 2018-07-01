@@ -84,5 +84,9 @@ void Piston::get_piston_all_data(){
     m_motor_speed = buff[5];
 }
 
+void Piston::get_piston_set_point(){
+    m_position_set_point = i2c_smbus_read_word_data(m_file, 0x03)/4.0;
+}
+
 
 

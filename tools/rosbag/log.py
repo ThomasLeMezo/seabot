@@ -219,8 +219,9 @@ pg_piston_switch.setXLink(pg_piston_state_position)
 
 pg_piston_state_position2 = pg.PlotWidget()
 pg_piston_state_position2.addLegend()
-pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
-pg_piston_state_position2.plot(time_piston_state, piston_state_position_set_point, pen=(0,0,255), name="set point")
+pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position pic")
+pg_piston_state_position2.plot(time_piston_state, piston_state_position_set_point, pen=(0,0,255), name="set point pic")
+pg_piston_state_position2.plot(time_piston_position, piston_position, pen=(0,255,0), name="set point pi")
 pg_piston_state_position2.setLabel('left', "Piston state position and set point")
 dock_piston2.addWidget(pg_piston_state_position2)
 

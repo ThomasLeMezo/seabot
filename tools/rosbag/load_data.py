@@ -96,10 +96,24 @@ def load_bag(filename):
 													start_time=startTime,\
 													end_time=end_time):
 		if(topic=="/driver/piston/position"):
+			if(len(time_piston_position)>0):
+				time_piston_position.append((t-startTime).to_sec())
+				piston_position.append(piston_position[-1])	
 			time_piston_position.append((t-startTime).to_sec())
 			piston_position.append(msg.position)
 
 		elif(topic=="/driver/piston/state"):
+			if(len(time_piston_state)>0):
+				time_piston_state.append((t-startTime).to_sec())
+				piston_state_position.append(msg.position)
+				piston_state_switch_out.append(piston_state_switch_out[-1])
+				piston_state_switch_in.append(piston_state_switch_in[-1])
+				piston_state_state.append(piston_state_state[-1])
+				piston_state_motor_ono.append(piston_state_motor_on[-1])
+				piston_state_enable_on.append(piston_state_enable_on[-1])
+				piston_state_position_set_point.append(piston_state_position_set_point[-1])
+				piston_state_motor_speed.append(piston_state_motor_speed[-1])
+
 			time_piston_state.append((t-startTime).to_sec())
 			piston_state_position.append(msg.position)
 			piston_state_switch_out.append(msg.switch_out)

@@ -106,6 +106,11 @@ public:
   void get_piston_all_data();
 
   /**
+   * @brief get_piston_set_point
+   */
+  void get_piston_set_point();
+
+  /**
    * @brief write_cmd
    * @param left
    * @param right

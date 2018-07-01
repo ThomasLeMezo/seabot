@@ -56,6 +56,7 @@ int position_set_point = 0;
 signed int error = 0;
 unsigned long int position_reached_max_value = 50000;
 unsigned long int position_reached_cpt = 0;
+unsigned short position_reached_enable = 1;
 unsigned short error_interval = 3;
 
 // State machine
@@ -87,6 +88,9 @@ void i2c_read_data_from_buffer(){
                 break;
             case 0x05:
                 error_interval = rxbuffer_tab[i+1];
+                break;
+            case 0x06:
+                position_reached_enable = rxbuffer_tab[i+1];
                 break;
             case 0x10:  // consigne de postion
                 if(nb_data >= i+2){
@@ -183,7 +187,8 @@ void read_butee(){
  */
 void set_motor_cmd_stop(){
     if(motor_current_speed != 127){
-        CCPR1 = 50; // Rapport cyclique à 50% pour stopper le moteur et garder du couple
+        // CCPR1 = 50; // Rapport cyclique à 50% pour stopper le moteur et garder du couple
+        PWM1_Set_Duty(127);
         motor_current_speed = 127;
         RC6_bit = 1;
     }
@@ -194,24 +199,26 @@ void set_motor_cmd_stop(){
  * @param i
  */
 void set_motor_cmd(unsigned short speed){
-
     if(motor_on == 0 || (butee_out == 1 && speed >= 127) || (butee_in == 1 && speed <= 127)){
         set_motor_cmd_stop();
-        if(position_reached_cpt>position_reached_max_value){
-          RC6_bit = 0;
+        if(position_reached_enable == 1){
+          if(position_reached_cpt>position_reached_max_value){
+            RC6_bit = 0;
+          }
+          else
+            position_reached_cpt++;
         }
-        else
-          position_reached_cpt++;
     }
     else if(motor_current_speed != speed){
         position_reached_cpt = 0;
         motor_current_speed = speed;
         PWM1_Set_Duty(speed);
-        CCP1CON=0b10001100; // Half-bridge output: P1A, P1B modulated with dead-band control
-        PSTRCON.STRB = 1 ;  // Pour activer la sortie P1B
-        PWM1_Start(); // Necessary ?
         RC6_bit = 1;  //Enable L6203
     }
+
+    // P1M : 10 (P1A assigned as Capture/Compare input/output...)
+    // DC1B : 00
+    // CCP1 : 1100 : PWM mode; P1A, P1C active-high; P1B, P1D active-high
     
 }
 
@@ -373,6 +380,10 @@ void main(){
     motor_current_speed = 127;
     PWM1_Start();
 
+    // Necessary ?
+    // CCP1CON=0b10001100; // Half-bridge output: P1A, P1B modulated with dead-band control
+    // PSTRCON.STRB = 1 ;  // Pour activer la sortie P1B
+
     UART1_Init(115200);
     delay_ms(100);
 
@@ -435,9 +446,8 @@ void interrupt(){
             delay_ms(2);
             if (!RA0_bit){
                 butee_out = 1;
-                //nb_pulse = 0; // Reset pulse
                 CCPR1 = 50;  // Rapport cyclique à 50% pour stopper le moteur et garder du couple (=> pose problème car dépend du sens !)
-                motor_current_speed = 127;
+                // motor_current_speed = 127;
             }
         }
         INTCON.INT0IF = 0;
@@ -450,7 +460,7 @@ void interrupt(){
             if (!RA1_bit){
                 butee_in = 1;
                 CCPR1 = 50;  // Rapport cyclique à 50% pour stopper le moteur et garder du couple
-                motor_current_speed = 127;
+                // motor_current_speed = 127;
             }
         }
         INTCON3.INT1IF = 0;
