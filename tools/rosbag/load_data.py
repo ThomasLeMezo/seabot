@@ -60,10 +60,6 @@ regulation_debug_piston_set_point_offset = []
 time_regulation_depth_set_point = []
 regulation_depth_set_point = []
 
-# /regulation/depth_set_point
-time_regulation_set_point = []
-regulation_set_point_depth = []
-
 # /fusion/pose
 time_fusion_pose = []
 fusion_pose_x = []
@@ -96,7 +92,6 @@ def load_bag(filename):
 													"/regulation/debug",\
 													"/regulation/depth_set_point",\
 													"/fusion/pose",\
-													"/regulation/depth_set_point",\
 													"/driver/extended_fix"],\
 													start_time=startTime,\
 													end_time=end_time):
@@ -152,10 +147,6 @@ def load_bag(filename):
 			regulation_debug_piston_set_point.append(msg.piston_set_point)
 			regulation_debug_piston_set_point_offset.append(msg.piston_set_point_offset)
 
-		elif(topic=="/regulation/depth_set_point"):
-			time_regulation_set_point.append((t-startTime).to_sec())
-			regulation_set_point_depth.append(msg.depth)
-
 		elif(topic=="/fusion/pose"):
 			time_fusion_pose.append((t-startTime).to_sec())
 			fusion_pose_x.append(msg.x)
@@ -163,6 +154,9 @@ def load_bag(filename):
 			fusion_pose_z.append(msg.z)
 
 		elif(topic=="/regulation/depth_set_point"):
+			if(len(regulation_depth_set_point)>0):
+				time_regulation_depth_set_point.append((t-startTime).to_sec())
+				regulation_depth_set_point.append(regulation_depth_set_point[-1])
 			time_regulation_depth_set_point.append((t-startTime).to_sec())
 			regulation_depth_set_point.append(msg.depth)
 
@@ -171,3 +165,7 @@ def load_bag(filename):
 			extend_fix_status.append(msg.status.status)
 
 	bag.close()
+
+	if(len(time_regulation_depth_set_point)>0):
+		time_regulation_depth_set_point.append((end_time-startTime).to_sec())
+		regulation_depth_set_point.append(regulation_depth_set_point[-1])

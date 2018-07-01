@@ -96,7 +96,7 @@ def regulation_node():
     set_piston_speed(piston_speed_start)
 
 
-    for depth_ref in range(1, 17, 2):
+    for depth_ref in range(1, 17, 5):
         ROS_INFO("[CALIBRATION_PISTON] Start new sequence at %f m", depth_ref)
         
         # Reset piston position

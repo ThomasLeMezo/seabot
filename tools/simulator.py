@@ -8,11 +8,14 @@ tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
 g = 9.81
 rho_eau = 1020.0 # kg/m3
 m = 8.810 # kg
-C_f = 1.0
+C_f = 0.1
 # C_f = 0.02
 
-speed_in = 14.0 #
-speed_out = 10.0 # Check ok ?
+## 0.01 -> Kf = 0.08, Kv = 500, Delta_t = 1.0
+## 0.1 ->
+
+speed_in = 10.0 #
+speed_out = 2.0 # Check ok ?
 
 volume_piston_max = 700 * tick_to_volume
 volume_piston_min = -(1200-700) * tick_to_volume
@@ -26,43 +29,29 @@ offset_physical = -0 * tick_to_volume
 
 ########## Drone regulation ##########
 # C_f_estim = C_f
-C_f_estim = C_f
-K_velocity = 300.0
-K_factor = 0.05
+C_f_estim = 0.1
+K_velocity = 100.0
+K_e = 1.0
+K_factor = 1.0
 delta_t_regulation = 1.0 # sec
-
-offset = -0 * tick_to_volume
 
 ########## Simulation ##########
 dt=0.05
-time_simulation = 2*120*60 # sec
+time_simulation = 120*60 # sec
 
 delta_compression = 30*tick_to_volume # in delta_V / m
 depth_seafloor = 20.0
 
-#################################################
-
-def set_point_depth():
-	global d0, t
-	mod = (t/60.0)%120.0
-	if(mod<60.0):
-		d0=5.0
-	elif(mod<120.0):
-		d0=15.0
-
-V = m/rho_eau
-rho_eau_m = rho_eau /m
-V_estime = V
-print("m (volume) = ", V*rho_eau)
+rho_eau_m = rho_eau/m
 print("m = ", m)
-print("offset = ", offset)
-# print("tick_to_volume = ", tick_to_volume)
+
+##############################################################
 
 def f(x, u):
 	# Note : u => cmd in tick (inverted from volume variation)
 	y=np.zeros(3)
 	y[0] = x[1]
-	y[1] = g - g*((V+x[2]+offset_physical-x[0]*delta_compression)*rho_eau/m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau/m)
+	y[1] = - g*((x[2]-x[0]*delta_compression+offset_physical)*rho_eau_m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau)
 	volume_target = -u*tick_to_volume
 
 	if(volume_target < x[2]): # reduce volume => piston move in
@@ -79,16 +68,29 @@ def f(x, u):
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
 
-	d_noise = d+np.random.random_sample()*1.1e-2 # noise around centimeter
+	d_noise = d #+np.random.random_sample()*1.1e-2 # noise around centimeter
+	ddot_noise = ddot # + np.random.random_sample()*1e-2
 
-	a = -g*V_piston*rho_eau_m
-	cmd = -K_factor*(t-t_old)*(-g*((V_piston+offset-d_noise*delta_compression)*rho_eau/m)-0.5*C_f*ddot*abs(ddot)*rho_eau/m+K_velocity*ddot+(d-d0))
+	a = (-g*(V_piston-d_noise*delta_compression)*rho_eau_m+0.5*C_f_estim*ddot*abs(ddot)*rho_eau)
+	v = K_velocity*ddot
+	e = K_e*(d-d0)
+	cmd = -K_factor*(t-t_old)*(a+v+e)
 
 	t_old = t
 	# if(abs(d-d0)<0.3):
 	# 	return u
 	# else:
 	return cmd+u
+
+def set_point_depth():
+	global d0, t
+	mod = (t/60.0)%120.0
+	if(mod<60.0):
+		d0=5.0
+	elif(mod<120.0):
+		d0=15.0
+
+##############################################################
 
 result_x = []
 result_u = []

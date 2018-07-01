@@ -11,12 +11,16 @@
 
         <param name="frequency" value="1.0" />
         <param name="offset" value="600" />
+        <param name="hysteresis_piston" value="0.6" />
+
         <param name="K_factor" value="0.05" />
         <param name="K_velocity" value="300.0" />
-        <param name="hysteresis_piston" value="0.6" />
 
         <param name="piston_position_min" value="0.0" />
         <param name="piston_position_max" value="1250.0" />
+
+        <param name="compression_tick_factor" value="30.0" />
+
     </node>
 
 <!-- Kf : 10, Kv: 50, freq:1, offset = 865 / 964 -->

@@ -39,7 +39,7 @@ win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.showMaximized()	
-win.setWindowTitle('Seabot log')
+win.setWindowTitle("Seabot log - " + sys.argv[1])
 
 dock_battery = Dock("Battery")
 dock_piston = Dock("Piston")

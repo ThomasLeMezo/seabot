@@ -59,6 +59,8 @@ int main(int argc, char *argv[]){
     const double piston_position_min = n_private.param<double>("piston_position_min", 0.0);
     const double piston_position_max = n_private.param<double>("piston_position_max", 1280.0);
 
+    const double compression_factor = tick_to_volume * n_private.param<double>("compression_tick_factor", 30.0);
+
     const double rho_eau_m = rho_eau/m;
 
     // Subscriber
@@ -86,7 +88,7 @@ int main(int argc, char *argv[]){
         t_old = t;
         if(depth_set_point>0.2){
             double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
-            double a = -g*V_piston*rho_eau_m -0.5*C_f*velocity*abs(velocity)*rho_eau_m;
+            double a = (-g*(V_piston-depth*compression_factor) -0.5*C_f*velocity*abs(velocity))*rho_eau_m;
             double v = K_velocity*velocity;
             double e = depth-depth_set_point;
             double u = -K_factor*dt*(a + v + e);
