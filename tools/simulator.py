@@ -31,6 +31,7 @@ offset_physical = -0 * tick_to_volume
 # C_f_estim = C_f
 C_f_estim = 0.1
 K_velocity = 300.0
+K_acc = 100.0
 K_e = 1.0
 K_factor = 1.0
 delta_t_regulation = 1.0 # sec
@@ -51,7 +52,7 @@ def f(x, u):
 	# Note : u => cmd in tick (inverted from volume variation)
 	y=np.zeros(3)
 	y[0] = x[1]
-	y[1] = - g*((x[2]-x[0]*delta_compression+offset_physical)*rho_eau_m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau)
+	y[1] = g*((-x[2]+x[0]*delta_compression+offset_physical)*rho_eau_m) - (0.5*C_f*x[1]*abs(x[1])*rho_eau)
 	volume_target = -u*tick_to_volume
 
 	if(volume_target < x[2]): # reduce volume => piston move in
@@ -68,10 +69,10 @@ def f(x, u):
 def control(d0, d, ddot, V_piston, u):
 	global t_old, t
 
-	d_noise = d #+np.random.random_sample()*1.1e-2 # noise around centimeter
-	ddot_noise = ddot # + np.random.random_sample()*1e-2
+	d_noise = d +np.random.random_sample()*1.1e-2 # noise around centimeter
+	ddot_noise = ddot + np.random.random_sample()*1e-2
 
-	a = (-g*(V_piston-d_noise*delta_compression)*rho_eau_m+0.5*C_f_estim*ddot*abs(ddot)*rho_eau)
+	a = K_acc*(g*(-V_piston+d_noise*delta_compression)*rho_eau_m-0.5*C_f_estim*ddot*abs(ddot)*rho_eau)
 	v = K_velocity*ddot
 	e = K_e*(d-d0)
 	cmd = -K_factor*(t-t_old)*(a+v+e)

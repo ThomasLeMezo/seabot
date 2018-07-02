@@ -48,13 +48,14 @@ int main(int argc, char *argv[]){
 
     const double g = n_private.param<double>("g", 9.81);
     const double rho_eau = n_private.param<double>("rho_eau", 1000.0);
-    const double m = n_private.param<double>("m", 6.855);
+    const double m = n_private.param<double>("m", 8.81);
     const double C_f = n_private.param<double>("C_f", 0.08);
     const double tick_to_volume = n_private.param<double>("tick_to_volume", 1.431715402026599e-07);
     const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
 
-    const double K_factor = n_private.param<double>("K_factor", 0.1);
-    const double K_velocity = n_private.param<double>("K_velocity", 150.0);
+    const double K_factor = n_private.param<double>("K_factor", 1.0);
+    const double K_velocity = n_private.param<double>("K_velocity", 300.0);
+    const double K_acc = n_private.param<double>("K_acc", 100.0);
 
     const double piston_position_min = n_private.param<double>("piston_position_min", 0.0);
     const double piston_position_max = n_private.param<double>("piston_position_max", 1280.0);
@@ -88,7 +89,7 @@ int main(int argc, char *argv[]){
         t_old = t;
         if(depth_set_point>0.2){
             double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
-            double a = (-g*(V_piston-depth*compression_factor) -0.5*C_f*velocity*abs(velocity))*rho_eau_m;
+            double a = K_acc*(g*(-V_piston+depth*compression_factor)*rho_eau_m -0.5*C_f*velocity*abs(velocity)*rho_eau);
             double v = K_velocity*velocity;
             double e = depth-depth_set_point;
             double u = -K_factor*dt*(a + v + e);

@@ -6,7 +6,7 @@
         <param name="g" value="9.81" />
         <param name="rho_eau" value="1020.0" />
         <param name="m" value="8.810" />
-        <param name="C_f" value="0.02" />
+        <param name="C_f" value="0.1" />
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
         <param name="frequency" value="1.0" />
@@ -15,6 +15,7 @@
 
         <param name="K_factor" value="1.0" />
         <param name="K_velocity" value="300.0" />
+        <param name="K_acc" value="100.0" />
 
         <param name="piston_position_min" value="0.0" />
         <param name="piston_position_max" value="1250.0" />
