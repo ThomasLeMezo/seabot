@@ -47,17 +47,18 @@ unsigned short butee_out = 0;
 unsigned short butee_in = 0;
 
 // Motor
-unsigned short motor_speed_in = 50; // 2 octets
-unsigned short motor_speed_out = 50; // 2 octets
-unsigned short motor_current_speed = 127; // 2 octets
+unsigned short motor_speed_in = 20; // 2 octets
+unsigned short motor_speed_out = 20; // 2 octets
+unsigned short motor_current_speed = 50; // 2 octets
+#define MOTOR_STOP 50
 
 // Regulation
 int position_set_point = 0;
 signed int error = 0;
 unsigned long int position_reached_max_value = 50000;
 unsigned long int position_reached_cpt = 0;
-unsigned short position_reached_enable = 1;
-unsigned short error_interval = 3;
+unsigned short position_reached_enable = 0;
+unsigned short error_interval = 0;
 
 // State machine
 unsigned short motor_on = 1;
@@ -98,19 +99,21 @@ void i2c_read_data_from_buffer(){
                     i++;
                 }
                 break;
-
             case 0x12:  // consigne de vitesse in
+                if(rxbuffer_tab[i+1] <=50)
+                  motor_speed_in = rxbuffer_tab[i+1];
+                break;
+            case 0x13:  // consigne de vitesse out
+                if(rxbuffer_tab[i+1] <=50)
+                  motor_speed_out = rxbuffer_tab[i+1];
+                break;
+
+            case 0xA0:  // consigne de postion
                 if(nb_data >= i+2){
-                    motor_speed_in = rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8);
+                    position_reached_max_value = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
                     i++;
                 }
-                break;
-            case 0x14:  // consigne de vitesse out
-                if(nb_data >= i+2){
-                    motor_speed_out = rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8);
-                    i++;
-                }
-                break;
+                break;   
             default:
                 break;
         }
@@ -151,13 +154,13 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         SSPBUF = motor_speed_in;
         break;
     case 0x07:
-        SSPBUF = motor_speed_in >> 8;
-        break;
-    case 0x08:
         SSPBUF = motor_speed_out;
         break;
-    case 0x09:
-        SSPBUF = motor_speed_out >> 8;
+    case 0xA0:
+        SSPBUF = error;
+        break;
+    vase 0xA1:
+        SSPBUF = (error >> 8);
         break;
     default:
         SSPBUF = 0x00;
@@ -186,33 +189,38 @@ void read_butee(){
  * @brief Arret du Moteur
  */
 void set_motor_cmd_stop(){
-    if(motor_current_speed != 127){
-        // CCPR1 = 50; // Rapport cyclique à 50% pour stopper le moteur et garder du couple
-        PWM1_Set_Duty(127);
-        motor_current_speed = 127;
+    if(motor_current_speed != MOTOR_STOP){
+        CCPR1L = MOTOR_STOP >> 2;
+        CCP1CON.DC1B = MOTOR_STOP & 0b11;
+
+        motor_current_speed = 50;
         RC6_bit = 1;
+    }
+
+    if(position_reached_enable == 1){
+      if(position_reached_cpt>position_reached_max_value)
+        RC6_bit = 0;
+      else
+        position_reached_cpt++;
     }
 }
 
 /**
  * @brief Commande du moteur
  * @param i
+ * out : [50, 100]
+ * in : [0, 50]
  */
 void set_motor_cmd(unsigned short speed){
-    if(motor_on == 0 || (butee_out == 1 && speed >= 127) || (butee_in == 1 && speed <= 127)){
+    if(motor_on == 0 || (butee_out == 1 && speed >= 50) || (butee_in == 1 && speed <= 50)){
         set_motor_cmd_stop();
-        if(position_reached_enable == 1){
-          if(position_reached_cpt>position_reached_max_value){
-            RC6_bit = 0;
-          }
-          else
-            position_reached_cpt++;
-        }
     }
     else if(motor_current_speed != speed){
         position_reached_cpt = 0;
         motor_current_speed = speed;
-        PWM1_Set_Duty(speed);
+        
+        CCPR1L = speed >> 2;
+        CCP1CON.DC1B = speed & 0b11;
         RC6_bit = 1;  //Enable L6203
     }
 
@@ -227,7 +235,7 @@ void set_motor_cmd(unsigned short speed){
  * @param speed
  */
 void set_motor_cmd_out(unsigned short speed){
-    set_motor_cmd(127 + speed);
+    set_motor_cmd(MOTOR_STOP + speed);
 }
 
 /**
@@ -235,7 +243,7 @@ void set_motor_cmd_out(unsigned short speed){
  * @param speed
  */
 void set_motor_cmd_in(unsigned short speed){
-    set_motor_cmd(127 - speed);
+    set_motor_cmd(MOTOR_STOP - speed);
 }
 
 /**
@@ -273,10 +281,10 @@ void read_optical_fork(){
         break;
     }
 
-    if (optical_state != new_state){
-        TXREG = nb_pulse >> 8;
-        TXREG = nb_pulse;
-    }
+    // if (optical_state != new_state){
+    //     TXREG = nb_pulse >> 8;
+    //     TXREG = nb_pulse;
+    // }
     
     optical_state = new_state;  // store the current state value to optical_state value this value will be used in next call
 }
@@ -374,15 +382,31 @@ void main(){
     TMR0IE_bit = 1;  //Enable TIMER0
     TMR0ON_bit = 1; // Start TIMER1
 
-    PWM1_Init(10000);  // Fréquence du PWM à 10Khz
-    RC6_bit = 0;  //Disable L6203
-    CCPR1 = 50; // Rapport cyclique à 50%
-    motor_current_speed = 127;
-    PWM1_Start();
 
-    // Necessary ?
-    // CCP1CON=0b10001100; // Half-bridge output: P1A, P1B modulated with dead-band control
-    // PSTRCON.STRB = 1 ;  // Pour activer la sortie P1B
+    // Period = 4 * TOSC * (PR2 + 1) * (TMR2 Prescale Value)
+    // Pulse Width = TOSC * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
+    // Delay = 4 * TOSC * (PWM1CON<6:0>)
+    PR2 = 24; // 
+    TMR2 = 4; // Prescale
+    PWM1CON = 1; // Delay
+
+    // Max value = 4*(PR2+1)
+    // Mid = 2*(PR2+1)
+    // Min value = 0
+    // Constraint : 4*(PR2+1) < 1023 (ie PR2<255)
+    CCPR1L = 50 >> 2;
+    CCP1CON.DC1B = 50 & 0b11;
+
+    CCP1CON.P1M1 = 0b10; // Half-bridge output: P1A, P1B modulated with dead-band control
+    CCP1CON.CCP1M = 0b1100; // PWM mode; P1A, P1C active-high; P1B, P1D active-high
+
+    // STRB: Steering Enable bit B
+    // P1B pin has the PWM waveform with polarity control from CCP1M<1:0>
+    PSTRCON.STRB = 1 ;
+
+    RC6_bit = 0;  //Disable L6203
+    motor_current_speed = 50;
+    delay_ms(1);
 
     UART1_Init(115200);
     delay_ms(100);
@@ -404,7 +428,7 @@ void main(){
                 position_set_point = 0;
             }
             else
-                set_motor_cmd_out(motor_speed_out);
+                set_motor_cmd_out(motor_speed_out); // [50, 100]
 
             break;
 
@@ -417,15 +441,21 @@ void main(){
             error = position_set_point - nb_pulse;
 
             if(error > error_interval)
-                set_motor_cmd_in(motor_speed_in);
-            else if(error < error_interval)
-                set_motor_cmd_out(motor_speed_out);
+                set_motor_cmd_in(motor_speed_in); // [0, 50]
+            else if(error < -error_interval)
+                set_motor_cmd_out(motor_speed_out); // [50, 100]
             else // position reached
                 set_motor_cmd_stop();
 
             break;
         default:
             break;
+        }
+
+        // I2C
+        if(nb_rx_octet>1 && SSPSTAT.P == 1 && ){
+            i2c_read_data_from_buffer();
+            nb_rx_octet = 0;
         }
     }
 }
@@ -446,7 +476,12 @@ void interrupt(){
             delay_ms(2);
             if (!RA0_bit){
                 butee_out = 1;
-                CCPR1 = 50;  // Rapport cyclique à 50% pour stopper le moteur et garder du couple (=> pose problème car dépend du sens !)
+                if(speed > MOTOR_STOP){
+                  // Rapport cyclique à 50% pour stopper le moteur et garder du couple (=> pose problème car dépend du sens !)
+                  CCPR1L = MOTOR_STOP >> 2;
+                  CCP1CON.DC1B = MOTOR_STOP & 0b11;
+                  
+                }
                 // motor_current_speed = 127;
             }
         }
@@ -459,8 +494,10 @@ void interrupt(){
             delay_ms(2);
             if (!RA1_bit){
                 butee_in = 1;
-                CCPR1 = 50;  // Rapport cyclique à 50% pour stopper le moteur et garder du couple
-                // motor_current_speed = 127;
+                if(speed < MOTOR_STOP)
+                  // Rapport cyclique à 50% pour stopper le moteur et garder du couple
+                  CCPR1L = MOTOR_STOP >> 2;
+                  CCP1CON.DC1B = MOTOR_STOP & 0b11;
             }
         }
         INTCON3.INT1IF = 0;
@@ -558,7 +595,7 @@ void interrupt_low(){
         }
 
         if(nb_rx_octet>1){
-          Delay_us(30); // Wait P signal ?
+          //Delay_us(30); // Wait P signal ?
           if(SSPSTAT.P == 1){
             i2c_read_data_from_buffer();
             nb_rx_octet = 0;

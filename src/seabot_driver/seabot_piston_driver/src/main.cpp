@@ -136,12 +136,7 @@ int main(int argc, char *argv[]){
         if(state_start && state_emergency==false){
             if((piston_set_point != p.m_position_set_point) || (t-t_last_set_point).toSec()>30.0){
                 t_last_set_point = t;
-                for(size_t k=0; k<3; k++){ // Try 3 times to send set point (in order not taken into account
-                    p.set_piston_position(piston_set_point);
-                    p.get_piston_set_point();
-                    if(p.m_position_set_point == piston_set_point)
-                        break;
-                }
+                p.set_piston_position(piston_set_point);
             }
         }
 

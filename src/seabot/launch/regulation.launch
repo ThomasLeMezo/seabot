@@ -20,7 +20,7 @@
         <param name="piston_position_min" value="0.0" />
         <param name="piston_position_max" value="1250.0" />
 
-        <param name="compression_tick_factor" value="30.0" />
+        <param name="compression_tick_factor" value="9.0" />
 
     </node>
 

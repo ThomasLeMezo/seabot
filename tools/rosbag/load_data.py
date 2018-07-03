@@ -109,7 +109,7 @@ def load_bag(filename):
 				piston_state_switch_out.append(piston_state_switch_out[-1])
 				piston_state_switch_in.append(piston_state_switch_in[-1])
 				piston_state_state.append(piston_state_state[-1])
-				piston_state_motor_ono.append(piston_state_motor_on[-1])
+				piston_state_motor_on.append(piston_state_motor_on[-1])
 				piston_state_enable_on.append(piston_state_enable_on[-1])
 				piston_state_position_set_point.append(piston_state_position_set_point[-1])
 				piston_state_motor_speed.append(piston_state_motor_speed[-1])

@@ -69,7 +69,7 @@ public:
    * @param speed_in
    * @param speed_out
    */
-  void set_piston_speed(const uint16_t &speed_in, const uint16_t &speed_out) const;
+  void set_piston_speed(const __u8 &speed_in, const __u8 &speed_out) const;
 
   /**
    * @brief set_piston_position

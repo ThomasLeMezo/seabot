@@ -2,7 +2,7 @@ from math import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
+tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
 ########## Drone characteristics ##########
 g = 9.81
@@ -40,7 +40,7 @@ delta_t_regulation = 1.0 # sec
 dt=0.05
 time_simulation = 120*60 # sec
 
-delta_compression = 30*tick_to_volume # in delta_V / m
+delta_compression = 8.0*tick_to_volume # in delta_V / m
 depth_seafloor = 20.0
 
 rho_eau_m = rho_eau/m
