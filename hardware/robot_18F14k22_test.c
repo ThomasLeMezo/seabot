@@ -159,7 +159,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     case 0xA0:
         SSPBUF = error;
         break;
-    vase 0xA1:
+    case 0xA1:
         SSPBUF = (error >> 8);
         break;
     default:
@@ -191,8 +191,9 @@ void read_butee(){
 void set_motor_cmd_stop(){
     if(motor_current_speed != MOTOR_STOP){
         CCPR1L = MOTOR_STOP >> 2;
-        CCP1CON.DC1B = MOTOR_STOP & 0b11;
-
+        CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
+        CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
+        
         motor_current_speed = 50;
         RC6_bit = 1;
     }
@@ -220,7 +221,9 @@ void set_motor_cmd(unsigned short speed){
         motor_current_speed = speed;
         
         CCPR1L = speed >> 2;
-        CCP1CON.DC1B = speed & 0b11;
+        CCP1CON.DC1B0 = speed & 0b01;
+        CCP1CON.DC1B1 = speed & 0b10;
+        
         RC6_bit = 1;  //Enable L6203
     }
 
@@ -386,23 +389,28 @@ void main(){
     // Period = 4 * TOSC * (PR2 + 1) * (TMR2 Prescale Value)
     // Pulse Width = TOSC * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
     // Delay = 4 * TOSC * (PWM1CON<6:0>)
-    PR2 = 24; // 
-    TMR2 = 4; // Prescale
+    PR2 = 24;
+    T2CON = 0b00000111; // ON et 16 bit
     PWM1CON = 1; // Delay
 
     // Max value = 4*(PR2+1)
     // Mid = 2*(PR2+1)
     // Min value = 0
     // Constraint : 4*(PR2+1) < 1023 (ie PR2<255)
-    CCPR1L = 50 >> 2;
-    CCP1CON.DC1B = 50 & 0b11;
+    CCPR1L = MOTOR_STOP >> 2;
+    CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
+    CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
 
-    CCP1CON.P1M1 = 0b10; // Half-bridge output: P1A, P1B modulated with dead-band control
-    CCP1CON.CCP1M = 0b1100; // PWM mode; P1A, P1C active-high; P1B, P1D active-high
-
+    CCP1CON.P1M0 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
+    CCP1CON.P1M1 = 0b1; // Half-bridge output: P1A, P1B modulated with dead-band control
+    CCP1CON.CCP1M3 = 0b1; // PWM mode; P1A, P1C active-high; P1B, P1D active-high
+    CCP1CON.CCP1M2 = 0b1;
+    CCP1CON.CCP1M1 = 0b0;
+    CCP1CON.CCP1M0 = 0b0;
+    
     // STRB: Steering Enable bit B
     // P1B pin has the PWM waveform with polarity control from CCP1M<1:0>
-    PSTRCON.STRB = 1 ;
+    PSTRCON.STRB = 1;
 
     RC6_bit = 0;  //Disable L6203
     motor_current_speed = 50;
@@ -453,7 +461,7 @@ void main(){
         }
 
         // I2C
-        if(nb_rx_octet>1 && SSPSTAT.P == 1 && ){
+        if(nb_rx_octet>1 && SSPSTAT.P == 1){
             i2c_read_data_from_buffer();
             nb_rx_octet = 0;
         }
@@ -476,13 +484,12 @@ void interrupt(){
             delay_ms(2);
             if (!RA0_bit){
                 butee_out = 1;
-                if(speed > MOTOR_STOP){
+                if(motor_current_speed > MOTOR_STOP){
                   // Rapport cyclique à 50% pour stopper le moteur et garder du couple (=> pose problème car dépend du sens !)
                   CCPR1L = MOTOR_STOP >> 2;
-                  CCP1CON.DC1B = MOTOR_STOP & 0b11;
-                  
+                  CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
+                  CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
                 }
-                // motor_current_speed = 127;
             }
         }
         INTCON.INT0IF = 0;
@@ -494,10 +501,11 @@ void interrupt(){
             delay_ms(2);
             if (!RA1_bit){
                 butee_in = 1;
-                if(speed < MOTOR_STOP)
+                if(motor_current_speed < MOTOR_STOP)
                   // Rapport cyclique à 50% pour stopper le moteur et garder du couple
                   CCPR1L = MOTOR_STOP >> 2;
-                  CCP1CON.DC1B = MOTOR_STOP & 0b11;
+                  CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
+                  CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
             }
         }
         INTCON3.INT1IF = 0;
@@ -554,7 +562,7 @@ void init_i2c(){
   SSPCON1.WCOL = 0; // Write Collision Detect bit
   SSPCON1.SSPOV = 0; // Receive Overflow Indicator bit
   SSPCON1.CKP = 1; // SCK Release Control bit (1=Release clock)
-  SSPCON1.SSPM3 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+  SSPCON1.SSPM3 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled (1-> with S/P, 0 -> without)
   SSPCON1.SSPM2 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSPCON1.SSPM1 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSPCON1.SSPM0 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
@@ -594,13 +602,13 @@ void interrupt_low(){
           }
         }
 
-        if(nb_rx_octet>1){
-          //Delay_us(30); // Wait P signal ?
-          if(SSPSTAT.P == 1){
-            i2c_read_data_from_buffer();
-            nb_rx_octet = 0;
-          }
-        }
+        // if(nb_rx_octet>1){
+        //   //Delay_us(30); // Wait P signal ?
+        //   if(SSPSTAT.P == 1){
+        //     i2c_read_data_from_buffer();
+        //     nb_rx_octet = 0;
+        //   }
+        // }
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
