@@ -5,7 +5,6 @@
     <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="g" value="9.81" />
         <param name="rho_eau" value="1020.0" />
-        <param name="m" value="8.810" />
         <param name="C_f" value="0.1" />
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
@@ -13,12 +12,14 @@
         <param name="offset" value="920" />
         <param name="hysteresis_piston" value="0.6" />
 
-        <param name="K_factor" value="1.0" />
+        <param name="K_factor" value="2.0" />
         <param name="K_velocity" value="300.0" />
-        <param name="K_acc" value="1.0" />
+        <param name="K_acc" value="0.0" />
 
         <param name="piston_position_min" value="0.0" />
         <param name="piston_position_max" value="1200.0" />
+
+        <param name="set_point_following" value="10.0" />
 
         <param name="compression_tick_factor" value="9.0" />
 

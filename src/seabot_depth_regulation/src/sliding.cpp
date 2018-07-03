@@ -48,7 +48,6 @@ int main(int argc, char *argv[]){
 
     const double g = n_private.param<double>("g", 9.81);
     const double rho_eau = n_private.param<double>("rho_eau", 1000.0);
-    const double m = n_private.param<double>("m", 8.81);
     const double C_f = n_private.param<double>("C_f", 0.08);
     const double tick_to_volume = n_private.param<double>("tick_to_volume", 1.431715402026599e-07);
     const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
@@ -60,9 +59,9 @@ int main(int argc, char *argv[]){
     const double piston_position_min = n_private.param<double>("piston_position_min", 0.0);
     const double piston_position_max = n_private.param<double>("piston_position_max", 1280.0);
 
-    const double compression_factor = tick_to_volume * n_private.param<double>("compression_tick_factor", 30.0);
+    const double set_point_following = n_private.param<double>("set_point_following", 10.0);
 
-    const double rho_eau_m = rho_eau/m;
+    const double compression_factor = tick_to_volume * n_private.param<double>("compression_tick_factor", 30.0);
 
     // Subscriber
     ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -80,8 +79,9 @@ int main(int argc, char *argv[]){
     double piston_set_point_offset = piston_set_point + offset;
     t = ros::Time::now();
     t_old = ros::Time::now() - ros::Duration(1);
-
     ros::Rate loop_rate(frequency);
+
+    // Main regulation loop
     while (ros::ok()){
         ros::spinOnce();
 
@@ -89,11 +89,14 @@ int main(int argc, char *argv[]){
         t_old = t;
         if(depth_set_point>0.2){
             double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
-            double a = K_acc*(g*(-V_piston+depth*compression_factor)*rho_eau_m -0.5*C_f*velocity*abs(velocity)*rho_eau);
+            double a = K_acc*(-g*(V_piston-depth*compression_factor*tick_to_volume)*rho_eau -0.5*C_f*velocity*abs(velocity)*rho_eau);
             double v = K_velocity*velocity;
-            double e = depth-depth_set_point;
-            double u = -K_factor*dt*(a + v + e);
-            piston_set_point+=u;
+            double e = depth_set_point-depth;
+            double u = K_factor*dt*(-a - v + e);
+
+            // Antiwindup following (?)
+            if(abs(piston_set_point+offset-piston_position)<set_point_following)
+                piston_set_point+=u;
 
             // Antiwindup for switch
             if((piston_switch_out && (piston_set_point+offset)<piston_position) // To zero

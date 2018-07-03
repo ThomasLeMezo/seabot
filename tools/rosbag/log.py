@@ -136,7 +136,7 @@ pg_battery.plot(time_battery, battery1, pen=(255,0,0), name="Battery 1")
 pg_battery.plot(time_battery, battery2, pen=(0,255,0), name="Battery 2")
 pg_battery.plot(time_battery, battery3, pen=(0,0,255), name="Battery 3")
 pg_battery.plot(time_battery, battery4, pen=(255,0,255), name="Battery 4")
-pg_regulation_acceleration.setLabel('left', "Tension", units="V")
+pg_battery.setLabel('left', "Tension", units="V")
 dock_battery.addWidget(pg_battery)
 
 #################### Sensor Internal ####################
