@@ -27,17 +27,6 @@ int speed_in_last = 50;
 int speed_out_last = 50;
 __u16 piston_set_point = 0;
 
-bool piston_enable(std_srvs::SetBool::Request  &req,
-                   std_srvs::SetBool::Response &res){
-    if(req.data == true)
-        p.set_piston_enable(true);
-    else
-        p.set_piston_enable(false);
-
-    res.success = true;
-    return true;
-}
-
 bool piston_reset(std_srvs::Empty::Request  &req,
                   std_srvs::Empty::Response &res){
     p.set_piston_reset();
@@ -93,17 +82,14 @@ int main(int argc, char *argv[]){
     double adaptative_coeff_slope_out = n_private.param<double>("adaptative_coeff_slope_out", 1.0/20.0);
     double adaptative_coeff_offset_out = n_private.param<double>("adaptative_coeff_offset_out", 50.0);
 
-    const double max_speed = 126.0;
-    const double min_speed = 30.0;
-    const double nb_step = 5.0;
+    const double max_speed = 100.0;
+    const double min_speed = 10.0;
+    const double nb_step = 20.0;
 
     // Service (ON/OFF)
     ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
-
     ros::ServiceServer service_reset = n.advertiseService("reset", piston_reset);
-    ros::ServiceServer service_enable = n.advertiseService("enable", piston_enable);
     ros::ServiceServer service_emergency = n.advertiseService("emergency", piston_emergency);
-
     ros::ServiceServer service_error_interval = n.advertiseService("error_interval", piston_error_interval);
 
     // Publisher
@@ -125,6 +111,15 @@ int main(int argc, char *argv[]){
     // Sensor initialization
     p.i2c_open();
     sleep(1); // 1s sleep (wait until i2c open)
+
+    // Wait reset_out
+    while(p.m_state==1){
+        p.get_piston_all_data();
+        sleep(1);
+    }
+    p.set_error_interval(2);
+    p.set_reached_enable(true);
+    p.set_piston_speed(10, 10);
 
     ros::Rate loop_rate(frequency);
     while (ros::ok()){

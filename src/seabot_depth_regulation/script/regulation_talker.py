@@ -29,6 +29,7 @@ def set_zero_depth():
       rospy.logwarn("[Regulation_Talker] Fail to call Zero Depth");
 
 def set_depth(val, duration=0):
+  global piston_position
   msg = DepthPose()
   msg.depth = val
   set_flash(True)
@@ -39,7 +40,7 @@ def set_depth(val, duration=0):
     rospy.sleep(duration-10)
 
 def talker():
-  global flash_enable, fusion_zero_depth, piston_position
+  global flash_enable, fusion_zero_depth, piston_position, battery_warning
   rospy.init_node('regulation_talker_node', anonymous=True)
 
   piston_position = rospy.Publisher('/regulation/depth_set_point', DepthPose, queue_size=1)
@@ -57,12 +58,12 @@ def talker():
   rospy.sleep(3.0)
 
   for i in range(2):
-    for d in range(8):
+    for d in range(1, 17, 2):
      rospy.loginfo("[Regulation_Talker] Depth %i", d)
-     set_depth((d+1.0)*2.0, 120*60) # 0, 2, 4, ... 16
-     for d in range(8):
-      rospy.loginfo("[Regulation_Talker] Depth %i", d)
-      set_depth(17-(d+1.0)*2.0, 120*60) # 15, 13, ...
+     set_depth(d, 60*60)
+    for d in range(16, 0, -2):
+     rospy.loginfo("[Regulation_Talker] Depth %i", d)
+     set_depth(d, 60*60)
 
     if battery_warning:
       set_depth(0.0)

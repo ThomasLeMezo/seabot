@@ -16,7 +16,7 @@ from math import *
 
 ### Parameters
 margin_depth = 0.9
-start_piston_position = 600
+start_piston_position = 800
 
 ### Variables
 depth = 0
@@ -122,7 +122,8 @@ def regulation_node():
 
         # depth*piston_surface == abs(start_piston_position-start_piston_position)*tick_to_volume
 
-        while(margin_depth*depth*piston_surface < abs(start_piston_position-start_piston_position)*tick_to_volume):
+        while(depth < 0.2):
+            # while(margin_depth*depth*piston_surface < abs(start_piston_position-start_piston_position)*tick_to_volume):
             rospy.sleep(0.2)
             piston_position_set_point += 0.2
             set_piston_position(np.floor(piston_position_set_point))

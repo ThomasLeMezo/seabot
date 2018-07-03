@@ -108,7 +108,7 @@ void i2c_read_data_from_buffer(){
                   motor_speed_out = rxbuffer_tab[i+1];
                 break;
 
-            case 0xA0:  // consigne de postion
+            case 0xA0:  // Wait until release couple
                 if(nb_data >= i+2){
                     position_reached_max_value = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
                     i++;

@@ -29,32 +29,32 @@ int Piston::i2c_open(){
 void Piston::set_piston_reset() const{
     if(i2c_smbus_write_byte_data(m_file, 0x01, 0x01)<0)
         ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
-    usleep(2000);
+    usleep(100);
 }
 
 void Piston::set_led_enable(const bool &val) const{
     if(i2c_smbus_write_byte_data(m_file, 0x04, val?0x01:0x00)<0)
         ROS_WARN("[Piston_driver] I2C bus Failure - LED Enable");
-    usleep(2000);
+    usleep(100);
 }
 
 void Piston::set_error_interval(const __u8 &val) const{
     if(i2c_smbus_write_byte_data(m_file, 0x05, val)<0)
         ROS_WARN("[Piston_driver] I2C bus Failure - Error Interval");
-    usleep(2000);
+    usleep(100);
 }
 
-void Piston::set_piston_enable(const bool &val) const{
-    if(i2c_smbus_write_byte_data(m_file, I2C_PISTON_CMD, val?0x05:0x06)<0)
-        ROS_WARN("[Piston_driver] I2C bus Failure - Enable piston");
-    usleep(2000);
+void Piston::set_reached_enable(const bool &val) const{
+    if(i2c_smbus_write_byte_data(m_file, 0x06, val?0x01:0x00)<0)
+        ROS_WARN("[Piston_driver] I2C bus Failure - Piston reached enable");
+    usleep(100);
 }
 
 void Piston::set_piston_speed(const __u8 &speed_in, const __u8 &speed_out) const{
     __u16 val = (speed_in | speed_out<<8);
     if(i2c_smbus_write_word_data(m_file, 0x12, val)<0)
         ROS_WARN("[Piston_driver] I2C bus Failure - Set Speed In/Out");
-    usleep(2000);
+    usleep(100);
 }
 
 void Piston::set_piston_position(__u16 position) const{
@@ -62,7 +62,7 @@ void Piston::set_piston_position(__u16 position) const{
 
     if(i2c_smbus_write_word_data(m_file, 0x10, position)<0)
         ROS_WARN("[Piston_driver] I2C bus Failure - Piston set position");
-    usleep(2000);
+    usleep(100);
 }
 
 void Piston::get_piston_all_data(){
@@ -84,12 +84,12 @@ void Piston::get_piston_all_data(){
     m_enable_on = (buff[2] >> 5) & 0b1;
     m_position_set_point = (buff[4] << 8 | buff[3])/4.0;
     m_motor_speed = buff[5];
-    usleep(2000);
+    usleep(100);
 }
 
 void Piston::get_piston_set_point(){
     m_position_set_point = i2c_smbus_read_word_data(m_file, 0x03)/4.0;
-    usleep(2000);
+    usleep(100);
 }
 
 

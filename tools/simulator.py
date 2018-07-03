@@ -14,14 +14,14 @@ C_f = 0.1
 ## 0.01 -> Kf = 0.08, Kv = 500, Delta_t = 1.0
 ## 0.1 ->
 
-speed_in = 10.0 #
-speed_out = 2.0 # Check ok ?
+speed_in = 4.0 #
+speed_out = 4.0 # Check ok ?
 
 volume_piston_max = 700 * tick_to_volume
 volume_piston_min = -(1200-700) * tick_to_volume
 
 # Initial : position, velocity, piston volume
-x = np.array([0.0, 0.0, 0.0])
+x = np.array([0.0, 0.0, -400 * tick_to_volume])
 offset_physical = -0 * tick_to_volume
 # Speed : [0.16, 0.18] m/s for delta of 440 ticks
 # 2*440*tick_to_volume*9.81/(0.18**2)
@@ -31,9 +31,9 @@ offset_physical = -0 * tick_to_volume
 # C_f_estim = C_f
 C_f_estim = 0.1
 K_velocity = 300.0
-K_acc = 100.0
+K_acc = 1.0
 K_e = 1.0
-K_factor = 1.0
+K_factor = 0.1
 delta_t_regulation = 1.0 # sec
 
 ########## Simulation ##########

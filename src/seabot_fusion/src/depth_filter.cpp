@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
 
     const double rho = n_private.param<double>("rho", 1020.0);
     const double g = n_private.param<double>("g", 9.81);
-    const double g_rho = g*rho;
+    const double g_rho = g*rho/1e5; // To be homogeneous to Bar
 
     filter_median_size = n_private.param<int>("filter_median_size", 10);
     filter_mean_width = n_private.param<int>("filter_mean_width", 3);

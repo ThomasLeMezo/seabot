@@ -78,12 +78,6 @@ public:
   void set_piston_position(__u16 position) const;
 
   /**
-   * @brief set_piston_enable
-   * @param val
-   */
-  void set_piston_enable(const bool &val) const;
-
-  /**
    * @brief set_led_enable
    * @param val
    */
@@ -94,6 +88,12 @@ public:
    * @param val
    */
   void set_error_interval(const __u8 &val) const;
+
+  /**
+   * @brief set_reached_enable
+   * @param val
+   */
+  void set_reached_enable(const bool &val) const;
 
   /**
    * @brief set_piston_reset

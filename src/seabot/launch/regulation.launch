@@ -10,15 +10,15 @@
         <param name="tick_to_volume" value="1.431715402026599e-07" />
 
         <param name="frequency" value="1.0" />
-        <param name="offset" value="600" />
+        <param name="offset" value="920" />
         <param name="hysteresis_piston" value="0.6" />
 
         <param name="K_factor" value="1.0" />
         <param name="K_velocity" value="300.0" />
-        <param name="K_acc" value="100.0" />
+        <param name="K_acc" value="1.0" />
 
         <param name="piston_position_min" value="0.0" />
-        <param name="piston_position_max" value="1250.0" />
+        <param name="piston_position_max" value="1200.0" />
 
         <param name="compression_tick_factor" value="9.0" />
 
