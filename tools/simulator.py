@@ -2,17 +2,18 @@ from math import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
+tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
 
 ########## Drone characteristics ##########
 g = 9.81
 rho_eau = 1020.0 # kg/m3
 m = 8.810 # kg
-C_f = 0.04
-# C_f = 0.02
+# C_f = 0.00005
+# C_f = 0.1
+C_f = 0.001
 
-speed_in = 8.0 #
-speed_out = 8.0 # Check ok ?
+speed_in = 4.0 #
+speed_out = 4.0 # Check ok ?
 
 piston_tick_max = 1200
 piston_tick_min = 0
@@ -28,7 +29,7 @@ x[3] = 700
 # for d in range(16, 0, -2):
 # 	waypoints.append([d, 60*60])
 
-waypoints = [[5.0, 60*60], [5.5, 60*60], [50.0, 60*60]]
+waypoints = [[5.0, 60*60], [15, 60*60], [0.0, 60*60]]
 
 # waypoints = [[5.0, 60*60], [10.0, 60*60], [0.0, 60*60], [5.0, 60*60]]
 
@@ -39,10 +40,10 @@ waypoints = [[5.0, 60*60], [5.5, 60*60], [50.0, 60*60]]
 ########## Drone regulation ##########
 # C_f_estim = C_f
 C_f_estim = C_f
-K_velocity = 300.0
-K_acc = 0.0
+K_velocity = 600.0
+K_acc = 0.0 # 10000 OK
 K_e = 1.0
-K_factor = 2.0
+K_factor = 0.1
 delta_t_regulation = 1.0 # sec
 set_point_following = 10.0
 
@@ -54,9 +55,9 @@ for w in waypoints:
 next_time_waypoint = 0
 nb_waypoint = 0
 
-delta_compression = 8.0*tick_to_volume # in delta_V / m
+delta_compression = 10.0*tick_to_volume # in delta_V / m
 # depth_seafloor = 20.0
-depth_seafloor = 100.0
+depth_seafloor = 20.0
 offset_error = 0.0
 
 rho_eau_m = rho_eau/m
@@ -108,12 +109,12 @@ def control(set_point, x, u, dt):
 
 	V_piston = -(x[3]-offset_tick+offset_error)*tick_to_volume
 
-	a = K_acc*(-g*(V_piston-d_noise*delta_compression*tick_to_volume)*rho_eau-0.5*C_f_estim*ddot_noise*abs(ddot_noise)*rho_eau)
+	# a = K_acc*(-g*(V_piston-d_noise*delta_compression*tick_to_volume)*rho_eau-0.5*C_f_estim*ddot_noise*abs(ddot_noise)*rho_eau)
 	v = K_velocity*ddot_noise
 	e = K_e*(set_point-d_noise)
-	cmd = K_factor*dt*(-a-v+e)
+	cmd = K_factor*dt*(-v+e)
 
-	a_log.append(a)
+	# a_log.append(a)
 	v_log.append(v)
 	e_log.append(e)
 
@@ -184,21 +185,21 @@ plt.ylabel('speed')
 plt.plot(result_t, np.transpose(result_x)[1])
 
 plt.figure(2)
-plt.subplot(411)
+plt.subplot(311)
 plt.ylabel('u')
 plt.plot(u_log, 'r')
 
-plt.subplot(412)
+plt.subplot(312)
 plt.ylabel('e')
 plt.plot(e_log, 'r')
 
-plt.subplot(413)
+plt.subplot(313)
 plt.ylabel('v')
 plt.plot(v_log, 'r')
 
-plt.subplot(414)
-plt.ylabel('a')
-plt.plot(a_log, 'r')
+# plt.subplot(414)
+# plt.ylabel('a')
+# plt.plot(a_log, 'r')
 
 plt.show()
 

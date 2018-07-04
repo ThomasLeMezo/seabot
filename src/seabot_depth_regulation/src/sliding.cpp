@@ -44,7 +44,8 @@ int main(int argc, char *argv[]){
     // Parameters
     ros::NodeHandle n_private("~");
     const double frequency = n_private.param<double>("frequency", 1.0);
-    const int offset = n_private.param<int>("offset", 700);
+    const int offset_piston = n_private.param<int>("offset_piston", 700);
+    int offset = offset_piston;
 
     const double g = n_private.param<double>("g", 9.81);
     const double rho_eau = n_private.param<double>("rho_eau", 1000.0);
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]){
 
     const double set_point_following = n_private.param<double>("set_point_following", 10.0);
 
-    const double compression_factor = tick_to_volume * n_private.param<double>("compression_tick_factor", 30.0);
+    const double compression_factor = tick_to_volume * n_private.param<double>("compression_tick_factor", 10.0);
 
     // Subscriber
     ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -88,11 +89,13 @@ int main(int argc, char *argv[]){
         double dt = (t-t_old).toSec();
         t_old = t;
         if(depth_set_point>0.2){
-            double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
-            double a = K_acc*(-g*(V_piston-depth*compression_factor*tick_to_volume)*rho_eau -0.5*C_f*velocity*abs(velocity)*rho_eau);
+            offset = offset_piston - depth*compression_factor;
+
+//            double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
+//            double a = K_acc*(-g*(V_piston-depth*compression_factor*tick_to_volume)*rho_eau -0.5*C_f*velocity*abs(velocity)*rho_eau);
             double v = K_velocity*velocity;
             double e = depth_set_point-depth;
-            double u = K_factor*dt*(-a - v + e);
+            double u = K_factor*dt*(- v + e); // (-a -v +e)
 
             // Antiwindup following (?)
             if(abs(piston_set_point+offset-piston_position)<set_point_following)
@@ -119,7 +122,7 @@ int main(int argc, char *argv[]){
             position_msg.position = piston_set_point_offset;
 
             // Debug msg
-            debug_msg.acceleration = a;
+            debug_msg.acceleration = 0.0;
             debug_msg.velocity = v;
             debug_msg.depth_error = e;
             debug_msg.u = u;

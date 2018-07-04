@@ -109,7 +109,7 @@ def regulation_node():
         # Reset piston position
         set_piston_speed(piston_speed_start)
         set_piston_position(piston_position_start)
-        while(abs(piston_position-piston_position_start)<2):
+        while(abs(piston_position-piston_position_start)>2):
             rospy.sleep(1)
             set_piston_position(piston_position_start)
         rospy.loginfo("[CALIBRATION_PISTON] Start Piston position reached")

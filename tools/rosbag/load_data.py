@@ -19,6 +19,10 @@ piston_state_enable_on = []
 piston_state_position_set_point = []
 piston_state_motor_speed = []
 
+# /driver/piston/velocity
+time_piston_velocity = []
+piston_velocity = []
+
 # /driver/power/battery
 time_battery = []
 battery1 = []
@@ -92,7 +96,8 @@ def load_bag(filename):
 													"/regulation/debug",\
 													"/regulation/depth_set_point",\
 													"/fusion/pose",\
-													"/driver/extended_fix"],\
+													"/driver/extended_fix",\
+													"/driver/piston/velocity"],\
 													start_time=startTime,\
 													end_time=end_time):
 		if(topic=="/driver/piston/position"):
@@ -177,6 +182,10 @@ def load_bag(filename):
 		elif(topic=="/driver/extended_fix"):
 			time_extend_fix.append((t-startTime).to_sec())
 			extend_fix_status.append(msg.status.status)
+
+		elif(topic=="/driver/piston/velocity"):
+			time_piston_velocity.append((t-startTime).to_sec())
+			piston_velocity.append(msg.velocity)
 
 	bag.close()
 

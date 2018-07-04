@@ -231,7 +231,14 @@ pg_piston_speed.plot(time_piston_state, np.array(piston_state_motor_speed).astyp
 pg_piston_speed.setLabel('left', "Speed")
 dock_piston2.addWidget(pg_piston_speed)
 
+pg_piston_velocity = pg.PlotWidget()
+pg_piston_velocity.addLegend()
+pg_piston_velocity.plot(time_piston_velocity, piston_velocity, pen=(255,0,0), name="velocity")
+pg_piston_velocity.setLabel('left', "Velocity")
+dock_piston2.addWidget(pg_piston_velocity)
+
 pg_piston_speed.setXLink(pg_piston_state_position2)
+pg_piston_velocity.setXLink(pg_piston_state_position2)
 
 #################### Fusion ####################
 

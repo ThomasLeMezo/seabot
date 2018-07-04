@@ -57,13 +57,20 @@ def talker():
   set_zero_depth()
   rospy.sleep(3.0)
 
-  for i in range(2):
-    for d in range(1, 17, 2):
-     rospy.loginfo("[Regulation_Talker] Depth %i", d)
-     set_depth(d, 60*60)
-    for d in range(16, 0, -2):
-     rospy.loginfo("[Regulation_Talker] Depth %i", d)
-     set_depth(d, 60*60)
+  for d in range(1, 17, 2):
+    rospy.loginfo("[Regulation_Talker] Depth %i", d)
+    set_depth(d, 60*60)
+  for d in range(16, 0, -2):
+    rospy.loginfo("[Regulation_Talker] Depth %i", d)
+    set_depth(d, 60*60)
+
+  for i in range(3):
+    rospy.loginfo("[Regulation_Talker] Depth 5")
+    set_depth(5, 60*60)
+    rospy.loginfo("[Regulation_Talker] Depth 15")
+    set_depth(15, 60*60)
+    rospy.loginfo("[Regulation_Talker] Depth 0")
+    set_depth(0, 60*60)
 
     if battery_warning:
       set_depth(0.0)

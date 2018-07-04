@@ -11,9 +11,9 @@
 
                         <param name="adaptative_speed" value="true" />
                         <param name="adaptative_coeff_slope_in" value="0.0" />
-                        <param name="adaptative_coeff_offset_in" value="10.0" />
+                        <param name="adaptative_coeff_offset_in" value="15.0" />
                         <param name="adaptative_coeff_slope_out" value="0.0" />
-                        <param name="adaptative_coeff_offset_out" value="10.0" />
+                        <param name="adaptative_coeff_offset_out" value="15.0" />
                 </node>
 
                 <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">

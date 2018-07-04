@@ -16,7 +16,7 @@ from math import *
 
 ### Parameters
 margin_depth = 0.9
-start_piston_position = 800
+start_piston_position = 700
 
 ### Variables
 depth = 0
@@ -64,9 +64,9 @@ def set_zero_depth():
     except rospy.ServiceException, e:
         rospy.logwarn("[Calibration_piston] Fail to call Flash Enable");
 
-def reset_position_position():
+def reset_position():
     global piston_position, start_piston_position
-    while(abs(piston_position-start_piston_position)<5.0):
+    while(abs(piston_position-start_piston_position)>2.0):
         set_piston_position(start_piston_position)
         rospy.sleep(1.0)
 
@@ -94,24 +94,23 @@ def regulation_node():
     ######################################################################
     
     rospy.loginfo("[Calibration_piston] Move piston to start position")
-    reset_position_position()
-
-    rospy.loginfo("[Calibration_piston] Zero depth")
+    reset_position()
     rospy.sleep(3.0)
+    rospy.loginfo("[Calibration_piston] Zero depth")
     set_zero_depth()
     
     for i in range(3):
         rospy.loginfo("[Calibration] ##### Calibration %i", i)
         ## Reset piston position (piston move)
         rospy.loginfo("[Calibration_piston] Wait Piston position")
-        while(abs(piston_position-start_piston_position)<5.0):
+        while(abs(piston_position-start_piston_position)>5.0):
             set_piston_position(start_piston_position)
             rospy.sleep(1.0)
 
         ## Wait depth reach (in range for at least 1s)
         rospy.loginfo("[Calibration_piston] Wait stabilized depth")
         depth_last = depth+5.0 # Init with different values
-        while(depth > 0.05 and depth < 0.0 and depth_last > 0.05 and depth_last < 0.0):
+        while(depth > 0.05 or depth < 0.0 or depth_last > 0.05 or depth_last < 0.0):
             depth_last = depth
             set_piston_position(start_piston_position)
             rospy.sleep(1.0)
