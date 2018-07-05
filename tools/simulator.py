@@ -55,7 +55,9 @@ for w in waypoints:
 next_time_waypoint = 0
 nb_waypoint = 0
 
-delta_compression = 10.0*tick_to_volume # in delta_V / m
+tick_compression = 10.0
+volume_compression = tick_compression*tick_to_volume # in delta_V / m
+
 # depth_seafloor = 20.0
 depth_seafloor = 20.0
 offset_error = 0.0
@@ -77,7 +79,7 @@ def euler(x, u, dt):
 	# y=np.array(x)
 	y=np.array(x)
 	y[0] += dt*x[1]
-	y[1] += dt*(-g*((x[2]-x[0]*delta_compression*tick_to_volume)*rho_eau) - (0.5*C_f*x[1]*abs(x[1])*rho_eau))
+	y[1] += dt*(-g*((x[2]-x[0]*volume_compression*tick_to_volume)*rho_eau) - (0.5*C_f*x[1]*abs(x[1])*rho_eau))
 
 	# Simulation limits
 	if(x[0]>=depth_seafloor and y[1]>=0.0):
@@ -109,7 +111,7 @@ def control(set_point, x, u, dt):
 
 	V_piston = -(x[3]-offset_tick+offset_error)*tick_to_volume
 
-	# a = K_acc*(-g*(V_piston-d_noise*delta_compression*tick_to_volume)*rho_eau-0.5*C_f_estim*ddot_noise*abs(ddot_noise)*rho_eau)
+	# a = K_acc*(-g*(V_piston-d_noise*volume_compression*tick_to_volume)*rho_eau-0.5*C_f_estim*ddot_noise*abs(ddot_noise)*rho_eau)
 	v = K_velocity*ddot_noise
 	e = K_e*(set_point-d_noise)
 	cmd = K_factor*dt*(-v+e)
@@ -150,14 +152,15 @@ for k in range(0, int(time_simulation/dt)):
 
 	## Compute cmd
 	if k % int((delta_t_regulation/dt)) == 0:
-		u = control(set_point, x, u, dt) # u=volume targeted
-	u_log.append(u)
+		if(set_point>0.2):
+			u = control(set_point, x, u, dt) # u=volume targeted
+			u_offset = u + x[0]*volume_compression
+		else
+			u_offset = 0.0
+	u_log.append(u_offset)
 
 	## Euler
-	if(set_point<0.2):
-		x = euler(x, 0, dt)
-	else:
-		x = euler(x, round(u), dt)
+	x = euler(x, round(u_offset), dt)
 
 	# print(y[1])
 

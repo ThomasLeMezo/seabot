@@ -26,6 +26,7 @@ bool adaptative_speed = false;
 int speed_in_last = 50;
 int speed_out_last = 50;
 __u16 piston_set_point = 0;
+size_t cpt_error_zero = 0;
 
 bool piston_reset(std_srvs::Empty::Request  &req,
                   std_srvs::Empty::Response &res){
@@ -155,6 +156,7 @@ int main(int argc, char *argv[]){
         state_msg.motor_speed = p.m_motor_speed;
         state_pub.publish(state_msg);
 
+        // Piston Velocity publisher
         double delta_t = (t - t_last_velocity).toSec();
         if(delta_t > 1.0){
             velocity = (p.m_position - position_last)/delta_t;
@@ -164,7 +166,7 @@ int main(int argc, char *argv[]){
             velocity_pub.publish(velocity_msg);
         }
 
-        // Analyze depth
+        // Analyze depth to change motor speed
         if(adaptative_speed){
             int speed_in = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_in+adaptative_coeff_offset_in, max_speed), min_speed)*(nb_step/max_speed));
             int speed_out = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_out+adaptative_coeff_offset_out, max_speed), min_speed)*(nb_step/max_speed));
@@ -180,6 +182,18 @@ int main(int argc, char *argv[]){
                 speed_pub.publish(speed_msg);
             }
         }
+
+        // Detect shift error of zero -> Implemented directly inside the pic
+//        if(abs(p.m_position)<1.0 && !p.m_switch_out){
+//            if(cpt_error_zero<=5)
+//                cpt_error_zero++;
+//            if(cpt_error_zero==5){ // Reset only once
+//                ROS_WARN("[Piston_driver] Shift error of zero detected");
+//                p.set_piston_reset();
+//            }
+//        }
+//        else
+//            cpt_error_zero=0;
 
         loop_rate.sleep();
     }

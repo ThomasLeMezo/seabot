@@ -60,6 +60,9 @@ unsigned long int position_reached_cpt = 0;
 unsigned short position_reached_enable = 0;
 unsigned short error_interval = 0;
 
+unsigned short zero_shift_error = 0;
+unsigned short time_zero_shift_error = 5;
+
 // State machine
 unsigned short motor_on = 1;
 enum robot_state {RESET_OUT,REGULATION};
@@ -92,6 +95,9 @@ void i2c_read_data_from_buffer(){
                 break;
             case 0x06:
                 position_reached_enable = rxbuffer_tab[i+1];
+                break;
+            case 0x07:
+                time_zero_shift_error = rxbuffer_tab[i+1];
                 break;
             case 0x10:  // consigne de postion
                 if(nb_data >= i+2){
@@ -519,6 +525,17 @@ void interrupt(){
           position_set_point = 0;
           watchdog_restart = watchdog_restart_default;
         }
+
+        if(position_set_point==0 && nb_pulse<error_interval && butee_out==0){
+            if(zero_shift_error<=time_zero_shift_error)
+                zero_shift_error++;
+
+            if(zero_shift_error==time_zero_shift_error){
+                state = RESET_OUT;
+            }
+        }
+        else
+            zero_shift_error=0;
 
         TMR0H = 0x0B;
         TMR0L = 0xDC;
