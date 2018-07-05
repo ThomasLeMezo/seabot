@@ -183,18 +183,6 @@ int main(int argc, char *argv[]){
             }
         }
 
-        // Detect shift error of zero -> Implemented directly inside the pic
-//        if(abs(p.m_position)<1.0 && !p.m_switch_out){
-//            if(cpt_error_zero<=5)
-//                cpt_error_zero++;
-//            if(cpt_error_zero==5){ // Reset only once
-//                ROS_WARN("[Piston_driver] Shift error of zero detected");
-//                p.set_piston_reset();
-//            }
-//        }
-//        else
-//            cpt_error_zero=0;
-
         loop_rate.sleep();
     }
 

@@ -90,6 +90,12 @@ public:
   void set_error_interval(const __u8 &val) const;
 
   /**
+   * @brief set_time_shift_error
+   * @param val
+   */
+  void set_time_shift_error(const __u8 &val) const;
+
+  /**
    * @brief set_reached_enable
    * @param val
    */

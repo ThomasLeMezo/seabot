@@ -527,11 +527,11 @@ void interrupt(){
         }
 
         if(position_set_point==0 && nb_pulse<error_interval && butee_out==0){
-            if(zero_shift_error<=time_zero_shift_error)
+            if(zero_shift_error<time_zero_shift_error)
                 zero_shift_error++;
-
-            if(zero_shift_error==time_zero_shift_error){
+            else{
                 state = RESET_OUT;
+                zero_shift_error = 0;
             }
         }
         else

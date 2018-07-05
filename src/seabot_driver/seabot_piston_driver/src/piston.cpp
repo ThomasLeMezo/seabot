@@ -66,6 +66,12 @@ void Piston::set_piston_position(__u16 position) const{
     usleep(100);
 }
 
+void Piston::set_time_shift_error(const __u8 &val) const{
+    if(i2c_smbus_write_byte_data(m_file, 0x07, val)<0)
+        ROS_WARN("[Piston_driver] I2C bus Failure - Time Shift Error");
+    usleep(100);
+}
+
 void Piston::get_piston_all_data(){
     uint8_t buff[6];
     if(i2c_smbus_read_i2c_block_data(m_file, 0x00, 6,buff) != 6)
