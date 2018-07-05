@@ -155,7 +155,7 @@ for k in range(0, int(time_simulation/dt)):
 		if(set_point>0.2):
 			u = control(set_point, x, u, dt) # u=volume targeted
 			u_offset = u + x[0]*volume_compression
-		else
+		else:
 			u_offset = 0.0
 	u_log.append(u_offset)
 

@@ -49,6 +49,7 @@ unsigned short butee_in = 0;
 // Motor
 unsigned short motor_speed_in = 20; // 2 octets
 unsigned short motor_speed_out = 20; // 2 octets
+unsigned short motor_speed_out_reset = 20; // 2 octets
 unsigned short motor_current_speed = 50; // 2 octets
 #define MOTOR_STOP 50
 
@@ -112,6 +113,10 @@ void i2c_read_data_from_buffer(){
             case 0x13:  // consigne de vitesse out
                 if(rxbuffer_tab[i+1] <=50)
                   motor_speed_out = rxbuffer_tab[i+1];
+                break;
+            case 0x14:  // consigne de vitesse out
+                if(rxbuffer_tab[i+1] <=50)
+                  motor_speed_out_reset = rxbuffer_tab[i+1];
                 break;
 
             case 0xA0:  // Wait until release couple
@@ -442,7 +447,7 @@ void main(){
                 position_set_point = 0;
             }
             else
-                set_motor_cmd_out(motor_speed_out); // [50, 100]
+                set_motor_cmd_out(motor_speed_out_reset); // [50, 100]
 
             break;
 
