@@ -6,7 +6,7 @@
 
     <param name="filter_median_size" value="6" />
     <param name="filter_mean_width" value="3" />
-  	<param name="velocity_delta_size" value="5" />
+    <param name="velocity_delta_size" value="5" />
     <param name="velocity_limit" value="0.5" />
   </node>
 </launch>

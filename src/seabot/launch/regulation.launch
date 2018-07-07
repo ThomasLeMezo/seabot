@@ -21,7 +21,7 @@
 
         <param name="set_point_following" value="10.0" />
 
-        <param name="compression_tick_factor" value="9.0" />
+        <param name="compression_tick_factor" value="18.0" />
 
     </node>
 

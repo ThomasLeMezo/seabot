@@ -5,6 +5,7 @@ from seabot_depth_regulation.msg import *
 from seabot_fusion.msg import *
 from std_srvs.srv import *
 from seabot_power_driver.msg import Battery
+from seabot_mission.msg import *
 
 battery_warning = False
 
@@ -30,7 +31,7 @@ def set_zero_depth():
 
 def set_depth(val, duration=0):
   global piston_position
-  msg = DepthPose()
+  msg = Waypoint()
   msg.depth = val
   set_flash(True)
   piston_position.publish(msg)
@@ -43,7 +44,7 @@ def talker():
   global flash_enable, fusion_zero_depth, piston_position, battery_warning
   rospy.init_node('regulation_talker_node', anonymous=True)
 
-  piston_position = rospy.Publisher('/regulation/depth_set_point', DepthPose, queue_size=1)
+  piston_position = rospy.Publisher('/regulation/depth_set_point', Waypoint, queue_size=1)
   rospy.wait_for_service('/fusion/zero_depth')
   rospy.wait_for_service('/driver/power/flash_led')
   rospy.wait_for_service('/driver/power/sleep_mode')
