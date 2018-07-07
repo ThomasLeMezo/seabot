@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['sbd',['sbd',['../structTIS__modem.html#a24b3bc2a268e11ecabfda8f0811b3ea5',1,'TIS_modem']]],
+  ['sbd_5ffile_5fname',['SBD_file_name',['../structTIS__properties.html#a184c8d6a2bc1c0465151dc0e67637b0a',1,'TIS_properties']]],
+  ['sbd_5ffile_5fnumber',['SBD_file_number',['../structTIS__properties.html#af2a393680d3293a74717ebffcacb401e',1,'TIS_properties']]],
+  ['sbd_5ffile_5fstatus',['SBD_file_status',['../structTIS__properties.html#ad937cd835f0c7a0480e806ce867bd53c',1,'TIS_properties']]],
+  ['sbd_5ffiles',['SBD_files',['../structTIS__properties.html#a4f2425a9b4e9b2f5df75afc30603d094',1,'TIS_properties']]],
+  ['sbd_5freceived_5fwith_5ferror',['SBD_received_with_error',['../structTIS__properties.html#aa629e1fe3e6b94b7a9dc44b76d644037',1,'TIS_properties']]],
+  ['sbd_5freceived_5fwithout_5ferror',['SBD_received_without_error',['../structTIS__properties.html#ac8c42071061d10770b0237e66b39bede',1,'TIS_properties']]],
+  ['sbd_5fsent_5fwith_5ferror',['SBD_sent_with_error',['../structTIS__properties.html#a2e19f5fa9a67c6991647631558ecd031',1,'TIS_properties']]],
+  ['sbd_5fsent_5fwithout_5ferror',['SBD_sent_without_error',['../structTIS__properties.html#a0b3733048d871479f9a20e0b0c362e3a',1,'TIS_properties']]],
+  ['sbd_5fsize_5fmax',['sbd_size_max',['../structTIS__modem.html#a5efc60b17d51f67bdbd7e71b46f314e6',1,'TIS_modem']]],
+  ['sbd_5fwaiting_5fmessages',['SBD_waiting_messages',['../structTIS__properties.html#a45272edd26bb9f732c64a0bfabaad112',1,'TIS_properties']]],
+  ['send_5fdata',['send_data',['../structTIS__properties.html#a2c474f7ac04d8fa07e078790ffb26a0b',1,'TIS_properties']]],
+  ['sent_5ffiles_5fallocated',['sent_files_allocated',['../structTIS__properties.html#a70714f74596ace57ad2ff5e56e9e9d22',1,'TIS_properties']]],
+  ['sent_5ffiles_5fcount',['sent_files_count',['../structTIS__properties.html#a1038ef2d553214cead046455f09a9e25',1,'TIS_properties']]],
+  ['sent_5ffiles_5fpart_5fnumber',['sent_files_part_number',['../structTIS__properties.html#a8fb1ecbc2d513f12faf833d4feddebba',1,'TIS_properties']]],
+  ['sent_5ffiles_5fpath',['sent_files_path',['../structTIS__properties.html#a47c73c5d1afea0233b16bdbb3c39e656',1,'TIS_properties']]],
+  ['sent_5ffiles_5fprogress',['sent_files_progress',['../structTIS__properties.html#ac9046b62ad323aa5ec0f6f9bfd49d9a9',1,'TIS_properties']]],
+  ['serial_5fstruct',['serial_struct',['../structTIS__properties.html#a5f4612101917ae0d2b372bf05c5d24f4',1,'TIS_properties']]],
+  ['service',['service',['../structTIS__properties.html#afd33264e6691db15df430a8af9745ab5',1,'TIS_properties']]],
+  ['sim_5fcard',['sim_card',['../structTIS__modem.html#ac7f2b3721434c18bc199fab4210baaa0',1,'TIS_modem']]]
+];
