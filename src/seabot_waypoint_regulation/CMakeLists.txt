@@ -11,6 +11,8 @@ find_package(catkin REQUIRED
   roscpp
   rospy
   message_generation
+  seabot_mission
+  gps_common
 )
 
 ## System dependencies are found with CMake's conventions

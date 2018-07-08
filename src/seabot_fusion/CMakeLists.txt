@@ -55,7 +55,7 @@ find_package(catkin REQUIRED
 add_message_files(
   FILES
   DepthPose.msg
-  # Message2.msg
+  GnssPose.msg
 )
 
 ## Generate services in the 'srv' folder

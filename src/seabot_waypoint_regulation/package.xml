@@ -17,4 +17,6 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>message_runtime</depend>
+  <depend>seabot_mission</depend>
+  <depend>gps_common</depend>
 </package>

@@ -1,0 +1,14 @@
+<launch>
+
+    <include file="$(find seabot)/launch/base.launch"/>
+    <include file="$(find seabot)/launch/regulation.launch"/>
+
+    <node name="mission" pkg="seabot_mission" type="mission_node" output="screen" respawn="false">
+        <param name="frequency" value="1.0" />
+    </node>
+
+<!--<node name="regulation" pkg="seabot_depth_regulation" type="regulation_talker.py" output="screen" respawn="false">
+</node>-->
+
+</launch>
+

@@ -108,6 +108,9 @@ int main(int argc, char *argv[]){
     p.set_sleep_mode_countdown(48, 0, 0, 250);
     ROS_INFO("[POWER] Set sleep mode to 15 hours");
 
+    // ToDo : Add serices to turn off/on Iridium, GPS
+    // Add turn off screen by default in linux launch script
+
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         ros::spinOnce();
