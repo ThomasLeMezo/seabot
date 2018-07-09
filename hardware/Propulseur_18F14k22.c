@@ -55,6 +55,8 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 */
 
+#define CODE_VERSION 0x01
+
 // I2C
 const unsigned short ADDRESS_I2C = 0x20;
 #define SIZE_RX_BUFFER 8
@@ -111,7 +113,14 @@ void i2c_read_data_from_buffer(){
  * @param nb_tx_octet
  */
 void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
-  SSPBUF = 0x00;
+  switch(rxbuffer_tab[0]+nb_tx_octet){
+    case 0xC0:
+      SSPBUF = CODE_VERSION;
+      break;
+    default:
+      SSPBUF = 0x00;
+      break;
+  }
 }
 
 /**

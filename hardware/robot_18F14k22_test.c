@@ -26,6 +26,8 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
+#define CODE_VERSION 0x01
+
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
@@ -124,7 +126,7 @@ void i2c_read_data_from_buffer(){
                     position_reached_max_value = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
                     i++;
                 }
-                break;   
+                break;  
             default:
                 break;
         }
@@ -172,6 +174,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         break;
     case 0xA1:
         SSPBUF = (error >> 8);
+        break;
+    case 0xC0:
+        SSPBUF = CODE_VERSION;
         break;
     default:
         SSPBUF = 0x00;
