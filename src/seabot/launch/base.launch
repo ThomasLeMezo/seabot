@@ -1,6 +1,6 @@
 <launch>
 
-    <node pkg="rosbag" type="record" name="record" output="screen" args="--all" respawn="true" respawn_delay="5"/>
+    <node pkg="rosbag" type="record" name="record" output="screen" args="--split --size 1024 --all" respawn="true" respawn_delay="5"/>
 
     <include file="$(find seabot)/launch/driver.launch"/>
     <include file="$(find seabot_fusion)/launch/filter.launch"/>

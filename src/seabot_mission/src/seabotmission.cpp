@@ -83,6 +83,7 @@ bool SeabotMission::load_mission(){
 }
 
 bool SeabotMission::update_mission(){
+  if(m_update_mission){
     if (!filesystem::exists(m_folder_path)){
         ROS_INFO("Path doesn't exist %s", m_folder_path.c_str());
         return false;
@@ -115,5 +116,8 @@ bool SeabotMission::update_mission(){
     }
     else
         ROS_INFO("No file in the directory");
+    return false;
+  }
+  else
     return false;
 }

@@ -11,12 +11,11 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
   
-  <depend>rospy</depend>
-  <!-- <depend>roscpp</depend> -->
-  <!-- <depend>sensor_msgs</depend> -->
+<!--  <depend>rospy</depend>-->
+   <depend>roscpp</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>message_runtime</depend>
   <depend>seabot_mission</depend>
-  <depend>gps_common</depend>
+  <depend>gpsd_client</depend>
 </package>

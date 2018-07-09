@@ -50,6 +50,7 @@ private:
     std::vector<Waypoint> m_waypoints;
     size_t m_current_waypoint = 0;
     bool    m_mission_enable = false;
+    bool    m_update_mission = true;
 };
 
 #endif // SEABOTMISSION_H

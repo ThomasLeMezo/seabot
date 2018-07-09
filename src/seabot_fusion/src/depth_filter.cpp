@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
 
     const size_t filter_mean_width_velocity = (size_t) n_private.param<int>("filter_mean_width_velocity", 5);
     const size_t velocity_delta_size = (size_t) n_private.param<int>("velocity_delta_size", 5);
-    const double velocity_limit = n_private.param<int>("velocity_limit", 0.5);
+    const double velocity_limit = n_private.param<double>("velocity_limit", 0.5);
 
     // Service
     ros::ServiceServer service_reset_zero_depth = n.advertiseService("zero_depth", handle_zero_depth);

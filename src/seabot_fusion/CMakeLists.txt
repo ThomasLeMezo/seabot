@@ -56,6 +56,7 @@ add_message_files(
   FILES
   DepthPose.msg
   GnssPose.msg
+  TemperaturePose.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -140,6 +141,10 @@ add_executable(depth_filter_node
 	src/depth_filter.cpp
 )
 
+add_executable(temperature_filter_node
+        src/temperature_filter.cpp
+)
+
 add_executable(lambert_node
     src/lambert.cpp
 )
@@ -160,6 +165,7 @@ add_executable(batteries_filter_node
 add_dependencies(depth_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(lambert_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(batteries_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(temperature_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(depth_filter_node
@@ -172,6 +178,10 @@ target_link_libraries(lambert_node
 )
 
 target_link_libraries(batteries_filter_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(temperature_filter_node
   ${catkin_LIBRARIES}
 )
 

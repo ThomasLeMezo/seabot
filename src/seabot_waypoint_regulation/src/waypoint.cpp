@@ -6,8 +6,8 @@
 #include <seabot_mission/Waypoint.h>
 #include <seabot_thruster_driver/Velocity.h>
 #include <geometry_msgs/Vector3.h>
-#include <gps_common/GPSFix.h>
-#include <gps_common/GPSStatus.h>
+#include <gpsd_client/GPSFix.h>
+#include <gpsd_client/GPSStatus.h>
 
 #include <cmath>
 
@@ -44,7 +44,7 @@ void imu_callback(const geometry_msgs::Vector3::ConstPtr& msg){
   yaw_imu = msg->z; // Check unity ?
 }
 
-void gnss_callback(const gps_common::GPSFix::ConstPtr& msg){
+void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
   speed = msg->speed;
   yaw_gnss = msg->track * M_PI/180.0; // Degree from north
 }
