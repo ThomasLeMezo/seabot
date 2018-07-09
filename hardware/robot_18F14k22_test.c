@@ -56,7 +56,7 @@ unsigned short motor_current_speed = 50; // 2 octets
 // Regulation
 int position_set_point = 0;
 signed int error = 0;
-unsigned long int position_reached_max_value = 50000;
+unsigned long int position_reached_max_value = 40000;
 unsigned long int position_reached_cpt = 0;
 unsigned short position_reached_enable = 0;
 unsigned short error_interval = 0;

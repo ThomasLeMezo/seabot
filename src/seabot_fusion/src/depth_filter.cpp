@@ -17,7 +17,6 @@ using namespace std;
 double zero_depth = 0.0;
 double depth = 0;
 deque<pair<double, ros::Time>> depth_memory;
-double velocity = 0.0;
 double pressure_to_depth = 10.0;
 int filter_median_size = 5;
 int filter_mean_width = 3;
@@ -62,8 +61,10 @@ int main(int argc, char *argv[]){
 
   filter_median_size = n_private.param<int>("filter_median_size", 10);
   filter_mean_width = n_private.param<int>("filter_mean_width", 3);
-  const double velocity_limit = n_private.param<int>("velocity_limit", 0.5);
+
+  const size_t filter_mean_width_velocity = (size_t) n_private.param<int>("filter_mean_width_velocity", 5);
   const size_t velocity_delta_size = (size_t) n_private.param<int>("velocity_delta_size", 5);
+  const double velocity_limit = n_private.param<int>("velocity_limit", 0.5);
 
   // Service
   ros::ServiceServer service_reset_zero_depth = n.advertiseService("zero_depth", handle_zero_depth);
@@ -74,8 +75,10 @@ int main(int argc, char *argv[]){
   // Publisher
   ros::Publisher depth_pub = n.advertise<seabot_fusion::DepthPose>("depth", 1);
 
+  // Loop variables
   seabot_fusion::DepthPose msg;
   time_pressure = ros::Time::now();
+  double velocity = 0.0;
 
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
@@ -98,14 +101,15 @@ int main(int argc, char *argv[]){
       depth = (pressure_mean - zero_depth) / (g_rho); // Take the median
 
       /// ************** Compute velocity ************** //
-      if(!depth_memory.empty()){
+      if(depth_memory.size()==(velocity_delta_size+filter_mean_width_velocity)){
         velocity = (depth-depth_memory[0].first)/(time_pressure-depth_memory[0].second).toSec();
         if(abs(velocity)>velocity_limit)
           velocity = std::copysign(velocity_limit, velocity);
       }
 
+      // Save depth
       depth_memory.push_back(std::pair<double,ros::Time>(depth, time_pressure));
-      if(depth_memory.size()>velocity_delta_size)
+      if(depth_memory.size()>(velocity_delta_size+filter_mean_width_velocity))
         depth_memory.pop_front();
 
       if((ros::Time::now()-time_pressure).toSec() < 1.0 && zero_depth_valid){

@@ -67,6 +67,8 @@ unsigned short ils_removed = 1;
 // State Machine
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
 unsigned short state = IDLE;
+unsigned int cpt_wait = 0;
+#define WAIT_LOOP 10000;
 
 // Batteries
 #define WARNING_LOW_VOLTAGE 665 // 0.015625 (quantum) / 10.4 (min tension)
@@ -395,7 +397,15 @@ void main(){
       state = POWER_ON;
       break;
     }
-    delay_ms(500);
+    // delay_ms(500);
+    for(cpt_wait=0; cpt_wait<WAIT_LOOP; cpt_wait++){
+      delay_us(50);
+      // I2C
+        if(nb_rx_octet>1 && SSPSTAT.P == 1){
+            i2c_read_data_from_buffer();
+            nb_rx_octet = 0;
+        }
+    }
   }
 }
 
@@ -531,7 +541,7 @@ void init_i2c(){
   SSPCON1.WCOL = 0; // Write Collision Detect bit
   SSPCON1.SSPOV = 0; // Receive Overflow Indicator bit
   SSPCON1.CKP = 1; // SCK Release Control bit (1=Release clock)
-  SSPCON1.SSPM3 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+  SSPCON1.SSPM3 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled (1-> with S/P, 0 -> without)
   SSPCON1.SSPM2 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSPCON1.SSPM1 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSPCON1.SSPM0 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
