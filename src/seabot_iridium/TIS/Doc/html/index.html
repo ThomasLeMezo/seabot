@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<title>Transmission Iridium Simplifiée - Partie Instrument: Documentation de Transmission Iridium Simplifiée - Partie Instrument</title>
+
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() { searchBox.OnSelectItem(0); });
+</script>
+
+</head>
+<body>
+<div id="top"><!-- do not remove this div! -->
+
+
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  
+  
+  <td style="padding-left: 0.5em;">
+   <div id="projectname">Transmission Iridium Simplifiée - Partie Instrument
+   
+   </div>
+   
+  </td>
+  
+  
+  
+ </tr>
+ </tbody>
+</table>
+</div>
+
+<!-- Généré par Doxygen 1.8.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Recherche');
+</script>
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li class="current"><a href="index.html"><span>Page&#160;principale</span></a></li>
+      <li><a href="pages.html"><span>Pages&#160;associées</span></a></li>
+      <li><a href="annotated.html"><span>Structures&#160;de&#160;données</span></a></li>
+      <li><a href="files.html"><span>Fichiers</span></a></li>
+      <li>
+        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <img id="MSearchSelect" src="search/mag_sel.png"
+               onmouseover="return searchBox.OnSearchSelectShow()"
+               onmouseout="return searchBox.OnSearchSelectHide()"
+               alt=""/>
+          <input type="text" id="MSearchField" value="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.png" alt=""/></a>
+          </span>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>Tout</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Structures de données</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Fichiers</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Fonctions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Définitions de type</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Macros</a></div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">Documentation de Transmission Iridium Simplifiée - Partie Instrument </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>Cette documentation présente l'usage de la librairie TIS. Ci-dessous vous trouverez un exemple d'utilisation de la librairie pour réaliser des échanges en SBD. Certaines fonctionnalités dépendent de la plateforme utilisée et non de la librairie, des fonctions factices sont donc utilisées dans cet exemple. </p>
+<div class="fragment"><pre class="fragment"><span class="preprocessor"> #include &quot;<a class="code" href="tis_8h.html" title="Eléments publiques de la librairie. Dans un programme, vous pouvez utiliser toutes ses fonctions et s...">tis.h</a>&quot;</span>
+
+ <span class="comment">//Cete fonction prend en paramètre un tableau contenant des pointeurs vers le nom des fichiers à envoyer ainsi que le nombre de fichier à renvoyer.</span>
+ <span class="keywordtype">bool</span> Iridium_send_and_receive_datas(<span class="keywordtype">char</span> ** files, <span class="keywordtype">int</span> files_count) {
+    <a class="code" href="structTIS__properties.html" title="Contient toutes les données nécessaires au fonctionnement de la librairie.">TIS_properties</a> tis; <span class="comment">//Déclaration de la structure de la librairie</span>
+    UART_struct serial; <span class="comment">//Structure contenant la configuration de la liaison série utilisée par le modem (dépend de votre plateforme et non de la librairie)</span>
+
+    <span class="comment">//Initialise la liaison série (dépend de votre plateforme et non de la librairie)</span>
+    UART_init(&amp;serial);
+
+    <span class="comment">//Initialise la structure de la librairie</span>
+    <span class="keywordflow">if</span> (<a class="code" href="tis_8h.html#ad9ec5af47f014187f6d70c8ea6d41db6" title="Initialise la structure de la librairie.">TIS_init</a>(&amp;tis,
+                 <span class="stringliteral">&quot;/CMD/&quot;</span>,           <span class="comment">//&quot;/CMD/&quot; est le chemin du dossier qui contiendras les fichier reçues.</span>
+                 <a class="code" href="TIS__modems_8h.html#ad63f72a82f72b257423d82c9cdc75e70" title="Index des caractéristiques du modem 9602 dans TIS_modems.">TIS_MODEM_9602</a>,    <span class="comment">//Modèle du modem</span>
+                 310036010122330,   <span class="comment">//Numéro IMEI du modem</span>
+                 <a class="code" href="tis_8h.html#a0f4e7dbf8a254edbcf17debb9edce06d" title="Service Iridium SBD.">TIS_SERVICE_SBD</a>,   <span class="comment">//Service SBD</span>
+                 NULL,              <span class="comment">//Inutile avec un modem sans carte SIM</span>
+                 0,                 <span class="comment">//Inutile en modem SBD</span>
+                 NULL,              <span class="comment">//Inutile en modem SBD</span>
+                 files_count,       <span class="comment">//Nombre de fichier envoyés</span>
+                 &amp;serial,           <span class="comment">//Un pointeur vers la structure décrivant la liaison série</span>
+                 UART_send_data,    <span class="comment">//Fonction utilisant les appelles système de la plateforme pour envoyer des données sur la liaison série</span>
+                 UART_receive_data, <span class="comment">//Fonction utilisant les appelles système de la plateforme pour recevoir des données sur la liaison série</span>
+                 UART_wait_data,    <span class="comment">//Fonction utilisant les appelles système de la plateforme pour attendre des données sur la liaison série</span>
+                 UART_flush_TX,     <span class="comment">//Fonction utilisant les appelles système de la plateforme pour vider le tampon de sortie de la liaison série</span>
+                 UART_flush_RX      <span class="comment">//Fonction utilisant les appelles système de la plateforme pour vider le tampon d&#39;entrée de la liaison série</span>
+        ) != <a class="code" href="TIS__errors_8h.html#ad1385477a93c6ea1367f2e4c0db270e8" title="La fonction s&#39;est terminé avec succès.">TIS_ERROR_SUCCES</a>) {
+        <span class="keywordflow">return</span> <a class="code" href="TIS__plateforme_8h.html#aa93f0eb578d23995850d61f7d61c55c1" title="Valeur booléenne correspondant à FAUX, compatible avec le type bool.">FALSE</a>;
+    }
+
+    <span class="comment">//Ajoute les fichiers à envoyer</span>
+    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; files_count; i++) {
+        <a class="code" href="tis_8h.html#a6498ffe71c826ab268ccaac7834c4fca" title="Cette fonction vous permet d&#39;ajouter un fichier dans la liste des fichiers à envoyer.">TIS_add_file_to_send</a>(&amp;tis, files[i]);
+    }
+
+    <span class="comment">//Boucle d&#39;envoie et de réception, s&#39;arrête quand tous les fichier sont envoyés ou reçus</span>
+    <span class="keywordflow">do</span> {
+        <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> result;
+
+        <span class="comment">//Met le modem sous tension</span>
+        Iridium_ON(); <span class="comment">//(dépend de votre plateforme et non de la librairie)</span>
+
+        <span class="comment">//Lance la transmission</span>
+        result = <a class="code" href="tis_8h.html#a796b6052ed22263f72eb5d9309859e12" title="Effectue une session d&#39;envoie et de réception de fichier via Iridium.">TIS_transmition</a>(&amp;tis, 10);
+
+        <span class="comment">//Met le modem hors tension</span>
+        Iridium_OFF(); <span class="comment">//(dépend de votre plateforme et non de la librairie)</span>
+
+        <span class="comment">//Affiche des informations de diagnostiques</span>
+        <span class="keywordflow">if</span> (result != <a class="code" href="TIS__errors_8h.html#ad1385477a93c6ea1367f2e4c0db270e8" title="La fonction s&#39;est terminé avec succès.">TIS_ERROR_SUCCES</a>) {
+            printf(<span class="stringliteral">&quot;Iridium : erreur %ld s&#39;est produite pendant la transmission&quot;</span>, result);
+        }
+        printf(<span class="stringliteral">&quot;Iridium : informations de diagnostiques : \n&quot;</span>);
+        printf(<span class="stringliteral">&quot;\tNombre de messages SBD envoyés avec succès : %ld\n&quot;</span>, tis.<a class="code" href="structTIS__properties.html#a0b3733048d871479f9a20e0b0c362e3a">SBD_sent_without_error</a>);
+        printf(<span class="stringliteral">&quot;\tNombre de messages SBD dont l&#39;envoie a échoué : %ld\n&quot;</span>, tis.<a class="code" href="structTIS__properties.html#a2e19f5fa9a67c6991647631558ecd031">SBD_sent_with_error</a>);
+        printf(<span class="stringliteral">&quot;\tNombre de messages SBD reçues avec succès : %ld\n&quot;</span>, tis.<a class="code" href="structTIS__properties.html#ac8c42071061d10770b0237e66b39bede">SBD_received_without_error</a>);
+        printf(<span class="stringliteral">&quot;\tNombre de messages SBD dont la réception a échoué : %ld\n&quot;</span>, tis.<a class="code" href="structTIS__properties.html#aa629e1fe3e6b94b7a9dc44b76d644037">SBD_received_with_error</a>);
+        printf(<span class="stringliteral">&quot;\tNombre de messages SBD en attente dans la constellation : %ld\n&quot;</span>, tis.<a class="code" href="structTIS__properties.html#a45272edd26bb9f732c64a0bfabaad112">SBD_waiting_messages</a>);
+        <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i = 0; i &lt; file_count; i++) {
+            printf(<span class="stringliteral">&quot;Iridium : fichier %s, envoyé à %ld%\n&quot;</span>, <a class="code" href="tis_8h.html#a4c3de23c020629af90ca10cb7e18332d" title="Cette fonction vous permet de récupérer le chemin d&#39;un fichier dans la liste des fichiers à envoyer g...">TIS_get_file_path</a>(&amp;tis, i), <a class="code" href="tis_8h.html#a5891a1b12301096bd16c4908da081d92" title="Cette fonction vous permet de récupérer l&#39;avancement d&#39;un fichier dans la liste des fichiers à envoye...">TIS_get_file_progress</a>(&amp;tis, i));
+        }
+        
+        <span class="comment">//Si la communication n&#39;est pas terminée, met en veille le système en attendant un nouveau crénaux de réception</span>
+        <span class="keywordflow">if</span> ((<a class="code" href="tis_8h.html#ad43396ef32c719c1d16446f6b1511a22" title="Cette fonction vous permet de connaitre le nombre de fichier de la liste des fichiers à envoyer qui n...">TIS_remaning_file_to_send</a>(&amp;tis) != 0) || (<a class="code" href="tis_8h.html#a2333fe6125a68774af4f672e2d36678c" title="Cette fonction vous permet de savoir si des fichiers sont en attente dans la constellation (SBD) ou s...">TIS_waiting_incomming_data</a>() == <a class="code" href="TIS__plateforme_8h.html#aa8cecfc5c5c054d2875c03e77b7be15d" title="Valeur booléenne correspondant à VRAI, compatible avec le type bool.">TRUE</a>)) {
+            sleep(300); <span class="comment">//La durée dépend de votre application, la fonction depend de votre plateforme et non de la librairie)</span>
+        }
+
+    <span class="comment">//Si il reste des fichier en cours d&#39;envoie ou en attente dans le satellite, reboucle</span>
+    } <span class="keywordflow">while</span> ((<a class="code" href="tis_8h.html#ad43396ef32c719c1d16446f6b1511a22" title="Cette fonction vous permet de connaitre le nombre de fichier de la liste des fichiers à envoyer qui n...">TIS_remaning_file_to_send</a>(&amp;tis) != 0) || (<a class="code" href="tis_8h.html#a2333fe6125a68774af4f672e2d36678c" title="Cette fonction vous permet de savoir si des fichiers sont en attente dans la constellation (SBD) ou s...">TIS_waiting_incomming_data</a>() == <a class="code" href="TIS__plateforme_8h.html#aa8cecfc5c5c054d2875c03e77b7be15d" title="Valeur booléenne correspondant à VRAI, compatible avec le type bool.">TRUE</a>));
+    
+    <span class="comment">//Libère la mémoire occupée par la structure de la librairie</span>
+    <a class="code" href="tis_8h.html#a09ac28fd21dcbfdd61ab4d868d04a9d6" title="Libère la mémoire occupée par la structure de la librairie.">TIS_clean</a>(&amp;tis);
+    <span class="keywordflow">return</span> <a class="code" href="TIS__plateforme_8h.html#aa8cecfc5c5c054d2875c03e77b7be15d" title="Valeur booléenne correspondant à VRAI, compatible avec le type bool.">TRUE</a>;
+ }
+</pre></div><dl class="section author"><dt>Auteur:</dt><dd>Clément Bonnet </dd></dl>
+<dl class="section date"><dt>Date:</dt><dd>2011-2012 </dd></dl>
+<dl class="section copyright"><dt>Copyright:</dt><dd>Laboratoire de Physique des Océans. Ce code est couvert par la license CeCILL-B. </dd></dl>
+</div></div><!-- contents -->
+
+
+<hr class="footer"/><address class="footer"><small>
+Généré le Jeudi Mai 10 2012 12:42:34 pour Transmission Iridium Simplifiée - Partie Instrument par &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.0
+</small></address>
+
+</body>
+</html>

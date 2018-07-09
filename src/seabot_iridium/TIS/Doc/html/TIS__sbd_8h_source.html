@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<title>Transmission Iridium Simplifiée - Partie Instrument:  Fichier source de inc/TIS_sbd.h</title>
+
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() { searchBox.OnSelectItem(0); });
+</script>
+
+</head>
+<body>
+<div id="top"><!-- do not remove this div! -->
+
+
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  
+  
+  <td style="padding-left: 0.5em;">
+   <div id="projectname">Transmission Iridium Simplifiée - Partie Instrument
+   
+   </div>
+   
+  </td>
+  
+  
+  
+ </tr>
+ </tbody>
+</table>
+</div>
+
+<!-- Généré par Doxygen 1.8.0 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Recherche');
+</script>
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>Page&#160;principale</span></a></li>
+      <li><a href="pages.html"><span>Pages&#160;associées</span></a></li>
+      <li><a href="annotated.html"><span>Structures&#160;de&#160;données</span></a></li>
+      <li class="current"><a href="files.html"><span>Fichiers</span></a></li>
+      <li>
+        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <img id="MSearchSelect" src="search/mag_sel.png"
+               onmouseover="return searchBox.OnSearchSelectShow()"
+               onmouseout="return searchBox.OnSearchSelectHide()"
+               alt=""/>
+          <input type="text" id="MSearchField" value="Recherche" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.png" alt=""/></a>
+          </span>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>Liste&#160;des&#160;fichiers</span></a></li>
+      <li><a href="globals.html"><span>Variables&#160;globale</span></a></li>
+    </ul>
+  </div>
+</div>
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>Tout</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Structures de données</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Fichiers</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Fonctions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Définitions de type</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Macros</a></div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">inc/TIS_sbd.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="TIS__sbd_8h.html">Aller à la documentation de ce fichier.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/***********************************************************************/</span>
+<a name="l00012"></a>00012 <span class="preprocessor">#ifndef TIS_SBD_H</span>
+<a name="l00013"></a>00013 <span class="preprocessor"></span><span class="preprocessor">#define TIS_SBD_H</span>
+<a name="l00014"></a>00014 <span class="preprocessor"></span>
+<a name="l00015"></a>00015 <span class="preprocessor">#include &quot;<a class="code" href="TIS__plateforme_8h.html" title="Ensemble des éléments spécifiques à une plateforme utilisés par TIS.">TIS_plateforme.h</a>&quot;</span>
+<a name="l00016"></a>00016 <span class="preprocessor">#include &quot;<a class="code" href="tis_8h.html" title="Eléments publiques de la librairie. Dans un programme, vous pouvez utiliser toutes ses fonctions et s...">tis.h</a>&quot;</span>
+<a name="l00017"></a>00017 
+<a name="l00018"></a>00018 <span class="comment">/***********************************************************************/</span>
+<a name="l00022"></a><a class="code" href="TIS__sbd_8h.html#afc8199680c4857800f641b6911f09903">00022</a> <span class="preprocessor">#define TIS_SBD_MESSAGE_HEADER_SIZE         6</span>
+<a name="l00023"></a>00023 <span class="preprocessor"></span>
+<a name="l00024"></a>00024 <span class="comment">/***********************************************************************/</span>
+<a name="l00028"></a><a class="code" href="TIS__sbd_8h.html#a88defc0daaa1c56b0a1fdf0436b4843b">00028</a> <span class="preprocessor">#define TIS_SBD_FILE_TYPE_SCIENTIFIC_DATA   0b00000000</span>
+<a name="l00029"></a>00029 <span class="preprocessor"></span>
+<a name="l00030"></a>00030 <span class="comment">/***********************************************************************/</span>
+<a name="l00034"></a><a class="code" href="TIS__sbd_8h.html#a9aa97f3f01cda9ece15dfe2bb998f63c">00034</a> <span class="preprocessor">#define TIS_SBD_FILE_TYPE_TECHNICAL_DATA    0b01000000</span>
+<a name="l00035"></a>00035 <span class="preprocessor"></span>
+<a name="l00036"></a>00036 <span class="comment">/***********************************************************************/</span>
+<a name="l00040"></a><a class="code" href="TIS__sbd_8h.html#a8d6fe83b74f26d038256e32da4619885">00040</a> <span class="preprocessor">#define TIS_SBD_FILE_TYPE_COMMAND           0b10000000</span>
+<a name="l00041"></a>00041 <span class="preprocessor"></span>
+<a name="l00042"></a>00042 <span class="comment">/***********************************************************************/</span>
+<a name="l00046"></a><a class="code" href="TIS__sbd_8h.html#a8b0fcdcc488072c9a83846c7331e4d82">00046</a> <span class="preprocessor">#define TIS_SBD_FILE_TYPE_MASK              0b11000000</span>
+<a name="l00047"></a>00047 <span class="preprocessor"></span>
+<a name="l00048"></a>00048 <span class="comment">/***********************************************************************/</span>
+<a name="l00052"></a><a class="code" href="TIS__sbd_8h.html#ac344d858dd3ecbce027f26db1fd1874f">00052</a> <span class="preprocessor">#define TIS_SBD_HEADER_END_MESSAGE          0b00100000</span>
+<a name="l00053"></a>00053 <span class="preprocessor"></span>
+<a name="l00054"></a>00054 <span class="comment">/***********************************************************************/</span>
+<a name="l00058"></a><a class="code" href="TIS__sbd_8h.html#ae0f748178dae243681c5a397f5d7961a">00058</a> <span class="preprocessor">#define TIS_SBD_HEADER_NOT_END_MESSAGE      0b00000000</span>
+<a name="l00059"></a>00059 <span class="preprocessor"></span>
+<a name="l00060"></a>00060 <span class="comment">/***********************************************************************/</span>
+<a name="l00064"></a><a class="code" href="TIS__sbd_8h.html#a556ce61db4734ca764d0971a664e44d2">00064</a> <span class="preprocessor">#define TIS_SBD_MESSAGE_NUMBER_MAX 8191</span>
+<a name="l00065"></a>00065 <span class="preprocessor"></span>
+<a name="l00066"></a>00066 <span class="comment">/***********************************************************************/</span>
+<a name="l00072"></a><a class="code" href="TIS__sbd_8h.html#a5ee347158bf7bd8072b5597af6ff9fbf">00072</a> <span class="preprocessor">#define TIS_SBD_SIZE_MAX 1960 //Cette valeur correspond à ce que l&#39;on fait de mieux au début 2012, si de meilleur modems sortent, il faut l&#39;augmenter</span>
+<a name="l00073"></a>00073 <span class="preprocessor"></span>                           
+<a name="l00074"></a>00074 <span class="comment">/***********************************************************************/</span>
+<a name="l00087"></a>00087 <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> <a class="code" href="TIS__sbd_8h.html#a219cf485d6df4871e563592fc446e6ac" title="Effectue une session d&#39;envoie et de réception SBD.">TIS_SBD_transmition</a>(<a class="code" href="structTIS__properties.html" title="Contient toutes les données nécessaires au fonctionnement de la librairie.">TIS_properties</a> * properties, <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> maximum_consecutive_errors);
+<a name="l00088"></a>00088                            
+<a name="l00089"></a>00089 <span class="comment">/***********************************************************************/</span>
+<a name="l00101"></a>00101 <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> <a class="code" href="TIS__sbd_8h.html#a33e6f7d3f1e123e12d2d1ae54fb7220d" title="Stocke un message SBD entrant dans un fichier.">TIS_SBD_store_received_message</a>(<a class="code" href="structTIS__properties.html" title="Contient toutes les données nécessaires au fonctionnement de la librairie.">TIS_properties</a> * properties, <a class="code" href="TIS__plateforme_8h.html#ae1affc9ca37cfb624959c866a73f83c2" title="Type POSIX standard : entier non signé de 8 bits.">uint8_t</a> * message, <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> message_count);
+<a name="l00102"></a>00102 
+<a name="l00103"></a>00103 <span class="comment">/***********************************************************************/</span>
+<a name="l00114"></a>00114 <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> <a class="code" href="TIS__sbd_8h.html#acecec63bc5d6474107335afe37122db8" title="Concatène deux fichiers.">TIS_file_append</a>(FILE * destination, FILE * source);
+<a name="l00115"></a>00115 
+<a name="l00116"></a>00116 <span class="comment">/***********************************************************************/</span>
+<a name="l00126"></a>00126 <a class="code" href="TIS__plateforme_8h.html#afd12020da5a235dfcf0c3c748fb5baed" title="Type POSIX standard : entier signé de 32 bits.">int32_t</a> <a class="code" href="TIS__sbd_8h.html#a6e29a4956f38d0c9f2a202c01fbed9c9" title="Retourne la taille d&#39;un fichier.">TIS_filelength</a>(FILE * fp);
+<a name="l00127"></a>00127 
+<a name="l00128"></a>00128 <span class="preprocessor">#endif //TIS_SBD_H</span>
+</pre></div></div><!-- contents -->
+
+
+<hr class="footer"/><address class="footer"><small>
+Généré le Jeudi Mai 10 2012 12:42:33 pour Transmission Iridium Simplifiée - Partie Instrument par &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.0
+</small></address>
+
+</body>
+</html>

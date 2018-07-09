@@ -1,7 +1,4 @@
 <launch>
-
-    <include file="$(find seabot)/launch/base.launch"/>
-
     <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="g" value="9.81" />
         <param name="rho_eau" value="1020.0" />
@@ -21,13 +18,16 @@
 
         <param name="set_point_following" value="10.0" />
 
-        <param name="compression_tick_factor" value="9.0" />
-
+        <param name="compression_tick_factor" value="18.0" />
     </node>
 
-<!-- Kf : 10, Kv: 50, freq:1, offset = 865 / 964 -->
-
-    <node name="regulation" pkg="seabot_depth_regulation" type="regulation_talker.py" output="screen" respawn="false">
+    <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+        <param name="frequency" value="10.0" />
+        <param name="delta_valid_time" value="3.0" />
+        <param name="coeff_P" value="1.0" />
+        <param name="hysteresis_circle_in" value="10.0" />
+        <param name="hysteresis_circle_out" value="30.0" />
+        <param name="linear_speed" value="1.0" />
     </node>
 
 </launch>

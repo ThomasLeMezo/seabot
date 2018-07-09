@@ -6,6 +6,8 @@
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
 #include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_regulation/DepthPoint.h>
+#include <seabot_mission/Waypoint.h>
 
 #include <cmath>
 
@@ -33,7 +35,7 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
     t = ros::Time::now();
 }
 
-void depth_set_point_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
+void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
     depth_set_point = msg->depth;
 }
 

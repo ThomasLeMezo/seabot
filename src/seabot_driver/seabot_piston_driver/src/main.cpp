@@ -22,11 +22,12 @@ uint16_t cmd_position_piston = 0;
 uint16_t new_cmd_position_piston = 0;
 bool state_emergency = false;
 double depth = 0;
-bool adaptative_speed = false;
 int speed_in_last = 50;
 int speed_out_last = 50;
 __u16 piston_set_point = 0;
 size_t cpt_error_zero = 0;
+
+bool fast_move = false;
 
 bool piston_reset(std_srvs::Empty::Request  &req,
                   std_srvs::Empty::Response &res){
@@ -76,12 +77,17 @@ int main(int argc, char *argv[]){
 
     // Parameters
     ros::NodeHandle n_private("~");
-    double frequency = n_private.param<double>("frequency", 5.0);
-    adaptative_speed = n_private.param<bool>("adaptative_speed", false);
-    double adaptative_coeff_slope_in = n_private.param<double>("adaptative_coeff_slope_in", 1.0/20.0);
-    double adaptative_coeff_offset_in = n_private.param<double>("adaptative_coeff_offset_in", 50.0);
-    double adaptative_coeff_slope_out = n_private.param<double>("adaptative_coeff_slope_out", 1.0/20.0);
-    double adaptative_coeff_offset_out = n_private.param<double>("adaptative_coeff_offset_out", 50.0);
+    const double frequency = n_private.param<double>("frequency", 5.0);
+    const bool adaptative_speed = n_private.param<bool>("adaptative_speed", false);
+
+    const double speed_in_slope = n_private.param<double>("speed_in_slope", 1.0/20.0);
+    const double speed_out_slope = n_private.param<double>("speed_out_slope", 1.0/20.0);
+
+    const int speed_in_offset = n_private.param<int>("speed_in_offset", 10);
+    const int speed_out_offset = n_private.param<int>("speed_out_offset", 10);
+
+    const double distance_fast_move = n_private.param<double>("distance_fast_move", 100);
+    const int speed_fast_move = n_private.param<int>("speed_fast_move", 30);
 
     const double max_speed = 100.0;
     const double min_speed = 10.0;
@@ -114,7 +120,7 @@ int main(int argc, char *argv[]){
     sleep(1); // 1s sleep (wait until i2c open)
 
     // Wait reset_out
-    while(p.m_state==1){
+    while(p.m_state!=1){
         p.get_piston_all_data();
         sleep(1);
     }
@@ -128,14 +134,9 @@ int main(int argc, char *argv[]){
 
         ros::Time t = ros::Time::now();
 
-        // Piston set point
-        if(state_start && state_emergency==false){
-            if((piston_set_point != p.m_position_set_point) || (t-t_last_set_point).toSec()>30.0){
-                t_last_set_point = t;
-                p.set_piston_position(piston_set_point);
-            }
-        }
-
+        /// ********************************************
+        /// ******** Send Command to the piston ********
+        /// ********************************************
         if(state_emergency){
             if(p.m_position_set_point!=0){
                 p.set_piston_position(0);
@@ -143,8 +144,51 @@ int main(int argc, char *argv[]){
                     p.set_piston_speed(50, 50);
             }
         }
+        else{
+          // Piston set point
+          if(state_start && state_emergency==false){
+              if((piston_set_point != p.m_position_set_point) || (t-t_last_set_point).toSec()>30.0){
+                  t_last_set_point = t;
+                  p.set_piston_position(piston_set_point);
+              }
+          }
 
-        // Piston state
+          // Fast speed if position is far from position
+          if(abs(piston_set_point - p.m_position)>distance_fast_move){
+            if(!fast_move){
+              p.set_piston_speed(speed_fast_move, speed_fast_move);
+              fast_move = true;
+            }
+          }
+          else{
+            if(fast_move){
+              p.set_piston_speed(speed_in_offset, speed_out_offset);
+              fast_move = false;
+            }
+          }
+
+          // Analyze depth to change motor speed
+          if(adaptative_speed){
+              int speed_in = (max_speed/nb_step)*round(max(min(depth*speed_in_slope+speed_in_offset, max_speed), min_speed)*(nb_step/max_speed));
+              int speed_out = (max_speed/nb_step)*round(max(min(depth*speed_out_slope+speed_out_offset, max_speed), min_speed)*(nb_step/max_speed));
+
+              // Hysteresis
+              if(abs(speed_in-speed_in_last)>(max_speed/nb_step)/2.0
+                      || abs(speed_out-speed_out_last)>(max_speed/nb_step)/2.0){
+                  p.set_piston_speed((uint16_t) speed_in, (uint16_t) speed_out);
+                  speed_in_last = speed_in;
+                  speed_out_last = speed_out;
+                  speed_msg.speed_in = speed_in;
+                  speed_msg.speed_out = speed_out;
+                  speed_pub.publish(speed_msg);
+              }
+          }
+        }
+
+        //
+        /// ********************************************
+        /// ********      Get Piston state      ********
+        /// ********************************************
         p.get_piston_all_data();
         state_msg.position = p.m_position;
         state_msg.switch_out = p.m_switch_out;
@@ -164,23 +208,6 @@ int main(int argc, char *argv[]){
             position_last = p.m_position;
             velocity_msg.velocity =velocity;
             velocity_pub.publish(velocity_msg);
-        }
-
-        // Analyze depth to change motor speed
-        if(adaptative_speed){
-            int speed_in = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_in+adaptative_coeff_offset_in, max_speed), min_speed)*(nb_step/max_speed));
-            int speed_out = (max_speed/nb_step)*round(max(min(depth*adaptative_coeff_slope_out+adaptative_coeff_offset_out, max_speed), min_speed)*(nb_step/max_speed));
-
-            // Hysteresis
-            if(abs(speed_in-speed_in_last)>(max_speed/nb_step)/2.0
-                    || abs(speed_out-speed_out_last)>(max_speed/nb_step)/2.0){
-                p.set_piston_speed((uint16_t) speed_in, (uint16_t) speed_out);
-                speed_in_last = speed_in;
-                speed_out_last = speed_out;
-                speed_msg.speed_in = speed_in;
-                speed_msg.speed_out = speed_out;
-                speed_pub.publish(speed_msg);
-            }
         }
 
         loop_rate.sleep();

@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/NavSatStatus.h>
-#include <geometry_msgs/Point.h>
+#include <seabot_fusion/GnssPose.h>
 #include <cmath>
 
 #include <proj_api.h>
@@ -45,24 +45,23 @@ int main(int argc, char *argv[])
 
   // Publishers
   ros::Subscriber navSatFix_sub = n.subscribe("/driver/fix", 1, navSatFix_callback);
-  ros::Publisher pose_pub = n.advertise<geometry_msgs::Point>("pose", 1);
+  ros::Publisher pose_pub = n.advertise<seabot_fusion::GnssPose>("pose", 1);
 
-  geometry_msgs::Point msg_point;
+  seabot_fusion::GnssPose msg_pose;
 
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
 
     if(new_data){
-      double x = longitude*M_PI/180.0; // Longitude
-      double y = latitude*M_PI/180.0; // Latitude
-      pj_transform(pj_latlong, pj_lambert, 1, 1, &x, &y, nullptr);
-      msg_point.x = x + offset_east;
-      msg_point.y = y + offset_north;
-      msg_point.z = altitude;
+      double east = longitude*M_PI/180.0; // Longitude
+      double north = latitude*M_PI/180.0; // Latitude
+      pj_transform(pj_latlong, pj_lambert, 1, 1, &east, &north, nullptr);
+      msg_pose.east = east + offset_east;
+      msg_pose.north = north + offset_north;
       new_data = false;
 
-      pose_pub.publish(msg_point);
+      pose_pub.publish(msg_pose);
     }
 
     loop_rate.sleep();
