@@ -9,7 +9,11 @@
     <param name="filter_mean_width_velocity" value="5" />
     <param name="velocity_delta_size" value="5" />
     <param name="velocity_limit" value="0.5" />
-
-
   </node>
+
+ <node name="batteries_filter_node" pkg="seabot_fusion" type="batteries_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+   <param name="filter_median_size" value="6" />
+   <param name="filter_mean_width" value="3" />
+ </node>
+
 </launch>

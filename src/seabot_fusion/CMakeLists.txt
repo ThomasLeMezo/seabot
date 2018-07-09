@@ -144,6 +144,10 @@ add_executable(lambert_node
     src/lambert.cpp
 )
 
+add_executable(batteries_filter_node
+    src/batteries_filter.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -155,6 +159,7 @@ add_executable(lambert_node
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(depth_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(lambert_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(batteries_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(depth_filter_node
@@ -163,6 +168,10 @@ target_link_libraries(depth_filter_node
 
 target_link_libraries(lambert_node
   proj
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(batteries_filter_node
   ${catkin_LIBRARIES}
 )
 
