@@ -47,8 +47,8 @@ unsigned short butee_out = 0;
 unsigned short butee_in = 0;
 
 // Motor
-unsigned short motor_speed_in = 20; // 2 octets
-unsigned short motor_speed_out = 20; // 2 octets
+unsigned short motor_speed_in = 15; // 2 octets
+unsigned short motor_speed_out = 15; // 2 octets
 unsigned short motor_speed_out_reset = 20; // 2 octets
 unsigned short motor_current_speed = 50; // 2 octets
 #define MOTOR_STOP 50

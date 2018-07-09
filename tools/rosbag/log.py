@@ -51,7 +51,8 @@ dock_regulation1 = Dock("Regulation 1")
 dock_regulation2 = Dock("Regulation 2")
 dock_regulation3 = Dock("Regulation 3")
 dock_fusion = Dock("Fusion")
-dock_gps = Dock("GPS")
+dock_gps = Dock("GPS Signal")
+dock_gps2 = Dock("GPS Pose")
 
 area.addDock(dock_battery)
 area.addDock(dock_piston, 'above', dock_battery)
@@ -64,6 +65,7 @@ area.addDock(dock_regulation2, 'above', dock_battery)
 area.addDock(dock_regulation3, 'above', dock_battery)
 area.addDock(dock_fusion, 'above', dock_battery)
 area.addDock(dock_gps, 'above', dock_battery)
+area.addDock(dock_gps2, 'above', dock_battery)
 
 #################### Regulation 1 ####################
 pg_regulation_u = pg.PlotWidget()
@@ -256,7 +258,7 @@ dock_fusion.addWidget(pg_fusion_velocity)
 
 pg_fusion_velocity.setXLink(pg_fusion_depth1)
 
-#################### Pose (GPS) ####################
+#################### GPS Status ####################
 
 pg_gps = pg.PlotWidget()
 pg_gps.addLegend()
@@ -271,6 +273,14 @@ pg_fusion_depth2.setLabel('left', "Depth", units="m")
 dock_gps.addWidget(pg_fusion_depth2)
 
 pg_gps.setXLink(pg_fusion_depth2)
+
+#################### GPS Pose ####################
+
+pg_gps2 = pg.PlotWidget()
+pg_gps2.addLegend()
+pg_gps2.plot(fusion_pose_east, fusion_pose_north, pen=(255,0,0), name="pose")
+pg_gps2.setLabel('left', "Pose")
+dock_gps2.addWidget(pg_gps2)
 
 # w0 = pg.PlotWidget(title="Pose (Lambert)")
 # w0.plot(fusion_pose_x, fusion_pose_y, pen=(255,0,0), name="Red curve")

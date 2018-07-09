@@ -1,2 +1,0 @@
-float32 depth
-float32 velocity
