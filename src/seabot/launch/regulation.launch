@@ -1,27 +1,26 @@
 <launch>
     <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
-        <param name="g" value="9.81" />
+<!--        <param name="g" value="9.81" />
         <param name="rho_eau" value="1020.0" />
-        <param name="C_f" value="0.1" />
+        <param name="C_f" value="0.1" />-->
 
         <param name="piston_diameter" value="50.0e-3" />
         <param name="tick_per_rotation" value="48" />
         <param name="screw_thread" value="1.75e-3" />
 
         <param name="frequency" value="1.0" />
-        <param name="offset_piston" value="1360" />
+
         <param name="hysteresis_piston" value="0.6" />
 
         <param name="K_factor" value="0.2" />
         <param name="K_velocity" value="600.0" />
         <param name="K_acc" value="0.0" />
 
-<!--        <param name="piston_position_min" value="0.0" />
-        <param name="piston_position_max" value="2400.0" />-->
-
         <param name="set_point_following" value="10.0" />
 
-        <param name="compression_tick_factor" value="18.0" />
+        <param name="offset_piston" value="1360" />
+        <param name="cf_x2" value="0.0" />
+        <param name="cf_x1" value="-36.0" />
     </node>
 
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

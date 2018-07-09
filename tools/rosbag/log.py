@@ -78,7 +78,7 @@ pg_regulation_set_point = pg.PlotWidget()
 pg_regulation_set_point.addLegend()
 pg_regulation_set_point.plot(time_regulation_debug, regulation_debug_piston_set_point, pen=(255,0,0), name="piston set point")
 if(len(regulation_debug_piston_set_point_offset)>1):
-	pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255), name="piston set point offset")
+	pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255), name="piston state position (without offset)")
 pg_regulation_set_point.setLabel('left', "set point")
 dock_regulation1.addWidget(pg_regulation_set_point)
 
