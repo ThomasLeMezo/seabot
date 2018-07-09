@@ -69,7 +69,7 @@ unsigned short ils_removed = 1;
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
 unsigned short state = IDLE;
 unsigned int cpt_wait = 0;
-#define WAIT_LOOP 10000;
+#define WAIT_LOOP 10000
 
 // Batteries
 #define WARNING_LOW_VOLTAGE 665 // 0.015625 (quantum) / 10.4 (min tension)
@@ -585,13 +585,13 @@ void interrupt_low(){
           }
         }
 
-        if(nb_rx_octet>1){
-          Delay_us(30); // Wait P signal ?
-          if(SSPSTAT.P == 1){
-            i2c_read_data_from_buffer();
-            nb_rx_octet = 0;
-          }
-        }
+        // if(nb_rx_octet>1){
+        //   Delay_us(30); // Wait P signal ?
+        //   if(SSPSTAT.P == 1){
+        //     i2c_read_data_from_buffer();
+        //     nb_rx_octet = 0;
+        //   }
+        // }
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
