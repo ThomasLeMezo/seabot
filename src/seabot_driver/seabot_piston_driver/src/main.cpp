@@ -89,6 +89,9 @@ int main(int argc, char *argv[]){
     const double distance_fast_move = n_private.param<double>("distance_fast_move", 100);
     const int speed_fast_move = n_private.param<int>("speed_fast_move", 30);
 
+    const bool reached_switch_off = n_private.param<bool>("reached_switch_off", true);
+    const int error_interval = n_private.param<int>("error_interval", 6);
+
     const double max_speed = 100.0;
     const double min_speed = 10.0;
     const double nb_step = 20.0;
@@ -124,9 +127,9 @@ int main(int argc, char *argv[]){
         p.get_piston_all_data();
         sleep(1);
     }
-    p.set_error_interval(2);
-    p.set_reached_enable(true);
-    p.set_piston_speed(10, 10);
+    p.set_error_interval(error_interval);
+    p.set_reached_switch_off(reached_switch_off);
+    p.set_piston_speed(speed_in_offset, speed_out_offset);
 
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
@@ -168,7 +171,7 @@ int main(int argc, char *argv[]){
           }
 
           // Analyze depth to change motor speed
-          if(adaptative_speed){
+          if(adaptative_speed && !fast_move){
               int speed_in = (max_speed/nb_step)*round(max(min(depth*speed_in_slope+speed_in_offset, max_speed), min_speed)*(nb_step/max_speed));
               int speed_out = (max_speed/nb_step)*round(max(min(depth*speed_out_slope+speed_out_offset, max_speed), min_speed)*(nb_step/max_speed));
 

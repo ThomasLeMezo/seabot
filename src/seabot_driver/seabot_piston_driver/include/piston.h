@@ -96,10 +96,10 @@ public:
   void set_time_shift_error(const __u8 &val) const;
 
   /**
-   * @brief set_reached_enable
+   * @brief set_reached_switch_off
    * @param val
    */
-  void set_reached_enable(const bool &val) const;
+  void set_reached_switch_off(const bool &val) const;
 
   /**
    * @brief set_piston_reset

@@ -11,7 +11,7 @@ def talker():
   f = 1.0/60.0
 
   while not rospy.is_shutdown():
-    cmd = 50.0*sin(rospy.get_time()*2.0*pi*f) + 500
+    cmd = 100.0*sin(rospy.get_time()*2.0*pi*f) + 1000
     piston_position.publish(cmd)
     
     rospy.sleep(1)

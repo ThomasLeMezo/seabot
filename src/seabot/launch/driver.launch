@@ -16,6 +16,9 @@
             <param name="adaptative_speed" value="false" />
             <param name="speed_in_slope" value="0.0" />
             <param name="speed_out_slope" value="0.0" />
+
+            <param name="reached_switch_off" value="true" />
+            <param name="error_interval" value="6" />
         </node>
 
         <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">

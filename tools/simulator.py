@@ -2,7 +2,7 @@ from math import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-tick_to_volume = (1.75e-3/24.0)*((0.05/2.0)**2)*np.pi
+tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
 ########## Drone characteristics ##########
 g = 9.81

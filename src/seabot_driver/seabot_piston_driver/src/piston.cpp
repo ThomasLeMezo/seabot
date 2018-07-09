@@ -45,9 +45,9 @@ void Piston::set_error_interval(const __u8 &val) const{
     usleep(100);
 }
 
-void Piston::set_reached_enable(const bool &val) const{
+void Piston::set_reached_switch_off(const bool &val) const{
     if(i2c_smbus_write_byte_data(m_file, 0x06, val?0x01:0x00)<0)
-        ROS_WARN("[Piston_driver] I2C bus Failure - Piston reached enable");
+        ROS_WARN("[Piston_driver] I2C bus Failure - Piston Switch off at reached");
     usleep(100);
 }
 
