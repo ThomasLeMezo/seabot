@@ -18,9 +18,11 @@
 
         <param name="set_point_following" value="10.0" />
 
-        <param name="offset_piston" value="1360" />
-        <param name="cf_x2" value="0.0" />
-        <param name="cf_x1" value="-36.0" />
+        <param name="offset_piston" value="1317.84" />
+        <param name="cf_x2" value="2.06936" />
+        <param name="cf_x1" value="-76.6614" />
+        <param name="max_depth_validity" value="17.0" />
+
     </node>
 
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

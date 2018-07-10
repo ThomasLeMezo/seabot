@@ -64,9 +64,10 @@ int main(int argc, char *argv[]){
   const double K_velocity = n_private.param<double>("K_velocity", 300.0);
   //    const double K_acc = n_private.param<double>("K_acc", 100.0);
 
-  const int cf_x0 = n_private.param<int>("offset_piston", 700);
+  const double cf_x0 = n_private.param<double>("offset_piston", 700);
   const double cf_x2 = n_private.param<double>("cf_x2", 0.0);
   const double cf_x1 = n_private.param<double>("cf_x1", 0.0);
+  const double max_depth_validity = n_private.param<double>("max_depth_validity", 17.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -81,7 +82,7 @@ int main(int argc, char *argv[]){
   seabot_depth_regulation::RegulationDebug debug_msg;
 
   double piston_set_point = 0.0;
-  int offset_piston = cf_x0;
+  double offset_piston = cf_x0;
   double piston_set_point_offset = piston_set_point + offset_piston;
   t = ros::Time::now();
   t_old = ros::Time::now() - ros::Duration(1);
@@ -95,7 +96,8 @@ int main(int argc, char *argv[]){
     t_old = t;
     if(depth_set_point>0.2){
       // Polynomial model
-      offset_piston = cf_x2*pow(depth, 2) + cf_x1*depth + cf_x0;
+      double depth_validity = min(depth, max_depth_validity);
+      offset_piston = cf_x2*pow(depth_validity, 2) + cf_x1*depth_validity + cf_x0;
 
       //            double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
       //            double a = K_acc*(-g*(V_piston-depth*compression_factor*tick_to_volume)*rho_eau -0.5*C_f*velocity*abs(velocity)*rho_eau);
