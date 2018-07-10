@@ -10,47 +10,62 @@
 class Waypoint{
 
 public:
-    double north = 0.0;
-    double east = 0.0;
-    double depth = 0.0;
-    ros::WallTime time_start;
+  Waypoint();
+
+  Waypoint(const ros::WallTime &time_start_param, const double &depth_param, const double &north_param, const double &east_param){
+    time_start = time_start_param;
+    depth = depth_param;
+    east = east_param;
+    north = north_param;
+  }
+public:
+  double north = 0.0;
+  double east = 0.0;
+  double depth = 0.0;
+  ros::WallTime time_start;
 };
 
 class SeabotMission
 {
 public:
-    /**
+  /**
      * @brief SeabotMission
      */
-    SeabotMission(std::string folder_path);
+  SeabotMission(std::string folder_path);
 
-    /**
-     * @brief load_mission
-     * @param filename
-     */
-    bool load_mission();
+  //    /**
+  //     * @brief load_mission
+  //     * @param filename
+  //     */
+  //    void load_mission(const std::string &file_name);
 
-    /**
+  /**
      * @brief update_mission
      * @return
      */
-    bool update_mission();
+  bool update_mission();
 
-    /**
+  /**
      * @brief compute_command
      * @param north
      * @param east
      * @param depth
      */
-    void compute_command(double &north, double &east, double &depth, double &ratio);
+  void compute_command(double &north, double &east, double &depth, double &ratio);
+
+  /**
+     * @brief load_mission
+     * @param file_xml
+     */
+  void load_mission(const std::string &file_xml);
 
 private:
-    std::string m_folder_path = "";
-    std::string m_file_name = "";
-    std::vector<Waypoint> m_waypoints;
-    size_t m_current_waypoint = 0;
-    bool    m_mission_enable = false;
-    bool    m_update_mission = true;
+  std::string m_folder_path = "";
+  std::string m_file_name = "";
+  std::vector<Waypoint> m_waypoints;
+  size_t m_current_waypoint = 0;
+  bool    m_mission_enable = false;
+  bool    m_update_mission = true;
 };
 
 #endif // SEABOTMISSION_H

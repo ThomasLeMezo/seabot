@@ -13,18 +13,20 @@ int main(int argc, char *argv[]){
 
 //  piston_position = rospy.Publisher('/regulation/depth_set_point', DepthPose, queue_size=1)
 
-  ros::Publisher waypoint_pub = n.advertise<seabot_mission::Waypoint>("/regulation/depth_set_point", 1);
+  ros::Publisher waypoint_pub = n.advertise<seabot_mission::Waypoint>("set_point", 1);
   seabot_mission::Waypoint waypoint_msg;
 
   // Parameters
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
+  const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
+  const string mission_path = n_private.param<string>("mission_path", "~");
 
   ros::Rate loop_rate(frequency);
-  SeabotMission m("/home/lemezoth/workspaceFlotteur/mission");
+  SeabotMission m(mission_path);
 
   ROS_INFO("Load mission");
-  m.update_mission(); // Update mission file
+  m.load_mission(mission_file_name); // Update mission file
 
   double north, east, depth, ratio;
 

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+
+<offset>
+	<north>1</north>
+	<east>2</east>
+	<time>1531261745</time>
+</offset>
+
+<paths type ="0">
+	<waypoint>
+		<time>10</time>
+		<east>1</east>
+		<north>2</north>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>20</time>
+		<east>1</east>
+		<north>2</north>
+		<depth>5</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>30</time>
+		<east>1</east>
+		<north>2</north>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>40</time>
+		<east>1</east>
+		<north>2</north>
+		<depth>5</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>50</time>
+		<east>1</east>
+		<north>2</north>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>60</time>
+		<east>1</east>
+		<north>2</north>
+		<depth>5</depth>
+	</waypoint>
+</paths>

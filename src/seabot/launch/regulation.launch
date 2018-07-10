@@ -32,6 +32,7 @@
         <param name="hysteresis_circle_in" value="10.0" />
         <param name="hysteresis_circle_out" value="30.0" />
         <param name="linear_speed" value="1.0" />
+        <param name="depth_limit_switch_off" value="0.5" />
     </node>
 
 </launch>

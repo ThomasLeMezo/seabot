@@ -71,7 +71,7 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
-  ros::Subscriber depth_set_point_sub = n.subscribe("depth_set_point", 1, depth_set_point_callback);
+  ros::Subscriber depth_set_point_sub = n.subscribe("/mission/set_point", 1, depth_set_point_callback);
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);

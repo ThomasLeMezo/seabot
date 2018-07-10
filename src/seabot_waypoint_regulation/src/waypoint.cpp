@@ -8,7 +8,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <gpsd_client/GPSFix.h>
 #include <gpsd_client/GPSStatus.h>
-
+#include <seabot_fusion/DepthPose.h>
 #include <cmath>
 
 using namespace std;
@@ -20,6 +20,7 @@ double yaw_imu = 0.0;
 bool is_surface = false;
 double speed = 0.0;
 double yaw_gnss = 0.0;
+double depth = 0.0;
 
 ros::WallTime last_received_set_point;
 ros::WallTime last_received_pose;
@@ -49,6 +50,10 @@ void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
   yaw_gnss = msg->track * M_PI/180.0; // Degree from north
 }
 
+void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
+  depth = msg->depth;
+}
+
 
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "waypoint_node");
@@ -62,9 +67,11 @@ int main(int argc, char *argv[]){
   const double hysteresis_circle_in = n_private.param<double>("hysteresis_circle_in", 10.0);
   const double hysteresis_circle_out = n_private.param<double>("hysteresis_circle_out", 30.0);
   const double linear_speed = n_private.param<double>("linear_speed", 1.0);
+  const double depth_limit_switch_off = n_private.param<double>("depth_limit_switch_off", 0.5);
 
   // Subscriber
   ros::Subscriber pose_sub = n.subscribe("/fusion/pose", 1, pose_callback);
+  ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber mission_sub = n.subscribe("/mission/waypoint", 1, set_point_callback);
   ros::Subscriber imu_sub = n.subscribe("/driver/euler", 1, imu_callback);
   ros::Subscriber gnss_sub = n.subscribe("/driver/fix_extended", 1, gnss_callback);
@@ -104,6 +111,9 @@ int main(int argc, char *argv[]){
     }
 
     if((last_received_set_point-t).toSec()<delta_valid_time && (last_received_pose-t).toSec()<delta_valid_time)
+      enable_regulation = false;
+
+    if(depth>depth_limit_switch_off)
       enable_regulation = false;
 
     if(is_surface && enable_regulation){
