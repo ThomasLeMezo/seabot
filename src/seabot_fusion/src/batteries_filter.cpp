@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include <ros/ros.h>
-#include <power_driver/Battery.h>
+#include <seabot_power_driver/Battery.h>
 
 #include <algorithm>    // std::sort
 #include <deque>
@@ -16,7 +16,7 @@ int filter_mean_width = 3;
 
 bool zero_depth_valid = false;
 
-void batteries_callback(const power_driver::Battery::ConstPtr& msg){
+void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     batteries_memory[0].push_front(msg->battery1);
     batteries_memory[1].push_front(msg->battery2);
     batteries_memory[2].push_front(msg->battery3);
@@ -42,10 +42,10 @@ int main(int argc, char *argv[]){
     ros::Subscriber batteries_sub = n.subscribe("/driver/power/battery", 10, batteries_callback);
 
     // Publisher
-    ros::Publisher batteries_pub = n.advertise<power_driver::Battery>("battery", 1);
+    ros::Publisher batteries_pub = n.advertise<seabot_power_driver::Battery>("battery", 1);
 
     // Loop variables
-    power_driver::Battery msg;
+    seabot_power_driver::Battery msg;
 
     ros::Rate loop_rate(frequency);
     while (ros::ok()){

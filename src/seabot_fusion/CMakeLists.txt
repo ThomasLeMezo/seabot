@@ -16,6 +16,7 @@ find_package(catkin REQUIRED
   std_srvs
   message_generation
   pressure_89bsd_driver
+  seabot_power_driver
 )
 
 ## System dependencies are found with CMake's conventions
@@ -110,7 +111,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp pressure_89bsd_driver
+  CATKIN_DEPENDS roscpp pressure_89bsd_driver seabot_power_driver
 )
 
 ###########

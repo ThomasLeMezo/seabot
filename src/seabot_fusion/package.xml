@@ -17,5 +17,6 @@
   <depend>std_msgs</depend>
   <depend>pressure_89bsd_driver</depend>
   <depend>message_runtime</depend>
+  <depend>seabot_power_driver</depend>
 
   </package>
