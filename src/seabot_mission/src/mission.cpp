@@ -38,6 +38,7 @@ int main(int argc, char *argv[]){
     waypoint_msg.depth = depth;
     waypoint_msg.north = north;
     waypoint_msg.east = east;
+    waypoint_msg.mission_enable = m.is_mission_enable();
     waypoint_pub.publish(waypoint_msg);
 
     loop_rate.sleep();

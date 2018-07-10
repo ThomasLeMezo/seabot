@@ -59,6 +59,12 @@ public:
      */
   void load_mission(const std::string &file_xml);
 
+  /**
+   * @brief is_mission_enable
+   * @return
+   */
+  bool is_mission_enable() const;
+
 private:
   std::string m_folder_path = "";
   std::string m_file_name = "";
@@ -67,5 +73,9 @@ private:
   bool    m_mission_enable = false;
   bool    m_update_mission = true;
 };
+
+inline bool SeabotMission::is_mission_enable() const{
+  return m_mission_enable;
+}
 
 #endif // SEABOTMISSION_H

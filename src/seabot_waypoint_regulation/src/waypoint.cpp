@@ -22,6 +22,8 @@ double speed = 0.0;
 double yaw_gnss = 0.0;
 double depth = 0.0;
 
+bool mission_enable = false;
+
 ros::WallTime last_received_set_point;
 ros::WallTime last_received_pose;
 
@@ -34,6 +36,7 @@ void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
 void set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
   east_set_point = msg->east;
   north_set_point = msg->north;
+  mission_enable = msg->mission_enable;
   if(msg->depth == 0)
     is_surface = true;
   else
@@ -113,7 +116,8 @@ int main(int argc, char *argv[]){
     if((last_received_set_point-t).toSec()<delta_valid_time && (last_received_pose-t).toSec()<delta_valid_time)
       enable_regulation = false;
 
-    if(depth>depth_limit_switch_off)
+    // Limitation of regulation
+    if(!mission_enable || depth>depth_limit_switch_off)
       enable_regulation = false;
 
     if(is_surface && enable_regulation){
