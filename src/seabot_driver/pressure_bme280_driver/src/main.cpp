@@ -8,9 +8,6 @@
 #include <sensor_msgs/FluidPressure.h>
 #include <sensor_msgs/RelativeHumidity.h>
 
-#include <diagnostic_updater/diagnostic_updater.h>
-#include <diagnostic_updater/publisher.h>
-
 #include <pressure_bme280_driver/Bme280Data.h>
 
 #include <stdio.h>
@@ -92,36 +89,10 @@ void print_sensor_mode(struct bme280_dev &dev){
     ROS_INFO("[Pressure_BME280] Sensor Mode = %i", sensor_mode);
 }
 
-void pressure_diagnostic(diagnostic_updater::DiagnosticStatusWrapper &stat){
-  double val = m_pressure/(273.15+m_temperature);
-  if(val>2.7){ // => threshold at 800/(22+273.15)
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::ERROR, "High Pressure detected %f", m_pressure);
-  }
-  else if(m_pressure<600){
-    stat.summaryf(diagnostic_msgs::DiagnosticStatus::WARN, "Low Pressure detected %f", m_pressure);
-  }
-  else{
-    stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "Pressure OK");
-  }
-
-  // add and addf are used to append key-value pairs.
-  stat.add("Internal Pressure", m_pressure);
-}
-
 int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "pressure_bme280");
     ros::NodeHandle n;
-
-    // Diagnostics
-    diagnostic_updater::Updater updater;
-    updater.setHardwareID("none");
-
-    double min_freq = 0.5;
-    double max_freq = 5;
-    diagnostic_updater::HeaderlessTopicDiagnostic pub1_freq("sensor_internal", updater,
-        diagnostic_updater::FrequencyStatusParam(&min_freq, &max_freq, 0.1, 10));
-    updater.add("pressure_internal", pressure_diagnostic);
 
     // Parameters
     ros::NodeHandle n_private("~");
@@ -194,9 +165,7 @@ int main(int argc, char *argv[])
         msg.pressure = m_pressure;
         msg.humidity = m_humidity;
         pub.publish(msg);
-        pub1_freq.tick();
 
-        updater.update();
         loop_rate.sleep();
     }
 
