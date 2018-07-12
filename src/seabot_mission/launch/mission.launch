@@ -3,7 +3,7 @@
     <node name="mission" pkg="seabot_mission" type="mission_node" output="screen" ns="mission" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
         <param name="mission_file_name" value="mission_test.xml" />
-        <param name="mission_path" value="/home/lemezoth/workspaceFlotteur/mission" />
+        <param name="mission_path" value="$(find seabot)/mission" />
     </node>
 
 </launch>

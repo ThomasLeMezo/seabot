@@ -6,6 +6,7 @@
     <node name="mission" pkg="seabot_mission" type="mission_node" output="screen" respawn="false">
         <param name="frequency" value="1.0" />
         <param name="mission_file" value="mission_test.xml"/>
+        <param name="mission_path" value="$(find seabot)/mission" />
     </node>
 
 </launch>
