@@ -50,17 +50,17 @@ int main(int argc, char *argv[]){
 //  const double rho_eau = n_private.param<double>("rho_eau", 1000.0);
 //  const double C_f = n_private.param<double>("C_f", 0.08);
 
-  const double piston_diameter = n_private.param<double>("piston_diameter", 50.0e-3);
-  const double tick_per_rotation = n_private.param<double>("tick_per_rotation", 48);
-  const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
-  const double tick_to_volume = (screw_thread/tick_per_rotation)*pow(piston_diameter/2.0, 2)*M_PI;
-  ROS_INFO("[Sliding_Node] tick_to_volume = %.10e", tick_to_volume);
+//  const double piston_diameter = n_private.param<double>("piston_diameter", 50.0e-3);
+//  const double tick_per_rotation = n_private.param<double>("tick_per_rotation", 48);
+//  const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
+//  const double tick_to_volume = (screw_thread/tick_per_rotation)*pow(piston_diameter/2.0, 2)*M_PI;
+//  ROS_INFO("[Sliding_Node] tick_to_volume = %.10e", tick_to_volume);
 
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double set_point_following = n_private.param<double>("set_point_following", 10.0);
 
   const double K_factor = n_private.param<double>("K_factor", 1.0);
-  const double K_velocity = n_private.param<double>("K_velocity", 300.0);
+  double K_velocity = n_private.param<double>("K_velocity", 300.0);
   //    const double K_acc = n_private.param<double>("K_acc", 100.0);
 
   const double cf_x0 = n_private.param<double>("offset_piston", 700);

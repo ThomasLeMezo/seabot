@@ -7,7 +7,7 @@ from pyqtgraph.dockarea import *
 import datetime
 from PyQt4.QtCore import QTime, QTimer
 
-from scipy import signal
+from scipy import signal, interpolate
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -45,6 +45,7 @@ dock_battery = Dock("Battery")
 dock_piston = Dock("Piston")
 dock_piston2 = Dock("Piston2")
 dock_depth = Dock("Depth")
+dock_temp = Dock("Temperature")
 dock_internal_sensor = Dock("Internal Sensor")
 dock_external_sensor = Dock("External Sensor")
 dock_regulation1 = Dock("Regulation 1")
@@ -66,6 +67,7 @@ area.addDock(dock_regulation3, 'above', dock_battery)
 area.addDock(dock_fusion, 'above', dock_battery)
 area.addDock(dock_gps, 'above', dock_battery)
 area.addDock(dock_gps2, 'above', dock_battery)
+area.addDock(dock_temp, 'above', dock_battery)
 
 #################### Regulation 1 ####################
 pg_regulation_u = pg.PlotWidget()
@@ -285,6 +287,23 @@ dock_gps2.addWidget(pg_gps2)
 # w0 = pg.PlotWidget(title="Pose (Lambert)")
 # w0.plot(fusion_pose_x, fusion_pose_y, pen=(255,0,0), name="Red curve")
 # d0.addWidget(w0)
+
+#################### Temperature / Depth ####################
+
+pg_temp = pg.PlotWidget()
+pg_temp.addLegend()
+
+f_temp = interpolate.interp1d(time_sensor_external, sensor_external_temperature, bounds_error=False)
+f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
+
+time_interp = np.linspace(time_sensor_external[0], time_sensor_external[-1], 50000)
+temperature_interp = f_temp(time_interp)
+depth_interp = f_depth(time_interp)
+
+pg_temp.plot(depth_interp, temperature_interp, pen=(255,0,0), name="temperature")
+pg_temp.setLabel('left', "Temperature")
+dock_temp.addWidget(pg_temp)
+
 
 ###################################################
 
