@@ -290,19 +290,20 @@ dock_gps2.addWidget(pg_gps2)
 
 #################### Temperature / Depth ####################
 
-pg_temp = pg.PlotWidget()
-pg_temp.addLegend()
+if(len(fusion_depth)>0):
+    pg_temp = pg.PlotWidget()
+    pg_temp.addLegend()
 
-f_temp = interpolate.interp1d(time_sensor_external, sensor_external_temperature, bounds_error=False)
-f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
+    f_temp = interpolate.interp1d(time_sensor_external, sensor_external_temperature, bounds_error=False)
+    f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
 
-time_interp = np.linspace(time_sensor_external[0], time_sensor_external[-1], 50000)
-temperature_interp = f_temp(time_interp)
-depth_interp = f_depth(time_interp)
+    time_interp = np.linspace(time_sensor_external[0], time_sensor_external[-1], 50000)
+    temperature_interp = f_temp(time_interp)
+    depth_interp = f_depth(time_interp)
 
-pg_temp.plot(depth_interp, temperature_interp, pen=(255,0,0), name="temperature")
-pg_temp.setLabel('left', "Temperature")
-dock_temp.addWidget(pg_temp)
+    pg_temp.plot(depth_interp, temperature_interp, pen=(255,0,0), name="temperature")
+    pg_temp.setLabel('left', "Temperature")
+    dock_temp.addWidget(pg_temp)
 
 
 ###################################################
