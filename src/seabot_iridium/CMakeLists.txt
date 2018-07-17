@@ -115,6 +115,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
  include
+ TIS/include
+ TIS/platforms/include
  ${catkin_INCLUDE_DIRS}
 )
 
@@ -122,6 +124,18 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/seabot_iridium.cpp
 # )
+
+add_library(TIS
+    TIS/src/tis.c
+    TIS/src/TIS_at.c
+    TIS/src/TIS_rudics.c
+    TIS/src/TIS_sbd.c
+    TIS/platforms/src/TIS_posix.c
+)
+
+target_include_directories(TIS PRIVATE TIS/platforms/include)
+target_include_directories(TIS PRIVATE TIS/include)
+#target_include_directories(TIS PRIVATE TIS/src)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -149,6 +163,7 @@ include_directories(
 ## Specify libraries to link a library or executable target against
  target_link_libraries(iridium_node
    ${catkin_LIBRARIES}
+   TIS
  )
 
 #############

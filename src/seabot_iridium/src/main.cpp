@@ -16,6 +16,8 @@ int main(int argc, char *argv[]){
 
   ros::Rate loop_rate(frequency);
 
+  Iridium iridium();
+
   while (ros::ok()){
     ros::spinOnce();
 

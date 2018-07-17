@@ -22,7 +22,7 @@ int64_t TIS_get_file_size(uint8_t * path) {
 bool TIS_folder_empty(uint8_t * path) {
 	//TODO
 	(void)(path);
-	return TRUE;
+    return true;
 /*
 	DIR* dir = opendir((char*)path);
 	if (dir == NULL) 
