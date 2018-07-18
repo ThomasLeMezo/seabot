@@ -42,6 +42,13 @@ public:
      */
     void enable_com(bool val);
 
+    /**
+     * @brief uart_init
+     * @param fd
+     * @return
+     */
+    int32_t uart_init();
+
 public:
     double m_east = 0.0;
     double m_north = 0.0;

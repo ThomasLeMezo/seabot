@@ -6,6 +6,7 @@
 #include <seabot_power_driver/Battery.h>
 #include <gpsd_client/GPSFix.h>
 #include <gpsd_client/GPSStatus.h>
+#include <seabot_fusion/DepthPose.h>
 
 #include "iridium.h"
 
@@ -15,7 +16,26 @@ double east = 0.0;
 double north = 0.0;
 double speed = 0.0;
 double yaw_gnss = 0.0;
+
+double depth_surface_limit = 0.5;
+double wait_surface_time = 10.0;
+ros::WallTime time_at_surface;
+bool is_surface = false;
+
+Iridium iridium;
+
 array<double, 4> batteries_level ={0.0, 0.0, 0.0, 0.0};
+
+void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
+  if(msg->depth < depth_surface_limit){
+    if(!is_surface){
+      time_at_surface = ros::WallTime::now();
+      is_surface = true;
+    }
+  }
+  else
+    is_surface = false;
+}
 
 void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
   east = msg->east;
@@ -34,6 +54,17 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     batteries_level[3] = msg->battery4;
 }
 
+void timerTISCallback(const ros::WallTimerEvent&){
+  // Test if is at surface for sufficient period of time
+  if(is_surface && (ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
+    iridium.m_east = east;
+    iridium.m_north = north;
+    iridium.add_new_log_file();
+
+    iridium.send_and_receive_data();
+  }
+}
+
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "iridium_node");
   ros::NodeHandle n;
@@ -45,23 +76,17 @@ int main(int argc, char *argv[]){
 
   // Parameters
   ros::NodeHandle n_private("~");
+  ros::WallDuration duration_sleep(n_private.param<int>("duration_sleep", 60*5));
+  wait_surface_time = n_private.param<double>("wait_time_surface", 10.0);
+  depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
 
-  ros::Duration duration_sleep(n_private.param<int>("duration_sleep", 60*5));
-
-  Iridium iridium;
+  iridium.uart_init();
   iridium.enable_com(true);
 
+  ros::WallTimer timer = n.createWallTimer(duration_sleep, timerTISCallback);
+
   while (ros::ok()){
-    ros::spinOnce();
-
-    iridium.m_east = east;
-    iridium.m_north = north;
-
-    iridium.add_new_log_file();
-
-    iridium.send_and_receive_data();
-
-    duration_sleep.sleep();
+    ros::spin();
   }
 
   return 0;

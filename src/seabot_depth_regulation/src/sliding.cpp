@@ -8,6 +8,7 @@
 #include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
 #include <std_srvs/Trigger.h>
+#include <std_srvs/SetBool.h>
 #include <pressure_bme280_driver/Bme280Data.h>
 
 #include <cmath>
@@ -23,6 +24,8 @@ double pressure_limit = 6.2;
 int pressure_limit_count = 5*3;
 int pressure_limit_count_reset = 5*3; // 5Hz * 3s of data
 bool pressure_limit_reached = true;
+
+bool flash_is_enable = false;
 
 double depth_set_point = 0.0;
 ros::Time t;
@@ -67,6 +70,18 @@ void call_zero_depth(){
   }
 }
 
+void call_flash_enable(const bool &val){
+  if(val != flash_is_enable){
+    std_srvs::SetBool srv;
+    srv.request.data = val;
+    if (!service_flash_enable.call(srv)){
+      ROS_ERROR("[DepthRegulation] Failed to call flash enable");
+    }
+    else
+      flash_is_enable = val;
+  }
+}
+
 bool reset_limit_depth(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res){
   pressure_limit_reached = false;
   res.success = true;
@@ -81,15 +96,15 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
-//  const double g = n_private.param<double>("g", 9.81);
-//  const double rho_eau = n_private.param<double>("rho_eau", 1000.0);
-//  const double C_f = n_private.param<double>("C_f", 0.08);
+  //  const double g = n_private.param<double>("g", 9.81);
+  //  const double rho_eau = n_private.param<double>("rho_eau", 1000.0);
+  //  const double C_f = n_private.param<double>("C_f", 0.08);
 
-//  const double piston_diameter = n_private.param<double>("piston_diameter", 50.0e-3);
-//  const double tick_per_rotation = n_private.param<double>("tick_per_rotation", 48);
-//  const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
-//  const double tick_to_volume = (screw_thread/tick_per_rotation)*pow(piston_diameter/2.0, 2)*M_PI;
-//  ROS_INFO("[Sliding_Node] tick_to_volume = %.10e", tick_to_volume);
+  //  const double piston_diameter = n_private.param<double>("piston_diameter", 50.0e-3);
+  //  const double tick_per_rotation = n_private.param<double>("tick_per_rotation", 48);
+  //  const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
+  //  const double tick_to_volume = (screw_thread/tick_per_rotation)*pow(piston_diameter/2.0, 2)*M_PI;
+  //  ROS_INFO("[Sliding_Node] tick_to_volume = %.10e", tick_to_volume);
 
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double set_point_following = n_private.param<double>("set_point_following", 10.0);
@@ -105,6 +120,8 @@ int main(int argc, char *argv[]){
 
   const double max_depth_reset_zero = n_private.param<double>("max_depth_reset_zero", 1.0);
   const double max_speed_reset_zero = n_private.param<double>("max_speed_reset_zero", 0.1);
+
+  const double limit_depth_flash_enable = n_private.param<double>("limit_depth_flash_enable", 0.5);
 
   pressure_limit = n_private.param<double>("pressure_limit", 6.2);
 
@@ -126,6 +143,10 @@ int main(int argc, char *argv[]){
   service_zero_depth = n.serviceClient<std_srvs::Trigger>("/fusion/zero_depth");
   call_zero_depth();
   ROS_INFO("[DepthRegulation] Reset zero");
+
+  ROS_INFO("[DepthRegulation] Wait for flash service from power_driver");
+  ros::service::waitForService("/driver/power/flash_led");
+  service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash_led");
 
   // Server
   ros::ServiceServer server_reset_limit_depth = n.advertiseService("reset_limit_depth", reset_limit_depth);
@@ -192,6 +213,11 @@ int main(int argc, char *argv[]){
         call_zero_depth();
     }
     position_pub.publish(position_msg);
+
+    if(depth < limit_depth_flash_enable)
+      call_flash_enable(true);
+    else
+      call_flash_enable(false);
     loop_rate.sleep();
   }
 

@@ -25,17 +25,15 @@
 using namespace std;
 
 Iridium::Iridium(){
-    uart_init(m_uart_fd);   // Init uart
-
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
     m_path_received_full = string(homedir) + "/" + m_path_received;
 }
 
-int32_t uart_init(int &fd){
-    fd = open( "/dev/ttyAMA0", O_RDWR|O_NOCTTY|O_NDELAY);
+int32_t Iridium::uart_init(){
+    m_uart_fd = open( "/dev/ttyAMA0", O_RDWR|O_NOCTTY|O_NDELAY);
     /* Error Handling */
-    if ( fd < 0 ){
+    if ( m_uart_fd < 0 ){
         ROS_WARN("[Iridium] ERROR %i opening /dev/ttyAMA0 : %s", errno, strerror(errno));
         return TIS_ERROR_SERIAL_ERROR;
     }
@@ -52,7 +50,7 @@ int32_t uart_init(int &fd){
     //	PARENB - Parity enable
     //	PARODD - Odd parity (else even)
     struct termios options;
-    tcgetattr(fd, &options);
+    tcgetattr(m_uart_fd, &options);
 //    cfmakeraw(&options);
 //    options.c_cflag &= ~CSIZE;
 //    options.c_cflag |= (CLOCAL | CREAD);
@@ -85,7 +83,7 @@ int32_t uart_init(int &fd){
     options.c_lflag = 0;
 
 
-    tcsetattr(fd, TCSADRAIN, &options);
+    tcsetattr(m_uart_fd, TCSADRAIN, &options);
 
     return TIS_ERROR_SUCCESS;
 }

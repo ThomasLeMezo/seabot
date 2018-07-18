@@ -21,13 +21,13 @@ def callback_battery(data):
     if(data.battery1 < 10.0 and data.battery2 < 10.0 and data.battery3<10.0 and data.battery4 < 10.0):
       battery_warning = True
 
-def set_zero_depth():
-  global fusion_zero_depth
-  try:
-      resp = fusion_zero_depth()
-      rospy.loginfo("[Regulation_Talker] Zero ")
-  except rospy.ServiceException, e:
-      rospy.logwarn("[Regulation_Talker] Fail to call Zero Depth");
+#def set_zero_depth():
+#  global fusion_zero_depth
+#  try:
+#      resp = fusion_zero_depth()
+#      rospy.loginfo("[Regulation_Talker] Zero ")
+#  except rospy.ServiceException, e:
+#      rospy.logwarn("[Regulation_Talker] Fail to call Zero Depth");
 
 def set_depth(val, duration=0):
   global piston_position
@@ -45,18 +45,18 @@ def talker():
   rospy.init_node('regulation_talker_node', anonymous=True)
 
   piston_position = rospy.Publisher('/regulation/depth_set_point', Waypoint, queue_size=1)
-  rospy.wait_for_service('/fusion/zero_depth')
+#  rospy.wait_for_service('/fusion/zero_depth')
   rospy.wait_for_service('/driver/power/flash_led')
   rospy.wait_for_service('/driver/power/sleep_mode')
-  fusion_zero_depth = rospy.ServiceProxy('/fusion/zero_depth', Trigger)
+#  fusion_zero_depth = rospy.ServiceProxy('/fusion/zero_depth', Trigger)
   flash_enable = rospy.ServiceProxy('/driver/power/flash_led', SetBool)
   sleep_enable = rospy.ServiceProxy('/driver/power/sleep_mode', Empty)
 
-  #Wait 30s before init
+  #Wait 6s before init
   rospy.loginfo("[Regulation_Talker] Wait 6 s")
-  rospy.sleep(3.0)
-  set_zero_depth()
-  rospy.sleep(3.0)
+  rospy.sleep(6.0)
+#  set_zero_depth()
+#  rospy.sleep(3.0)
 
   for d in range(1, 17, 2):
     rospy.loginfo("[Regulation_Talker] Depth %i", d)
