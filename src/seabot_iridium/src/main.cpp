@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
   ros::Duration duration_sleep(n_private.param<int>("duration_sleep", 60*5));
 
   Iridium iridium;
-  iridium.enable_com(false);
+  iridium.enable_com(true);
 
   while (ros::ok()){
     ros::spinOnce();
@@ -58,7 +58,8 @@ int main(int argc, char *argv[]){
     iridium.m_north = north;
 
     iridium.add_new_log_file();
-//    iridium.send_and_receive_data();
+
+    iridium.send_and_receive_data();
 
     duration_sleep.sleep();
   }

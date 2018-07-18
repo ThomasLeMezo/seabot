@@ -33,7 +33,7 @@ Iridium::Iridium(){
 }
 
 int32_t uart_init(int &fd){
-    fd = open( "/dev/ttyAMA0", O_RDWR| O_NONBLOCK | O_NDELAY );
+    fd = open( "/dev/ttyAMA0", O_RDWR|O_NOCTTY|O_NDELAY);
     /* Error Handling */
     if ( fd < 0 ){
         ROS_WARN("[Iridium] ERROR %i opening /dev/ttyAMA0 : %s", errno, strerror(errno));
@@ -53,9 +53,33 @@ int32_t uart_init(int &fd){
     //	PARODD - Odd parity (else even)
     struct termios options;
     tcgetattr(fd, &options);
-    options.c_cflag = B19200 | CS8 | PARENB | CLOCAL | CREAD;		//<Set baud rate
-    tcflush(fd, TCIFLUSH);
-    tcsetattr(fd, TCSANOW, &options);
+    cfmakeraw(&options);
+    options.c_cflag &= ~CSIZE;
+    options.c_cflag |= (CLOCAL | CREAD);
+    options.c_cflag |= CS8;
+    options.c_cflag |= B19200;
+
+    // NOPARITY
+    options.c_cflag &= ~CMSPAR;
+    options.c_cflag &= ~PARENB;
+    options.c_cflag &= ~PARODD;
+    // ONESTOPBIT
+    options.c_cflag &= ~CSTOPB;
+
+    options.c_lflag &= ~(ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ISIG);
+    // Raw input.
+    options.c_iflag &= ~(IGNBRK | BRKINT | INLCR | IGNCR | ICRNL);
+    options.c_iflag &= ~(IXON | IXOFF | IXANY);
+    options.c_iflag &= ~ISTRIP;
+    options.c_iflag &= ~PARMRK;
+    options.c_iflag |= IGNPAR;
+    // Raw output.
+    options.c_oflag &= ~(OPOST | ONLCR | ONOCR | ONLRET | OCRNL);
+
+    options.c_cc[VMIN] = 0; // Minimum number of characters to read.
+    options.c_cc[VTIME] = 1000/100; // Time to wait for every character read in tenths of seconds. (ms/100)
+
+    tcsetattr(fd, TCSADRAIN, &options);
 
     return TIS_ERROR_SUCCESS;
 }
@@ -148,6 +172,7 @@ bool Iridium::iridium_power(const bool &enable){
 ////Cete fonction prend en paramètre un tableau contenant des pointeurs vers le nom des fichiers à envoyer ainsi que le nombre de fichier à renvoyer.
 bool Iridium::send_and_receive_data(){
     if(m_files_to_send.size()>0  && m_enable_iridium){
+        ROS_INFO("[Iridium] Start send/receive data");
         if (TIS_init(&m_tis,
                      reinterpret_cast<uint8_t *>(&m_path_received_full[0]),				//"CMD" est le chemin du dossier qui contiendra les fichier reçus.
                      TIS_MODEM_9602,	//Modèle du modem

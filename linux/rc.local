@@ -16,17 +16,17 @@
 # Diseablt HDMI on boot (-p to re-enable)
 /usr/bin/tvservice -o
 
-# Power On Iridium (Active high)
-echo "5" > /sys/class/gpio/export
-sleep 0.1
-echo "out" > /sys/class/gpio/gpio5/direction
-echo "1" > /sys/class/gpio/gpio5/value
-
 # Iridium DTR (Active low)
 echo "20" > /sys/class/gpio/export
 sleep 0.1
 echo "out" > /sys/class/gpio/gpio20/direction
 echo "0" > /sys/class/gpio/gpio20/value
+
+# Power On Iridium (Active high)
+echo "5" > /sys/class/gpio/export
+sleep 0.1
+echo "out" > /sys/class/gpio/gpio5/direction
+echo "1" > /sys/class/gpio/gpio5/value
 
 #roslaunch ~/inobo.launch > ~/log_roslaunch &
 exit 0
