@@ -35,6 +35,7 @@ int main(int argc, char *argv[]){
 
     m.compute_command(north, east, depth, ratio);
 
+    waypoint_msg.depth_only = m.is_depth_only();
     waypoint_msg.depth = depth;
     waypoint_msg.north = north;
     waypoint_msg.east = east;

@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
   // Parameters
   ros::NodeHandle n_private("~");
   double frequency = n_private.param<double>("frequency", 10.0);
-  float coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 15.0);
+  float coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 9.0);
   double delay_stop = n_private.param<float>("delay_stop", 3.0);
 
   // Subscriber

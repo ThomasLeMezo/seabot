@@ -1,0 +1,10 @@
+<launch>
+
+    <include file="$(find seabot)/launch/base.launch"/>
+    <include file="$(find seabot)/launch/regulation.launch"/>
+
+    <node name="regulation_script" pkg="seabot_depth_regulation" type="regulation_script.py" output="screen">
+    </node>
+
+</launch>
+

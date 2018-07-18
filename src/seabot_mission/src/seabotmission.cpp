@@ -82,19 +82,34 @@ void SeabotMission::load_mission(const std::string &file_xml){
 
   try{
     offset_north = tree.get_child("offset.north").get_value<double>();
-    offset_east = tree.get_child("offset.east").get_value<double>();
-    offset_time = tree.get_child("offset.time").get_value<int>();
+  } catch (std::exception const&  ex){
+      ROS_INFO("[Seabot_Mission] No north offset defined %s", ex.what());
   }
-  catch (std::exception const&  ex) {
-    ROS_INFO("[Seabot_Mission] No offset defined (north, east, time) %s", ex.what());
+
+  try{
+  offset_east = tree.get_child("offset.east").get_value<double>();
+  } catch (std::exception const&  ex){
+      ROS_INFO("[Seabot_Mission] No east offset defined %s", ex.what());
   }
+
+  try{
+  offset_time = tree.get_child("offset.time").get_value<int>();
+  } catch (std::exception const&  ex){
+    ROS_INFO("[Seabot_Mission] No time offset defined %s", ex.what());
+  }
+
+  int mission_type = tree.get_child("paths.time").get_value<int>();
+  if(mission_type == 1)
+    m_depth_only = true;
 
   BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("paths")){
     if(v.first == "waypoint"){
       double north, east, depth, posix_time;
       try{
-        north = v.second.get_child("north").get_value<double>() + offset_north;
-        east = v.second.get_child("east").get_value<double>() + offset_east;
+        if(!m_depth_only){
+          north = v.second.get_child("north").get_value<double>() + offset_north;
+          east = v.second.get_child("east").get_value<double>() + offset_east;
+        }
         depth = v.second.get_child("depth").get_value<double>();
         posix_time = v.second.get_child("time").get_value<double>() + offset_time;
       }

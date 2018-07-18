@@ -65,6 +65,12 @@ public:
    */
   bool is_mission_enable() const;
 
+  /**
+   * @brief is_depth_only
+   * @return
+   */
+  bool is_depth_only() const;
+
 private:
   std::string m_folder_path = "";
   std::string m_file_name = "";
@@ -72,10 +78,15 @@ private:
   size_t m_current_waypoint = 0;
   bool    m_mission_enable = false;
   bool    m_update_mission = true;
+  bool    m_depth_only = false;
 };
 
 inline bool SeabotMission::is_mission_enable() const{
   return m_mission_enable;
+}
+
+inline bool SeabotMission::is_depth_only() const{
+  return m_depth_only;
 }
 
 #endif // SEABOTMISSION_H
