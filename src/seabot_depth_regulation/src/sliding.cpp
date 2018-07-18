@@ -32,6 +32,7 @@ ros::Time t;
 ros::Time t_old;
 
 ros::ServiceClient service_zero_depth;
+ros::ServiceClient service_flash_enable;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
