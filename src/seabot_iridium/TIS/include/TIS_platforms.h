@@ -1,15 +1,15 @@
 /***********************************************************************//**
  * \file  TIS_platforms.h
- * \brief Ensemble des éléments spécifiques à une plateforme utilisés par TIS.
+ * \brief Ensemble des Ã©lÃ©ments spÃ©cifiques Ã  une plateforme utilisÃ©s par TIS.
  *
- * Les éléments spécifiques à une plateforme sont principalement les types variables, la librairie utilise
- * les types POSIX, il faut donc les redéfinir sur les plateforme qui ne sont pas POSIX.
+ * Les Ã©lÃ©ments spÃ©cifiques Ã  une plateforme sont principalement les types variables, la librairie utilise
+ * les types POSIX, il faut donc les redÃ©finir sur les plateforme qui ne sont pas POSIX.
  *
- * Les implémentations des fonctions sont présente dans /platforms/src.
+ * Les implÃ©mentations des fonctions sont prÃ©sente dans /platforms/src.
  *
- * \author Clément Bonnet
+ * \author ClÃ©ment Bonnet
  * \date 2011-2012
- * \copyright Laboratoire de Physique des Océans. Ce code est couvert par la license CeCILL-B.
+ * \copyright Laboratoire de Physique des OcÃ©ans. Ce code est couvert par la license CeCILL-B.
  ***********************************************************************/
 
 #ifndef TIS_PLATFORMS_H
@@ -32,14 +32,14 @@
 #ifndef PATH_SEPARATOR
 /***********************************************************************//**
         * \def PATH_SEPARATOR
-        * \brief Caractère de séparation de dossier dans les chemins.
+        * \brief CaractÃ¨re de sÃ©paration de dossier dans les chemins.
         ***********************************************************************/
 #define PATH_SEPARATOR "/"
 #endif
 
 /***********************************************************************//**
 * \def FALSE
-* \brief Valeur booléenne correspondant à FAUX, compatible avec le type bool.
+* \brief Valeur boolÃ©enne correspondant Ã  FAUX, compatible avec le type bool.
 ***********************************************************************/
 #ifndef FALSE
 #define FALSE 0
@@ -47,16 +47,16 @@
 
 /***********************************************************************//**
 * \def TRUE
-* \brief Valeur booléenne correspondant à VRAI, compatible avec le type bool.
+* \brief Valeur boolÃ©enne correspondant Ã  VRAI, compatible avec le type bool.
 ***********************************************************************/
 #ifndef TRUE
 #define TRUE 1
 #endif // TRUE
 
 /***********************************************************************//**
- * \brief Crée un fichier temporaire.
+ * \brief CrÃ©e un fichier temporaire.
  *
- * \return Un pointeur vers le descripteur de fichier du fichier temporaire crée.
+ * \return Un pointeur vers le descripteur de fichier du fichier temporaire crÃ©e.
  ***********************************************************************/
 FILE * TIS_create_temporary_file();
 
@@ -65,7 +65,7 @@ FILE * TIS_create_temporary_file();
  *
  * \param[in] tfp Pointeur vers le descripteur de fichier du fichier temporaire.
  *
- * \return 0  en cas de succès.
+ * \return 0  en cas de succÃ¨s.
  * \return -1 en cas d'erreur.
  ***********************************************************************/
 int32_t TIS_delete_temporary_file(FILE * tfp);

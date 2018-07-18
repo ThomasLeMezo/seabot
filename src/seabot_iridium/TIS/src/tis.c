@@ -9,8 +9,8 @@
 #include <stdlib.h>
 
 int32_t TIS_init(TIS_properties *	properties,
-				 uint8_t *			receive_folder,
-				 int32_t			modem,
+                 uint8_t *          receive_folder,
+                 int32_t			modem,
 				 uint64_t			IMEI_number,
 				 uint32_t			service,
 				 uint8_t *			pin,
@@ -26,13 +26,13 @@ int32_t TIS_init(TIS_properties *	properties,
 				 
 	int32_t i;
 		
-	//Vérifie les paramètres d'entrée
-	if ((properties == NULL) || (receive_folder == NULL) || (send_data == NULL) || (receive_data == NULL) || (wait_data == NULL) || (flush_TX == NULL) || (flush_RX == NULL)) {
+	//VÃ©rifie les paramÃ¨tres d'entrÃ©e
+    if ((properties == NULL) || (receive_folder == NULL) || (send_data == NULL) || (receive_data == NULL) || (wait_data == NULL) || (flush_TX == NULL) || (flush_RX == NULL)) {
 		return TIS_ERROR_UNDEFINED_PARAMETER;
 	}
 	
-	//Copie le chemin du dossier de réception
-	strcpy(properties->receive_folder, receive_folder);
+	//Copie le chemin du dossier de rÃ©ception
+    strcpy(properties->receive_folder, receive_folder);
 		
 	//Copie de la configuration du modem
 	properties->modem.sbd = TIS_modems[modem].sbd;
@@ -54,7 +54,7 @@ int32_t TIS_init(TIS_properties *	properties,
 		properties->pin[4] = '\0';
 	}
 	
-	//Désactive le mode rudics si aucun numéro d'appel n'est fournit
+	//DÃ©sactive le mode rudics si aucun numÃ©ro d'appel n'est fournit
 	if (rudics_dial_number == 0) {
 		properties->modem.rudics = FALSE;
 	}
@@ -71,16 +71,16 @@ int32_t TIS_init(TIS_properties *	properties,
 		return TIS_ERROR_UNDEFINED_PARAMETER;
 	}
 	
-	//Copie le chemin du dossier temporaire utilisé en mode RUDICS
+	//Copie le chemin du dossier temporaire utilisÃ© en mode RUDICS
 	if (rudics_temporary_folder != NULL) {
-		strcpy(properties->rudics_temporary_folder, rudics_temporary_folder);
+        strcpy(properties->rudics_temporary_folder, rudics_temporary_folder);
 	}
 	
 	properties->sent_files_path = NULL;
 	properties->sent_files_progress = NULL;
 	properties->sent_files_part_number = NULL;
 	
-	//Alloue la mémoire pour stocker les informations sur les fichiers à envoyer si besoin
+	//Alloue la mÃ©moire pour stocker les informations sur les fichiers Ã  envoyer si besoin
 	if (sent_files_count != 0) {
 		properties->sent_files_path = calloc(MAXPATHLEN * sent_files_count, sizeof(uint8_t));
 		properties->sent_files_progress = calloc(sent_files_count, sizeof(int64_t));
@@ -142,7 +142,7 @@ void TIS_clean(TIS_properties * properties) {
 }
 
 int32_t TIS_add_file_to_send(TIS_properties * properties, uint8_t * path) {
-	//Vérifie qu'il reste de la place dans la liste
+	//VÃ©rifie qu'il reste de la place dans la liste
 	if (properties->sent_files_count + 1 > properties->sent_files_allocated) {
 		return -TIS_ERROR_LIST_FULL;
 	}
@@ -158,7 +158,7 @@ int32_t TIS_add_file_to_send(TIS_properties * properties, uint8_t * path) {
 	properties->sent_files_progress[properties->sent_files_count] = 0;
 	properties->sent_files_part_number[properties->sent_files_count] = 0;
 	
-	//incrémente le compteur de fichiers
+	//incrÃ©mente le compteur de fichiers
 	properties->sent_files_count++;
 	
 	//Renvoie l'index du ficheir dans la liste
@@ -239,14 +239,14 @@ int32_t TIS_transmission(TIS_properties * properties, int32_t maximum_consecutiv
 	properties->RUDICS_disconnections = 0;
 	properties->RUDICS_incomplete_files = 0;
 	
-	//Si le modem à une carte SIM, envoie le code PIN
+	//Si le modem Ã  une carte SIM, envoie le code PIN
 	if (properties->modem.sim_card == TRUE) {
 		result = TIS_AT_CPIN(properties, properties->pin);
 		if (result != TIS_ERROR_SUCCESS) {
 			return result;
 		}
 		
-		//Attend que le modem soit associé avec le réseau
+		//Attend que le modem soit associÃ© avec le rÃ©seau
 		errors = 0;
 		do {
 			//Attend 10 seconde pour laisser le temps du modem pour s'enregistrer
@@ -262,7 +262,7 @@ int32_t TIS_transmission(TIS_properties * properties, int32_t maximum_consecutiv
 		}
 	}
 		
-	//Lance la session du protocole adapté				
+	//Lance la session du protocole adaptÃ©				
 	if (properties->service == TIS_SERVICE_SBD) {
 		return TIS_SBD_transmission(properties, maximum_consecutive_errors);
 	} else {
@@ -275,7 +275,7 @@ int32_t TIS_signal_strenght(TIS_properties * properties) {
 	int32_t strength;
 	int32_t result;
 	
-	//Si le modem à une carte SIM, envoie le code PIN
+	//Si le modem Ã  une carte SIM, envoie le code PIN
 	if (properties->modem.sim_card == TRUE) {
 		result = TIS_AT_CPIN(properties, properties->pin);
 		if (result != TIS_ERROR_SUCCESS) {

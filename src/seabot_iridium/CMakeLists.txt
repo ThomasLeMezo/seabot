@@ -2,14 +2,17 @@ cmake_minimum_required(VERSION 2.8.3)
 project(seabot_iridium)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
- add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
  roscpp
-)
+ seabot_fusion
+ seabot_power_driver
+ gpsd_client
+ )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -101,11 +104,11 @@ find_package(catkin REQUIRED
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES seabot_iridium
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
+ INCLUDE_DIRS include
+ # LIBRARIES TIS
+ CATKIN_DEPENDS roscpp seabot_fusion seabot_power_driver gpsd_client
+ #  DEPENDS system_lib
+ )
 
 ###########
 ## Build ##
@@ -114,27 +117,25 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include
  TIS/include
- TIS/platforms/include
+ include
  ${catkin_INCLUDE_DIRS}
-)
+ )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/seabot_iridium.cpp
 # )
 
-add_library(TIS
-    TIS/src/tis.c
-    TIS/src/TIS_at.c
-    TIS/src/TIS_rudics.c
-    TIS/src/TIS_sbd.c
-    TIS/platforms/src/TIS_posix.c
-)
+#add_library(TIS
+#    TIS/src/tis.c
+#    TIS/src/TIS_at.c
+#    TIS/src/TIS_rudics.c
+#    TIS/src/TIS_sbd.c
+#    TIS/src/TIS_posix.c
+#)
 
-target_include_directories(TIS PRIVATE TIS/platforms/include)
-target_include_directories(TIS PRIVATE TIS/include)
+#target_include_directories(TIS PUBLIC TIS/include)
 #target_include_directories(TIS PRIVATE TIS/src)
 
 ## Add cmake target dependencies of the library
@@ -145,9 +146,15 @@ target_include_directories(TIS PRIVATE TIS/include)
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(iridium_node
-     src/main.cpp
-     src/iridium.cpp
+add_executable(iridium_node
+ TIS/src/tis.c
+ TIS/src/TIS_at.c
+ TIS/src/TIS_rudics.c
+ TIS/src/TIS_sbd.c
+ TIS/src/TIS_posix.c
+
+ src/iridium.cpp
+ src/main.cpp
  )
 
 ## Rename C++ executable without prefix
@@ -158,12 +165,11 @@ target_include_directories(TIS PRIVATE TIS/include)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
- add_dependencies(iridium_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(iridium_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(iridium_node
-   ${catkin_LIBRARIES}
-   TIS
+target_link_libraries(iridium_node
+ ${catkin_LIBRARIES}
  )
 
 #############

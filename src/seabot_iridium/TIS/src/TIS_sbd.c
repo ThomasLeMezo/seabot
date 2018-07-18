@@ -14,8 +14,8 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 		
 	int32_t MO_status;						//Resultat de l'envoi d'un message SBD
 	int32_t MT_queued;						//Indique le nombre de message en attente dans le satellite
-	int32_t MT_queued_previous;				//Indique le nombre de message en attente dans le satellite lors de la derniËre session sans erreur
-	int32_t MT_status;						//Resultat de la rÈception d'un message SBD
+	int32_t MT_queued_previous;				//Indique le nombre de message en attente dans le satellite lors de la derni√®re session sans erreur
+	int32_t MT_status;						//Resultat de la r√©ception d'un message SBD
 	
 	int32_t result;
 	int32_t consecutive_errors;
@@ -28,7 +28,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 	
 	sent_file = NULL;
 		
-	consecutive_errors = 0; //Met ‡ jour le compteur d'erreur consÈcutives
+	consecutive_errors = 0; //Met √† jour le compteur d'erreur cons√©cutives
 		
 	//Vide les tampons SBD du modem
 	result = TIS_AT_SBDD(properties, TRUE, TRUE); 
@@ -45,9 +45,9 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 			uint8_t	sent_file_extension[5];
 			uint8_t MO_message[TIS_SBD_SIZE_MAX];	//Message sortant
 			int32_t MO_count;						//Taille du message sortant
-			//Si le prÈcÈdent est terminÈ
+			//Si le pr√©c√©dent est termin√©
 			if (sent_file == NULL) {
-				//On cherche le prochain fichier ‡ envoyer dans la liste
+				//On cherche le prochain fichier √† envoyer dans la liste
 				while (TIS_get_file_progress(properties, sent_file_index) == 100) {
 					sent_file_index++;
 					//Si on atteint la fin de la liste, on quitte
@@ -67,14 +67,14 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 					fseek(sent_file, 0, SEEK_END);
 					sent_file_size = ftell(sent_file);
 					
-					//Si le fichier avais dÈj‡ ÈtÈ envoyÈ en partie, se dÈplace dans le fichier pour continuer l'envoi
+					//Si le fichier avais d√©j√† √©t√© envoy√© en partie, se d√©place dans le fichier pour continuer l'envoi
 					fseek(sent_file, properties->sent_files_progress[sent_file_index],SEEK_SET);
 				}
 			}
 			
 			//Si le fichier est ouvert
 			if (sent_file != NULL) {
-				//GÈnÈration de l'en-tÍte
+				//G√©n√©ration de l'en-t√™te
 				result = sscanf(TIS_get_file_path(properties, sent_file_index) + strlen(TIS_get_file_path(properties, sent_file_index)) - 12, "%"PRIX32".%s", &sent_file_datation, sent_file_extension);
 				if (result != 2) {
 					return TIS_ERROR_INVALID_FILE_NAME;
@@ -86,7 +86,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 				MO_message[2] = sent_file_datation >> 8;
 				MO_message[3] = sent_file_datation;
 				
-				//Ajoute le numÈro de la partie
+				//Ajoute le num√©ro de la partie
 				MO_message[4] = properties->sent_files_part_number[sent_file_index] >> 8;
 				MO_message[5] = properties->sent_files_part_number[sent_file_index] & 0xFF;
 								
@@ -99,13 +99,13 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 					MO_message[4] = MO_message[4] | TIS_SBD_FILE_TYPE_COMMAND;
 				}	
 				
-				//Lit le fichier et copie les donnÈes dans le message
+				//Lit le fichier et copie les donn√©es dans le message
 				MO_count = fread(MO_message + TIS_SBD_MESSAGE_HEADER_SIZE, 1, properties->modem.sbd_size_max - TIS_SBD_MESSAGE_HEADER_SIZE, sent_file);	
 				MO_count = MO_count + TIS_SBD_MESSAGE_HEADER_SIZE;
 											
-				//DÈtection de la fin de fichier
+				//D√©tection de la fin de fichier
 				if (feof(sent_file)) {
-					//On met ‡ jour l'en-tÍte du fichier
+					//On met √† jour l'en-t√™te du fichier
 					MO_message[4] = MO_message[4] | TIS_SBD_HEADER_END_MESSAGE;
 					//On ferme le fichier
 					fclose(sent_file);
@@ -155,11 +155,11 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 		properties->SBD_waiting_messages = MT_queued;
 		
 		if (MO_status == TIS_AT_SBDI_MO_STATUS_SUCCESS) {
-			consecutive_errors = 0; //Remet ‡ jour le compteur d'erreur consÈcutives
+			consecutive_errors = 0; //Remet √† jour le compteur d'erreur cons√©cutives
 			properties->SBD_sent_without_error++;
 			
 			if (properties->sent_files_progress != NULL) {
-				//Met ‡ jour l'avancement du fichier
+				//Met √† jour l'avancement du fichier
 				if (sent_file == NULL) {
 					properties->sent_files_progress[sent_file_index-1] = sent_file_size;
 				} else {
@@ -178,7 +178,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 		if (MT_status == TIS_AT_SBDI_MT_STATUS_SUCCESS) {
 			uint8_t MT_message[TIS_SBD_SIZE_MAX];	//Message entrant
 			int32_t MT_count;						//Taille du message entrant
-			consecutive_errors = 0; //Remet ‡ jour le compteur d'erreur consÈcutives
+			consecutive_errors = 0; //Remet √† jour le compteur d'erreur cons√©cutives
 	
 			properties->SBD_received_without_error++;
 			
@@ -215,7 +215,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 	int8_t current_file_name[13];
 	
 	
-	//GÈnËre le nom du fichier
+	//G√©n√®re le nom du fichier
 	sprintf(current_file_name, "%08"PRIX32".", (uint32_t)((uint32_t)message[0] << 24 | (uint32_t)message[1] << 16 | (uint32_t)message[2] << 8 | (uint32_t)message[3]));
 
 	if ((message[4] & TIS_SBD_FILE_TYPE_MASK) == TIS_SBD_FILE_TYPE_SCIENTIFIC_DATA) {
@@ -235,7 +235,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 		current_file_name[12] = '\0';
 	}
 		
-	//Extrait le numÈro de message du message
+	//Extrait le num√©ro de message du message
 	number = ((message[4] & 0x1F) << 8) | message[5];
 	
 	//Stocke le message sur le disque
@@ -243,7 +243,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 		//Si c'est le premier message d'un fichier
 		uint8_t received_file_path[MAXPATHLEN];
 		
-		//Recherche un emplacement non utilisÈ dans la liste
+		//Recherche un emplacement non utilis√© dans la liste
 		current_index = 0;
 		while ((properties->SBD_file_status[current_index] != TIS_SBD_INCOMMING_FILE_EMPTY) && (current_index < TIS_SBD_INCOMMING_FILE_QUEUE_SIZE)) {
 			current_index++;
@@ -255,19 +255,19 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 		//Stocke le nom du fichier
 		strcpy(properties->SBD_file_name[current_index],current_file_name);
 						
-		//GÈnÈre le chemin du fichier
+		//G√©n√©re le chemin du fichier
 		sprintf(received_file_path, "%s"PATH_SEPARATOR"%s", properties->receive_folder, current_file_name);
 
-		//CrÈe le fichier
+		//Cr√©e le fichier
 		properties->SBD_files[current_index] = fopen(received_file_path,"w");
 		if (properties->SBD_files[current_index] == NULL) {
 			return TIS_ERROR_FILE_ACCESS;
 		}
 		
-		//On Ècrit les donnÈes dans le fichier
+		//On √©crit les donn√©es dans le fichier
 		fwrite(message + TIS_SBD_MESSAGE_HEADER_SIZE, 1 , message_count - TIS_SBD_MESSAGE_HEADER_SIZE, properties->SBD_files[current_index]);
 		
-		//On met ‡ jour le status
+		//On met √† jour le status
 		if ((message[4] & TIS_SBD_HEADER_END_MESSAGE) == TIS_SBD_HEADER_END_MESSAGE) {
 			properties->SBD_file_status[current_index] = TIS_SBD_INCOMMING_FILE_COMPLET;
 		} else {
@@ -278,13 +278,13 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 		bool found = FALSE;
 		uint32_t previous_index;
 		
-		//Recherche si ce message est la suite d'un message prÈcÈdent
+		//Recherche si ce message est la suite d'un message pr√©c√©dent
 		for (previous_index = 0; previous_index < TIS_SBD_INCOMMING_FILE_QUEUE_SIZE; previous_index++) {
-			//Si c'est le dÈbut d'un fichier
+			//Si c'est le d√©but d'un fichier
 			if (properties->SBD_file_status[previous_index] == TIS_SBD_INCOMMING_FILE_BEGINNING) {
-				//VÈrifie si c'est le bon fichier
+				//V√©rifie si c'est le bon fichier
 				if (strcmp(properties->SBD_file_name[previous_index], current_file_name) == 0) {
-					//test si c'est la partie prÈcÈdente
+					//test si c'est la partie pr√©c√©dente
 					if (properties->SBD_file_number[previous_index] == number - 1) {
 						found = TRUE;
 						break;
@@ -294,7 +294,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 		}
 		
 		if (found == FALSE) {
-			//Recherche un emplacement non utilisÈ dans la liste
+			//Recherche un emplacement non utilis√© dans la liste
 			current_index = 0;
 			while ((properties->SBD_file_status[current_index] != TIS_SBD_INCOMMING_FILE_EMPTY) && (current_index < TIS_SBD_INCOMMING_FILE_QUEUE_SIZE)) {
 				current_index++;
@@ -303,19 +303,19 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 				return TIS_ERROR_TOO_MANY_FILES_PARTS;
 			}
 			
-			//CrÈe le fichier temporaire
+			//Cr√©e le fichier temporaire
 			properties->SBD_files[current_index] = TIS_create_temporary_file();
 			if (properties->SBD_files[current_index] == NULL) {
 				return TIS_ERROR_FILE_ACCESS;
 			}
 			
-			//On Ècrit le message dans le fichier
+			//On √©crit le message dans le fichier
 			fwrite(message + TIS_SBD_MESSAGE_HEADER_SIZE, 1 , message_count - TIS_SBD_MESSAGE_HEADER_SIZE, properties->SBD_files[current_index]);
 			
 			//Stocke le nom du fichier
 			strcpy(properties->SBD_file_name[current_index],current_file_name);
 			
-			//On met ‡ jour le status
+			//On met √† jour le status
 			if ((message[4] & TIS_SBD_HEADER_END_MESSAGE) == TIS_SBD_HEADER_END_MESSAGE) {
 				properties->SBD_file_status[current_index] = TIS_SBD_INCOMMING_FILE_END;
 			} else {
@@ -323,13 +323,13 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 			}
 			
 		} else {
-			//Change la valeur de current_index pour Ècrire ‡ la suite du fichier prÈcÈdent
+			//Change la valeur de current_index pour √©crire √† la suite du fichier pr√©c√©dent
 			current_index = previous_index;
 			
-			//On Ècrit le message dans le fichier
+			//On √©crit le message dans le fichier
 			fwrite(message + TIS_SBD_MESSAGE_HEADER_SIZE, 1 , message_count - TIS_SBD_MESSAGE_HEADER_SIZE, properties->SBD_files[current_index]);
 			
-			//On met ‡ jour le status
+			//On met √† jour le status
 			if ((message[4] & TIS_SBD_HEADER_END_MESSAGE) == TIS_SBD_HEADER_END_MESSAGE) {
 				properties->SBD_file_status[current_index] = TIS_SBD_INCOMMING_FILE_COMPLET;
 			} else {
@@ -337,45 +337,45 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 			}
 		}
 	}
-	//On met ‡ jour le numÈro du message
+	//On met √† jour le num√©ro du message
 	properties->SBD_file_number[current_index] = number;
 	
-	//VÈrifie que le fichier courrant contient le dÈbut du fichier, sinon ne fait rien
+	//V√©rifie que le fichier courrant contient le d√©but du fichier, sinon ne fait rien
 	if (properties->SBD_file_status[current_index] == TIS_SBD_INCOMMING_FILE_BEGINNING) {			
 		bool found;
 		
 		do {
-			//On recherche si l'on a dÈj‡ la suite du fichier
+			//On recherche si l'on a d√©j√† la suite du fichier
 			uint32_t next_index;
 			
 			found = FALSE;
 			for (next_index = 0; next_index < TIS_SBD_INCOMMING_FILE_QUEUE_SIZE; next_index++) {
 				//test si le fichier est valide
 				if (properties->SBD_file_status[next_index] != TIS_SBD_INCOMMING_FILE_EMPTY) {
-					//VÈrifier qu'il s'agit du mÍme fichier
+					//V√©rifier qu'il s'agit du m√™me fichier
 					if (strcmp(properties->SBD_file_name[next_index], current_file_name) == 0) {
 						if (properties->SBD_file_number[next_index] == number + 1) {
 							//Si l'on trouve la suite du fichier, on l'ajoute au fichier
 							int32_t result;
 							
-							//On Ècrit la suite du fichier
+							//On √©crit la suite du fichier
 							result = TIS_file_append(properties->SBD_files[current_index], properties->SBD_files[next_index]);
 							if (result != TIS_ERROR_SUCCESS) {
 								return result;
 							}
 							
-							//Ferme le fichier temporaire, cel‡ le supprime Ègalement
+							//Ferme le fichier temporaire, cel√† le supprime √©galement
 							TIS_delete_temporary_file(properties->SBD_files[next_index]);
 													
-							//Met ‡ jour le status du fichier courrant
+							//Met √† jour le status du fichier courrant
 							if (properties->SBD_file_status[next_index] == TIS_SBD_INCOMMING_FILE_END) {
 								properties->SBD_file_status[current_index] = TIS_SBD_INCOMMING_FILE_COMPLET;
 							}
 							
-							//Met ‡ jour le status du fichier temporaire
+							//Met √† jour le status du fichier temporaire
 							properties->SBD_file_status[next_index] = TIS_SBD_INCOMMING_FILE_EMPTY;
 							
-							//Met ‡ jour le numÈro du message
+							//Met √† jour le num√©ro du message
 							properties->SBD_file_number[current_index] = properties->SBD_file_number[next_index];
 							
 							found = TRUE;
@@ -389,7 +389,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 	
 	//Si le fichier est complet
 	if (properties->SBD_file_status[current_index] == TIS_SBD_INCOMMING_FILE_COMPLET) {
-		//On ferme le fichier et libËre la liste
+		//On ferme le fichier et lib√®re la liste
 		fclose(properties->SBD_files[current_index]);
 		properties->SBD_file_status[current_index] = TIS_SBD_INCOMMING_FILE_EMPTY;
 	}

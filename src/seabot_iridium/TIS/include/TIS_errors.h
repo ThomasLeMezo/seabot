@@ -1,12 +1,12 @@
 /***********************************************************************//**
  * \file  TIS_errors.h
- * \brief Déclaration des différents codes d'erreurs.
+ * \brief DÃ©claration des diffÃ©rents codes d'erreurs.
  *
- * Certaines de ces erreurs sont utilisées en interne par la librairie et ne serons retournés par aucune fonction publique.
+ * Certaines de ces erreurs sont utilisÃ©es en interne par la librairie et ne serons retournÃ©s par aucune fonction publique.
  *
- * \author Clément Bonnet
+ * \author ClÃ©ment Bonnet
  * \date 2011-2012
- * \copyright Laboratoire de Physique des Océans. Ce code est couvert par la license CeCILL-B.
+ * \copyright Laboratoire de Physique des OcÃ©ans. Ce code est couvert par la license CeCILL-B.
  ***********************************************************************/
 
 #ifndef TIS_ERRORS_H
@@ -14,7 +14,7 @@
 
 /***********************************************************************//**
  * \def TIS_ERROR_SUCCESS
- * \brief La fonction s'est terminé avec succès.
+ * \brief La fonction s'est terminÃ© avec succÃ¨s.
  ***********************************************************************/
 #define TIS_ERROR_SUCCESS						 0
 
@@ -26,94 +26,94 @@
 
 /***********************************************************************//**
  * \def TIS_ERROR_NOT_AVAILABLE
- * \brief La fonction ne peut s'exécuter car le modem ne supporte pas la fonctionnalitée associée.
+ * \brief La fonction ne peut s'exÃ©cuter car le modem ne supporte pas la fonctionnalitÃ©e associÃ©e.
  ***********************************************************************/
 #define TIS_ERROR_NOT_AVAILABLE 				 2
 
 /***********************************************************************//**
  * \def TIS_ERROR_SERIAL_ERROR
- * \brief Une erreur de lecture ou d'écriture s'est produite sur la liaison série.
+ * \brief Une erreur de lecture ou d'Ã©criture s'est produite sur la liaison sÃ©rie.
  *
- * La lecture de données attendues mais pas présente non considéré comme une erreur.
- * A la réception de cette erreur, il est conseillé de redémarrer le modem.
+ * La lecture de donnÃ©es attendues mais pas prÃ©sente non considÃ©rÃ© comme une erreur.
+ * A la rÃ©ception de cette erreur, il est conseillÃ© de redÃ©marrer le modem.
  ***********************************************************************/
 #define TIS_ERROR_SERIAL_ERROR  				 3
 
 /***********************************************************************//**
  * \def TIS_ERROR_FILE_ACCESS
- * \brief Une erreur lors de l'écriture ou de la lecture d'un fichier s'est produite.
+ * \brief Une erreur lors de l'Ã©criture ou de la lecture d'un fichier s'est produite.
  ***********************************************************************/
 #define TIS_ERROR_FILE_ACCESS  					 4
 
 /***********************************************************************//**
  * \def TIS_ERROR_UNDEFINED_PARAMETER
- * \brief Au moins un des paramètres donnés à la fonction n'est pas défini.
+ * \brief Au moins un des paramÃ¨tres donnÃ©s Ã  la fonction n'est pas dÃ©fini.
  ***********************************************************************/
 #define TIS_ERROR_UNDEFINED_PARAMETER	  		 5
 
 /***********************************************************************//**
  * \def TIS_ERROR_CHECK_SUM
- * \brief Une erreur de transfert a été détecté entre l'instrument et le modem Iridium.
+ * \brief Une erreur de transfert a Ã©tÃ© dÃ©tectÃ© entre l'instrument et le modem Iridium.
  *
- * A la réception de cette erreur, il est conseillé de redémarrer le modem.
+ * A la rÃ©ception de cette erreur, il est conseillÃ© de redÃ©marrer le modem.
  ***********************************************************************/
 #define TIS_ERROR_CHECK_SUM				  		 6
 
 /***********************************************************************//**
  * \def TIS_ERROR_TIMEOUT
- * \brief Un timeout a été dépassé dans la communication avec le modem.
+ * \brief Un timeout a Ã©tÃ© dÃ©passÃ© dans la communication avec le modem.
  *
- * A la réception de cette erreur, il est conseillé de redémarrer le modem.
+ * A la rÃ©ception de cette erreur, il est conseillÃ© de redÃ©marrer le modem.
  ***********************************************************************/
 #define TIS_ERROR_TIMEOUT				  		 7
 
 /***********************************************************************//**
  * \def TIS_ERROR_OVERFLOW
- * \brief Un tampon a été dépassé.
+ * \brief Un tampon a Ã©tÃ© dÃ©passÃ©.
  ***********************************************************************/
 #define TIS_ERROR_OVERFLOW				  		 8
 
 /***********************************************************************//**
  * \def TIS_ERROR_DIALUP
- * \brief Une erreur s'est produite lors d'un appel RUDICS, soit le numéro est incorrect, soit la réception satellite n'est pas suffisante.
+ * \brief Une erreur s'est produite lors d'un appel RUDICS, soit le numÃ©ro est incorrect, soit la rÃ©ception satellite n'est pas suffisante.
  ***********************************************************************/
 #define TIS_ERROR_DIALUP						 9
 
 /***********************************************************************//**
  * \def TIS_ERROR_NO_SPACE_AVAILABLE
- * \brief Il n'y a plus assez de place sur le disque ou la carte mémoire.
+ * \brief Il n'y a plus assez de place sur le disque ou la carte mÃ©moire.
  ***********************************************************************/
 #define TIS_ERROR_NO_SPACE_AVAILABLE			10
 
 /***********************************************************************//**
  * \def TIS_ERROR_RUDICS_IDENTIFICATION_FAILED
- * \brief Une erreur s'est produite lors de l'identification de l'instrument au début d'une session RUDICS.
+ * \brief Une erreur s'est produite lors de l'identification de l'instrument au dÃ©but d'une session RUDICS.
  ***********************************************************************/
 #define TIS_ERROR_RUDICS_IDENTIFICATION_FAILED 	11
 
 /***********************************************************************//**
  * \def TIS_ERROR_TOO_MANY_CONSECUTIVE_ERRORS
- * \brief La communication s'est terminé car trop d'erreurs consécutives se sont produites. Une partie des données a cependant été transféré.
+ * \brief La communication s'est terminÃ© car trop d'erreurs consÃ©cutives se sont produites. Une partie des donnÃ©es a cependant Ã©tÃ© transfÃ©rÃ©.
  ***********************************************************************/
 #define TIS_ERROR_TOO_MANY_CONSECUTIVE_ERRORS	12
 
 /***********************************************************************//**
  * \def TIS_ERROR_NOT_REGISTERED
- * \brief Le modem n'a pas réussi à s'enregistrer avec la constellation.
+ * \brief Le modem n'a pas rÃ©ussi Ã  s'enregistrer avec la constellation.
  *
- * A la réception de cette erreur, il est conseillé de redémarrer le modem.
+ * A la rÃ©ception de cette erreur, il est conseillÃ© de redÃ©marrer le modem.
  ***********************************************************************/
 #define TIS_ERROR_NOT_REGISTERED				13
 
 /***********************************************************************//**
  * \def TIS_ERROR_FILE_TOO_LARGE
- * \brief Le ficher envoyé est trop gros.
+ * \brief Le ficher envoyÃ© est trop gros.
  ***********************************************************************/
 #define TIS_ERROR_FILE_TOO_LARGE				14
 
 /***********************************************************************//**
  * \def TIS_ERROR_TOO_MANY_FILES_PARTS
- * \brief Cette erreur se produit lorsque la liste des parties de fichiers en cours de réception est pleine.
+ * \brief Cette erreur se produit lorsque la liste des parties de fichiers en cours de rÃ©ception est pleine.
  *
  * Il vous fait alors augmenter la valeur de TIS_SBD_INCOMMING_FILE_QUEUE_SIZE.
  *
@@ -123,13 +123,13 @@
 
 /***********************************************************************//**
  * \def TIS_ERROR_INVALID_FILE_NAME
- * \brief Le nom d'un fichier envoyé est incorrect.
+ * \brief Le nom d'un fichier envoyÃ© est incorrect.
  ***********************************************************************/
 #define TIS_ERROR_INVALID_FILE_NAME				16
 
 /***********************************************************************//**
  * \def TIS_ERROR_NOT_ENOUGH_MEMORY
- * \brief Le système n'a pas assez de mémoire, cette erreur se produit lorsque la librairie alloue de la mémoire dynamiquement et que la mémoire est trop faible.
+ * \brief Le systÃ¨me n'a pas assez de mÃ©moire, cette erreur se produit lorsque la librairie alloue de la mÃ©moire dynamiquement et que la mÃ©moire est trop faible.
  ***********************************************************************/
 #define TIS_ERROR_NOT_ENOUGH_MEMORY				17
 

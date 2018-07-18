@@ -9,7 +9,7 @@ static int64_t TIS_RUDICS_current_file_progress;
 
 int32_t TIS_RUDICS_transmission(TIS_properties * properties, int32_t maximum_consecutive_errors) {
 	
-	//Permet de couper la partie RUDICS afin de réduire la taille de code si ce mode n'est jamais utilisé
+	//Permet de couper la partie RUDICS afin de rÃ©duire la taille de code si ce mode n'est jamais utilisÃ©
 	#if DISABLE_RUDICS == TRUE
 		return TIS_ERROR_NOT_AVAILABLE;
 	#else
@@ -35,7 +35,7 @@ int32_t TIS_RUDICS_transmission(TIS_properties * properties, int32_t maximum_con
 				TIS_flush_TX,
 				NULL);
 	
-	//Génère le fichier d'identification
+	//GÃ©nÃ¨re le fichier d'identification
 	identification = TIS_create_temporary_file();
 	if (identification == NULL) {
 		return TIS_ERROR_NO_SPACE_AVAILABLE;
@@ -68,21 +68,21 @@ int32_t TIS_RUDICS_transmission(TIS_properties * properties, int32_t maximum_con
 		return TIS_ERROR_RUDICS_IDENTIFICATION_FAILED;
 	}
 		
-	//On récupère les fichiers de configurations via Zmodem
-	printf("début réception zmodem\n");
+	//On rÃ©cupÃ¨re les fichiers de configurations via Zmodem
+	printf("dÃ©but rÃ©ception zmodem\n");
 	zmodem_recv_files(&zm, properties->rudics_temporary_folder, &bytes_received);
-	printf("fin réception zmodem\n");
+	printf("fin rÃ©ception zmodem\n");
 	
-	//On envoi les fichiers de données via Zmodem
-	printf("début envoi zmodem\n");
+	//On envoi les fichiers de donnÃ©es via Zmodem
+	printf("dÃ©but envoi zmodem\n");
 	
 	for (i = 0; i < properties->sent_files_count; i++) {
-		//Vérifie si le fichier a déjà été envoyé
+		//VÃ©rifie si le fichier a dÃ©jÃ  Ã©tÃ© envoyÃ©
 		if (TIS_get_file_progress(properties, i) == 100) {
 			continue;
 		}
 		
-		//ouvre le fichier à envoyer
+		//ouvre le fichier Ã  envoyer
 		sent_file = fopen(TIS_get_file_path(properties, i), "r");
 		if (sent_file == NULL) {
 			return TIS_ERROR_FILE_ACCESS;
@@ -163,9 +163,9 @@ void TIS_file_received(void * properties, int8_t* name) {
 	char buffer[BUFSIZ] = {'\0'} ;
 	size_t len = 0;
 	
-	//Génère les chemins
-	sprintf(copy_path, "%s"PATH_SEPARATOR"%s", ((TIS_properties*)properties)->receive_folder,  name);
-	sprintf(received_path, "%s"PATH_SEPARATOR"%s", ((TIS_properties*)properties)->rudics_temporary_folder,  name);
+	//GÃ©nÃ¨re les chemins
+    sprintf(copy_path, "%s" PATH_SEPARATOR "%s", ((TIS_properties*)properties)->receive_folder,  name);
+    sprintf(received_path, "%s" PATH_SEPARATOR "%s", ((TIS_properties*)properties)->rudics_temporary_folder,  name);
 	
 	//Ouvre les fichiers
     copy = fopen(copy_path, "wb");

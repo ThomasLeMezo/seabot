@@ -1,18 +1,18 @@
 /***********************************************************************//**
  * \file  TIS_modems.h
- * \brief Définitions des différents modems.
+ * \brief DÃ©finitions des diffÃ©rents modems.
  *
- * Les modems sont définies par une constante permettant de les indexer dans la structure TIS_modems.
- * Les modems possédant les mêmes caractéristiques pointes sur la même entrée.
+ * Les modems sont dÃ©finies par une constante permettant de les indexer dans la structure TIS_modems.
+ * Les modems possÃ©dant les mÃªmes caractÃ©ristiques pointes sur la mÃªme entrÃ©e.
  *
- * Pour rajouter un modem, si celui-ci est similaire à un modem déjà présent,
- * rajoutez une constante ayant comme valeur le modem de référence.
- * Si le modem possède des caractéristiques différentes des modems déjà présents,
- * rajoutez une entrée dans la structure TIS_modems puis une constante correspondant à ce modem.
+ * Pour rajouter un modem, si celui-ci est similaire Ã  un modem dÃ©jÃ  prÃ©sent,
+ * rajoutez une constante ayant comme valeur le modem de rÃ©fÃ©rence.
+ * Si le modem possÃ¨de des caractÃ©ristiques diffÃ©rentes des modems dÃ©jÃ  prÃ©sents,
+ * rajoutez une entrÃ©e dans la structure TIS_modems puis une constante correspondant Ã  ce modem.
  *
- * \author Clément Bonnet
+ * \author ClÃ©ment Bonnet
  * \date 2011-2012
- * \copyright Laboratoire de Physique des Océans. Ce code est couvert par la license CeCILL-B.
+ * \copyright Laboratoire de Physique des OcÃ©ans. Ce code est couvert par la license CeCILL-B.
  ***********************************************************************/
 
 
@@ -23,20 +23,20 @@
 
 /***********************************************************************//**
  * \struct TIS_modem
- * \brief Représentation des caractéristiques d'un modem Iridium.
+ * \brief ReprÃ©sentation des caractÃ©ristiques d'un modem Iridium.
  ***********************************************************************/
 typedef struct {
-	bool sbd;				/**< Indique si le modem gère le mode SBD.*/
-	bool rudics;			/**< Indique si le modem gère le mode RUDICS.*/
-	bool sim_card;			/**< Indique si le modem possède une carte SIM.*/
-	bool gps;				/**< Indique si le modem possède une puce GPS.*/
-	uint32_t sbd_size_max;	/**< Taille maximale d'un SBD en émission.*/
+	bool sbd;				/**< Indique si le modem gÃ¨re le mode SBD.*/
+	bool rudics;			/**< Indique si le modem gÃ¨re le mode RUDICS.*/
+	bool sim_card;			/**< Indique si le modem possÃ¨de une carte SIM.*/
+	bool gps;				/**< Indique si le modem possÃ¨de une puce GPS.*/
+	uint32_t sbd_size_max;	/**< Taille maximale d'un SBD en Ã©mission.*/
 } TIS_modem;
 
 
 /***********************************************************************//**
  * \var TIS_modems
- * \brief Variable globale contenant l'ensembles de propriétés des modems supportés par la librairie.
+ * \brief Variable globale contenant l'ensembles de propriÃ©tÃ©s des modems supportÃ©s par la librairie.
  ***********************************************************************/
 //								  SBD	RUDICS SIM	  GPS	 taille SBD
 static TIS_modem TIS_modems[] = {{TRUE, FALSE, FALSE, FALSE, 340}, 		//modem 9601 ou similaire
@@ -45,27 +45,27 @@ static TIS_modem TIS_modems[] = {{TRUE, FALSE, FALSE, FALSE, 340}, 		//modem 960
 
 /***********************************************************************//**
  * \def TIS_MODEM_9601
- * \brief Index des caractéristiques du modem 9601 dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem 9601 dans TIS_modems.
  ***********************************************************************/
 #define TIS_MODEM_9601			0
 
 /***********************************************************************//**
  * \def TIS_MODEM_A3LA_X
- * \brief Index des caractéristiques du modem A3LA X de NAL dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem A3LA X de NAL dans TIS_modems.
  ***********************************************************************/
 #define TIS_MODEM_A3LA_X		1
 
 /***********************************************************************//**
  * \def TIS_MODEM_A3LA_XG
- * \brief Index des caractéristiques du modem A3LA XG de NAL dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem A3LA XG de NAL dans TIS_modems.
  ***********************************************************************/
 #define TIS_MODEM_A3LA_XG		2
 
 /***********************************************************************//**
  * \def TIS_MODEM_9602
- * \brief Index des caractéristiques du modem 9602 dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem 9602 dans TIS_modems.
  *
- * Ce modem posséde les mêmes caractéristiques que le 9601.
+ * Ce modem possÃ©de les mÃªmes caractÃ©ristiques que le 9601.
  *
  * \sa TIS_MODEM_9601
  ***********************************************************************/
@@ -73,9 +73,9 @@ static TIS_modem TIS_modems[] = {{TRUE, FALSE, FALSE, FALSE, 340}, 		//modem 960
 
 /***********************************************************************//**
  * \def TIS_MODEM_A3LA_XM
- * \brief Index des caractéristiques du modem A3LA XM de NAL dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem A3LA XM de NAL dans TIS_modems.
  *
- * Ce modem possède les mêmes caractéristiques que le A3LA X.
+ * Ce modem possÃ¨de les mÃªmes caractÃ©ristiques que le A3LA X.
  *
  * \sa TIS_MODEM_A3LA_X
  ***********************************************************************/
@@ -83,9 +83,9 @@ static TIS_modem TIS_modems[] = {{TRUE, FALSE, FALSE, FALSE, 340}, 		//modem 960
 
 /***********************************************************************//**
  * \def TIS_MODEM_A3LA_XP
- * \brief Index des caractéristiques du modem A3LA XP de NAL dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem A3LA XP de NAL dans TIS_modems.
  *
- * Ce modem possède les mêmes caractéristiques que le A3LA X.
+ * Ce modem possÃ¨de les mÃªmes caractÃ©ristiques que le A3LA X.
  *
  * \sa TIS_MODEM_A3LA_X
  ***********************************************************************/
@@ -93,9 +93,9 @@ static TIS_modem TIS_modems[] = {{TRUE, FALSE, FALSE, FALSE, 340}, 		//modem 960
 
 /***********************************************************************//**
  * \def TIS_MODEM_A3LA_XL
- * \brief Index des caractéristiques du modem A3LA XL de NAL dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem A3LA XL de NAL dans TIS_modems.
  *
- * Ce modem possède les mêmes caractéristiques que le A3LA X.
+ * Ce modem possÃ¨de les mÃªmes caractÃ©ristiques que le A3LA X.
  *
  * \sa TIS_MODEM_A3LA_X
  ***********************************************************************/
@@ -103,9 +103,9 @@ static TIS_modem TIS_modems[] = {{TRUE, FALSE, FALSE, FALSE, 340}, 		//modem 960
 
 /***********************************************************************//**
  * \def TIS_MODEM_A3LA_XGP
- * \brief Index des caractéristiques du modem A3LA XGP de NAL dans TIS_modems.
+ * \brief Index des caractÃ©ristiques du modem A3LA XGP de NAL dans TIS_modems.
  *
- * Ce modem possède les mêmes caractéristiques que le A3LA XG.
+ * Ce modem possÃ¨de les mÃªmes caractÃ©ristiques que le A3LA XG.
  *
  * \sa TIS_MODEM_A3LA_XG
  ***********************************************************************/

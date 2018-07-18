@@ -1,194 +1,226 @@
 #include "iridium.h"
 
-#include "tis.h"
 #include "ros/ros.h"
 
 #include <stdio.h>      // standard input / output functions
 #include <stdlib.h>
-#include <string.h>     // string function definitions
 #include <unistd.h>     // UNIX standard function definitions
 #include <fcntl.h>      // File control definitions
 #include <errno.h>      // Error number definitions
 #include <termios.h>    // POSIX terminal control definitions
 
-Iridium::Iridium()
-{
+#include <boost/date_time/local_time/local_time.hpp>
+#include <iomanip>
+#include <ctime>
 
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <sstream>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+using namespace std;
+
+Iridium::Iridium(){
+    uart_init(m_uart_fd);   // Init uart
+
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+    m_path_received_full = string(homedir) + "/" + m_path_received;
 }
 
-int32_t UART_init(int &fd){
+int32_t uart_init(int &fd){
     fd = open( "/dev/ttyAMA0", O_RDWR| O_NONBLOCK | O_NDELAY );
     /* Error Handling */
     if ( fd < 0 ){
         ROS_WARN("[Iridium] ERROR %i opening /dev/ttyAMA0 : %s", errno, strerror(errno));
         return TIS_ERROR_SERIAL_ERROR;
     }
+
+
+    //CONFIGURE THE UART (http://www.cplusplus.com/forum/general/219754/)
+    //The flags (defined in /usr/include/termios.h - see http://pubs.opengroup.org/onlinepubs/007908799/xsh/termios.h.html):
+    //	Baud rate:- B1200, B2400, B4800, B9600, B19200, B38400, B57600, B115200, B230400, B460800, B500000, B576000, B921600, B1000000, B1152000, B1500000, B2000000, B2500000, B3000000, B3500000, B4000000
+    //	CSIZE:- CS5, CS6, CS7, CS8
+    //	CLOCAL - Ignore modem status lines
+    //	CREAD - Enable receiver
+    //	IGNPAR = Ignore characters with parity errors
+    //	ICRNL - Map CR to NL on input (Use for ASCII comms where you want to auto correct end of line characters - don't use for bianry comms!)
+    //	PARENB - Parity enable
+    //	PARODD - Odd parity (else even)
+    struct termios options;
+    tcgetattr(fd, &options);
+    options.c_cflag = B19200 | CS8 | PARENB | CLOCAL | CREAD;		//<Set baud rate
+    tcflush(fd, TCIFLUSH);
+    tcsetattr(fd, TCSANOW, &options);
+
+    return TIS_ERROR_SUCCESS;
+}
+
+int32_t uart_send_data(void *serial_struct, uint8_t *data, int32_t count){
+    ssize_t error = write(*((int *)serial_struct), data, count);
+
+    if(error<0){
+        ROS_WARN("[Iridium] ERROR %i writing to /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_SERIAL_ERROR;
+    }
     else
         return TIS_ERROR_SUCCESS;
 }
 
-//int32_t UART_send_data(void *serial_struct, uint8_t *data, int32_t count)
-//{
-//    int iResult = SendDataIridium((IRIDIUM*)serial_struct, data, count);
+int32_t uart_receive_data(void *serial_struct, uint8_t *data, int32_t count){
+    ssize_t error = read(*((int *)serial_struct), data, count);
 
-//    switch (iResult)
-//    {
-//    case EXIT_SUCCESS:
-//        return TIS_ERROR_SUCCESS;
-//    case EXIT_TIMEOUT:
-//        return TIS_ERROR_TIMEOUT;
-//    default:
-//        return TIS_ERROR_SERIAL_ERROR;
-//    }
-//}
+    if(error<0){
+        ROS_WARN("[Iridium] ERROR %i reading /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_SERIAL_ERROR;
+    }
+    else
+        return TIS_ERROR_SUCCESS;
+}
 
-//int32_t UART_receive_data(void *serial_struct, uint8_t *data, int32_t count)
-//{
-//    int iResult = RecvDataIridium((IRIDIUM*)serial_struct, data, count);
+int32_t uart_wait_data(void *serial_struct, uint32_t timeout){
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(*((int *)serial_struct), &fds);
+    struct timeval timeout_struct = {timeout, 0 }; /* 10 seconds */
+    int error = select(*((int *)serial_struct)+1, &fds, NULL, NULL, &timeout_struct);
 
-//    switch (iResult)
-//    {
-//    case EXIT_SUCCESS:
-//        return TIS_ERROR_SUCCESS;
-//    case EXIT_TIMEOUT:
-//        return TIS_ERROR_TIMEOUT;
-//    default:
-//        return TIS_ERROR_SERIAL_ERROR;
-//    }
-//}
+    if(error<0){
+        ROS_WARN("[Iridium] ERROR %i waiting data from /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_SERIAL_ERROR;
+    }
+    else if(error == 0){
+        ROS_INFO("[Iridium] ERROR %i timeout waiting data from /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_TIMEOUT;
+    }
+    else
+        return TIS_ERROR_SUCCESS;
+}
 
-//int32_t UART_wait_data(void *serial_struct, uint32_t timeout)
-//{
-//    int iResult = WaitDataIridium((IRIDIUM*)serial_struct, timeout);
+int32_t uart_flush_TX(void *serial_struct){
+    int error = tcflush(*((int *)serial_struct),TCOFLUSH);
+    if(error<0){
+        ROS_WARN("[Iridium] ERROR %i flushing TX (TCOFLUSH) /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_SERIAL_ERROR;
+    }
+    else
+        return TIS_ERROR_SUCCESS;
+}
 
-//    switch (iResult)
-//    {
-//    case EXIT_SUCCESS:
-//        return TIS_ERROR_SUCCESS;
-//    case EXIT_TIMEOUT:
-//        return TIS_ERROR_TIMEOUT;
-//    default:
-//        return TIS_ERROR_SERIAL_ERROR;
-//    }
-//}
+int32_t uart_flush_RX(void *serial_struct){
+    int error = tcflush(*((int *)serial_struct),TCIFLUSH);
+    if(error<0){
+        ROS_WARN("[Iridium] ERROR %i flushing RX (TCIFLUSH) /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_SERIAL_ERROR;
+    }
+    else
+        return TIS_ERROR_SUCCESS;
+}
 
-//int32_t UART_flush_TX(void *serial_struct)
-//{
-//    UNREFERENCED_PARAMETER(serial_struct);
+int32_t uart_release(void *serial_struct){
+    int error = close(*((int *)serial_struct));
+    if(error<0){
+        ROS_WARN("[Iridium] ERROR %i closing /dev/ttyAMA0 : %s", errno, strerror(errno));
+        return TIS_ERROR_SERIAL_ERROR;
+    }
+    else
+        return TIS_ERROR_SUCCESS;
+}
 
-//    // This function is useless...
+bool Iridium::iridium_power(const bool &enable){
+    string gpio_file = "/sys/class/gpio/gpio" + to_string(m_gpio_power) + "/value";
 
-//    return TIS_ERROR_SUCCESS;
-//}
-
-//int32_t UART_flush_RX(void *serial_struct)
-//{
-//    if (PurgeDataIridium((IRIDIUM*)serial_struct) != EXIT_SUCCESS)
-//    {
-//        return TIS_ERROR_SERIAL_ERROR;
-//    }
-
-//    return TIS_ERROR_SUCCESS;
-//}
-
-//int32_t UART_release(void *serial_struct)
-//{
-//    if (ReleaseIridium((IRIDIUM*)serial_struct) != EXIT_SUCCESS)
-//    {
-//        return TIS_ERROR_SERIAL_ERROR;
-//    }
-
-//    return TIS_ERROR_SUCCESS;
-//}
-
-//int32_t Iridium_ON()
-//{
-//    if (SetDeviceCurrentState("CurIridiumState.txt", 1) != EXIT_SUCCESS)
-//    {
-//        return TIS_ERROR_FILE_ACCESS;
-//    }
-
-//    // Time to start.
-//    mSleep(STARTUP_DELAY_IRIDIUM);
-
-//    return TIS_ERROR_SUCCESS;
-//}
-
-//int32_t Iridium_OFF()
-//{
-//    if (SetDeviceCurrentState("CurIridiumState.txt", 0) != EXIT_SUCCESS)
-//    {
-//        return TIS_ERROR_FILE_ACCESS;
-//    }
-
-//    // Time to stop.
-//    mSleep(SHUTDOWN_DELAY_IRIDIUM);
-
-//    return TIS_ERROR_SUCCESS;
-//}
-
-
-//Cete fonction prend en paramètre un tableau contenant des pointeurs vers le nom des fichiers à envoyer ainsi que le nombre de fichier à renvoyer.
-bool Iridium::send_and_receive_data(std::vector<std::string> &files){
-    TIS_properties tis; //Déclaration de la structure de la librairie
-//    int i = 0;
-    //Initialise la liaison série (dépend de votre plateforme et non de la librairie)
-    int fd;
-    UART_init(fd);
-
-    //Initialise la structure de la librairie
-    if (TIS_init(&tis,
-                 "CMD",				//"CMD" est le chemin du dossier qui contiendra les fichier reçus.
-                 TIS_MODEM_9602,	//Modèle du modem
-                 m_imei,	//Numéro IMEI du modem
-                 TIS_SERVICE_SBD,	//Service SBD
-                 NULL,				//Inutile avec un modem sans carte SIM
-                 0,					//Inutile en modem SBD
-                 NULL,				//Inutile en modem SBD
-                 files.size(),		//Nombre de fichier envoyés
-                 &fd,			//Un pointeur vers la structure décrivant la liaison série
-                 UART_send_data,	//Fonction utilisant les appelles système de la plateforme pour envoyer des données sur la liaison série
-                 UART_receive_data, //Fonction utilisant les appelles système de la plateforme pour recevoir des données sur la liaison série
-                 UART_wait_data,	//Fonction utilisant les appelles système de la plateforme pour attendre des données sur la liaison série
-                 UART_flush_TX,		//Fonction utilisant les appelles système de la plateforme pour vider le tampon de sortie de la liaison série
-                 UART_flush_RX		//Fonction utilisant les appelles système de la plateforme pour vider le tampon d'entrée de la liaison série
-                 ) != TIS_ERROR_SUCCESS) {
+    ofstream setvalgpio(gpio_file.c_str()); // open value file for gpio
+    if (!setvalgpio.is_open()){
+        ROS_WARN("[IRIDIUM] Unable to write power on on GPIO %u", m_gpio_power);
         return false;
     }
-//    //Ajoute les fichiers à envoyer
-//    for (i = 0; i < files_count; i++) {
-//        TIS_add_file_to_send(&tis, files[i]);
-//    }
-//    //Boucle d'envoie et de réception, s'arrête quand tous les fichier sont envoyés ou reçus
-//    do {
-//        int32_t result;
-//        //Met le modem sous tension
-//        Iridium_ON(); //(dépend de votre plateforme et non de la librairie)
-//        //Lance la transmission
-//        result = TIS_transmission(&tis, 10);
-//        //Met le modem hors tension
-//        Iridium_OFF(); //(dépend de votre plateforme et non de la librairie)
-//        //Affiche des informations de diagnostiques
-//        if (result != TIS_ERROR_SUCCESS) {
-//            printf("Iridium : erreur %ld s'est produite pendant la transmission", result);
-//        }
-//        printf("Iridium : informations de diagnostiques : \n");
-//        printf("\tNombre de messages SBD envoyés avec succès : %ld\n", tis.SBD_sent_without_error);
-//        printf("\tNombre de messages SBD dont l'envoie a échoué : %ld\n", tis.SBD_sent_with_error);
-//        printf("\tNombre de messages SBD reçues avec succès : %ld\n", tis.SBD_received_without_error);
-//        printf("\tNombre de messages SBD dont la réception a échoué : %ld\n", tis.SBD_received_with_error);
-//        printf("\tNombre de messages SBD en attente dans la constellation : %ld\n", tis.SBD_waiting_messages);
-//        for (i = 0; i < file_count; i++) {
-//            printf("Iridium : fichier %s, envoyé à %ld%\n", TIS_get_file_path(&tis, i), TIS_get_file_progress(&tis, i));
-//        }
-//        //Si la communication n'est pas terminée, met en veille le système en attendant un nouveau crénaux de réception
-//        if ((TIS_remaining_file_to_send(&tis) != 0) || (TIS_waiting_incoming_data() == TRUE)) {
-//            sleep(300); //La durée dépend de votre application, la fonction depend de votre plateforme et non de la librairie)
-//        }
-//        //Si il reste des fichier en cours d'envoie ou en attente dans le satellite, reboucle
-//    } while ((TIS_remaining_file_to_send(&tis) != 0) || (TIS_waiting_incoming_data() == TRUE));
-//    //Libère la mémoire occupée par la structure de la librairie
-//    TIS_clean(&tis);
-//    return TRUE;
+
+    setvalgpio << enable?1:0;//write value to value file
+    setvalgpio.close();// close value file
     return true;
+}
+
+////Cete fonction prend en paramètre un tableau contenant des pointeurs vers le nom des fichiers à envoyer ainsi que le nombre de fichier à renvoyer.
+bool Iridium::send_and_receive_data(){
+    if(m_files_to_send.size()>0  && m_enable_iridium){
+        if (TIS_init(&m_tis,
+                     reinterpret_cast<uint8_t *>(&m_path_received_full[0]),				//"CMD" est le chemin du dossier qui contiendra les fichier reçus.
+                     TIS_MODEM_9602,	//Modèle du modem
+                     m_imei,	//Numéro IMEI du modem
+                     TIS_SERVICE_SBD,	//Service SBD
+                     NULL,				//Inutile avec un modem sans carte SIM
+                     0,					//Inutile en modem SBD
+                     NULL,				//Inutile en modem SBD
+                     (uint8_t)m_files_to_send.size(),		//Nombre de fichier envoyés
+                     (void*)&m_uart_fd,			//Un pointeur vers la structure décrivant la liaison série
+                     uart_send_data,	//Fonction utilisant les appelles système de la plateforme pour envoyer des données sur la liaison série
+                     uart_receive_data, //Fonction utilisant les appelles système de la plateforme pour recevoir des données sur la liaison série
+                     uart_wait_data,	//Fonction utilisant les appelles système de la plateforme pour attendre des données sur la liaison série
+                     uart_flush_TX,		//Fonction utilisant les appelles système de la plateforme pour vider le tampon de sortie de la liaison série
+                     uart_flush_RX		//Fonction utilisant les appelles système de la plateforme pour vider le tampon d'entrée de la liaison série
+                     ) != TIS_ERROR_SUCCESS) {
+            return false;
+        }
+
+        // Add files to transmit
+        for(string file:m_files_to_send)
+            TIS_add_file_to_send(&m_tis, reinterpret_cast<uint8_t *>(&file[0]));
+
+        int enable_transmission = m_transmission_number_attempt;
+        while(enable_transmission>0){
+            iridium_power(true); // Power On Iridium
+            int result = TIS_transmission(&m_tis, 10); // Launch transmission
+
+            ///***** Diagnostic Result *****///
+            if (result != TIS_ERROR_SUCCESS) // Get diagnostic info
+                ROS_WARN("[Iridium] Error while transmitting : %i", result);
+            ROS_INFO("[Iridium] Send messages : (%i / %i)\n", m_tis.SBD_sent_without_error, m_tis.SBD_sent_without_error + m_tis.SBD_sent_with_error);
+            ROS_INFO("[Iridium] Received messages : (%i / %i)\n", m_tis.SBD_received_without_error, m_tis.SBD_received_without_error + m_tis.SBD_received_with_error);
+            ROS_INFO("[Iridium] Waiting to receive messages : %i\n", m_tis.SBD_waiting_messages);
+            for (size_t i = 0; i < m_files_to_send.size(); i++)
+                ROS_INFO("[Iridium] File %s was send at %i/100", m_files_to_send[i].c_str(), TIS_get_file_progress(&m_tis, i));
+
+            // Test if tranmission is over
+            if ((TIS_remaining_file_to_send(&m_tis) != 0) || (TIS_waiting_incoming_data(&m_tis) == true)){
+                sleep(m_transmission_sleep_time); //La durée dépend de votre application, la fonction depend de votre plateforme et non de la librairie)
+                enable_transmission--;
+            }
+            else{
+                enable_transmission = 0;
+                iridium_power(false); // Power Off Iridium
+            }
+        }
+
+        TIS_clean(&m_tis);
+    }
+    m_files_to_send.clear();
+    return true;
+}
+
+bool Iridium::add_new_log_file(){
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+
+    string file_name = boost::posix_time::to_iso_string(boost::posix_time::second_clock::universal_time());
+    string file_path = string(homedir) + "/" + m_path_send + "/" + file_name + "Z.tdt";
+
+    ofstream save_file;
+    save_file.open(file_path);
+
+    if(!save_file.is_open()){
+        ROS_WARN("[Iridium] Unable to open (%s) new log file %i : %s", file_path.c_str(), errno, strerror(errno));
+        return false;
+    }
+
+    save_file.write((char*)&m_east, sizeof(m_east));
+    save_file.write((char*)&m_north, sizeof(m_north));
+    save_file.close();
+
+    m_files_to_send.push_back(file_path);
+    ROS_INFO("[Iridium] Add new file to queue %s", file_path.c_str());
 }
