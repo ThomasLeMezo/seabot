@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<offset>
+	<time>1531261745</time>
+</offset>
+
+<paths type ="1">
+	<waypoint>
+		<time>10</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>20</time>
+		<depth>5</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>30</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>40</time>
+		<depth>5</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>50</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>60</time>
+		<depth>5</depth>
+	</waypoint>
+</paths>

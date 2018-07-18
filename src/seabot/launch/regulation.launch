@@ -21,7 +21,12 @@
         <param name="offset_piston" value="1317.84" />
         <param name="cf_x2" value="2.06936" />
         <param name="cf_x1" value="-76.6614" />
-        <param name="max_depth_validity" value="17.0" />
+        <param name="max_depth_compression_validity" value="17.0" />
+
+        <param name="max_depth_reset_zero" value="1.0" />
+        <param name="max_speed_reset_zero" value="0.1" />
+
+        <param name="pressure_limit" value="6.2" />
 
     </node>
 

@@ -12,6 +12,8 @@ find_package(catkin REQUIRED
   rospy
   message_generation
   seabot_fusion
+  std_srvs
+  pressure_bme280_driver
 )
 
 ## System dependencies are found with CMake's conventions
@@ -103,7 +105,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES seabot
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS roscpp std_srvs pressure_bme280_driver
 #  DEPENDS system_lib
 )
 

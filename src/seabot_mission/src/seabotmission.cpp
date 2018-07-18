@@ -98,9 +98,19 @@ void SeabotMission::load_mission(const std::string &file_xml){
     ROS_INFO("[Seabot_Mission] No time offset defined %s", ex.what());
   }
 
-  int mission_type = tree.get_child("paths.time").get_value<int>();
-  if(mission_type == 1)
+  int mission_type = tree.get_child("paths").get("<xmlattr>.type", 0);
+  switch (mission_type){
+  case 0:
+    ROS_INFO("[Seabot_Mission] Mission type : Depth and Waypoint regulation");
+    break;
+  case 1:
+    ROS_INFO("[Seabot_Mission] Mission type : Depth only regulation");
     m_depth_only = true;
+    break;
+  default:
+    ROS_INFO("[Seabot_Mission] Mission type : unknown");
+  }
+
 
   BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("paths")){
     if(v.first == "waypoint"){

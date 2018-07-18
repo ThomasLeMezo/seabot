@@ -18,4 +18,5 @@
   <depend>std_srvs</depend>
   <depend>message_runtime</depend>
   <depend>seabot_depth_regulation</depend>
+  <depend>seabot_power_driver</depend>
 </package>

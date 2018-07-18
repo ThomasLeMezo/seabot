@@ -53,31 +53,37 @@ int32_t uart_init(int &fd){
     //	PARODD - Odd parity (else even)
     struct termios options;
     tcgetattr(fd, &options);
-    cfmakeraw(&options);
-    options.c_cflag &= ~CSIZE;
-    options.c_cflag |= (CLOCAL | CREAD);
-    options.c_cflag |= CS8;
-    options.c_cflag |= B19200;
+//    cfmakeraw(&options);
+//    options.c_cflag &= ~CSIZE;
+//    options.c_cflag |= (CLOCAL | CREAD);
+//    options.c_cflag |= CS8;
+//    options.c_cflag |= B19200;
 
-    // NOPARITY
-    options.c_cflag &= ~CMSPAR;
-    options.c_cflag &= ~PARENB;
-    options.c_cflag &= ~PARODD;
-    // ONESTOPBIT
-    options.c_cflag &= ~CSTOPB;
+//    // NOPARITY
+//    options.c_cflag &= ~CMSPAR;
+//    options.c_cflag &= ~PARENB;
+//    options.c_cflag &= ~PARODD;
+//    // ONESTOPBIT
+//    options.c_cflag &= ~CSTOPB;
 
-    options.c_lflag &= ~(ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ISIG);
-    // Raw input.
-    options.c_iflag &= ~(IGNBRK | BRKINT | INLCR | IGNCR | ICRNL);
-    options.c_iflag &= ~(IXON | IXOFF | IXANY);
-    options.c_iflag &= ~ISTRIP;
-    options.c_iflag &= ~PARMRK;
-    options.c_iflag |= IGNPAR;
-    // Raw output.
-    options.c_oflag &= ~(OPOST | ONLCR | ONOCR | ONLRET | OCRNL);
+//    options.c_lflag &= ~(ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHONL | ISIG);
+//    // Raw input.
+//    options.c_iflag &= ~(IGNBRK | BRKINT | INLCR | IGNCR | ICRNL);
+//    options.c_iflag &= ~(IXON | IXOFF | IXANY);
+//    options.c_iflag &= ~ISTRIP;
+//    options.c_iflag &= ~PARMRK;
+//    options.c_iflag |= IGNPAR;
+//    // Raw output.
+//    options.c_oflag &= ~(OPOST | ONLCR | ONOCR | ONLRET | OCRNL);
 
-    options.c_cc[VMIN] = 0; // Minimum number of characters to read.
-    options.c_cc[VTIME] = 1000/100; // Time to wait for every character read in tenths of seconds. (ms/100)
+//    options.c_cc[VMIN] = 0; // Minimum number of characters to read.
+//    options.c_cc[VTIME] = 1000/100; // Time to wait for every character read in tenths of seconds. (ms/100)
+
+    options.c_cflag = B19200 | CS8 | CLOCAL | CREAD;		//<Set baud rate
+    options.c_iflag = IGNPAR;
+    options.c_oflag = 0;
+    options.c_lflag = 0;
+
 
     tcsetattr(fd, TCSADRAIN, &options);
 

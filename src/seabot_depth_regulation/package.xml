@@ -12,10 +12,10 @@
   <build_depend>message_generation</build_depend>
   
   <depend>rospy</depend>
-  <!-- <depend>roscpp</depend> -->
-  <!-- <depend>sensor_msgs</depend> -->
+   <depend>roscpp</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>message_runtime</depend>
   <depend>seabot_fusion</depend>
+  <depend>pressure_bme280_driver</depend>
 </package>

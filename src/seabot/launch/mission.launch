@@ -7,6 +7,7 @@
         <param name="frequency" value="1.0" />
         <param name="mission_file" value="mission_test.xml"/>
         <param name="mission_path" value="$(find seabot)/mission" />
+        <param name="battery_limit" value="10.0" />
     </node>
 
 </launch>

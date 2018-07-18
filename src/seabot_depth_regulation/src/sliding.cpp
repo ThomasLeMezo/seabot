@@ -7,6 +7,8 @@
 #include <seabot_piston_driver/PistonPosition.h>
 #include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
+#include <std_srvs/Trigger.h>
+#include <pressure_bme280_driver/Bme280Data.h>
 
 #include <cmath>
 
@@ -17,10 +19,16 @@ double velocity = 0;
 double piston_position = 0;
 bool piston_switch_in = false;
 bool piston_switch_out = false;
+double pressure_limit = 6.2;
+int pressure_limit_count = 5*3;
+int pressure_limit_count_reset = 5*3; // 5Hz * 3s of data
+bool pressure_limit_reached = true;
 
 double depth_set_point = 0.0;
 ros::Time t;
 ros::Time t_old;
+
+ros::ServiceClient service_zero_depth;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
@@ -35,7 +43,34 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
-  depth_set_point = msg->depth;
+  if(msg->mission_enable)
+    depth_set_point = msg->depth;
+  else
+    depth_set_point = 0.0;
+}
+
+void pressure_callback(const pressure_bme280_driver::Bme280Data::ConstPtr& msg){
+  if(msg->pressure > pressure_limit){
+    if(pressure_limit_count!=0)
+      pressure_limit_count--;
+    else
+      pressure_limit_reached=true;
+  }
+  else
+    pressure_limit_count = pressure_limit_count_reset;
+}
+
+void call_zero_depth(){
+  std_srvs::Trigger srv;
+  if (!service_zero_depth.call(srv)){
+    ROS_ERROR("[DepthRegulation] Failed to call zero depth");
+  }
+}
+
+bool reset_limit_depth(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res){
+  pressure_limit_reached = false;
+  res.success = true;
+  return true;
 }
 
 int main(int argc, char *argv[]){
@@ -66,7 +101,12 @@ int main(int argc, char *argv[]){
   const double cf_x0 = n_private.param<double>("offset_piston", 700);
   const double cf_x2 = n_private.param<double>("cf_x2", 0.0);
   const double cf_x1 = n_private.param<double>("cf_x1", 0.0);
-  const double max_depth_validity = n_private.param<double>("max_depth_validity", 17.0);
+  const double max_depth_compression_validity = n_private.param<double>("max_depth_compression_validity", 17.0);
+
+  const double max_depth_reset_zero = n_private.param<double>("max_depth_reset_zero", 1.0);
+  const double max_speed_reset_zero = n_private.param<double>("max_speed_reset_zero", 0.1);
+
+  pressure_limit = n_private.param<double>("pressure_limit", 6.2);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -80,6 +120,16 @@ int main(int argc, char *argv[]){
   seabot_piston_driver::PistonPosition position_msg;
   seabot_depth_regulation::RegulationDebug debug_msg;
 
+  // Service
+  ROS_INFO("[DepthRegulation] Wait for zero depth service from fusion");
+  ros::service::waitForService("/fusion/zero_depth");
+  service_zero_depth = n.serviceClient<std_srvs::Trigger>("/fusion/zero_depth");
+  call_zero_depth();
+  ROS_INFO("[DepthRegulation] Reset zero");
+
+  // Server
+  ros::ServiceServer server_reset_limit_depth = n.advertiseService("reset_limit_depth", reset_limit_depth);
+
   double piston_set_point = 0.0;
   double offset_piston = cf_x0;
   double piston_set_point_offset = piston_set_point + offset_piston;
@@ -88,14 +138,15 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
 
   // Main regulation loop
+  ROS_INFO("[DepthRegulation] Start regulation");
   while (ros::ok()){
     ros::spinOnce();
 
     double dt = (t-t_old).toSec();
     t_old = t;
-    if(depth_set_point>0.2){
+    if(depth_set_point>0.2 && !pressure_limit_reached){
       // Polynomial model
-      double depth_validity = min(depth, max_depth_validity);
+      double depth_validity = min(depth, max_depth_compression_validity);
       offset_piston = cf_x2*pow(depth_validity, 2) + cf_x1*depth_validity + cf_x0;
 
       //            double V_piston = -(piston_position-offset) * tick_to_volume; // Inverted bc if position increase, volume decrease
@@ -135,6 +186,10 @@ int main(int argc, char *argv[]){
     else{
       // Position set point
       position_msg.position = 0;
+
+      // Analyze zero depth
+      if(piston_position == 0 && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero)
+        call_zero_depth();
     }
     position_pub.publish(position_msg);
     loop_rate.sleep();
