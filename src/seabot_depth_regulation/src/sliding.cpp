@@ -7,6 +7,7 @@
 #include <seabot_piston_driver/PistonPosition.h>
 #include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
+#include <std_srvs/SetBool.h>
 
 #include <cmath>
 
@@ -21,6 +22,8 @@ bool piston_switch_out = false;
 double depth_set_point = 0.0;
 ros::Time t;
 ros::Time t_old;
+
+bool emergency = false;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
@@ -39,6 +42,12 @@ void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
     depth_set_point = msg->depth;
   else
     depth_set_point = 0.0;
+}
+
+bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res){
+  emergency = req.data;
+  res.success = true;
+  return true;
 }
 
 int main(int argc, char *argv[]){
@@ -83,6 +92,9 @@ int main(int argc, char *argv[]){
   seabot_piston_driver::PistonPosition position_msg;
   seabot_depth_regulation::RegulationDebug debug_msg;
 
+  // Server
+  ros::ServiceServer server_emergency = n.advertiseService("emergency", emergency_service);
+
   double piston_set_point = 0.0;
   double offset_piston = cf_x0;
   double piston_set_point_offset = piston_set_point + offset_piston;
@@ -97,7 +109,7 @@ int main(int argc, char *argv[]){
 
     double dt = (t-t_old).toSec();
     t_old = t;
-    if(depth_set_point>0.2 && !pressure_limit_reached){
+    if(depth_set_point>0.2 && !emergency){
       // Polynomial model
       double depth_validity = min(depth, max_depth_compression_validity);
       offset_piston = cf_x2*pow(depth_validity, 2) + cf_x1*depth_validity + cf_x0;

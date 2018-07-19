@@ -6,6 +6,7 @@
         <param name="max_speed_reset_zero" value="0.1" />
 
         <param name="pressure_limit" value="6.2" />
+        <param name="time_before_pressure_emergency" value="3.0" />
 
         <param name="limit_depth_flash_enable" value="0.5"/>
     </node>
