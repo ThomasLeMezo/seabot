@@ -9,6 +9,8 @@
         <param name="time_before_pressure_emergency" value="3.0" />
 
         <param name="limit_depth_flash_enable" value="0.5"/>
+
+        <param name="battery_limit" value="10.0" />
     </node>
 </launch>
 
