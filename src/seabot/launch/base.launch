@@ -5,6 +5,7 @@
     <include file="$(find seabot)/launch/driver.launch"/>
     <include file="$(find seabot_fusion)/launch/filter.launch"/>
     <include file="$(find seabot_fusion)/launch/lambert.launch"/>
+    <include file="$(find seabot_safety)/launch/safety.launch"/>
 
 
 </launch>

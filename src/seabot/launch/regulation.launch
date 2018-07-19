@@ -23,13 +23,6 @@
         <param name="cf_x1" value="-76.6614" />
         <param name="max_depth_compression_validity" value="17.0" />
 
-        <param name="max_depth_reset_zero" value="1.0" />
-        <param name="max_speed_reset_zero" value="0.1" />
-
-        <param name="pressure_limit" value="6.2" />
-
-        <param name="limit_depth_flash_enable" value="0.5"/>
-
     </node>
 
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

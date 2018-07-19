@@ -1,0 +1,13 @@
+<launch>
+    <node name="safety_node" pkg="seabot_safety" type="safety_node" output="screen" ns="safety" respawn="true" respawn_delay="5">
+        <param name="frequency" value="1.0" />
+
+        <param name="max_depth_reset_zero" value="1.0" />
+        <param name="max_speed_reset_zero" value="0.1" />
+
+        <param name="pressure_limit" value="6.2" />
+
+        <param name="limit_depth_flash_enable" value="0.5"/>
+    </node>
+</launch>
+
