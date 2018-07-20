@@ -2,6 +2,8 @@
 
     <include file="$(find seabot)/launch/base.launch"/>
     <include file="$(find seabot)/launch/regulation.launch"/>
+    <include file="$(find seabot_safety)/launch/safety.launch"/>
+    <include file="$(find seabot)/launch/iridium.launch"/>
 
     <node name="mission" pkg="seabot_mission" type="mission_node" output="screen" respawn="false">
         <param name="frequency" value="1.0" />

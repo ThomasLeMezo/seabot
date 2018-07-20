@@ -8,9 +8,20 @@
         <param name="pressure_limit" value="6.2" />
         <param name="time_before_pressure_emergency" value="3.0" />
 
+        <param name="enable_flash" value="false"/>
         <param name="limit_depth_flash_enable" value="0.5"/>
 
         <param name="battery_limit" value="10.0" />
+
+        <param name="time_delay_batteries_msg" value="30.0" />
+        <param name="time_delay_internal_sensor_msg" value="2.0" />
+        <param name="time_delay_external_sensor_msg" value="2.0" />
+        <param name="time_delay_depth_msg" value="2.0" />
+        <param name="time_delay_piston_state_msg" value="2.0" />
+
+        <param name="delta_volume_allowed" value="0.001" />
+        <param name="volume_ref" value="6.0" />
+
     </node>
 </launch>
 

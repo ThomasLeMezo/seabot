@@ -43,9 +43,9 @@ Te = np.array(f_Te(time_sensor_internal)) + 273.15
 
 P1 = np.mean(P[0:10])
 T1 = np.mean(Ti[0:10])
-T = 0.1*Te+0.9*Ti
+T = Ti
 
-P[5000:7000] = 850.0e2
+# P[5000:7000] = 850.0e2
 
 dock_pression_temp = Dock("PV=nRT")
 area.addDock(dock_pression_temp)
@@ -56,25 +56,38 @@ pg_internal_pressure.plot(time_sensor_internal, (dV*P/T)/(P/T - P1/T1), pen=(255
 pg_internal_pressure.setLabel('left', "Pressure/Temp")
 dock_pression_temp.addWidget(pg_internal_pressure)
 
-pg_fusion_depth = pg.PlotWidget()
-pg_fusion_depth.addLegend()
-pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-pg_fusion_depth.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
-pg_fusion_depth.setLabel('left', "Depth", units="m")
-dock_pression_temp.addWidget(pg_fusion_depth)
+pg_internal_pressure2 = pg.PlotWidget()
+pg_internal_pressure2.addLegend()
+pg_internal_pressure2.plot(time_sensor_internal, (P/T - P1/T1), pen=(255,0,0), name="pressure")
+pg_internal_pressure2.setLabel('left', "Pressure/Temp diff")
+dock_pression_temp.addWidget(pg_internal_pressure2)
 
-pg_fusion_depth.setXLink(pg_internal_pressure)
+# pg_fusion_depth = pg.PlotWidget()
+# pg_fusion_depth.addLegend()
+# pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
+# pg_fusion_depth.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
+# pg_fusion_depth.setLabel('left', "Depth", units="m")
+# dock_pression_temp.addWidget(pg_fusion_depth)
+
+pg_piston_position = pg.PlotWidget()
+pg_piston_position.addLegend()
+pg_piston_position.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="piston_position")
+pg_piston_position.setLabel('left', "piston_position", units="")
+dock_pression_temp.addWidget(pg_piston_position)
+
+pg_internal_pressure2.setXLink(pg_internal_pressure)
+pg_piston_position.setXLink(pg_internal_pressure)
 
 ###################################################
 
-dock_pressure = Dock("Pressure")
-area.addDock(dock_pressure, 'above', dock_pression_temp)
+# dock_pressure = Dock("Pressure")
+# area.addDock(dock_pressure, 'above', dock_pression_temp)
 
-pg_internal_pressure = pg.PlotWidget()
-pg_internal_pressure.addLegend()
-pg_internal_pressure.plot(time_sensor_internal, sensor_internal_pressure, pen=(255,0,0), name="pressure")
-pg_internal_pressure.setLabel('left', "Pressure")
-dock_pressure.addWidget(pg_internal_pressure)
+# pg_internal_pressure = pg.PlotWidget()
+# pg_internal_pressure.addLegend()
+# pg_internal_pressure.plot(time_sensor_internal, sensor_internal_pressure, pen=(255,0,0), name="pressure")
+# pg_internal_pressure.setLabel('left', "Pressure")
+# dock_pressure.addWidget(pg_internal_pressure)
 
 win.show()
 	
