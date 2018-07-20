@@ -54,14 +54,18 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     batteries_level[3] = msg->battery4;
 }
 
+void call_iridium(){
+  iridium.m_east = east;
+  iridium.m_north = north;
+  iridium.add_new_log_file();
+
+  iridium.send_and_receive_data();
+}
+
 void timerTISCallback(const ros::WallTimerEvent&){
   // Test if is at surface for sufficient period of time
   if(is_surface && (ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
-    iridium.m_east = east;
-    iridium.m_north = north;
-    iridium.add_new_log_file();
-
-    iridium.send_and_receive_data();
+    call_iridium();
   }
 }
 
@@ -83,7 +87,13 @@ int main(int argc, char *argv[]){
   iridium.uart_init();
   iridium.enable_com(true);
 
-  ros::WallTimer timer = n.createWallTimer(duration_sleep, timerTISCallback);
+//  ros::WallTimer timer = n.createWallTimer(duration_sleep, timerTISCallback);
+
+  /// Test
+  sleep(1);
+  ros::spinOnce();
+  call_iridium();
+  ///
 
   while (ros::ok()){
     ros::spin();

@@ -75,6 +75,7 @@ int main(int argc, char *argv[]){
             msg.battery2 = battery_level[1];
             msg.battery3 = battery_level[2];
             msg.battery4 = battery_level[3];
+            batteries_pub.publish(msg);
         }
         loop_rate.sleep();
     }

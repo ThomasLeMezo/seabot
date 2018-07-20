@@ -85,6 +85,18 @@ int32_t Iridium::uart_init(){
 
     tcsetattr(m_uart_fd, TCSADRAIN, &options);
 
+//    // Find the IMEI number
+//    string cmd_at_imei = "AT+CGSN\r";
+//    write(m_uart_fd, cmd_at_imei.c_str(), cmd_at_imei.size());
+
+//    string imei = "000000000000000";
+//    sleep(1);
+//    read(m_uart_fd, (void*)imei.c_str(),imei.size());
+//    m_imei = atoll(imei.c_str());
+//    ROS_INFO("[IRIDUIM] IMEI = %lu", m_imei);
+
+//    char buffer[5];
+//    read(m_uart_fd, &buffer, 5);
     return TIS_ERROR_SUCCESS;
 }
 
