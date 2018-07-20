@@ -182,8 +182,6 @@ int main(int argc, char *argv[]){
   const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.001);
   const double volume_ref = n_private.param<double>("volume_ref", 6.0);
 
-
-
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);

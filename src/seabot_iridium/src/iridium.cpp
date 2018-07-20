@@ -10,9 +10,7 @@
 #include <termios.h>    // POSIX terminal control definitions
 #include <sys/ioctl.h>
 
-#include <boost/date_time/local_time/local_time.hpp>
-#include <iomanip>
-#include <ctime>
+#include "boost/filesystem.hpp"
 
 #include <fstream>
 #include <string>
@@ -80,45 +78,18 @@ int32_t Iridium::uart_init(){
   options.c_cc[VMIN] = 0; // Minimum number of characters to read.
   options.c_cc[VTIME] = 4000/100; // Time to wait for every character read in tenths of seconds. (ms/100)
 
-  //    options.c_cflag = B19200 | CS8 | CLOCAL | CREAD;		//<Set baud rate
-  //    options.c_iflag = IGNPAR;
-  //    options.c_oflag = 0;
-  //    options.c_lflag = 0;
-
-
   tcsetattr(m_uart_fd, TCSADRAIN, &options);
 
-  //    // Find the IMEI number
-  //    string cmd_at_imei = "AT+CGSN\r";
-  //    write(m_uart_fd, cmd_at_imei.c_str(), cmd_at_imei.size());
+  // ToDo : read the IMEI value
 
-  //    string imei = "000000000000000";
-  //    sleep(1);
-  //    read(m_uart_fd, (void*)imei.c_str(),imei.size());
-  //    m_imei = atoll(imei.c_str());
-  //    ROS_INFO("[IRIDUIM] IMEI = %lu", m_imei);
-
-  //    char buffer[5];
-  //    read(m_uart_fd, &buffer, 5);
   return TIS_ERROR_SUCCESS;
 }
 
 int32_t uart_send_data(void *serial_struct, uint8_t *data, int32_t count){
-//  ssize_t error = write(*((int *)serial_struct), data, count);
-
-//  ROS_INFO("[Iridium] send %i - %u", count, (unsigned int)error);
-
-//  if(error<=0){
-//    ROS_WARN("[Iridium] ERROR %i writing to /dev/ttyAMA0 : %s", errno, strerror(errno));
-//    return TIS_ERROR_SERIAL_ERROR;
-//  }
-//  else
-//    return TIS_ERROR_SUCCESS;
-
   ssize_t error = 0;
   while(error<count){
     ssize_t tmp = write(*((int *)serial_struct), data+error, count-error);
-    ROS_INFO("[Iridium] send %i - %li", (int)tmp, count-error);
+//    ROS_INFO("[Iridium] send %i - %li", (int)tmp, count-error);
     if(tmp<0){
       ROS_WARN("[Iridium] ERROR %i writing /dev/ttyAMA0 : %s", errno, strerror(errno));
       return TIS_ERROR_SERIAL_ERROR;
@@ -136,7 +107,7 @@ int32_t uart_receive_data(void *serial_struct, uint8_t *data, int32_t count){
   ssize_t error = 0;
   while(error<count){
     ssize_t tmp = read(*((int *)serial_struct), data+error, count-error);
-    ROS_INFO("[Iridium] read %i - %li", (int)tmp, (count-error));
+//    ROS_INFO("[Iridium] read %i - %li", (int)tmp, (count-error));
     if(tmp<0){
       ROS_WARN("[Iridium] ERROR %i reading /dev/ttyAMA0 : %s", errno, strerror(errno));
       return TIS_ERROR_SERIAL_ERROR;
@@ -276,15 +247,26 @@ bool Iridium::send_and_receive_data(){
 bool Iridium::add_new_log_file(){
   struct passwd *pw = getpwuid(getuid());
   const char *homedir = pw->pw_dir;
+  long int wall_time_now = round(ros::WallTime::now().toSec());
 
-  string file_name = boost::posix_time::to_iso_string(boost::posix_time::second_clock::universal_time());
-  string file_path = string(homedir) + "/" + m_path_send + "/" + file_name + ".tdt";
+  std::stringstream sstream;
+  sstream << homedir << "/" << m_path_send << "/";
+
+  boost::filesystem::path p(sstream.str());
+  ;
+
+  if (boost::filesystem::create_directories(p))
+    ROS_INFO("[Iridium] Directory to store msg was not found, create a new one");
+
+  sstream << std::hex << wall_time_now; // Print in hex
+  sstream << ".tdt";
+  //  string file_path = sstream;
 
   ofstream save_file;
-  save_file.open(file_path);
+  save_file.open(sstream.str());
 
   if(!save_file.is_open()){
-    ROS_WARN("[Iridium] Unable to open (%s) new log file %i : %s", file_path.c_str(), errno, strerror(errno));
+    ROS_WARN("[Iridium] Unable to open (%s) new log file %i : %s", sstream.str().c_str(), errno, strerror(errno));
     return false;
   }
 
@@ -292,6 +274,6 @@ bool Iridium::add_new_log_file(){
   save_file.write((char*)&m_north, sizeof(m_north));
   save_file.close();
 
-  m_files_to_send.push_back(file_path);
-  ROS_INFO("[Iridium] Add new file to queue %s", file_path.c_str());
+  m_files_to_send.push_back(sstream.str());
+  ROS_INFO("[Iridium] Add new file to queue %s", sstream.str().c_str());
 }

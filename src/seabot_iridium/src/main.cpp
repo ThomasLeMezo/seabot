@@ -21,6 +21,7 @@ double depth_surface_limit = 0.5;
 double wait_surface_time = 10.0;
 ros::WallTime time_at_surface;
 bool is_surface = false;
+ros::WallTime time_last_communication;
 
 Iridium iridium;
 
@@ -54,19 +55,18 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     batteries_level[3] = msg->battery4;
 }
 
-void call_iridium(){
-  iridium.m_east = east;
-  iridium.m_north = north;
-  iridium.add_new_log_file();
-
-  iridium.send_and_receive_data();
-}
-
-void timerTISCallback(const ros::WallTimerEvent&){
+bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if(is_surface && (ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
-    call_iridium();
+    iridium.m_east = east;
+    iridium.m_north = north;
+    iridium.add_new_log_file();
+
+    iridium.send_and_receive_data();
+    return true;
   }
+  else
+    return false;
 }
 
 int main(int argc, char *argv[]){
@@ -80,23 +80,27 @@ int main(int argc, char *argv[]){
 
   // Parameters
   ros::NodeHandle n_private("~");
-  ros::WallDuration duration_sleep(n_private.param<int>("duration_sleep", 60*5));
+  const double frequency = n_private.param<double>("frequency", 1.0);
+  const double duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
   wait_surface_time = n_private.param<double>("wait_time_surface", 10.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
 
   iridium.uart_init();
   iridium.enable_com(true);
 
-//  ros::WallTimer timer = n.createWallTimer(duration_sleep, timerTISCallback);
-
-  /// Test
-  sleep(1);
-  ros::spinOnce();
-  call_iridium();
-  ///
+  ros::Rate loop_rate(frequency);
 
   while (ros::ok()){
-    ros::spin();
+    ros::spinOnce();
+
+    ros::WallTime t = ros::WallTime::now();
+    if(is_surface && ((t-time_last_communication).toSec()>duration_between_msg)){
+      if(call_iridium()){
+        time_last_communication = t;
+      }
+    }
+
+    loop_rate.sleep();
   }
 
   return 0;
