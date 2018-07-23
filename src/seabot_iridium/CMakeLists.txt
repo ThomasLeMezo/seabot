@@ -12,6 +12,8 @@ find_package(catkin REQUIRED
  seabot_fusion
  seabot_power_driver
  gpsd_client
+ pressure_bme280_driver
+ seabot_safety
  )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +108,7 @@ find_package(catkin REQUIRED
 catkin_package(
  INCLUDE_DIRS include
  # LIBRARIES TIS
- CATKIN_DEPENDS roscpp seabot_fusion seabot_power_driver gpsd_client
+ CATKIN_DEPENDS roscpp seabot_fusion seabot_power_driver gpsd_client pressure_bme280_driver seabot_safety
  #  DEPENDS system_lib
  )
 

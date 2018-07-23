@@ -34,6 +34,8 @@ int32_t Iridium::uart_init(){
   /* Error Handling */
   if ( m_uart_fd < 0 ){
     ROS_WARN("[Iridium] ERROR %i opening /dev/ttyAMA0 : %s", errno, strerror(errno));
+    ROS_WARN("[Iridium] Demo mode");
+    m_demo_mode = true;
     return TIS_ERROR_SERIAL_ERROR;
   }
   fcntl(m_uart_fd, F_SETFL, 0);
@@ -89,7 +91,7 @@ int32_t uart_send_data(void *serial_struct, uint8_t *data, int32_t count){
   ssize_t error = 0;
   while(error<count){
     ssize_t tmp = write(*((int *)serial_struct), data+error, count-error);
-//    ROS_INFO("[Iridium] send %i - %li", (int)tmp, count-error);
+    //    ROS_INFO("[Iridium] send %i - %li", (int)tmp, count-error);
     if(tmp<0){
       ROS_WARN("[Iridium] ERROR %i writing /dev/ttyAMA0 : %s", errno, strerror(errno));
       return TIS_ERROR_SERIAL_ERROR;
@@ -107,7 +109,7 @@ int32_t uart_receive_data(void *serial_struct, uint8_t *data, int32_t count){
   ssize_t error = 0;
   while(error<count){
     ssize_t tmp = read(*((int *)serial_struct), data+error, count-error);
-//    ROS_INFO("[Iridium] read %i - %li", (int)tmp, (count-error));
+    //    ROS_INFO("[Iridium] read %i - %li", (int)tmp, (count-error));
     if(tmp<0){
       ROS_WARN("[Iridium] ERROR %i reading /dev/ttyAMA0 : %s", errno, strerror(errno));
       return TIS_ERROR_SERIAL_ERROR;
@@ -188,7 +190,7 @@ bool Iridium::iridium_power(const bool &enable){
 
 ////Cete fonction prend en paramètre un tableau contenant des pointeurs vers le nom des fichiers à envoyer ainsi que le nombre de fichier à renvoyer.
 bool Iridium::send_and_receive_data(){
-  if(m_files_to_send.size()>0  && m_enable_iridium){
+  if(m_files_to_send.size()>0  && m_enable_iridium && !m_demo_mode){
     ROS_INFO("[Iridium] Start send/receive data");
     if (TIS_init(&m_tis,
                  reinterpret_cast<uint8_t *>(&m_path_received_full[0]),				//"CMD" est le chemin du dossier qui contiendra les fichier reçus.
@@ -239,12 +241,12 @@ bool Iridium::send_and_receive_data(){
     }
 
     TIS_clean(&m_tis);
+    m_files_to_send.clear();
   }
-  m_files_to_send.clear();
   return true;
 }
 
-bool Iridium::add_new_log_file(){
+const std::string Iridium::get_new_tdt_file(){
   struct passwd *pw = getpwuid(getuid());
   const char *homedir = pw->pw_dir;
   long int wall_time_now = round(ros::WallTime::now().toSec());
@@ -253,27 +255,66 @@ bool Iridium::add_new_log_file(){
   sstream << homedir << "/" << m_path_send << "/";
 
   boost::filesystem::path p(sstream.str());
-  ;
-
   if (boost::filesystem::create_directories(p))
     ROS_INFO("[Iridium] Directory to store msg was not found, create a new one");
 
   sstream << std::hex << wall_time_now; // Print in hex
   sstream << ".tdt";
-  //  string file_path = sstream;
+  return sstream.str();
+}
 
+int Iridium::add_data(cpp_int &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double &value_max){
+  double scale = (1<<nb_bit-1)/(value_max-value_min);
+  long unsigned int v = (long unsigned int)(max(round((value-value_min)*scale), 0.0));
+  long unsigned int v_max = (1<<nb_bit)-1;
+  v = min(v, v_max);
+
+  cpp_int mask = ((1<<nb_bit)-1) << start_bit;
+  bits &= ~mask;
+  bits |= (v & ((1<<nb_bit)-1)) << start_bit;
+  return nb_bit;
+}
+
+int Iridium::add_data(cpp_int &bits, const int &nb_bit, const int &start_bit, const unsigned int &value){
+  cpp_int mask = ((1<<nb_bit)-1) << start_bit;
+  bits &= ~mask;
+  bits |= (value & ((1<<nb_bit)-1)) << start_bit;
+  return nb_bit;
+}
+
+bool Iridium::add_log_TDT1(){
   ofstream save_file;
-  save_file.open(sstream.str());
+  std::string name_file = get_new_tdt_file();
+  save_file.open(name_file);
 
   if(!save_file.is_open()){
-    ROS_WARN("[Iridium] Unable to open (%s) new log file %i : %s", sstream.str().c_str(), errno, strerror(errno));
+    ROS_WARN("[Iridium] Unable to open (%s) new log file %i : %s", name_file.c_str(), errno, strerror(errno));
     return false;
   }
 
-  save_file.write((char*)&m_east, sizeof(m_east));
-  save_file.write((char*)&m_north, sizeof(m_north));
+  size_t nb_bits = 96; // must be a multiple of 4
+  boost::multiprecision::cpp_int data(nb_bits);
+
+  int bit_position = 0;
+  bit_position += add_data(data, 21, bit_position, m_east, 0, 1300000);
+  bit_position += add_data(data, 21, bit_position, m_north, 6000000, 1300000);
+  bit_position += add_data(data, 8, bit_position, m_gnss_speed, 0, 5.0);
+  bit_position += add_data(data, 8, bit_position, m_gnss_heading, 0, 359.0);
+
+  bit_position += add_data(data, 8, bit_position, m_seabot_state);
+
+  bit_position += add_data(data, 5, bit_position, m_batteries[0], 9, 12.4);
+  bit_position += add_data(data, 5, bit_position, m_batteries[1], 9, 12.4);
+  bit_position += add_data(data, 5, bit_position, m_batteries[2], 9, 12.4);
+  bit_position += add_data(data, 5, bit_position, m_batteries[3], 9, 12.4);
+
+  bit_position += add_data(data, 4, bit_position, m_internal_pressure, 680.0, 800.0);
+  bit_position += add_data(data, 6, bit_position, m_internal_temperature, 8.0, 50.0);
+
+  save_file.write((char*)&data, ceil(nb_bits/4));
+
   save_file.close();
 
-  m_files_to_send.push_back(sstream.str());
-  ROS_INFO("[Iridium] Add new file to queue %s", sstream.str().c_str());
+  m_files_to_send.push_back(name_file);
+  ROS_INFO("[Iridium] Add new file to queue %s", name_file.c_str());
 }

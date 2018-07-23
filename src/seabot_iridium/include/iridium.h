@@ -3,6 +3,9 @@
 
 #include <string>
 #include <vector>
+#include <boost/multiprecision/cpp_int.hpp>
+
+using boost::multiprecision::cpp_int;
 
 extern "C"{
     #include "tis.h"
@@ -24,10 +27,10 @@ public:
     bool send_and_receive_data();
 
     /**
-     * @brief add_new_log_file
+     * @brief add_log_TDT1
      * @return
      */
-    bool add_new_log_file();
+    bool add_log_TDT1();
 
     /**
      * @brief iridium_power
@@ -49,9 +52,44 @@ public:
      */
     int32_t uart_init();
 
+    /**
+     * @brief get_new_tdt_file
+     * @return
+     */
+    const std::string get_new_tdt_file();
+
+    /**
+     * @brief add_data
+     * @param bits
+     * @param nb_bit
+     * @param start_bit
+     * @param value
+     * @param min
+     * @param max
+     */
+    int add_data(cpp_int &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double&value_max);
+
+    /**
+     * @brief add_data
+     * @param bits
+     * @param nb_bit
+     * @param start_bit
+     * @param value
+     * @return
+     */
+    int add_data(cpp_int &bits, const int &nb_bit, const int &start_bit, const unsigned int &value);
+
 public:
-    double m_east = 0.0;
-    double m_north = 0.0;
+    double m_east = 2097151; // 2^21-1
+    double m_north = 8097151; // 2^21-1 + 6e6
+    double m_gnss_speed = 0.0;
+    double m_gnss_heading = 0.0;
+    double m_batteries[4] = {0.0, 0.0, 0.0, 0.0};
+
+    double m_internal_pressure = 680.0;
+    double m_internal_temperature = 5.0;
+
+    unsigned int m_seabot_state = 0;
 
 private:
     uint64_t m_imei = 300234065392110;
@@ -69,6 +107,8 @@ private:
     int m_uart_fd = 0;
 
     bool m_enable_iridium = false;
+
+    bool m_demo_mode = false;
 };
 
 int32_t uart_init(int &fd);
