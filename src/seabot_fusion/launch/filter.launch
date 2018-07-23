@@ -22,8 +22,17 @@
 </node>
 
  <node name="batteries_filter_node" pkg="seabot_fusion" type="batteries_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-   <param name="filter_median_size" value="6" />
-   <param name="filter_mean_width" value="3" />
+    <param name="frequency" value="0.2" />
+    <param name="filter_median_size" value="6" />
+    <param name="filter_mean_width" value="3" />
  </node>
+
+<node name="internal_sensor_filter_node" pkg="seabot_fusion" type="internal_sensor_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+  <param name="frequency" value="5" />
+  <param name="filter_median_size" value="6" />
+  <param name="filter_mean_width" value="3" />
+</node>
+
+
 
 </launch>

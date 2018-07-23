@@ -10,7 +10,7 @@
 #include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
-#include <pressure_bme280_driver/Bme280Data.h>
+#include <seabot_fusion/InternalPose.h>
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <seabot_power_driver/Battery.h>
 #include <seabot_safety/SafetyLog.h>
@@ -99,7 +99,7 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
     is_pressure_limit_reached = false;
 }
 
-void internal_sensor_callback(const pressure_bme280_driver::Bme280Data::ConstPtr& msg){
+void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   time_internal_sensor = ros::WallTime::now();
   internal_pressure = msg->pressure*1e2;
   internal_temperature = msg->temperature + 273.15;

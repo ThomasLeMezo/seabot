@@ -7,6 +7,7 @@
 #include <gpsd_client/GPSFix.h>
 #include <gpsd_client/GPSStatus.h>
 #include <seabot_fusion/DepthPose.h>
+#include <seabot_fusion/InternalPose.h>
 #include <seabot_safety/SafetyLog.h>
 
 #include "iridium.h"
@@ -58,6 +59,11 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     iridium.m_batteries[3] = msg->battery4;
 }
 
+void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
+  iridium.m_internal_pressure = msg->pressure;
+  iridium.m_internal_temperature = msg->temperature;
+}
+
 bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if(is_surface && (ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
@@ -80,6 +86,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber gnss_sub = n.subscribe("/driver/fix_extended", 1, gnss_callback);
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber safety_sub = n.subscribe("/safety/safety", 1, depth_callback);
+  ros::Subscriber internal_sensor_sub = n.subscribe("/fusion/internal_sensor", 1, internal_sensor_callback);
 
   // Parameters
   ros::NodeHandle n_private("~");

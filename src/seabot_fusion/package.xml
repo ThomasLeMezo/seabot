@@ -18,5 +18,6 @@
   <depend>pressure_89bsd_driver</depend>
   <depend>message_runtime</depend>
   <depend>seabot_power_driver</depend>
+  <depend>pressure_bme280_driver</depend>
 
   </package>

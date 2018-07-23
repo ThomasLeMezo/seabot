@@ -13,8 +13,7 @@ array<deque<double>, 4> batteries_memory;
 
 int filter_median_size = 5;
 int filter_mean_width = 3;
-
-bool zero_depth_valid = false;
+bool new_data = false;
 
 void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     batteries_memory[0].push_front(msg->battery1);
@@ -25,6 +24,7 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
         for(size_t i=0; i<4; i++)
             batteries_memory[i].pop_back();
     }
+    new_data = true;
 }
 
 int main(int argc, char *argv[]){
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
 
     // Parameters
     ros::NodeHandle n_private("~");
-    const double frequency = n_private.param<double>("frequency", 5.0);
+    const double frequency = n_private.param<double>("frequency", 0.2);
 
     filter_median_size = n_private.param<int>("filter_median_size", 10);
     filter_mean_width = n_private.param<int>("filter_mean_width", 3);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]){
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         ros::spinOnce();
-        if(!batteries_memory.empty()){
+        if(!batteries_memory.empty() && new_data){
             /// ************** Compute depth ************** //
             /// MEDIAN + MEAN FILTER
 
@@ -75,7 +75,9 @@ int main(int argc, char *argv[]){
             msg.battery2 = battery_level[1];
             msg.battery3 = battery_level[2];
             msg.battery4 = battery_level[3];
+
             batteries_pub.publish(msg);
+            new_data = false;
         }
         loop_rate.sleep();
     }

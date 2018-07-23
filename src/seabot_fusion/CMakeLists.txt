@@ -16,6 +16,7 @@ find_package(catkin REQUIRED
   std_srvs
   message_generation
   pressure_89bsd_driver
+  pressure_bme280_driver
   seabot_power_driver
 )
 
@@ -58,6 +59,7 @@ add_message_files(
   DepthPose.msg
   GnssPose.msg
   TemperaturePose.msg
+  InternalPose.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -154,6 +156,10 @@ add_executable(batteries_filter_node
     src/batteries_filter.cpp
 )
 
+add_executable(internal_sensor_filter_node
+    src/internal_sensor_filter.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -167,6 +173,7 @@ add_dependencies(depth_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 add_dependencies(lambert_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(batteries_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(temperature_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(internal_sensor_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(depth_filter_node
@@ -183,6 +190,10 @@ target_link_libraries(batteries_filter_node
 )
 
 target_link_libraries(temperature_filter_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(internal_sensor_filter_node
   ${catkin_LIBRARIES}
 )
 

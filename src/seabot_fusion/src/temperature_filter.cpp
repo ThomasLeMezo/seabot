@@ -18,11 +18,14 @@ int filter_median_size = 5;
 deque<double> temperature_deque;
 ros::Time time_temperature;
 
+bool new_data = false;
+
 void temperature_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& msg){
   temperature_deque.push_front(msg->temperature);
   if(temperature_deque.size()>filter_median_size)
     temperature_deque.pop_back();
   time_temperature = msg->header.stamp;
+  new_data = true;
 }
 
 int main(int argc, char *argv[]){
@@ -55,7 +58,7 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
-    if(!temperature_deque.empty()){
+    if(!temperature_deque.empty() && new_data){
       /// ************** Compute temperature ************** //
       /// MEDIAN + MEAN FILTER
       deque<double> temperature_deque_tmp(temperature_deque); // Make a copy
@@ -89,11 +92,11 @@ int main(int argc, char *argv[]){
           velocity = std::copysign(velocity_limit, velocity);
       }
 
-      if((ros::Time::now()-time_temperature).toSec() < 1.0){
-        msg.temperature = temperature;
-        msg.velocity = velocity;
-        temperature_pub.publish(msg);
-      }
+      msg.temperature = temperature;
+      msg.velocity = velocity;
+      temperature_pub.publish(msg);
+
+      new_data = false;
     }
 
     loop_rate.sleep();
