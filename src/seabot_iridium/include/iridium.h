@@ -90,6 +90,7 @@ public:
     double m_internal_temperature = 5.0;
 
     unsigned int m_seabot_state = 0;
+    size_t  m_current_waypoint = 0; // 0 to 255 max
 
 private:
     uint64_t m_imei = 300234065392110;

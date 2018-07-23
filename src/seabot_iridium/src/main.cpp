@@ -9,6 +9,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_fusion/InternalPose.h>
 #include <seabot_safety/SafetyLog.h>
+#include <seabot_mission/Waypoint.h>
 
 #include "iridium.h"
 
@@ -64,6 +65,10 @@ void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   iridium.m_internal_temperature = msg->temperature;
 }
 
+void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){
+  iridium.m_current_waypoint = msg->waypoint_number;
+}
+
 bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if(is_surface && (ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
@@ -87,6 +92,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber safety_sub = n.subscribe("/safety/safety", 1, depth_callback);
   ros::Subscriber internal_sensor_sub = n.subscribe("/fusion/internal_sensor", 1, internal_sensor_callback);
+  ros::Subscriber mission_sub = n.subscribe("/mission/set_point", 1, mission_callback);
 
   // Parameters
   ros::NodeHandle n_private("~");

@@ -292,7 +292,7 @@ bool Iridium::add_log_TDT1(){
     return false;
   }
 
-  size_t nb_bits = 96; // must be a multiple of 4
+  size_t nb_bits = 26*4; // must be a multiple of 4
   boost::multiprecision::cpp_int data(nb_bits);
 
   int bit_position = 0;
@@ -310,6 +310,8 @@ bool Iridium::add_log_TDT1(){
 
   bit_position += add_data(data, 4, bit_position, m_internal_pressure, 680.0, 800.0);
   bit_position += add_data(data, 6, bit_position, m_internal_temperature, 8.0, 50.0);
+
+  bit_position += add_data(data, 8, bit_position, m_current_waypoint);
 
   save_file.write((char*)&data, ceil(nb_bits/4));
 

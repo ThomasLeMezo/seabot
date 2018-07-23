@@ -71,6 +71,12 @@ public:
    */
   bool is_depth_only() const;
 
+  /**
+   * @brief get_current_waypoint
+   * @return
+   */
+  size_t get_current_waypoint() const;
+
 private:
   std::string m_folder_path = "";
   std::string m_file_name = "";
@@ -89,4 +95,7 @@ inline bool SeabotMission::is_depth_only() const{
   return m_depth_only;
 }
 
+inline size_t SeabotMission::get_current_waypoint() const{
+  return m_current_waypoint;
+}
 #endif // SEABOTMISSION_H
