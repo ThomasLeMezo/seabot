@@ -7,6 +7,9 @@
 
 using boost::multiprecision::cpp_int;
 
+#define NB_BITS 104
+typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS, NB_BITS, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_log1_t;
+
 extern "C"{
     #include "tis.h"
 }
@@ -27,10 +30,10 @@ public:
     bool send_and_receive_data();
 
     /**
-     * @brief add_log_TDT1
+     * @brief serialize_log_TDT1
      * @return
      */
-    bool add_log_TDT1();
+    bool serialize_log_TDT1();
 
     /**
      * @brief iridium_power
@@ -59,7 +62,7 @@ public:
     const std::string get_new_tdt_file();
 
     /**
-     * @brief add_data
+     * @brief serialize_data
      * @param bits
      * @param nb_bit
      * @param start_bit
@@ -67,30 +70,64 @@ public:
      * @param min
      * @param max
      */
-    int add_data(cpp_int &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double&value_max);
+    int serialize_data(uint_log1_t &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double&value_max);
 
     /**
-     * @brief add_data
+     * @brief deserialize_data
+     * @param bits
+     * @param nb_bit
+     * @param start_bit
+     * @param value
+     * @param value_min
+     * @param value_max
+     * @return
+     */
+    int deserialize_data(uint_log1_t &bits, const int &nb_bit, const int &start_bit, double &value, const double &value_min, const double &value_max);
+
+    /**
+     * @brief serialize_data
      * @param bits
      * @param nb_bit
      * @param start_bit
      * @param value
      * @return
      */
-    int add_data(cpp_int &bits, const int &nb_bit, const int &start_bit, const unsigned int &value);
+    int serialize_data(uint_log1_t &bits, const int &nb_bit, const int &start_bit, const unsigned int &value);
+
+    /**
+     * @brief deserialize_data
+     * @param bits
+     * @param nb_bit
+     * @param start_bit
+     * @param value
+     * @return
+     */
+    int deserialize_data(const uint_log1_t &bits, const int &nb_bit, const int &start_bit, unsigned int &value);
+
+    /**
+     * @brief is_demo_mode
+     * @return
+     */
+    bool is_demo_mode() const;
+
+    /**
+     * @brief deserialize_log_TDT1
+     * @param file_name
+     */
+    bool deserialize_log_TDT1(const std::string &file_name);
 
 public:
-    double m_east = 2097151; // 2^21-1
-    double m_north = 8097151; // 2^21-1 + 6e6
-    double m_gnss_speed = 0.0;
-    double m_gnss_heading = 0.0;
-    double m_batteries[4] = {0.0, 0.0, 0.0, 0.0};
+    double m_east = 42.0; // 2^21-1
+    double m_north = 6000042.0; // 2^21-1 + 6e6
+    double m_gnss_speed = 4.2;
+    double m_gnss_heading = 242.0;
+    double m_batteries[4] = {10.0, 10.0, 10.0, 10.0};
 
-    double m_internal_pressure = 680.0;
-    double m_internal_temperature = 5.0;
+    double m_internal_pressure = 742.0;
+    double m_internal_temperature = 42.0;
 
     unsigned int m_seabot_state = 0;
-    size_t  m_current_waypoint = 0; // 0 to 255 max
+    unsigned int  m_current_waypoint = 42; // 0 to 255 max
 
 private:
     uint64_t m_imei = 300234065392110;
@@ -122,6 +159,10 @@ int32_t uart_release(void *serial_struct);
 
 inline void Iridium::enable_com(bool val){
     m_enable_iridium = val;
+}
+
+inline bool Iridium::is_demo_mode()const{
+  return m_demo_mode;
 }
 
 #endif // IRIDIUM_H
