@@ -16,7 +16,6 @@ deque<double> temperature_memory;
 int filter_median_size = 5;
 int filter_mean_width = 3;
 
-ros::WallTime received_time;
 bool new_data = false;
 
 void sensor_callback(const pressure_bme280_driver::Bme280Data::ConstPtr& msg){
@@ -24,12 +23,11 @@ void sensor_callback(const pressure_bme280_driver::Bme280Data::ConstPtr& msg){
   temperature_memory.push_front(msg->temperature);
 
   if(pressure_memory.size()>filter_median_size){
-    pressure_memory.pop_back();
-    if(temperature_memory.size()>filter_median_size){
-      temperature_memory.pop_back();
-    }
+    pressure_memory.pop_back(); 
   }
-  received_time = ros::WallTime::now();
+  if(temperature_memory.size()>filter_median_size){
+    temperature_memory.pop_back();
+  }
   new_data = true;
 }
 
@@ -61,7 +59,7 @@ int main(int argc, char *argv[]){
   filter_mean_width = n_private.param<int>("filter_mean_width", 3);
 
   // Subscriber
-  ros::Subscriber internal_sensor_sub = n.subscribe("/driver/internal_sensor", 10, sensor_callback);
+  ros::Subscriber internal_sensor_sub = n.subscribe("/driver/sensor_internal", 10, sensor_callback);
 
   // Publisher
   ros::Publisher fusion_pub = n.advertise<seabot_fusion::InternalPose>("sensor_internal", 1);

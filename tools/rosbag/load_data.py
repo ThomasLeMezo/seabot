@@ -80,7 +80,6 @@ regulation_depth_set_point = []
 time_fusion_pose = []
 fusion_pose_north = []
 fusion_pose_east = []
-fusion_pose_altitude = []
 
 # /driver/extended_fix
 time_extend_fix = []
@@ -179,9 +178,8 @@ def load_bag(filename):
 
 		elif(topic=="/fusion/pose"):
 			time_fusion_pose.append((t-startTime).to_sec())
-			fusion_pose_east.append(msg.x)
-			fusion_pose_north.append(msg.y)
-			fusion_pose_altitude.append(msg.z)
+			fusion_pose_east.append(msg.east)
+			fusion_pose_north.append(msg.north)
 
 		elif(topic=="/regulation/depth_set_point"):
 			if(len(regulation_depth_set_point)>0):
