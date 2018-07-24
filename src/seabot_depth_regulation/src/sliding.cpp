@@ -20,8 +20,7 @@ bool piston_switch_in = false;
 bool piston_switch_out = false;
 
 double depth_set_point = 0.0;
-ros::Time t;
-ros::Time t_old;
+ros::WallTime t_old;
 
 bool emergency = false;
 
@@ -34,7 +33,6 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   depth = msg->depth;
   velocity= msg->velocity;
-  t = ros::Time::now();
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
@@ -98,8 +96,7 @@ int main(int argc, char *argv[]){
   double piston_set_point = 0.0;
   double offset_piston = cf_x0;
   double piston_set_point_offset = piston_set_point + offset_piston;
-  t = ros::Time::now();
-  t_old = ros::Time::now() - ros::Duration(1);
+  t_old = ros::WallTime::now() - ros::WallDuration(1);
   ros::Rate loop_rate(frequency);
 
   // Main regulation loop
@@ -107,6 +104,7 @@ int main(int argc, char *argv[]){
   while (ros::ok()){
     ros::spinOnce();
 
+    ros::WallTime t = ros::WallTime::now();
     double dt = (t-t_old).toSec();
     t_old = t;
     if(depth_set_point>0.2 && !emergency){

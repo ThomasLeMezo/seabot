@@ -46,7 +46,7 @@ void SeabotMission::compute_command(double &north, double &east, double &depth, 
 
       if(t_now>=m_waypoints[m_current_waypoint+1].time_start){
         m_current_waypoint++;
-        ROS_INFO("[Seabot_mission] Start following waypoint %lu (%f)", m_current_waypoint, m_waypoints[m_current_waypoint].time_start.toSec());
+        ROS_INFO("[Seabot_mission] Start following waypoint %zu (%f)", m_current_waypoint, m_waypoints[m_current_waypoint].time_start.toSec());
       }
     }
   }

@@ -30,6 +30,13 @@ battery2 = []
 battery3 = []
 battery4 = []
 
+# /fusion/battery
+time_fusion_battery = []
+fusion_battery1 = []
+fusion_battery2 = []
+fusion_battery3 = []
+fusion_battery4 = []
+
 # /driver/sensor_external
 time_sensor_external = []
 sensor_external_pressure = []
@@ -40,6 +47,11 @@ time_sensor_internal = []
 sensor_internal_pressure = []
 sensor_internal_temperature = []
 sensor_internal_humidity = []
+
+# /fusion/sensor_internal
+time_fusion_sensor_internal = []
+sensor_fusion_internal_pressure = []
+sensor_fusion_internal_temperature = []
 
 # /driver/thruster/engine
 time_engine = []
@@ -86,20 +98,7 @@ def load_bag(filename):
 	startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
 	end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
 
-	for topic, msg, t in bag.read_messages(topics=["/driver/piston/position",\
-													"/driver/piston/state",\
-													"/driver/power/battery",\
-													"/driver/sensor_external",\
-													"/driver/sensor_internal",\
-													"/driver/thruster/engine",\
-													"/fusion/depth",\
-													"/regulation/debug",\
-													"/regulation/depth_set_point",\
-													"/fusion/pose",\
-													"/driver/extended_fix",\
-													"/driver/piston/velocity"],\
-													start_time=startTime,\
-													end_time=end_time):
+	for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
 		if(topic=="/driver/piston/position"):
 			if(len(time_piston_position)>0):
 				time_piston_position.append((t-startTime).to_sec())
@@ -136,6 +135,13 @@ def load_bag(filename):
 			battery3.append(msg.battery3)
 			battery4.append(msg.battery4)
 
+		elif(topic=="/fusion/battery"):
+			time_fusion_battery.append((t-startTime).to_sec())
+			fusion_battery1.append(msg.battery1)
+			fusion_battery2.append(msg.battery2)
+			fusion_battery3.append(msg.battery3)
+			fusion_battery4.append(msg.battery4)
+
 		elif(topic=="/driver/sensor_external"):
 			time_sensor_external.append((t-startTime).to_sec())
 			sensor_external_pressure.append(msg.pressure)
@@ -146,6 +152,11 @@ def load_bag(filename):
 			sensor_internal_pressure.append(msg.pressure)
 			sensor_internal_temperature.append(msg.temperature)
 			sensor_internal_humidity.append(msg.humidity)
+
+		elif(topic=="/fusion/sensor_internal"):
+			time_fusion_sensor_internal.append((t-startTime).to_sec())
+			sensor_fusion_internal_pressure.append(msg.pressure)
+			sensor_fusion_internal_temperature.append(msg.temperature)
 
 		elif(topic=="/driver/thruster/engine"):
 			time_engine.append((t-startTime).to_sec())

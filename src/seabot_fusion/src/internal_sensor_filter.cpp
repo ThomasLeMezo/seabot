@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber internal_sensor_sub = n.subscribe("/driver/internal_sensor", 10, sensor_callback);
 
   // Publisher
-  ros::Publisher fusion_pub = n.advertise<seabot_fusion::InternalPose>("internal_sensor", 1);
+  ros::Publisher fusion_pub = n.advertise<seabot_fusion::InternalPose>("sensor_internal", 1);
 
   // Loop variables
   seabot_fusion::InternalPose msg;

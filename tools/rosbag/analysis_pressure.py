@@ -45,7 +45,7 @@ P1 = np.mean(P[0:10])
 T1 = np.mean(Ti[0:10])
 T = Ti
 
-# P[5000:7000] = 850.0e2
+P[5000:7000] = 850.0e2
 
 dock_pression_temp = Dock("PV=nRT")
 area.addDock(dock_pression_temp)
