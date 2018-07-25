@@ -290,6 +290,7 @@ int Iridium::deserialize_data(uint_log1_t &bits, const int &nb_bit, const int &s
   double scale = (double)(1<<nb_bit-1)/(value_max-value_min);
   uint_log1_t mask = ((uint_log1_t(1)<<nb_bit)-1) << start_bit;
   uint_log1_t v = (bits & mask)>>start_bit;
+  cout << v << endl;
   value = (double)v;
   value /= scale;
   value += value_min;
@@ -360,6 +361,7 @@ bool Iridium::serialize_log_TDT1(){
 }
 
 bool Iridium::deserialize_log_TDT1(const string &file_name){
+  cout << "Deserialize log TDT1" << endl;
   ifstream save_file;
   save_file.open(file_name);
 

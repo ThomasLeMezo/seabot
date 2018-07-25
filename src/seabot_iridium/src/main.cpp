@@ -63,7 +63,7 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
     iridium.m_batteries[3] = msg->battery4;
 }
 
-void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
+void sensor_internal_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   iridium.m_internal_pressure = msg->pressure;
   iridium.m_internal_temperature = msg->temperature;
 }
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber gnss_sub = n.subscribe("/driver/fix_extended", 1, gnss_callback);
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber safety_sub = n.subscribe("/safety/safety", 1, depth_callback);
-  ros::Subscriber internal_sensor_sub = n.subscribe("/fusion/internal_sensor", 1, internal_sensor_callback);
+  ros::Subscriber sensor_internal_sub = n.subscribe("/fusion/sensor_internal", 1, sensor_internal_callback);
   ros::Subscriber mission_sub = n.subscribe("/mission/set_point", 1, mission_callback);
 
   // Parameters
