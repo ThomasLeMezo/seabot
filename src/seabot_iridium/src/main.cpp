@@ -29,10 +29,13 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
       time_at_surface = ros::WallTime::now();
       is_surface = true;
       ROS_INFO("[Iridium] Surface detected");
+      iridium.iridium_power(true);
     }
   }
-  else
+  else{
     is_surface = false;
+    iridium.iridium_power(false);
+  }
 }
 
 void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){

@@ -190,7 +190,8 @@ class GPSDClient {
 
       fix.status = status;
 
-      gps_fix_pub.publish(fix);
+      if(status.status != -1)
+        gps_fix_pub.publish(fix);
     }
 
     void process_data_navsat(struct gps_data_t* p) {
@@ -245,7 +246,7 @@ class GPSDClient {
       fix->position_covariance_type = NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
 
       // Avoid publishing to much data
-      if(p->status==STATUS_FIX)
+      if(p->status!=STATUS_NO_FIX)
         navsat_fix_pub.publish(fix);
     }
 };

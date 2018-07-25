@@ -1,0 +1,8 @@
+# /etc/default/gpsd
+# Default settings for the gpsd init script and the hotplug wrapper.
+
+START_DAEMON="true"
+GPSD_OPTIONS="/dev/ttyACM0 -n"
+DEVICES=""
+USBAUTO="true"
+GPSD_SOCKET="/var/run/gpsd.sock"

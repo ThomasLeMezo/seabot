@@ -129,6 +129,8 @@ public:
     unsigned int m_seabot_state = 0;
     unsigned int  m_current_waypoint = 42; // 0 to 255 max
 
+    bool m_iridium_power_state = false;
+
 private:
     uint64_t m_imei = 300234065392110;
     std::string m_path_received = "iridium/received";

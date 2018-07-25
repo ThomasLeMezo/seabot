@@ -28,6 +28,10 @@ Iridium::Iridium(){
   struct passwd *pw = getpwuid(getuid());
   const char *homedir = pw->pw_dir;
   m_path_received_full = string(homedir) + "/" + m_path_received;
+
+  boost::filesystem::path p(m_path_received_full);
+  if (boost::filesystem::create_directories(p))
+    ROS_INFO("[Iridium] Directory to store msg received was not found, create a new one");
 }
 
 int32_t Iridium::uart_init(){
@@ -176,6 +180,8 @@ int32_t uart_release(void *serial_struct){
 }
 
 bool Iridium::iridium_power(const bool &enable){
+  if(enable != m_iridium_power_state){
+
   string gpio_file = "/sys/class/gpio/gpio" + to_string(m_gpio_power) + "/value";
 
   ofstream setvalgpio(gpio_file.c_str()); // open value file for gpio
@@ -186,6 +192,9 @@ bool Iridium::iridium_power(const bool &enable){
 
   setvalgpio << enable?1:0;//write value to value file
   setvalgpio.close();// close value file
+
+  m_iridium_power_state = enable;
+  }
   return true;
 }
 
@@ -218,7 +227,7 @@ bool Iridium::send_and_receive_data(){
 
     int enable_transmission = m_transmission_number_attempt;
     while(enable_transmission>0){
-      iridium_power(true); // Power On Iridium
+//      iridium_power(true); // Power On Iridium
       int result = TIS_transmission(&m_tis, 10); // Launch transmission
 
       ///***** Diagnostic Result *****///
@@ -237,7 +246,7 @@ bool Iridium::send_and_receive_data(){
       }
       else{
         enable_transmission = 0;
-        iridium_power(false); // Power Off Iridium
+//        iridium_power(false); // Power Off Iridium
       }
     }
 
@@ -257,7 +266,7 @@ const std::string Iridium::get_new_tdt_file(){
 
   boost::filesystem::path p(sstream.str());
   if (boost::filesystem::create_directories(p))
-    ROS_INFO("[Iridium] Directory to store msg was not found, create a new one");
+    ROS_INFO("[Iridium] Directory to store msg send was not found, create a new one");
 
   sstream << std::hex << wall_time_now; // Print in hex
   sstream << ".tdt";
