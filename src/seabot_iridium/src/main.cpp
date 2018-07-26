@@ -106,6 +106,7 @@ int main(int argc, char *argv[]){
 
   iridium.uart_init();
   iridium.enable_com(true);
+  iridium.iridium_power(true);
 
   ros::Rate loop_rate(frequency);
   time_last_communication.fromSec(0);

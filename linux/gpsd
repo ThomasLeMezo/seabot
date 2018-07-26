@@ -1,4 +1,5 @@
 # /etc/default/gpsd
+# sudo usermod -a -G dialout gpsd
 # Default settings for the gpsd init script and the hotplug wrapper.
 
 START_DAEMON="true"
