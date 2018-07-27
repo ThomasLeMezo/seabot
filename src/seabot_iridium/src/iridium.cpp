@@ -326,10 +326,10 @@ bool Iridium::serialize_log_TDT1(){
   size_t nb_bits = 26*4; // must be a multiple of 4
   uint_log1_t data = (uint_log1_t(1)<<nb_bits) -1;
 
-  cout << "data.str().size() = " << data.str().size() << endl;
-  auto count = data.backend().size();
-  auto tsize = sizeof(boost::multiprecision::limb_type);
-  auto copy_count = count * tsize;
+//  cout << "data.str().size() = " << data.str().size() << endl;
+//  auto count = data.backend().size();
+//  auto tsize = sizeof(boost::multiprecision::limb_type);
+//  auto copy_count = count * tsize;
 
   int bit_position = 0;
   bit_position += serialize_data(data, 21, bit_position, m_east, 0, 1300000);

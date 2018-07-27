@@ -7,15 +7,15 @@ using namespace std;
 Iridium iridium;
 
 int main(int argc, char *argv[]){
-  std::ofstream outfile("log_TDT1.txt");
+  std::ofstream outfile("/mnt/webperso/iridium/log_TDT1.txt");
   string file_name(argv[1]);
   iridium.deserialize_log_TDT1(file_name);
   cout << "file open : " << outfile.is_open() << endl;
 
   outfile << "file_name = " << file_name << endl;
   
-  outfile << "east = " << iridium.m_east << endl;
-  outfile << "north = " << iridium.m_north << endl;
+  outfile << "east = " << std::fixed << iridium.m_east << endl;
+  outfile << "north = " << std::fixed << iridium.m_north << endl;
   outfile << "gnss_speed = " << iridium.m_gnss_speed << endl;
   outfile << "gnss_heading = " << iridium.m_gnss_heading << endl;
 
