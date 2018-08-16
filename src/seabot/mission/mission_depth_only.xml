@@ -6,32 +6,377 @@
 
 <paths type ="1">
 	<waypoint>
-		<time>10</time>
+		<time>0</time>
 		<depth>0</depth>
 	</waypoint>
 
 	<waypoint>
-		<time>20</time>
-		<depth>5</depth>
-	</waypoint>
-
-	<waypoint>
-		<time>30</time>
+		<time>600</time>
 		<depth>15</depth>
 	</waypoint>
 
 	<waypoint>
-		<time>40</time>
-		<depth>5</depth>
+		<time>3300</time>
+		<depth>2</depth>
 	</waypoint>
 
 	<waypoint>
-		<time>50</time>
+		<time>3600</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>4200</time>
 		<depth>15</depth>
 	</waypoint>
 
 	<waypoint>
-		<time>60</time>
-		<depth>5</depth>
+		<time>6900</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>7200</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>7800</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>10500</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>10800</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>11400</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>14100</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>14400</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>15000</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>17700</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>18000</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>18600</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>21300</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>21600</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>22200</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>24900</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>25200</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>25800</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>28500</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>28800</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>29400</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>32100</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>32400</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>33000</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>35700</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>36000</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>36600</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>39300</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>39600</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>40200</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>42900</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>43200</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>43800</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>46500</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>46800</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>47400</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>50100</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>50400</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>51000</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>53700</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>54000</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>54600</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>57300</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>57600</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>58200</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>60900</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>61200</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>61800</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>64500</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>64800</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>65400</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>68100</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>68400</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>69000</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>71700</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>72000</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>72600</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>75300</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>75600</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>76200</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>78900</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>79200</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>79800</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>82500</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>82800</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>83400</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>86100</time>
+		<depth>2</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>86400</time>
+		<depth>0</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>87000</time>
+		<depth>15</depth>
+	</waypoint>
+
+	<waypoint>
+		<time>89700</time>
+		<depth>2</depth>
 	</waypoint>
 </paths>
