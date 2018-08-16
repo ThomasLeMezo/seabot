@@ -185,8 +185,9 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
-  ros::Subscriber internal_sensor_sub = n.subscribe("/driver/internal_sensor", 1, internal_sensor_callback);
-  ros::Subscriber batteries_sub = n.subscribe("/fusion/batteries", 1, batteries_callback);
+  ros::Subscriber internal_sensor_sub = n.subscribe("/fusion/sensor_internal", 1, internal_sensor_callback);
+  ros::Subscriber batteries_sub = n.subscribe("/fusion/battery", 1, batteries_callback);
+  ros::Subscriber external_sensor_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
 
   // Publisher
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
@@ -231,7 +232,7 @@ int main(int argc, char *argv[]){
       cpt++;
     }
     else
-      ROS_WARN("[Safety] Not receiving internal sensor data or piston state data");
+      ROS_WARN("[Safety] Not receiving internal sensor data or piston state data (%f, %f)", d_internal_sensor.toSec(), d_piston_state.toSec());
     dt.sleep();
   }
   p_t_ratio_ref /= (double)nb_sample;
@@ -252,12 +253,12 @@ int main(int argc, char *argv[]){
     double d_depth = (t_ref-time_depth).toSec();
     double d_piston_state = (t_ref-time_piston_state).toSec();
 
-    if(d_batteries < d_batteries_ref
-       || d_internal_sensor < d_internal_sensor_ref
-       || d_external_sensor < d_external_sensor_ref
-       || d_depth < d_depth_ref
-       || d_piston_state < d_piston_state_ref){
-      ROS_WARN("[Safety] No data published by sensors");
+    if(d_batteries > d_batteries_ref
+       || d_internal_sensor > d_internal_sensor_ref
+       || d_external_sensor > d_external_sensor_ref
+       || d_depth > d_depth_ref
+       || d_piston_state > d_piston_state_ref){
+      ROS_WARN("[Safety] No data published by sensors (%f, %f, %f, %f, %f)", d_batteries, d_internal_sensor, d_external_sensor, d_depth, d_piston_state);
       enable_emergency_depth = true;
       safety_msg.published_frequency = true;
     }
