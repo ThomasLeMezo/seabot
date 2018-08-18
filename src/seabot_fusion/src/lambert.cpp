@@ -66,6 +66,9 @@ int main(int argc, char *argv[])
 
     loop_rate.sleep();
   }
+
+  pj_free(pj_latlong);
+  pj_free(pj_lambert);
   return 0;
 }
 

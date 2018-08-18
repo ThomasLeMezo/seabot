@@ -181,6 +181,7 @@ int main(int argc, char *argv[]){
   double tick_to_volume = (1.75e-3/48.0)*(pow((0.05/2.0),2))*M_PI;
   const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.001);
   const double volume_ref = n_private.param<double>("volume_ref", 6.0);
+  const double pressure_internal_max = 1e2*n_private.param<double>("pressure_internal_max", 850.0); // in Pa
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -221,6 +222,15 @@ int main(int argc, char *argv[]){
   double piston_position_ref = 0.0;
   unsigned int cpt = 0;
   unsigned int nb_sample = 5;
+
+  /// ******************************************************************************
+  /// **************************** Initialization **********************************
+  /// ******************************************************************************
+
+  // Wait initialization
+  ros::WallDuration(15.0).sleep();
+
+  // Set Ref Pressure & Temperature
   ros::WallDuration dt(1.0);
   while(cpt<nb_sample){
     ros::spinOnce();
@@ -238,14 +248,19 @@ int main(int argc, char *argv[]){
   p_t_ratio_ref /= (double)nb_sample;
   piston_position_ref /= (double) nb_sample;
 
-  // Main regulation loop
+  /// ******************************************************************************
+  /// **************************** Main regulation loop ****************************
+  /// ******************************************************************************
+
   ROS_INFO("[Safety] Start safety loop");
   while (ros::ok()){
     ros::spinOnce();
     bool enable_emergency_depth = false;
     seabot_safety::SafetyLog safety_msg;
 
-    // Sensor published data
+    ///*******************************************************
+    ///**************** Sensor published data ****************
+
     ros::WallTime t_ref = ros::WallTime::now();
     double d_batteries = (t_ref-time_batteries).toSec();
     double d_internal_sensor = (t_ref-time_internal_sensor).toSec();
@@ -265,11 +280,13 @@ int main(int argc, char *argv[]){
     else
       safety_msg.published_frequency = false;
 
-    // Analyze zero depth
+    ///*******************************************************
+    ///**************** Analyze zero depth *******************
     if(piston_position == 0 && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero)
       call_zero_depth();
 
-    // Flash at surface
+    ///*******************************************************
+    ///**************** Flash at surface ********************
     if(enable_flash){
       if(depth < limit_depth_flash_enable)
         call_flash_enable(true);
@@ -277,7 +294,8 @@ int main(int argc, char *argv[]){
         call_flash_enable(false);
     }
 
-    // Depth limit
+    ///*******************************************************
+    ///**************** Depth limit **************************
     if(is_pressure_limit_reached && (ros::WallTime::now()-time_pressure_limit_reached).toSec()>time_before_pressure_emergency){
       ROS_WARN("[Safety] Limit depth detected");
       enable_emergency_depth = true;
@@ -286,7 +304,8 @@ int main(int argc, char *argv[]){
     else
       safety_msg.depth_limit = false;
 
-    // Batteries
+    ///*******************************************************
+    ///**************** Batteries ****************************
     if(battery_limit_reached){
       ROS_WARN("[Safety] Batteries limit detected");
       enable_emergency_depth = true;
@@ -296,38 +315,44 @@ int main(int argc, char *argv[]){
     else
       safety_msg.batteries_limit = false;
 
-    // Internal sensor
+    ///*******************************************************
+    ///**************** Internal sensor **********************
     safety_msg.depressurization = false;
-    if(internal_temperature!=0.0){
+    if(internal_temperature!=273.15){
       double p_t_ratio = internal_pressure/internal_temperature;
       double piston = piston_position-piston_position_ref;
-      if(abs(piston)<620.0){
-        if(abs(p_t_ratio-p_t_ratio_ref)>1.5){
-          ROS_WARN("[Safety] Sealing issue detected");
-          enable_emergency_depth = true;
+
+      // PV=nRT law
+      if(abs(piston)<620.0){ // Case piston near zero
+        if(abs(p_t_ratio-p_t_ratio_ref)>1.5)
           safety_msg.depressurization = true;
-        }
       }
-      else{
+      else{ // General case
         if(p_t_ratio != p_t_ratio_ref){
           double volume = piston*tick_to_volume*p_t_ratio/(p_t_ratio-p_t_ratio_ref);
-          if(abs(volume-volume_ref)>delta_volume_allowed){
-            ROS_WARN("[Safety] Sealing issue detected");
-            enable_emergency_depth = true;
+          if(abs(volume-volume_ref)>delta_volume_allowed)
             safety_msg.depressurization = true;
-          }
         }
-        else{
-          ROS_WARN("[Safety] Sealing issue detected");
-          enable_emergency_depth = true;
+        else
           safety_msg.depressurization = true;
-        }
       }
+
+      // Limit max
+      if(internal_pressure>pressure_internal_max)
+        safety_msg.depressurization = true;
     }
     else{
       ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
-      enable_emergency_depth = true;
+      safety_msg.depressurization = true;
     }
+
+    if(safety_msg.depressurization = true)
+      ROS_WARN("[Safety] Sealing issue detected (p=%f, t=%f)", internal_pressure, internal_temperature);
+
+    ///*******************************************************
+    ///**************** Summary ******************************
+    if(safety_msg.batteries_limit || safety_msg.depressurization || safety_msg.depth_limit || safety_msg.published_frequency)
+      enable_emergency_depth = true;
 
     if(enable_emergency_depth)
       call_emergency_depth(true);

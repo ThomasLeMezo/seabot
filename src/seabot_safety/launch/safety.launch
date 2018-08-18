@@ -21,6 +21,7 @@
 
         <param name="delta_volume_allowed" value="0.001" />
         <param name="volume_ref" value="6.0" />
+        <param name="pressure_internal_max" value="850.0" />
 
     </node>
 </launch>
