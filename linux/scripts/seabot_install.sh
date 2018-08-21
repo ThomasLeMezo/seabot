@@ -23,3 +23,6 @@ source ~/.zshrc
 sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential
 
 echo "source ~/workspaceFlotteur/devel/setup.zsh" >> ~/.zshrc
+
+# Note NTP Install
+# ./configure --enable-NMEA --enable-NMEA --enable-SHM --enable-thread-support --with-threads --enable-libopts-install
