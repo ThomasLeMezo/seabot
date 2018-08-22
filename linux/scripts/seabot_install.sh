@@ -37,3 +37,7 @@ cmake ..
 make -j4
 sudo make install
 sudo ldconfig
+
+# Note NTP Install
+# ./configure --enable-NMEA --enable-NMEA --enable-SHM --enable-thread-support --with-threads --enable-libopts-install
+
