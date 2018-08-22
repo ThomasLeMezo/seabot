@@ -2,8 +2,8 @@
 #include <unistd.h>
 
 #include <ros/ros.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/NavSatStatus.h>
+#include <gpsd_client/GPSFix.h>
+#include <gpsd_client/GPSStatus.h>
 #include <seabot_fusion/GnssPose.h>
 #include <cmath>
 
@@ -13,7 +13,7 @@ using namespace std;
 double latitude, longitude, altitude;
 bool new_data = false;
 
-void navSatFix_callback(const sensor_msgs::NavSatFix::ConstPtr& msg){
+void navFix_callback(const gpsd_client::GPSFix::ConstPtr& msg){
   latitude =  msg->latitude;
   longitude =  msg->longitude;
   altitude =  msg->altitude;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   }
 
   // Publishers
-  ros::Subscriber navSatFix_sub = n.subscribe("/driver/fix", 1, navSatFix_callback);
+  ros::Subscriber navFix_sub = n.subscribe("/driver/fix", 1, navFix_callback);
   ros::Publisher pose_pub = n.advertise<seabot_fusion::GnssPose>("pose", 1);
 
   seabot_fusion::GnssPose msg_pose;
