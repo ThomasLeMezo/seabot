@@ -52,6 +52,7 @@ bool is_emergency_depth = false;
 ros::WallTime time_internal_sensor;
 double internal_pressure = 0.0;
 double internal_temperature = 0.0;
+double internal_humidity = 0.0;
 
 ros::ServiceClient service_zero_depth;
 ros::ServiceClient service_flash_enable;
@@ -103,6 +104,7 @@ void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   time_internal_sensor = ros::WallTime::now();
   internal_pressure = msg->pressure*1e2;
   internal_temperature = msg->temperature + 273.15;
+  internal_humidity = msg->humidity;
 }
 
 /// ****************** SERVICES ****************** ///
