@@ -176,10 +176,10 @@ def load_bag(filename):
 			regulation_debug_piston_set_point.append(msg.piston_set_point)
 			regulation_debug_piston_set_point_offset.append(msg.piston_set_point_offset)
 
-		elif(topic=="/fusion/pose"):
-			time_fusion_pose.append((t-startTime).to_sec())
-			fusion_pose_east.append(msg.east)
-			fusion_pose_north.append(msg.north)
+		# elif(topic=="/fusion/pose"):
+		# 	time_fusion_pose.append((t-startTime).to_sec())
+		# 	fusion_pose_east.append(msg.east)
+		# 	fusion_pose_north.append(msg.north)
 
 		elif(topic=="/regulation/depth_set_point"):
 			if(len(regulation_depth_set_point)>0):
