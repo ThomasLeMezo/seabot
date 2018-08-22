@@ -52,6 +52,7 @@ bool is_emergency_depth = false;
 ros::WallTime time_internal_sensor;
 double internal_pressure = 0.0;
 double internal_temperature = 0.0;
+double internal_humidity = 0.0;
 
 ros::ServiceClient service_zero_depth;
 ros::ServiceClient service_flash_enable;
@@ -103,6 +104,7 @@ void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   time_internal_sensor = ros::WallTime::now();
   internal_pressure = msg->pressure*1e2;
   internal_temperature = msg->temperature + 273.15;
+//  internal_humidity = msg->humidity; ToDo: remove after merge
 }
 
 /// ****************** SERVICES ****************** ///
@@ -182,6 +184,8 @@ int main(int argc, char *argv[]){
   const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.001);
   const double volume_ref = n_private.param<double>("volume_ref", 6.0);
   const double pressure_internal_max = 1e2*n_private.param<double>("pressure_internal_max", 850.0); // in Pa
+
+  const double humidity_limit = n_private.param<double>("humidity_limit", 75.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -345,9 +349,12 @@ int main(int argc, char *argv[]){
       ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
       safety_msg.depressurization = true;
     }
+    if(internal_humidity>humidity_limit){
+      safety_msg.depressurization = true;
+    }
 
     if(safety_msg.depressurization = true)
-      ROS_WARN("[Safety] Sealing issue detected (p=%f, t=%f)", internal_pressure, internal_temperature);
+      ROS_WARN("[Safety] Sealing issue detected (p=%f, t=%f, h=%f)", internal_pressure, internal_temperature, internal_humidity);
 
     ///*******************************************************
     ///**************** Summary ******************************

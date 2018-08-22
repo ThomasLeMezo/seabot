@@ -23,6 +23,8 @@
         <param name="volume_ref" value="6.0" />
         <param name="pressure_internal_max" value="850.0" />
 
+        <param name="humidity_limit" value="75.0" />
+
     </node>
 </launch>
 

@@ -308,7 +308,7 @@ if(len(fusion_pose_east)>0):
     dock_gps2.addWidget(pg_gps2)
 
 #################### Temperature / Depth ####################
-if(len(time_sensor_external)>0):
+if(len(time_sensor_external)>0 and len(time_fusion_depth)>0):
     dock_temp = Dock("Temperature")
     area.addDock(dock_temp, 'above', dock_battery)
     if(len(fusion_depth)>0):
