@@ -104,7 +104,7 @@ void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   time_internal_sensor = ros::WallTime::now();
   internal_pressure = msg->pressure*1e2;
   internal_temperature = msg->temperature + 273.15;
-//  internal_humidity = msg->humidity; ToDo: remove after merge
+  internal_humidity = msg->humidity;
 }
 
 /// ****************** SERVICES ****************** ///
