@@ -39,8 +39,10 @@ void GPSDClient::stop() {
 void GPSDClient::process_data(struct gps_data_t* p) {
   if (!p->online)
     return;
-  if(p->status!=STATUS_NO_FIX)
+  if(p->status!=STATUS_NO_FIX || m_last_fix){
     process_data_gps(p);
+    m_last_fix =  (p->status!=STATUS_NO_FIX)?true:false;
+  }
 }
 
 void GPSDClient::process_data_gps(struct gps_data_t* p) {
@@ -104,12 +106,10 @@ void GPSDClient::process_data_gps(struct gps_data_t* p) {
     fix.err_speed = p->fix.eps;
     fix.err_climb = p->fix.epc;
     fix.err_time = p->fix.ept;
-
   }
   else {
     status.status = -1; // STATUS_NO_FIX
   }
-
   fix.status = status;
 
   gps_fix_pub.publish(fix);

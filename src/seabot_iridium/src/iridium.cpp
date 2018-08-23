@@ -385,7 +385,7 @@ bool Iridium::deserialize_log_TDT1(const string &file_name){
 
   cout << data << endl;
 
-  cout << "Start deserialize data" << endl;
+  cout << "Start deserializing data" << endl;
   int bit_position = 0;
   bit_position += deserialize_data(data, 21, bit_position, m_east, 0, 1300000);
   bit_position += deserialize_data(data, 21, bit_position, m_north, 6000000, 7200000);
