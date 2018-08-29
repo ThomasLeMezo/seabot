@@ -3,49 +3,43 @@
 <offset>
 	<north>1</north>
 	<east>2</east>
-	<time>1531261745</time>
+	<start_time_utc>
+		<year>2018</year>
+		<month>08</month>
+		<day>29</day>
+		<hour>21</hour>
+		<min>41</min>
+	</start_time_utc>
 </offset>
 
 <paths type ="0">
 	<waypoint>
-		<time>10</time>
+		<duration_since_start>10</duration_since_start>
 		<east>1</east>
 		<north>2</north>
 		<depth>0</depth>
 	</waypoint>
 
 	<waypoint>
-		<time>20</time>
+		<duration>20</duration>
 		<east>1</east>
 		<north>2</north>
 		<depth>5</depth>
 	</waypoint>
 
-	<waypoint>
-		<time>30</time>
-		<east>1</east>
-		<north>2</north>
-		<depth>15</depth>
-	</waypoint>
+	<loop number="2">
+		<waypoint test="1">
+			<duration>20</duration>
+			<east>-1</east>
+			<north>-2</north>
+			<depth>0</depth>
+		</waypoint>
 
-	<waypoint>
-		<time>40</time>
-		<east>1</east>
-		<north>2</north>
-		<depth>5</depth>
-	</waypoint>
-
-	<waypoint>
-		<time>50</time>
-		<east>1</east>
-		<north>2</north>
-		<depth>15</depth>
-	</waypoint>
-
-	<waypoint>
-		<time>60</time>
-		<east>1</east>
-		<north>2</north>
-		<depth>5</depth>
-	</waypoint>
+		<waypoint>
+			<duration>20</duration>
+			<east>-3</east>
+			<north>-4</north>
+			<depth>5</depth>
+		</waypoint>
+	</loop>
 </paths>

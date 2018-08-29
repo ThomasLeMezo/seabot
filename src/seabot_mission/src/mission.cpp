@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
   const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
-  const string mission_path = n_private.param<string>("mission_path", "~");
+  const string mission_path = n_private.param<string>("mission_path", "/home/lemezoth");
 
   ros::Rate loop_rate(frequency);
   SeabotMission m(mission_path);
@@ -40,6 +40,8 @@ int main(int argc, char *argv[]){
     waypoint_msg.east = east;
     waypoint_msg.mission_enable = m.is_mission_enable();
     waypoint_msg.waypoint_number = m.get_current_waypoint();
+    waypoint_msg.wall_time = ros::WallTime::now().toSec();
+    waypoint_msg.time_to_next_waypoint = m.get_time_to_next_waypoint();
     waypoint_pub.publish(waypoint_msg);
 
     loop_rate.sleep();
