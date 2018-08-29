@@ -351,6 +351,7 @@ int main(int argc, char *argv[]){
       ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
       safety_msg.depressurization = true;
     }
+
     if(internal_humidity>humidity_limit){
       safety_msg.depressurization = true;
     }

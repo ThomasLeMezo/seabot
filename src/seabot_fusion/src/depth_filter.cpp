@@ -13,7 +13,7 @@
 using namespace std;
 
 double zero_depth = 0.0;
-double depth = 0;
+double depth = 0.0;
 deque<pair<double, ros::Time>> depth_memory;
 double pressure_to_depth = 10.0;
 int filter_median_size = 5;
@@ -22,7 +22,6 @@ int filter_mean_width = 3;
 deque<double> pressure_deque;
 ros::Time time_pressure;
 
-bool zero_depth_valid = false;
 bool new_data = false;
 
 bool handle_zero_depth(std_srvs::Trigger::Request  &req,
@@ -33,7 +32,6 @@ bool handle_zero_depth(std_srvs::Trigger::Request  &req,
     zero_depth /= pressure_deque.size();
 
     res.success = true;
-    zero_depth_valid = true;
   }
   else
     res.success = false;
@@ -59,6 +57,7 @@ int main(int argc, char *argv[]){
   const double rho = n_private.param<double>("rho", 1020.0);
   const double g = n_private.param<double>("g", 9.81);
   const double g_rho = g*rho/1e5; // To be homogeneous to Bar
+  zero_depth = n_private.param<double>("zero_depth_pressure", 1.024);
 
   filter_median_size = n_private.param<int>("filter_median_size", 10);
   filter_mean_width = n_private.param<int>("filter_mean_width", 3);
@@ -118,11 +117,10 @@ int main(int argc, char *argv[]){
           velocity = std::copysign(velocity_limit, velocity);
       }
 
-      if(zero_depth_valid){
-        msg.depth = depth;
-        msg.velocity = velocity;
-        depth_pub.publish(msg);
-      }
+      msg.depth = depth;
+      msg.velocity = velocity;
+      depth_pub.publish(msg);
+
       new_data = false;
     }
 
