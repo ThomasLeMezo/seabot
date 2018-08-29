@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
   const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
-  const string mission_path = n_private.param<string>("mission_path", "/home/lemezoth");
+  const string mission_path = n_private.param<string>("mission_path", "~");
 
   ros::Rate loop_rate(frequency);
   SeabotMission m(mission_path);
