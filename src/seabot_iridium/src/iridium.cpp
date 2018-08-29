@@ -344,8 +344,9 @@ bool Iridium::serialize_log_TDT1(){
   bit_position += serialize_data(data, 5, bit_position, m_batteries[2], 9, 12.4);
   bit_position += serialize_data(data, 5, bit_position, m_batteries[3], 9, 12.4);
 
-  bit_position += serialize_data(data, 4, bit_position, m_internal_pressure, 680.0, 800.0);
+  bit_position += serialize_data(data, 6, bit_position, m_internal_pressure, 680.0, 800.0);
   bit_position += serialize_data(data, 6, bit_position, m_internal_temperature, 8.0, 50.0);
+  bit_position += serialize_data(data, 6, bit_position, m_internal_humidity, 50.0, 100.0);
 
   bit_position += serialize_data(data, 8, bit_position, m_current_waypoint);
 
@@ -399,8 +400,9 @@ bool Iridium::deserialize_log_TDT1(const string &file_name){
   bit_position += deserialize_data(data, 5, bit_position, m_batteries[2], 9, 12.4);
   bit_position += deserialize_data(data, 5, bit_position, m_batteries[3], 9, 12.4);
 
-  bit_position += deserialize_data(data, 4, bit_position, m_internal_pressure, 680.0, 800.0);
+  bit_position += deserialize_data(data, 6, bit_position, m_internal_pressure, 680.0, 800.0);
   bit_position += deserialize_data(data, 6, bit_position, m_internal_temperature, 8.0, 50.0);
+  bit_position += deserialize_data(data, 6, bit_position, m_internal_humidity,50.0, 100.0);
 
   bit_position += deserialize_data(data, 8, bit_position, m_current_waypoint);
 

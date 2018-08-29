@@ -7,7 +7,7 @@
 
 using boost::multiprecision::cpp_int;
 
-#define NB_BITS 104
+#define NB_BITS 112
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS, NB_BITS, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_log1_t;
 
 extern "C"{
@@ -125,6 +125,7 @@ public:
 
     double m_internal_pressure = 742.0;
     double m_internal_temperature = 42.0;
+    double m_internal_humidity = 0.0;
 
     unsigned int m_seabot_state = 0;
     unsigned int  m_current_waypoint = 42; // 0 to 255 max

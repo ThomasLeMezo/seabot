@@ -66,6 +66,7 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
 void sensor_internal_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   iridium.m_internal_pressure = msg->pressure;
   iridium.m_internal_temperature = msg->temperature;
+  iridium.m_internal_temperature = msg->humidity;
 }
 
 void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){
