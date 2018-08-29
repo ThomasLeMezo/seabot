@@ -131,8 +131,10 @@ int main(int argc, char *argv[]){
       engine_msg.angular = 0.0;
     }
     engine_pub.publish(engine_msg);
+
+    loop_rate.sleep();
   }
-  loop_rate.sleep();
+
 
   return 0;
 }

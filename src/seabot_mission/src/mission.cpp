@@ -34,7 +34,6 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
 
     m.compute_command(north, east, depth, ratio);
-
     waypoint_msg.depth_only = m.is_depth_only();
     waypoint_msg.depth = depth;
     waypoint_msg.north = north;

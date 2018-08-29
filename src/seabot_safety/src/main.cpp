@@ -182,6 +182,7 @@ int main(int argc, char *argv[]){
 
   double tick_to_volume = (1.75e-3/48.0)*(pow((0.05/2.0),2))*M_PI;
   const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.001);
+  const double delta_ref_allowed = n_private.param<double>("delta_ref_allowed", 1.5);
   const double volume_ref = n_private.param<double>("volume_ref", 6.0);
   const double pressure_internal_max = 1e2*n_private.param<double>("pressure_internal_max", 850.0); // in Pa
 
@@ -322,13 +323,14 @@ int main(int argc, char *argv[]){
     ///*******************************************************
     ///**************** Internal sensor **********************
     safety_msg.depressurization = false;
+    double p_t_ratio;
     if(internal_temperature!=273.15){
-      double p_t_ratio = internal_pressure/internal_temperature;
+      p_t_ratio = internal_pressure/internal_temperature;
       double piston = piston_position-piston_position_ref;
 
       // PV=nRT law
       if(abs(piston)<620.0){ // Case piston near zero
-        if(abs(p_t_ratio-p_t_ratio_ref)>1.5)
+        if(abs(p_t_ratio-p_t_ratio_ref)>delta_ref_allowed)
           safety_msg.depressurization = true;
       }
       else{ // General case
@@ -353,8 +355,10 @@ int main(int argc, char *argv[]){
       safety_msg.depressurization = true;
     }
 
-    if(safety_msg.depressurization = true)
+    if(safety_msg.depressurization = true){
       ROS_WARN("[Safety] Sealing issue detected (p=%f, t=%f, h=%f)", internal_pressure, internal_temperature, internal_humidity);
+      ROS_WARN("[Safety] Ratio (%f / %f)", p_t_ratio, p_t_ratio_ref);
+    }
 
     ///*******************************************************
     ///**************** Summary ******************************
