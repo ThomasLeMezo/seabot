@@ -16,7 +16,7 @@ from math import *
 
 ### Parameters
 margin_depth = 0.9
-start_piston_position = 700
+start_piston_position = 1200
 
 ### Variables
 depth = 0

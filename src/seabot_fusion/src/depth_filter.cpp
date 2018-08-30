@@ -27,9 +27,11 @@ bool new_data = false;
 bool handle_zero_depth(std_srvs::Trigger::Request  &req,
                        std_srvs::Trigger::Response &res){
   if(!pressure_deque.empty()){
+    zero_depth = 0.0;
     for(double &p:pressure_deque)
       zero_depth +=p;
     zero_depth /= pressure_deque.size();
+    ROS_INFO("[Fusion_Depth] Zero_depth = %f", zero_depth);
 
     res.success = true;
   }
