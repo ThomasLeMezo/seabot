@@ -32,16 +32,16 @@ public:
   int i2c_open();
 
   /**
-   * @brief enable_led
+   * @brief enable the flash
    * @param val
    */
-  void set_flash_led(const bool &val) const;
+  void set_flash_enable(const bool &val) const;
 
   /**
    * @brief set_flash_led_delay
    * @param dt in 0.1 s (20 = 2s)
    */
-  void set_flash_led_delay(const unsigned char &dt) const;
+  void set_flash_delay(const unsigned char &dt) const;
 
   /**
    * @brief set_sleep_mode

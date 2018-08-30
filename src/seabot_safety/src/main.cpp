@@ -119,6 +119,7 @@ void call_zero_depth(){
 void call_emergency_depth(const bool &val){
   if(val != is_emergency_depth){
     std_srvs::SetBool srv;
+    srv.request.data = val;
     if (!service_emergency.call(srv)){
       ROS_ERROR("[Safety] Failed to call emergency");
     }
@@ -206,8 +207,8 @@ int main(int argc, char *argv[]){
   ROS_INFO("[Safety] Reset zero");
 
   ROS_INFO("[Safety] Wait for flash service from power_driver");
-  ros::service::waitForService("/driver/power/flash_led");
-  service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash_led");
+  ros::service::waitForService("/driver/power/flash");
+  service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash");
 
   ROS_INFO("[Safety] Wait for emergency service from depth regulation");
   ros::service::waitForService("/regulation/emergency");

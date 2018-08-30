@@ -2,6 +2,7 @@ import rospy
 import rosbag
 # from gmplot import gmplot
 import yaml
+import numpy as np
 
 # /driver/piston/position
 time_piston_position = []
@@ -96,6 +97,8 @@ def load_bag(filename):
 
 	startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
 	end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
+
+	nb_piston_position = bag.get_message_count('/driver/piston/position')
 
 	for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
 		if(topic=="/driver/piston/position"):

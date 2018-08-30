@@ -5,6 +5,7 @@
 #include "seabot_mission/Waypoint.h"
 #include "seabotmission.h"
 #include "seabot_power_driver/Battery.h"
+#include "seabot_power_driver/FlashCounter.h"
 
 using namespace std;
 
@@ -21,6 +22,11 @@ int main(int argc, char *argv[]){
   const double frequency = n_private.param<double>("frequency", 1.0);
   const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
   const string mission_path = n_private.param<string>("mission_path", "~");
+  const int flash_counter = ceil(n_private.param<double>("flash_time_next_waypoint", 3.0));
+
+  ROS_INFO("[Mission] Wait for Flasher counter service");
+  ros::service::waitForService("/driver/power/flash_counter");
+  ros::ServiceClient service_flash_counter = n.serviceClient<seabot_power_driver::FlashCounter>("/driver/power/flash_counter");
 
   ros::Rate loop_rate(frequency);
   SeabotMission m(mission_path);
@@ -33,7 +39,7 @@ int main(int argc, char *argv[]){
   while (ros::ok()){
     ros::spinOnce();
 
-    m.compute_command(north, east, depth, ratio);
+    bool is_new_waypoint = m.compute_command(north, east, depth, ratio);
     waypoint_msg.depth_only = m.is_depth_only();
     waypoint_msg.depth = depth;
     waypoint_msg.north = north;
@@ -43,6 +49,14 @@ int main(int argc, char *argv[]){
     waypoint_msg.wall_time = ros::WallTime::now().toSec();
     waypoint_msg.time_to_next_waypoint = m.get_time_to_next_waypoint();
     waypoint_pub.publish(waypoint_msg);
+
+    if(is_new_waypoint){
+        seabot_power_driver::FlashCounter srv;
+        srv.request.counter = flash_counter;
+        if (!service_flash_counter.call(srv)){
+          ROS_ERROR("[Safety] Failed to call zero depth");
+        }
+      }
 
     loop_rate.sleep();
   }

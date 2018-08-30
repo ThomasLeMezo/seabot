@@ -18,8 +18,9 @@ SeabotMission::SeabotMission(std::string folder_path){
   m_folder_path = folder_path;
 }
 
-void SeabotMission::compute_command(double &north, double &east, double &depth, double &ratio){
+bool SeabotMission::compute_command(double &north, double &east, double &depth, double &ratio){
   // Test if last waypoint
+  bool is_new_waypoint = false;
   if(m_current_waypoint < m_waypoints.size()){
     // Test if next time
     ros::WallTime t_now = ros::WallTime::now();
@@ -34,8 +35,10 @@ void SeabotMission::compute_command(double &north, double &east, double &depth, 
     }
     else{
       m_mission_enable = true;
-      if(t_now>=m_waypoints[m_current_waypoint].time_end)
+      if(t_now>=m_waypoints[m_current_waypoint].time_end){
         m_current_waypoint++;
+        is_new_waypoint = true;
+      }
       if(m_old_waypoint != m_current_waypoint){
         m_old_waypoint = m_current_waypoint;
         ROS_INFO("[Seabot_mission] Start following waypoint %i (ending at %li)", m_current_waypoint, (long int)m_waypoints[m_current_waypoint].time_end.toSec());
@@ -70,6 +73,8 @@ void SeabotMission::compute_command(double &north, double &east, double &depth, 
     m_mission_enable = false;
     m_duration_next_waypoint = ros::WallDuration(0);
   }
+
+  return is_new_waypoint;
 }
 
 

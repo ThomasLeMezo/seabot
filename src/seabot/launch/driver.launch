@@ -8,7 +8,8 @@
             <param name="frequency" value="5.0" />
 
             <param name="distance_fast_move" value="100" />
-            <param name="speed_fast_move" value="30" />
+            <!-- If speed_fast_move is too high, disturbances are create on I2C external pressure sensor -->
+            <param name="speed_fast_move" value="25" />
 
             <param name="speed_in_offset" value="15" />
             <param name="speed_out_offset" value="15" />

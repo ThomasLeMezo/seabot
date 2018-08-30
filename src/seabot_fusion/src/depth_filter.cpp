@@ -111,6 +111,7 @@ int main(int argc, char *argv[]){
       if(depth_memory.size()==(velocity_delta_size+filter_mean_width_velocity)){
         double tmp_velocity = 0.0;
         for(size_t i=0; i<filter_mean_width_velocity; i++){
+          // Delta_depth / Delta_dt
           tmp_velocity += (depth_memory[i].first-depth_memory[velocity_delta_size+i].first)/(depth_memory[i].second-depth_memory[velocity_delta_size+i].second).toSec();
         }
         velocity = tmp_velocity/filter_mean_width_velocity;

@@ -10,6 +10,7 @@
 #include <std_srvs/Empty.h>
 #include "seabot_power_driver/FlashSpeed.h"
 #include "seabot_power_driver/SleepModeParam.h"
+#include "seabot_power_driver/FlashCounter.h"
 
 #define THRESHOLD_LIPO_3S_MAX 10.4
 #define THRESHOLD_LIPO_3S_FIRST 9.9
@@ -17,17 +18,25 @@
 using namespace std;
 
 Power p;
+double flash_sec_left = 0.0;
+bool flash_is_enable = false;
 
 bool flash_enable(std_srvs::SetBool::Request  &req,
                   std_srvs::SetBool::Response &res){
-    p.set_flash_led(req.data);
+    p.set_flash_enable(req.data);
     res.success = true;
     return true;
 }
 
-bool flash_period(seabot_power_driver::FlashSpeed::Request  &req,
+bool flash_counter(seabot_power_driver::FlashCounter::Request  &req,
+                  seabot_power_driver::FlashCounter::Response &res){
+  flash_sec_left = req.counter;
+  return true;
+}
+
+bool flash_speed(seabot_power_driver::FlashSpeed::Request  &req,
                   seabot_power_driver::FlashSpeed::Response &res){
-    p.set_flash_led_delay(req.period);
+    p.set_flash_delay(req.period);
     return true;
 }
 
@@ -59,8 +68,9 @@ int main(int argc, char *argv[]){
     seabot_power_driver::Battery battery_msg;
 
     // Service (ON/OFF)
-    ros::ServiceServer service_flash = n.advertiseService("flash_led", flash_enable);
-    ros::ServiceServer service_flash_period = n.advertiseService("flash_led_period", flash_period);
+    ros::ServiceServer service_flash = n.advertiseService("flash", flash_enable);
+    ros::ServiceServer service_flash_speed = n.advertiseService("flash_speed", flash_speed);
+    ros::ServiceServer service_flash_counter = n.advertiseService("flash_counter", flash_counter);
     ros::ServiceServer service_sleep_mode = n.advertiseService("sleep_mode", sleep_mode);
     ros::ServiceServer service_sleep_mode_param = n.advertiseService("sleep_mode_param", sleep_mode_param);
 
@@ -80,6 +90,18 @@ int main(int argc, char *argv[]){
         battery_msg.battery3 = p.get_level_battery(2);
         battery_msg.battery4 = p.get_level_battery(3);
         battery_pub.publish(battery_msg);
+
+        if(flash_sec_left>0){
+          p.set_flash_enable(true);
+          flash_sec_left -= frequency;
+          flash_is_enable = true;
+        }
+        else{
+          if(flash_is_enable){
+            flash_is_enable = false;
+            p.set_flash_enable(false);
+          }
+        }
 
         loop_rate.sleep();
     }

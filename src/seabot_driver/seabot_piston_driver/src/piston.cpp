@@ -78,8 +78,8 @@ void Piston::get_piston_all_data(){
         ROS_WARN("[Piston_driver] I2C Bus Failure - Read piston data");
 
     uint16_t position = (buff[1] << 8 | buff[0]);
-    if(position > 32763)
-        m_position = -(65526-position)/4.0;
+    if(position > 32768) // 2^16 / 2
+        m_position = -(65536-position)/4.0; // 2^16-val
     else
         m_position = position/4.0;
 

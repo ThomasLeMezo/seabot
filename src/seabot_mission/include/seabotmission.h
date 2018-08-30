@@ -53,7 +53,7 @@ public:
      * @param east
      * @param depth
      */
-  void compute_command(double &north, double &east, double &depth, double &ratio);
+  bool compute_command(double &north, double &east, double &depth, double &ratio);
 
   /**
      * @brief load_mission

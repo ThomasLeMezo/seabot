@@ -46,10 +46,10 @@ def talker():
 
   piston_position = rospy.Publisher('/regulation/depth_set_point', Waypoint, queue_size=1)
 #  rospy.wait_for_service('/fusion/zero_depth')
-  rospy.wait_for_service('/driver/power/flash_led')
+  rospy.wait_for_service('/driver/power/flash')
   rospy.wait_for_service('/driver/power/sleep_mode')
 #  fusion_zero_depth = rospy.ServiceProxy('/fusion/zero_depth', Trigger)
-  flash_enable = rospy.ServiceProxy('/driver/power/flash_led', SetBool)
+  flash_enable = rospy.ServiceProxy('/driver/power/flash', SetBool)
   sleep_enable = rospy.ServiceProxy('/driver/power/sleep_mode', Empty)
 
   #Wait 6s before init
