@@ -323,6 +323,7 @@ int main(int argc, char *argv[]){
     ///*******************************************************
     ///**************** Internal sensor **********************
     safety_msg.depressurization = false;
+    int warning_number = 0;
     double p_t_ratio;
     if(internal_temperature!=273.15){
       p_t_ratio = internal_pressure/internal_temperature;
@@ -330,34 +331,44 @@ int main(int argc, char *argv[]){
 
       // PV=nRT law
       if(abs(piston)<620.0){ // Case piston near zero
-        if(abs(p_t_ratio-p_t_ratio_ref)>delta_ref_allowed)
+        if(abs(p_t_ratio-p_t_ratio_ref)>delta_ref_allowed){
           safety_msg.depressurization = true;
+          warning_number = 1;
+        }
       }
       else{ // General case
         if(p_t_ratio != p_t_ratio_ref){
           double volume = piston*tick_to_volume*p_t_ratio/(p_t_ratio-p_t_ratio_ref);
-          if(abs(volume-volume_ref)>delta_volume_allowed)
-            safety_msg.depressurization = true;
+          if(abs(volume-volume_ref)>delta_volume_allowed){
+           safety_msg.depressurization = true;
+           warning_number = 2;
+          }
         }
-        else
+        else{
           safety_msg.depressurization = true;
+          warning_number = 3;
+        }
       }
 
       // Limit max
-      if(internal_pressure>pressure_internal_max)
+      if(internal_pressure>pressure_internal_max){
         safety_msg.depressurization = true;
+        warning_number = 4;
+      }
     }
     else{
       ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
       safety_msg.depressurization = true;
+      warning_number = 5;
     }
 
     if(internal_humidity>humidity_limit){
       safety_msg.depressurization = true;
+      warning_number = 6;
     }
 
-    if(safety_msg.depressurization = true){
-      ROS_WARN("[Safety] Sealing issue detected (p=%f, t=%f, h=%f)", internal_pressure, internal_temperature, internal_humidity);
+    if(safety_msg.depressurization == true){
+      ROS_WARN("[Safety] Sealing issue detected %i (p=%f, t=%f, h=%f)", warning_number, internal_pressure, internal_temperature, internal_humidity);
       ROS_WARN("[Safety] Ratio (%f / %f)", p_t_ratio, p_t_ratio_ref);
     }
 

@@ -1,34 +1,28 @@
 <?xml version="1.0"?>
 
 <offset>
-	<start_end_time>
+<!-- 	<start_end_time>
 		<year>2018</year>
 		<month>08</month>
 		<day>30</day>
 		<hour>11</hour>
 		<min>27</min>
-	</start_end_time>
+	</start_end_time> -->
 </offset>
 
 <paths type ="1">
-	<!-- <loop number="10">
-		<waypoint>
-			<duration>300</duration>
-			<depth>1.5</depth>
-		</waypoint>
-
-		<waypoint>
-			<duration>300</duration>
-			<depth>2</depth>
-		</waypoint>
-
-		<waypoint>
-			<duration>600</duration>
-			<depth>0</depth>
-		</waypoint>
-	</loop> -->
-	<waypoint>
-		<duration>300</duration>
-		<depth>1.5</depth>
-	</waypoint>
+ <loop number="10">
+   <waypoint>
+    <duration>3000</duration>
+    <depth>5</depth>
+   </waypoint>
+   <waypoint>
+    <duration>3600</duration>
+    <depth>15</depth>
+   </waypoint>
+   <waypoint>
+    <duration>600</duration>
+    <depth>0</depth>
+   </waypoint>
+  </loop>
 </paths>

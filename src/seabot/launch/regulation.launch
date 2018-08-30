@@ -13,12 +13,13 @@
         <param name="hysteresis_piston" value="0.6" />
 
         <param name="K_factor" value="0.2" />
-        <param name="K_velocity" value="600.0" />
+<!--        K velocity value (old) : 600-->
+        <param name="K_velocity" value="500.0" />
         <param name="K_acc" value="0.0" />
 
         <param name="set_point_following" value="10.0" />
 
-        <param name="offset_piston" value="1317.84" />
+        <param name="offset_piston" value="2220" />
         <param name="cf_x2" value="2.06936" />
         <param name="cf_x1" value="-76.6614" />
         <param name="max_depth_compression_validity" value="17.0" />

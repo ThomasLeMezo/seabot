@@ -16,7 +16,7 @@ from math import *
 
 ### Parameters
 margin_depth = 0.9
-start_piston_position = 1200
+start_piston_position = 2000
 
 ### Variables
 depth = 0
@@ -97,6 +97,8 @@ def regulation_node():
     reset_position()
     rospy.sleep(3.0)
     rospy.loginfo("[Calibration_piston] Zero depth")
+    flash(3.0)
+    rospy.sleep(10.0)
     set_zero_depth()
     
     for i in range(3):
@@ -107,6 +109,7 @@ def regulation_node():
             set_piston_position(start_piston_position)
             rospy.sleep(1.0)
 
+        rospy.sleep(10.0)
         ## Wait depth reach (in range for at least 1s)
         rospy.loginfo("[Calibration_piston] Wait stabilized depth")
         depth_last = depth+5.0 # Init with different values
@@ -118,6 +121,7 @@ def regulation_node():
         rospy.loginfo("[Calibration_piston] Move piston")
         flash(3.0)
         piston_position_set_point = start_piston_position
+        rospy.sleep(15.0)
 
         # depth*piston_surface == abs(start_piston_position-start_piston_position)*tick_to_volume
 
