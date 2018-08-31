@@ -343,9 +343,9 @@ if(len(time_safety)>0):
     pg_safety = pg.PlotWidget()
     pg_safety.addLegend()
     pg_safety.plot(time_safety, safety_published_frequency, pen=(255,0,0), name="published_frequency")
-    pg_safety.plot(time_safety, safety_depth_limit, pen=(255,0,0), name="depth_limit")
-    pg_safety.plot(time_safety, safety_batteries_limit, pen=(255,0,0), name="batteries_limit")
-    pg_safety.plot(time_safety, safety_depressurization, pen=(255,0,0), name="depressurization")
+    pg_safety.plot(time_safety, safety_depth_limit, pen=(0,255,0), name="depth_limit")
+    pg_safety.plot(time_safety, safety_batteries_limit, pen=(0,0,255), name="batteries_limit")
+    pg_safety.plot(time_safety, safety_depressurization, pen=(255,255,0), name="depressurization")
 
     dock_safety.addWidget(pg_safety)
 

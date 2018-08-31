@@ -103,7 +103,7 @@ void SeabotMission::load_mission(const std::string &file_xml){
     ROS_INFO("[Seabot_Mission] No east offset defined %s", ex.what());
   }
 
-  m_time_start = ros::WallTime::now();
+  m_time_start = ros::WallTime::now() + ros::WallDuration(60);
   // Read special offset time
   try{
     const int year = tree.get_child("offset.start_time_utc.year").get_value<int>();
@@ -123,7 +123,7 @@ void SeabotMission::load_mission(const std::string &file_xml){
     m_time_start = ros::WallTime(mktime(&time));
     ROS_INFO("[Seabot_Mission] Start time = %f", m_time_start.toSec());
   } catch (std::exception const&  ex){
-    ROS_INFO("[Seabot_Mission] No time offset defined %s", ex.what());
+    ROS_INFO("[Seabot_Mission] No time offset defined %s - Set now + 60s", ex.what());
   }
 
   int mission_type = tree.get_child("paths").get("<xmlattr>.type", 0);
