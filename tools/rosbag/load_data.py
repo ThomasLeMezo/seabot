@@ -92,6 +92,13 @@ mag_x = []
 mag_y = []
 mag_z = []
 
+# /safety/safety
+time_safety = []
+safety_published_frequency = []
+safety_depth_limit = []
+safety_batteries_limit = []
+safety_depressurization = []
+
 def load_bag(filename):
 
 	bag = rosbag.Bag(filename, 'r')
@@ -207,6 +214,13 @@ def load_bag(filename):
 			mag_x.append(msg.magnetic_field.x)
 			mag_y.append(msg.magnetic_field.y)
 			mag_z.append(msg.magnetic_field.z)
+
+		elif(topic=="/safety/safety"):
+			time_safety.append((t-startTime).to_sec())
+			safety_published_frequency.append(msg.published_frequency)
+			safety_depth_limit.append(msg.depth_limit)
+			safety_batteries_limit.append(msg.batteries_limit)
+			safety_depressurization.append(msg.depressurization)
 
 	bag.close()
 

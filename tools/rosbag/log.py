@@ -336,6 +336,19 @@ if(len(time_mag)>0):
 
     pg_mag2.setXLink(pg_mag1)
 
+#################### Safety ####################
+if(len(time_safety)>0):
+    dock_safety = Dock("Safety")
+    area.addDock(dock_safety, 'above', dock_battery)
+    pg_safety = pg.PlotWidget()
+    pg_safety.addLegend()
+    pg_safety.plot(time_safety, safety_published_frequency, pen=(255,0,0), name="published_frequency")
+    pg_safety.plot(time_safety, safety_depth_limit, pen=(255,0,0), name="depth_limit")
+    pg_safety.plot(time_safety, safety_batteries_limit, pen=(255,0,0), name="batteries_limit")
+    pg_safety.plot(time_safety, safety_depressurization, pen=(255,0,0), name="depressurization")
+
+    dock_safety.addWidget(pg_safety)
+
 #################### Temperature / Depth ####################
 if(len(time_sensor_external)>0 and len(time_fusion_depth)>0):
     dock_temp = Dock("Temperature")
