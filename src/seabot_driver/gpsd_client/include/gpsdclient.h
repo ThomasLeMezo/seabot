@@ -36,7 +36,7 @@ private:
     bool check_fix_by_variance = true;
     std::string frame_id = "gps";
 
-    bool m_last_fix = true;
+    bool m_last_fix_state = true;
 };
 
 #endif // GPSDCLIENT_H

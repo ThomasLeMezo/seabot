@@ -1,5 +1,6 @@
-#!/bin/python3
-from copy import copy, deepcopy
+#!/bin/python2.7
+# from copy import copy, deepcopy
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.console
@@ -18,6 +19,8 @@ if(len(sys.argv)<2):
 	sys.exit(0)
 
 load_bag(sys.argv[1])
+
+print("Data has been loaded")
 
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
@@ -75,9 +78,9 @@ if(len(time_regulation_debug)>0):
 
     pg_regulation_set_point = pg.PlotWidget()
     pg_regulation_set_point.addLegend()
-    pg_regulation_set_point.plot(time_regulation_debug, regulation_debug_piston_set_point, pen=(255,0,0), name="piston set point")
+    pg_regulation_set_point.plot(time_regulation_debug, regulation_debug_piston_set_point, pen=(255,0,0), name="piston set point (compensed)")
     if(len(regulation_debug_piston_set_point_offset)>1):
-    	pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255), name="piston state position (without offset)")
+    	pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255), name="piston state position (real, shifted zero)")
     pg_regulation_set_point.setLabel('left', "set point")
     dock_regulation1.addWidget(pg_regulation_set_point)
 
@@ -280,12 +283,12 @@ if(len(time_fusion_depth)>0):
     pg_fusion_velocity.setXLink(pg_fusion_depth1)
 
 #################### GPS Status ####################
-if(len(time_extend_fix)>0):
+if(len(time_fix)>0):
     dock_gps = Dock("GPS Signal")
     area.addDock(dock_gps, 'above', dock_battery)
     pg_gps = pg.PlotWidget()
     pg_gps.addLegend()
-    pg_gps.plot(time_extend_fix, extend_fix_status, pen=(255,0,0), name="status")
+    pg_gps.plot(time_fix, fix_status, pen=(255,0,0), name="status")
     pg_gps.setLabel('left', "Fix status")
     dock_gps.addWidget(pg_gps)
 
@@ -303,9 +306,35 @@ if(len(fusion_pose_east)>0):
     area.addDock(dock_gps2, 'above', dock_battery)
     pg_gps2 = pg.PlotWidget()
     pg_gps2.addLegend()
-    pg_gps2.plot(fusion_pose_east, fusion_pose_north, pen=(255,0,0), name="pose")
-    pg_gps2.setLabel('left', "Pose")
+    Y = np.array(fusion_pose_north)
+    X = np.array(fusion_pose_east)
+    X = X[~np.isnan(X)]
+    Y = Y[~np.isnan(Y)]
+    X -= np.mean(X)
+    Y -= np.mean(Y)
+    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)")
+    pg_gps2.setLabel('left', "Y", units="m")
+    pg_gps2.setLabel('bottom', "X", units="m")
     dock_gps2.addWidget(pg_gps2)
+
+#################### Mag ####################
+if(len(time_mag)>0):
+    dock_mag = Dock("Mag")
+    area.addDock(dock_mag, 'above', dock_battery)
+    pg_mag1 = pg.PlotWidget()
+    pg_mag1.addLegend()
+    pg_mag1.plot(time_mag, mag_x, pen=(255,0,0), name="mag x")
+    pg_mag1.plot(time_mag, mag_y, pen=(255,0,0), name="mag y")
+    pg_mag1.plot(time_mag, mag_z, pen=(255,0,0), name="mag z")
+    dock_mag.addWidget(pg_mag1)
+
+    pg_mag2 = pg.PlotWidget()
+    pg_mag2.addLegend()
+    mag_N = np.sqrt(np.power(np.array(mag_x), 2)+np.power(np.array(mag_y), 2)+np.power(np.array(mag_z), 2))
+    pg_mag2.plot(time_mag, mag_N, pen=(255,0,0), name="mag N")
+    dock_mag.addWidget(pg_mag2)
+
+    pg_mag2.setXLink(pg_mag1)
 
 #################### Temperature / Depth ####################
 if(len(time_sensor_external)>0 and len(time_fusion_depth)>0):

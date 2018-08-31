@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find seabot)/launch/base.launch"/>
+
+        <node name="sinus_node" pkg="seabot_piston_driver" type="piston_sinus.py" output="screen" respawn="true">
+	</node>
+
+</launch>

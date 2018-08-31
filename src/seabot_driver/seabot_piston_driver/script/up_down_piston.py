@@ -19,7 +19,7 @@ def talker():
       piston_position.publish(0)
       down=False
     else:
-      piston_position.publish(1200)
+      piston_position.publish(2300)
       down=True
 
     rospy.sleep(sleep_time)

@@ -69,14 +69,14 @@ int main(int argc, char *argv[]){
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double set_point_following = n_private.param<double>("set_point_following", 10.0);
 
-  const double K_factor = n_private.param<double>("K_factor", 1.0);
-  double K_velocity = n_private.param<double>("K_velocity", 300.0);
-  //    const double K_acc = n_private.param<double>("K_acc", 100.0);
+  const double K_factor = n_private.param<double>("K_factor", 0.0);
+  double K_velocity = n_private.param<double>("K_velocity", 0.0);
+  //    const double K_acc = n_private.param<double>("K_acc", 0.0);
 
-  const double cf_x0 = n_private.param<double>("offset_piston", 700);
+  const double cf_x0 = n_private.param<double>("offset_piston", 0.0);
   const double cf_x2 = n_private.param<double>("cf_x2", 0.0);
   const double cf_x1 = n_private.param<double>("cf_x1", 0.0);
-  const double max_depth_compression_validity = n_private.param<double>("max_depth_compression_validity", 17.0);
+  const double max_depth_compression_validity = n_private.param<double>("max_depth_compression_validity", 0.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -92,6 +92,12 @@ int main(int argc, char *argv[]){
 
   // Server
   ros::ServiceServer server_emergency = n.advertiseService("emergency", emergency_service);
+
+  /// *************** Variable Description ***************//
+  /// piston_position : Real position of the piston send by the microcontroller
+  /// piston_set_point :
+  /// offset_piston : add to correct the compressibility effect (depth dependent)
+  /// piston_set_point_offset : value send to the microcontroller (piston_set_point + offset_piston)
 
   double piston_set_point = 0.0;
   double offset_piston = cf_x0;

@@ -152,6 +152,7 @@ void I2cImu::update()
 
     ros::Time current_time = ros::Time::now();
 
+    /// ********** IMU msg **********
 
     imu_msg.header.stamp = current_time;
     imu_msg.header.frame_id = imu_frame_id_;
@@ -170,8 +171,8 @@ void I2cImu::update()
 
     imu_pub_.publish(imu_msg);
 
-    if (magnetometer_pub_ != nullptr && imuData.compassValid)
-    {
+    /// ********** Mag msg **********
+    if (magnetometer_pub_ != nullptr && imuData.compassValid){
       sensor_msgs::MagneticField msg;
 
       msg.header.frame_id=imu_frame_id_;
@@ -184,14 +185,15 @@ void I2cImu::update()
       magnetometer_pub_.publish(msg);
     }
 
-    if (euler_pub_ != nullptr)
-    {
+    /// ********** Euler msg **********
+    if (euler_pub_ != nullptr){
       geometry_msgs::Vector3 msg;
       msg.x = imuData.fusionPose.x();
       msg.y = imuData.fusionPose.y();
       msg.z = -imuData.fusionPose.z();
       euler_pub_.publish(msg);
     }
+
     ros::spinOnce();
   }
 

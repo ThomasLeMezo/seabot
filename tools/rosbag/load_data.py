@@ -83,11 +83,14 @@ fusion_pose_north = []
 fusion_pose_east = []
 
 # /driver/extended_fix
-time_extend_fix = []
-extend_fix_status = []
+time_fix = []
+fix_status = []
 
-# bag = rosbag.Bag('bag/2018-06-21-14-02-06.bag', 'r')
-# bag = rosbag.Bag('bag/2018-06-26-15-29-06.bag', 'r')
+# /driver/mag
+time_mag = []
+mag_x = []
+mag_y = []
+mag_z = []
 
 def load_bag(filename):
 
@@ -179,10 +182,10 @@ def load_bag(filename):
 			regulation_debug_piston_set_point.append(msg.piston_set_point)
 			regulation_debug_piston_set_point_offset.append(msg.piston_set_point_offset)
 
-		# elif(topic=="/fusion/pose"):
-		# 	time_fusion_pose.append((t-startTime).to_sec())
-		# 	fusion_pose_east.append(msg.east)
-		# 	fusion_pose_north.append(msg.north)
+		elif(topic=="/fusion/pose"):
+			time_fusion_pose.append((t-startTime).to_sec())
+			fusion_pose_east.append(msg.east)
+			fusion_pose_north.append(msg.north)
 
 		elif(topic=="/regulation/depth_set_point"):
 			if(len(regulation_depth_set_point)>0):
@@ -191,13 +194,19 @@ def load_bag(filename):
 			time_regulation_depth_set_point.append((t-startTime).to_sec())
 			regulation_depth_set_point.append(msg.depth)
 
-		elif(topic=="/driver/extended_fix"):
-			time_extend_fix.append((t-startTime).to_sec())
-			extend_fix_status.append(msg.status.status)
+		elif(topic=="/driver/fix"):
+			time_fix.append((t-startTime).to_sec())
+			fix_status.append(msg.status.status)
 
 		elif(topic=="/driver/piston/velocity"):
 			time_piston_velocity.append((t-startTime).to_sec())
 			piston_velocity.append(msg.velocity)
+
+		elif(topic=="/driver/mag"):
+			time_mag.append((t-startTime).to_sec())
+			mag_x.append(msg.magnetic_field.x)
+			mag_y.append(msg.magnetic_field.y)
+			mag_z.append(msg.magnetic_field.z)
 
 	bag.close()
 

@@ -39,9 +39,11 @@ void GPSDClient::stop() {
 void GPSDClient::process_data(struct gps_data_t* p) {
   if (!p->online)
     return;
-  if(p->status!=STATUS_NO_FIX || m_last_fix){
+
+  bool new_fix_state = (p->fix.mode>=MODE_2D)?true:false;
+  if(new_fix_state ||(m_last_fix_state!=new_fix_state)){
     process_data_gps(p);
-    m_last_fix =  (p->status!=STATUS_NO_FIX)?true:false;
+    m_last_fix_state =  new_fix_state;
   }
 }
 
@@ -77,7 +79,7 @@ void GPSDClient::process_data_gps(struct gps_data_t* p) {
   }
 
   if(p->status != STATUS_NO_FIX) {
-    status.status = 0; // FIXME: gpsmm puts its constants in the global
+    status.status = p->fix.mode; // FIXME: gpsmm puts its constants in the global
     // namespace, so `GPSStatus::STATUS_FIX' is illegal.
 
     // STATUS_DGPS_FIX was removed in API version 6 but re-added afterward
