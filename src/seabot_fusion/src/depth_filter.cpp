@@ -82,6 +82,7 @@ int main(int argc, char *argv[]){
   time_pressure = ros::Time::now();
   double velocity = 0.0;
 
+  ROS_INFO("[FUSION depth] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();

@@ -24,18 +24,19 @@ int main(int argc, char *argv[]){
   const string mission_path = n_private.param<string>("mission_path", "");
   const int flash_counter = ceil(n_private.param<double>("flash_time_next_waypoint", 3.0));
 
-  ROS_INFO("[Mission] Wait for Flasher counter service");
+  ROS_DEBUG("[Mission] Wait for Flasher counter service");
   ros::service::waitForService("/driver/power/flash_counter");
   ros::ServiceClient service_flash_counter = n.serviceClient<seabot_power_driver::FlashCounter>("/driver/power/flash_counter");
 
   ros::Rate loop_rate(frequency);
   SeabotMission m(mission_path);
 
-  ROS_INFO("Load mission");
+  ROS_DEBUG("[Mission] Load mission");
   m.load_mission(mission_file_name); // Update mission file
 
   double north, east, depth, ratio;
 
+  ROS_INFO("[Mission] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 
@@ -54,7 +55,7 @@ int main(int argc, char *argv[]){
         seabot_power_driver::FlashCounter srv;
         srv.request.counter = flash_counter;
         if (!service_flash_counter.call(srv)){
-          ROS_ERROR("[Safety] Failed to call zero depth");
+          ROS_ERROR("[Mission] Failed to call zero depth");
         }
       }
 

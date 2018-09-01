@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 
   seabot_fusion::GnssPose msg_pose;
 
+  ROS_INFO("[FUSION lambert] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();

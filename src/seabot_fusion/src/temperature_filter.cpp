@@ -55,6 +55,7 @@ int main(int argc, char *argv[]){
   double temperature = 0;
   double velocity = 0.0;
 
+  ROS_INFO("[FUSION temperature] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();

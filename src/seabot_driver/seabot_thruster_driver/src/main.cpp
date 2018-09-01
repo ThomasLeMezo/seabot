@@ -58,6 +58,7 @@ int main(int argc, char *argv[]){
   // Sensor initialization
   t.i2c_open();
 
+  ROS_INFO("[Thruster] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();

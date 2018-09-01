@@ -26,7 +26,7 @@ double velocity = 0;
 
 // Piston state
 ros::WallTime time_piston_state;
-double piston_position = 0;
+double piston_position = -100;
 int piston_state = 0;
 bool piston_switch_in = false;
 bool piston_switch_out = false;
@@ -200,21 +200,21 @@ int main(int argc, char *argv[]){
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
 
   // Service
-  ROS_INFO("[Safety] Wait for zero depth service from fusion");
+  ROS_DEBUG("[Safety] Wait for zero depth service from fusion");
   ros::service::waitForService("/fusion/zero_depth");
   service_zero_depth = n.serviceClient<std_srvs::Trigger>("/fusion/zero_depth");
   call_zero_depth();
-  ROS_INFO("[Safety] Reset zero");
+  ROS_DEBUG("[Safety] Reset zero");
 
-  ROS_INFO("[Safety] Wait for flash service from power_driver");
+  ROS_DEBUG("[Safety] Wait for flash service from power_driver");
   ros::service::waitForService("/driver/power/flash");
   service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash");
 
-  ROS_INFO("[Safety] Wait for emergency service from depth regulation");
+  ROS_DEBUG("[Safety] Wait for emergency service from depth regulation");
   ros::service::waitForService("/regulation/emergency");
   service_emergency = n.serviceClient<std_srvs::SetBool>("/regulation/emergency");
 
-  ROS_INFO("[Safety] Wait for sleep service from power_driver");
+  ROS_DEBUG("[Safety] Wait for sleep service from power_driver");
   ros::service::waitForService("/driver/power/sleep_mode");
   service_sleep = n.serviceClient<std_srvs::Empty>("/driver/power/sleep_mode");
 
@@ -233,8 +233,8 @@ int main(int argc, char *argv[]){
   /// **************************** Initialization **********************************
   /// ******************************************************************************
 
-  // Wait initialization
-  ros::WallDuration(15.0).sleep();
+  // Call piston to move at 0
+  call_emergency_depth(true);
 
   // Set Ref Pressure & Temperature
   ros::WallDuration dt(1.0);
@@ -242,7 +242,10 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
     ros::WallDuration d_internal_sensor = ros::WallTime::now()-time_internal_sensor;
     ros::WallDuration d_piston_state = ros::WallTime::now()-time_piston_state;
-    if(d_internal_sensor.toSec()<1.0 && d_piston_state.toSec()<1.0 && internal_temperature!=0.0){
+    if(d_internal_sensor.toSec()<1.0 &&
+       d_piston_state.toSec()<1.0 &&
+       internal_temperature!=0.0 &&
+       piston_switch_out){
       p_t_ratio_ref += internal_pressure/internal_temperature;
       piston_position_ref += piston_position;
       cpt++;
@@ -254,14 +257,14 @@ int main(int argc, char *argv[]){
   p_t_ratio_ref /= (double)nb_sample;
   piston_position_ref /= (double) nb_sample;
 
-  // Clearance to regulation
+  // Clearance of regulation
   call_emergency_depth(false);
 
   /// ******************************************************************************
   /// **************************** Main regulation loop ****************************
   /// ******************************************************************************
 
-  ROS_INFO("[Safety] Start safety loop");
+  ROS_INFO("[Safety] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
     bool enable_emergency_depth = false;

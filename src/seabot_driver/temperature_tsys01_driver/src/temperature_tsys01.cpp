@@ -17,7 +17,7 @@ int Temperature_TSYS01::reset(){
     if (res < 0)
         ROS_WARN("[Temperature_TSYS01] Error reseting sensor");
     else
-        ROS_INFO("[Temperature_TSYS01] Reset ok");
+        ROS_DEBUG("[Temperature_TSYS01] Reset ok");
     return 0;
 }
 
@@ -35,7 +35,7 @@ int Temperature_TSYS01::i2c_open(){
 }
 
 int Temperature_TSYS01::init_sensor(){
-    ROS_INFO("[Temperature_TSYS01] Sensor initialization");
+    ROS_DEBUG("[Temperature_TSYS01] Sensor initialization");
     reset();
     int return_val = 0;
     u_int16_t  prom[5];
@@ -50,13 +50,13 @@ int Temperature_TSYS01::init_sensor(){
         m_k[4-i] = (buff[0] << 8) | buff[1] << 0;
     }
     if(return_val==0)
-        ROS_INFO("[Temperature_TSYS01] Sensor Read PROM OK");
+        ROS_DEBUG("[Temperature_TSYS01] Sensor Read PROM OK");
 
-    ROS_INFO("[Temperature_TSYS01] k0 = %d", m_k[0]);
-    ROS_INFO("[Temperature_TSYS01] k1 = %d", m_k[1]);
-    ROS_INFO("[Temperature_TSYS01] k2 = %d", m_k[2]);
-    ROS_INFO("[Temperature_TSYS01] k3 = %d", m_k[3]);
-    ROS_INFO("[Temperature_TSYS01] k4 = %d", m_k[4]);
+    ROS_DEBUG("[Temperature_TSYS01] k0 = %d", m_k[0]);
+    ROS_DEBUG("[Temperature_TSYS01] k1 = %d", m_k[1]);
+    ROS_DEBUG("[Temperature_TSYS01] k2 = %d", m_k[2]);
+    ROS_DEBUG("[Temperature_TSYS01] k3 = %d", m_k[3]);
+    ROS_DEBUG("[Temperature_TSYS01] k4 = %d", m_k[4]);
 
     return return_val;
 }

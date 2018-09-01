@@ -27,6 +27,7 @@ int main(int argc, char *argv[]){
     // Loop with sensor reading
     pressure_89bsd_driver::PressureBsdData msg;
 
+    ROS_INFO("[Pressure_89BSD] Start Ok");
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         ros::spinOnce();

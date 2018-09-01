@@ -106,7 +106,7 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
 
   // Main regulation loop
-  ROS_INFO("[DepthRegulation] Start regulation");
+  ROS_INFO("[DepthRegulation] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 

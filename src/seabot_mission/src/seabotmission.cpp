@@ -41,7 +41,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       }
       if(m_old_waypoint != m_current_waypoint){
         m_old_waypoint = m_current_waypoint;
-        ROS_INFO("[Seabot_mission] Start following waypoint %i (ending at %li)", m_current_waypoint, (long int)m_waypoints[m_current_waypoint].time_end.toSec());
+        ROS_DEBUG("[Mission] Start following waypoint %i (ending at %li)", m_current_waypoint, (long int)m_waypoints[m_current_waypoint].time_end.toSec());
       }
 
       depth = m_waypoints[m_current_waypoint].depth;
@@ -65,7 +65,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
   }
   else{
     if(m_mission_enable == true)
-      ROS_INFO("[Seabot_mission] End of waypoints");
+      ROS_INFO("[Mission] End of waypoints");
     depth = 0.0;
     north = m_waypoints[m_waypoints.size()-1].north;
     east = m_waypoints[m_waypoints.size()-1].east;
@@ -84,7 +84,7 @@ void SeabotMission::load_mission(const std::string &file_xml){
   else
     m_file_name = m_folder_path + "/" + file_xml;
   pt::ptree tree;
-  ROS_INFO("[Seabot_Mission] Read xml file : %s", m_file_name.c_str());
+  ROS_DEBUG("[Seabot_Mission] Read xml file : %s", m_file_name.c_str());
   try {
     pt::read_xml(m_file_name, tree);
   } catch (std::exception const&  ex) {
@@ -97,13 +97,13 @@ void SeabotMission::load_mission(const std::string &file_xml){
   try{
     m_offset_north = tree.get_child("offset.north").get_value<double>();
   } catch (std::exception const&  ex){
-    ROS_INFO("[Seabot_Mission] No north offset defined %s", ex.what());
+    ROS_DEBUG("[Seabot_Mission] No north offset defined %s", ex.what());
   }
 
   try{
     m_offset_east = tree.get_child("offset.east").get_value<double>();
   } catch (std::exception const&  ex){
-    ROS_INFO("[Seabot_Mission] No east offset defined %s", ex.what());
+    ROS_DEBUG("[Seabot_Mission] No east offset defined %s", ex.what());
   }
 
   m_time_start = ros::WallTime::now() + ros::WallDuration(60);
@@ -124,9 +124,9 @@ void SeabotMission::load_mission(const std::string &file_xml){
     time.tm_sec  = 0.0;
 
     m_time_start = ros::WallTime(mktime(&time));
-    ROS_INFO("[Seabot_Mission] Start time = %f", m_time_start.toSec());
+    ROS_DEBUG("[Seabot_Mission] Start time = %f", m_time_start.toSec());
   } catch (std::exception const&  ex){
-    ROS_INFO("[Seabot_Mission] No time offset defined %s - Set now + 60s", ex.what());
+    ROS_DEBUG("[Seabot_Mission] No time offset defined %s - Set now + 60s", ex.what());
   }
 
   int mission_type = tree.get_child("paths").get("<xmlattr>.type", 0);

@@ -14,7 +14,7 @@ bool GPSDClient::start() {
     return false;
   }
   else{
-    ROS_INFO("[GPSD_Client] GPSd opened");
+    ROS_DEBUG("[GPSD_Client] GPSd opened");
     return true;
   }
 }

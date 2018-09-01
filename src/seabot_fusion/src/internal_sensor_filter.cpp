@@ -69,6 +69,7 @@ int main(int argc, char *argv[]){
   // Loop variables
   seabot_fusion::InternalPose msg;
 
+  ROS_INFO("[FUSION internal sensor] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();

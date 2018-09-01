@@ -38,7 +38,7 @@ int Pressure_89BSD::reset(){
     if (res < 0)
         ROS_WARN("[Pressure_89BSD] Error reseting sensor");
     else
-        ROS_INFO("[Pressure_89BSD] Reset ok");
+        ROS_DEBUG("[Pressure_89BSD] Reset ok");
     return 0;
 }
 
@@ -56,7 +56,7 @@ int Pressure_89BSD::i2c_open(){
 }
 
 int Pressure_89BSD::init_sensor(){
-    ROS_INFO("[Pressure_89BSD] Sensor initialization");
+    ROS_DEBUG("[Pressure_89BSD] Sensor initialization");
     reset();
     int return_val = 0;
     u_int16_t  prom[7];
@@ -71,7 +71,7 @@ int Pressure_89BSD::init_sensor(){
         prom[i] = (buff[0] << 8) | buff[1] << 0;
     }
     if(return_val==0)
-        ROS_INFO("[Pressure_89BSD] Sensor Read PROM OK");
+        ROS_DEBUG("[Pressure_89BSD] Sensor Read PROM OK");
 
     m_C0 = bin2decs(prom[0]>>2,14);
     m_C1 = bin2decs(((prom[0] & 0x3)<<12) | (prom[1] >> 4), 14);
@@ -84,17 +84,17 @@ int Pressure_89BSD::init_sensor(){
     m_A1 = bin2decs(((prom[5] & 0xFF) << 2) | (prom[6]>>14), 10);
     m_A2 = bin2decs(((prom[6] >> 4) & 0x3FF), 10);
 
-    ROS_INFO("[Pressure_89BSD] C0 = %d", m_C0);
-    ROS_INFO("[Pressure_89BSD] C1 = %d", m_C1);
-    ROS_INFO("[Pressure_89BSD] C2 = %d", m_C2);
-    ROS_INFO("[Pressure_89BSD] C3 = %d", m_C3);
-    ROS_INFO("[Pressure_89BSD] C4 = %d", m_C4);
-    ROS_INFO("[Pressure_89BSD] C5 = %d", m_C5);
-    ROS_INFO("[Pressure_89BSD] C6 = %d", m_C6);
+    ROS_DEBUG("[Pressure_89BSD] C0 = %d", m_C0);
+    ROS_DEBUG("[Pressure_89BSD] C1 = %d", m_C1);
+    ROS_DEBUG("[Pressure_89BSD] C2 = %d", m_C2);
+    ROS_DEBUG("[Pressure_89BSD] C3 = %d", m_C3);
+    ROS_DEBUG("[Pressure_89BSD] C4 = %d", m_C4);
+    ROS_DEBUG("[Pressure_89BSD] C5 = %d", m_C5);
+    ROS_DEBUG("[Pressure_89BSD] C6 = %d", m_C6);
 
-    ROS_INFO("[Pressure_89BSD] A0 = %d", m_A0);
-    ROS_INFO("[Pressure_89BSD] A1 = %d", m_A1);
-    ROS_INFO("[Pressure_89BSD] A2 = %d", m_A2);
+    ROS_DEBUG("[Pressure_89BSD] A0 = %d", m_A0);
+    ROS_DEBUG("[Pressure_89BSD] A1 = %d", m_A1);
+    ROS_DEBUG("[Pressure_89BSD] A2 = %d", m_A2);
 
     return return_val;
 }

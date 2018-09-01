@@ -28,7 +28,7 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
     if(!is_surface){
       time_at_surface = ros::WallTime::now();
       is_surface = true;
-      ROS_INFO("[Iridium] Surface detected");
+      ROS_DEBUG("[Iridium] Surface detected");
       iridium.iridium_power(true);
     }
   }
@@ -76,7 +76,6 @@ void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){
 bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
-    ROS_INFO("[Iridium] Call iridium");
     iridium.get_new_log_files();
     iridium.send_and_receive_data();
     return true;
@@ -112,6 +111,7 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
   time_last_communication.fromSec(0);
 
+  ROS_INFO("[Iridium] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 

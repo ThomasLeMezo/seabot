@@ -274,7 +274,7 @@ const std::string Iridium::get_new_tdt_file(){
 
   boost::filesystem::path p(sstream.str());
   if (boost::filesystem::create_directories(p))
-    ROS_INFO("[Iridium] Directory to store msg send was not found, create a new one");
+    ROS_DEBUG("[Iridium] Directory to store msg send was not found, create a new one");
 
   sstream << std::hex << wall_time_now; // Print in hex
   sstream << ".tdt";

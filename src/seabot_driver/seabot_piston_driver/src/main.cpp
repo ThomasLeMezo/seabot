@@ -131,6 +131,7 @@ int main(int argc, char *argv[]){
     p.set_reached_switch_off(reached_switch_off);
     p.set_piston_speed(speed_in_offset, speed_out_offset);
 
+    ROS_DEBUG("[Piston_driver] Start Ok");
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         ros::spinOnce();

@@ -91,6 +91,7 @@ int main(int argc, char *argv[]){
 
   bool hysteresis_inside = false;
 
+  ROS_INFO("[Waypoint] Start Ok");
   // Main regulation loop
   while (ros::ok()){
     ros::spinOnce();

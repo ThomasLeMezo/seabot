@@ -201,7 +201,7 @@ void I2cImu::update()
 
 bool I2cImu::ImuSettings::loadSettings()
 {
-  ROS_INFO("%s: reading IMU parameters from param server", __FUNCTION__);
+  ROS_DEBUG("[IMU] %s: reading IMU parameters from param server", __FUNCTION__);
   int temp_int;
 
   // General
@@ -282,10 +282,10 @@ bool I2cImu::ImuSettings::loadSettings()
     m_compassCalMin = RTVector3(compass_min[0], compass_min[1], compass_min[2]);
     m_compassCalMax = RTVector3(compass_max[0],compass_max[1], compass_max[2]);
     m_compassCalValid = true;
-    ROS_INFO("Got Calibration for Compass");
+    ROS_DEBUG("[IMU] Got Calibration for Compass");
   }
   else{
-    ROS_INFO("No Calibration for Compass");
+    ROS_INFO("[IMU] No Calibration for Compass");
   }
 
   // Ellipsoid offset Compass
@@ -294,11 +294,11 @@ bool I2cImu::ImuSettings::loadSettings()
   if (settings_nh_->getParam("calib/ellipsoid_offset", compass_ellipsoid_offset)
       && compass_ellipsoid_offset.size() == 3){
     m_compassCalEllipsoidOffset = RTVector3(compass_ellipsoid_offset[0], compass_ellipsoid_offset[1], compass_ellipsoid_offset[2]);
-    ROS_INFO("Got Calibration Ellipsoid Offset for Compass");
+    ROS_DEBUG("[IMU] Got Calibration Ellipsoid Offset for Compass");
   }
   else{
     m_compassCalEllipsoidValid = false;
-    ROS_INFO("No Calibration Ellipsoid Offset for Compass");
+    ROS_INFO("[IMU] No Calibration Ellipsoid Offset for Compass");
   }
 
   std::vector<double> ellipsoid_corr0, ellipsoid_corr1, ellipsoid_corr2;
@@ -315,11 +315,11 @@ bool I2cImu::ImuSettings::loadSettings()
     m_compassCalEllipsoidCorr[2][1] = ellipsoid_corr2[1];
     m_compassCalEllipsoidCorr[2][2] = ellipsoid_corr2[2];
     m_compassCalEllipsoidCorr[2][3] = ellipsoid_corr2[3];
-    ROS_INFO("Got Calibration Ellipsoid Matrix for Compass");
+    ROS_DEBUG("[IMU] Got Calibration Ellipsoid Matrix for Compass");
   }
   else{
     m_compassCalEllipsoidValid = false;
-    ROS_INFO("No Calibration Ellipsoid Matrix for Compass");
+    ROS_INFO("[IMU] No Calibration Ellipsoid Matrix for Compass");
   }
 
   // Compas Biais
@@ -328,10 +328,10 @@ bool I2cImu::ImuSettings::loadSettings()
       && compass_ellipsoid_offset.size() == 3){
     m_gyroBias = RTVector3(gyro_biais[0], gyro_biais[1], gyro_biais[2]);
     m_gyroBiasValid = true;
-    ROS_INFO("Got Calibration Gyro Biais");
+    ROS_DEBUG("[IMU] Got Calibration Gyro Biais");
   }
   else{
-    ROS_INFO("No Calibration Gyro Biais");
+    ROS_INFO("[IMU] No Calibration Gyro Biais");
   }
 
   // Min/Max Acc
@@ -343,11 +343,11 @@ bool I2cImu::ImuSettings::loadSettings()
     m_accelCalMin = RTVector3(accel_min[0], accel_min[1], accel_min[2]);
     m_accelCalMax = RTVector3(accel_max[0],accel_max[1], accel_max[2]);
     m_accelCalValid = true;
-    ROS_INFO("Got Calibration for Accelerometer");
+    ROS_DEBUG("[IMU] Got Calibration for Accelerometer");
   }
   else
   {
-    ROS_INFO("No Calibration for Accelerometer");
+    ROS_INFO("[IMU] No Calibration for Accelerometer");
   }
 
   // Mag Declination
@@ -371,9 +371,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "i2c_imu_node");
 
-  ROS_INFO("RTIMU Node for ROS");
-
   I2cImu i2c_imu;
+  ROS_INFO("[IMU] Start Ok");
   i2c_imu.spin();
 
   return (0);
