@@ -151,12 +151,13 @@ target_include_directories(TIS PUBLIC TIS/include)
 add_executable(iridium_node
     src/iridium.cpp
     src/main.cpp
+    src/logtdt.cpp
     )
 
 add_executable(decode_iridium
-    src/iridium.cpp
+    src/logtdt.cpp
     src/tdt.cpp
-    )
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

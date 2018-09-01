@@ -254,6 +254,9 @@ int main(int argc, char *argv[]){
   p_t_ratio_ref /= (double)nb_sample;
   piston_position_ref /= (double) nb_sample;
 
+  // Clearance to regulation
+  call_emergency_depth(false);
+
   /// ******************************************************************************
   /// **************************** Main regulation loop ****************************
   /// ******************************************************************************

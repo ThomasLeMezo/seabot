@@ -1,7 +1,10 @@
 #include <iostream>
 #include <unistd.h>
-#include "bme280.h"
-#include "bme280_defs.h"
+
+extern "C"{
+  #include "bme280.h"
+  #include "bme280_defs.h"
+}
 
 #include <ros/ros.h>
 #include <sensor_msgs/Temperature.h>

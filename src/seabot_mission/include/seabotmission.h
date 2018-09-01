@@ -86,7 +86,7 @@ public:
   double get_time_to_next_waypoint() const;
 
 private:
-  void decode_waypoint(boost::property_tree::ptree::value_type &v, ros::WallTime &last_time);
+  void decode_waypoint(boost::property_tree::ptree::value_type &v, ros::WallTime &last_time, const double &depth_offset);
 
 private:
   std::string m_folder_path = "";

@@ -7,6 +7,30 @@ fusion_type: 1
 publish_euler: True
 publish_magnetometer: True
 
+# RTIMU_XNORTH_YEAST    -> 0
+# RTIMU_XEAST_YSOUTH    -> 1
+# RTIMU_XSOUTH_YWEST    -> 2
+# RTIMU_XWEST_YNORTH    -> 3
+# RTIMU_XNORTH_YWEST    -> 4
+# RTIMU_XEAST_YNORTH    -> 5
+# RTIMU_XSOUTH_YEAST    -> 6
+# RTIMU_XWEST_YSOUTH    -> 7
+# RTIMU_XUP_YNORTH      -> 8
+# RTIMU_XUP_YEAST       -> 9
+# RTIMU_XUP_YSOUTH      -> 10
+# RTIMU_XUP_YWEST       -> 11
+# RTIMU_XDOWN_YNORTH    -> 12
+# RTIMU_XDOWN_YEAST     -> 13
+# RTIMU_XDOWN_YSOUTH    -> 14
+# RTIMU_XDOWN_YWEST     -> 15
+# RTIMU_XNORTH_YUP      -> 16
+# RTIMU_XEAST_YUP       -> 17
+# RTIMU_XSOUTH_YUP      -> 18
+# RTIMU_XWEST_YUP       -> 19
+# RTIMU_XNORTH_YDOWN    -> 20
+# RTIMU_XEAST_YDOWN     -> 21
+# RTIMU_XSOUTH_YDOWN    -> 22
+# RTIMU_XWEST_YDOWN     -> 23
 axis_rotation: 0
 
 mpu9250:

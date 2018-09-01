@@ -39,45 +39,45 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
 }
 
 void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
-  iridium.m_east = msg->east;
-  iridium.m_north = msg->north;
+  iridium.logTDT.m_east = msg->east;
+  iridium.logTDT.m_north = msg->north;
 }
 
 void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
-  iridium.m_seabot_state = 0;
-  iridium.m_seabot_state |= (msg->published_frequency & 0b1) << 0;
-  iridium.m_seabot_state |= (msg->depth_limit & 0b1) << 1;
-  iridium.m_seabot_state |= (msg->batteries_limit & 0b1) << 2;
-  iridium.m_seabot_state |= (msg->depressurization & 0b1) << 3;
+  iridium.logTDT.m_seabot_state = 0;
+  iridium.logTDT.m_seabot_state |= (msg->published_frequency & 0b1) << 0;
+  iridium.logTDT.m_seabot_state |= (msg->depth_limit & 0b1) << 1;
+  iridium.logTDT.m_seabot_state |= (msg->batteries_limit & 0b1) << 2;
+  iridium.logTDT.m_seabot_state |= (msg->depressurization & 0b1) << 3;
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
-  iridium.m_gnss_speed = msg->speed; // Normaly in m/s
-  iridium.m_gnss_heading = msg->track; // Degree from north
+  iridium.logTDT.m_gnss_speed = msg->speed; // Normaly in m/s
+  iridium.logTDT.m_gnss_heading = msg->track; // Degree from north
 }
 
 void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
-    iridium.m_batteries[0] = msg->battery1;
-    iridium.m_batteries[1] = msg->battery2;
-    iridium.m_batteries[2] = msg->battery3;
-    iridium.m_batteries[3] = msg->battery4;
+    iridium.logTDT.m_batteries[0] = msg->battery1;
+    iridium.logTDT.m_batteries[1] = msg->battery2;
+    iridium.logTDT.m_batteries[2] = msg->battery3;
+    iridium.logTDT.m_batteries[3] = msg->battery4;
 }
 
 void sensor_internal_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
-  iridium.m_internal_pressure = msg->pressure;
-  iridium.m_internal_temperature = msg->temperature;
-  iridium.m_internal_temperature = msg->humidity;
+  iridium.logTDT.m_internal_pressure = msg->pressure;
+  iridium.logTDT.m_internal_temperature = msg->temperature;
+  iridium.logTDT.m_internal_temperature = msg->humidity;
 }
 
 void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){
-  iridium.m_current_waypoint = msg->waypoint_number;
+  iridium.logTDT.m_current_waypoint = msg->waypoint_number;
 }
 
 bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
     ROS_INFO("[Iridium] Call iridium");
-    iridium.serialize_log_TDT1();
+    iridium.get_new_log_files();
     iridium.send_and_receive_data();
     return true;
   }

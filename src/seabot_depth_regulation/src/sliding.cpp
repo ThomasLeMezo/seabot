@@ -22,7 +22,7 @@ bool piston_switch_out = false;
 double depth_set_point = 0.0;
 ros::WallTime t_old;
 
-bool emergency = false;
+bool emergency = true; // Wait safety clearance on startup
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;

@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
   const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
-  const string mission_path = n_private.param<string>("mission_path", "~");
+  const string mission_path = n_private.param<string>("mission_path", "");
   const int flash_counter = ceil(n_private.param<double>("flash_time_next_waypoint", 3.0));
 
   ROS_INFO("[Mission] Wait for Flasher counter service");

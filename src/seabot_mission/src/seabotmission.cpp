@@ -79,7 +79,10 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
 
 
 void SeabotMission::load_mission(const std::string &file_xml){
-  m_file_name = m_folder_path + "/" + file_xml;
+  if(m_folder_path.empty())
+    m_file_name = file_xml;
+  else
+    m_file_name = m_folder_path + "/" + file_xml;
   pt::ptree tree;
   ROS_INFO("[Seabot_Mission] Read xml file : %s", m_file_name.c_str());
   try {
@@ -141,50 +144,51 @@ void SeabotMission::load_mission(const std::string &file_xml){
 
   ros::WallTime last_time = m_time_start;
   BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("paths")){
-    if(v.first == "waypoint"){
-      decode_waypoint(v, last_time);
-    }
-    else if(v.first == "loop"){
-      int nb_loop = v.second.get<int>("<xmlattr>.number", 1);
-
-      for(int i=0; i<nb_loop; i++){
-        ROS_INFO("[Seabot_Mission] Loop %i/%i", i+1, nb_loop);
-        BOOST_FOREACH(pt::ptree::value_type &v_loop,v.second){
-          if(v_loop.first == "waypoint"){
-            decode_waypoint(v_loop, last_time);
-          }
-        }
-      }
-    }
+    decode_waypoint(v, last_time, 0.0);
   }
 }
 
-void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &last_time){
-  Waypoint w;
-  try{
-    if(!m_depth_only){
-      w.north = v.second.get_child("north").get_value<double>() + m_offset_north;
-      w.east = v.second.get_child("east").get_value<double>() + m_offset_east;
-    }
-    w.depth = v.second.get_child("depth").get_value<double>();
+void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &last_time, const double &depth_offset){
+  if(v.first == "waypoint"){
+    Waypoint w;
+    try{
+      if(!m_depth_only){
+        w.north = v.second.get_child("north").get_value<double>() + m_offset_north;
+        w.east = v.second.get_child("east").get_value<double>() + m_offset_east;
+      }
+      w.depth = v.second.get_child("depth").get_value<double>() + depth_offset;
 
-    boost::optional<double> t = v.second.get_optional<double>("duration_since_start");
-    boost::optional<double> d = v.second.get_optional<double>("duration");
-    if(t.is_initialized()) // End_time
-      w.time_end = m_time_start + ros::WallDuration(t.value());
-    else if(d.is_initialized()){ // Duration
-      w.time_end = last_time + ros::WallDuration(d.value());
+      boost::optional<double> t = v.second.get_optional<double>("duration_since_start");
+      boost::optional<double> d = v.second.get_optional<double>("duration");
+      if(t.is_initialized()) // End_time
+        w.time_end = m_time_start + ros::WallDuration(t.value());
+      else if(d.is_initialized()){ // Duration
+        w.time_end = last_time + ros::WallDuration(d.value());
+      }
+      else
+        throw(std::runtime_error("(No time or duration founded for a waypoint)"));
     }
-    else
-      throw(std::runtime_error("(No time or duration founded for a waypoint)"));
-  }
-  catch(std::exception const&  ex) {
-    ROS_FATAL("[Seabot_Mission] Wrong xml file %s", ex.what());
-    exit(1);
-  }
-  last_time = w.time_end;
-  m_waypoints.push_back(w);
+    catch(std::exception const&  ex) {
+      ROS_FATAL("[Seabot_Mission] Wrong xml file %s", ex.what());
+      exit(1);
+    }
+    last_time = w.time_end;
+    m_waypoints.push_back(w);
 
-  ROS_INFO("[Seabot_Mission] Load Waypoint %zu (t_end=%li, d=%lf, E=%lf, N=%lf)", m_waypoints.size(), (long int)w.time_end.toSec(), w.depth, w.east, w.north);
+    ROS_INFO("[Seabot_Mission] Load Waypoint %zu (t_end=%li, d=%lf, E=%lf, N=%lf)", m_waypoints.size(), (long int)w.time_end.toSec(), w.depth, w.east, w.north);
+  }
+  else if(v.first == "loop"){
+    const int nb_loop = v.second.get<int>("<xmlattr>.number", 1);
+    const double depth_increment = v.second.get<double>("<xmlattr>.depth_increment", 0.0);
+
+    double depth_offset_tmp = depth_offset;
+    for(int i=0; i<nb_loop; i++){
+      ROS_INFO("[Seabot_Mission] Loop %i/%i", i+1, nb_loop);
+      BOOST_FOREACH(pt::ptree::value_type &v_loop,v.second){
+        decode_waypoint(v_loop, last_time, depth_offset_tmp);
+      }
+      depth_offset_tmp += depth_increment;
+    }
+  }
 }
 

@@ -27,7 +27,7 @@
 		<depth>5</depth>
 	</waypoint>
 
-	<loop number="2">
+	<loop number="2" depth_increment="2.4">
 		<waypoint test="1">
 			<duration>20</duration>
 			<east>-1</east>
