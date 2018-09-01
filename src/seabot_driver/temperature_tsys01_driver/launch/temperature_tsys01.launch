@@ -1,0 +1,5 @@
+<launch>
+  <node name="temperature_sensor_ext" pkg="temperature_tsys01_driver" type="temperature_tsys01_node" output="screen">
+  	<param name="frequency" value="5.0" />
+  </node>
+</launch>
