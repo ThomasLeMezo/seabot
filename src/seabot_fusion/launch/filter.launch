@@ -4,10 +4,13 @@
     <param name="rho" value="1020.0" />
     <param name="g" value="9.81" />
 
-    <param name="filter_median_size" value="6" />
-    <param name="filter_mean_width" value="3" />
-    <param name="filter_mean_width_velocity" value="5" />
-    <param name="velocity_delta_size" value="5" />
+    <param name="filter_window_size" value="6" />
+    <param name="filter_mean_half_width" value="3" />
+
+    <param name="filter_mean_width_velocity" value="6" />
+    <param name="velocity_dt_sample" value="5" />
+    <param name="filter_velocity_mean_half_width" value="2" />
+
     <param name="velocity_limit" value="0.5" />
 
     <param name="zero_depth_pressure" value="1.024" />
