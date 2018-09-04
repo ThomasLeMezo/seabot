@@ -126,7 +126,8 @@ int main(int argc, char *argv[]){
 
       // Antiwindup following (?) : do not increase cmd if piston cannot follow
       // Avoid add too much energy (and so oscillations) to the command if motor is too slow
-      if(abs(piston_set_point+offset_piston-piston_position)<set_point_following)
+      if(abs(piston_set_point+offset_piston-piston_position)<set_point_following
+         || abs(piston_set_point+u+offset_piston-piston_position)<abs(piston_set_point+offset_piston-piston_position))
         piston_set_point+=u;
 
       // Antiwindup for switch
