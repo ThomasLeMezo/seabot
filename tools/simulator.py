@@ -20,20 +20,22 @@ piston_tick_max = 2400
 piston_tick_min = 0
 
 volume_compression = -tick_compression*tick_to_volume # in delta_V / m
+print("volume_compression", volume_compression)
+print("tick_to_volume", tick_to_volume)
 
 ########## Drone regulation ##########
 C_f_estim = C_f
 # K_velocity = 120.0
 # K_acc = 3000.0
-K_e = 1.0
-K_velocity = 120.0
-# K_acc = 3000.0
+K_e = 10.0
+K_velocity = 1.0
+K_acc = 0.0
 # K_i = 3000.0
 
-K_acc = 0.0
+# K_acc = 0.0
 K_i = 0.0
 
-K_factor = 0.2
+K_factor = 200.0
 delta_t_regulation = 1.0 # sec
 set_point_following = 10.0
 
@@ -49,7 +51,8 @@ x = np.zeros(4)
 x[0] = 0.0
 x[1] = 0.0
 
-x[3] = equilibrium_tick+(x[0]*volume_compression)/tick_to_volume
+# x[3] = equilibrium_tick+(x[0]*volume_compression)/tick_to_volume
+x[3] = 0.0
 x[2] = -(x[3]-equilibrium_tick)*tick_to_volume
 print("x[2] = ", x[2], "x[3] = ", x[3])
 
@@ -61,13 +64,14 @@ print("x[2] = ", x[2], "x[3] = ", x[3])
 # 	waypoints.append([d, 60*60])
 
 # waypoints = [[5.0, 60*60], [40, 60*60], [0.0, 10*60]]
-waypoints = [[5.0, 60*60]]
+# waypoints = [[5.0, 60*60]]
 # waypoints = [[5.0, 60*60*1]]
 # waypoints = [[0.0, 100]]
 # waypoints = [[5.0, 60*60], [10.0, 60*60], [0.0, 60*60], [5.0, 60*60]]
+waypoints = [[5.0, 60*60], [6.0, 60*60], [3.0, 60*60], [12.0, 60*60]]
 
 ########## Simulation ##########
-dt=0.001
+dt=0.01
 time_simulation = 0.0 # sec
 for w in waypoints:
 	time_simulation+=w[1]
@@ -121,27 +125,38 @@ def euler(x, u, dt):
 def K_e_v(e):
 	return max(0, -750.0*abs(e)+1000)
 
+def vector_field(z, set_point):
+	e = set_point-z
+	if(abs(e)>2.0):
+		return np.sign(e)*0.05
+	else:
+		return atan(e/20.0)
+
 def control(set_point, x, tick_target, tick_target_compensated, dt):
 	global a_log, v_log, e_log, i_acc
 
-	d_noise = x[0]# + np.random.standard_normal()*0.5e-3 # noise around centimeter
-	ddot_noise = x[1]# + np.random.standard_normal()*1e-3
+	d_noise = x[0] + np.random.standard_normal()*0.5e-3 # noise around centimeter
+	ddot_noise = x[1] + np.random.standard_normal()*1e-3
 
 	V_piston = -(x[3]-equilibrium_tick+equilibrium_tick_error)*tick_to_volume
 
 	a = K_acc*(-g*((V_piston+d_noise*volume_compression)*rho_eau) - (0.5*C_f_estim*x[1]*abs(x[1])*rho_eau))
-	e = K_e*(set_point-d_noise)
-	v = K_velocity*ddot_noise
-	# v = K_velocity*ddot_noise*K_e_v(e)
+	# e = K_e*(set_point-d_noise)
+	# v = K_velocity*ddot_noise
+	# # v = K_velocity*ddot_noise*K_e_v(e)
 	i_acc += (set_point-d_noise)*tick_to_volume
-	# i_acc = min(a/K_i, i_acc)*np.sign(i_acc)
+	# # i_acc = min(a/K_i, i_acc)*np.sign(i_acc)
 	i=K_i*i_acc
-	cmd = K_factor*delta_t_regulation*(-v+e-a+i)
+	# cmd = K_factor*delta_t_regulation*(-v+e-a+i)
 
-	# a_log.append(a)
-	v_log.append(-v)
+	v = K_velocity*(vector_field(d_noise, set_point) - ddot_noise)
+
+	cmd = K_factor*delta_t_regulation*(v-a)
+
+
 	e_log.append(e)
-	a_log.append(-a)
+	v_log.append(v)	
+	a_log.append(a)
 	i_log.append(i)
 
 	if(abs(x[3]-tick_target_compensated)<set_point_following):
@@ -186,7 +201,7 @@ for k in range(0, int(time_simulation/dt)):
 		u_log.append(tick_target_compensated)
 
 	## Euler
-	x = euler(x, round(tick_target_compensated-x[3]), dt)
+	x = euler(x, round(tick_target_compensated)-x[3], dt)
 
 	# print(y[1])
 
@@ -210,34 +225,38 @@ plt.subplot(312)
 plt.ylabel('Ticks')
 plt.plot(result_t, np.transpose(result_x)[3], 'b')
 
+# plt.subplot(212)
+# plt.ylabel('Volume')
+# plt.plot(result_t, np.transpose(result_x)[2])
+
 plt.subplot(313)
-plt.ylabel('Volume')
-plt.plot(result_t, np.transpose(result_x)[2])
+plt.ylabel('Velocity')
+plt.plot(result_t, np.transpose(result_x)[1])
 
 plt.figure(2)
 # plt.subplot(311)
 # plt.ylabel('tick_target_compensated')
 # plt.plot(result_t, result_tick_target_compensated, 'r')
 
-plt.subplot(511)
+plt.subplot(411)
 plt.ylabel('e')
 plt.plot(e_log, 'r')
 
-plt.subplot(512)
+plt.subplot(412)
 plt.ylabel('v')
 plt.plot(v_log, 'r')
 
-plt.subplot(513)
+plt.subplot(413)
 plt.ylabel('a')
 plt.plot(a_log, 'r')
 
-plt.subplot(514)
+plt.subplot(414)
 plt.ylabel('i')
 plt.plot(i_log, 'r')
 
-plt.subplot(515)
-plt.ylabel('ticks')
-plt.plot(np.transpose(result_x)[3], 'r')
+# plt.subplot(515)
+# plt.ylabel('ticks')
+# plt.plot(np.transpose(result_x)[3], 'r')
 
 plt.show()
 

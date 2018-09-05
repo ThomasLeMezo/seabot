@@ -4,3 +4,4 @@ float32 depth_error
 float32 u
 float32 piston_set_point
 uint16 piston_set_point_offset
+bool antiwindup

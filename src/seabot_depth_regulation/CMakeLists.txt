@@ -139,6 +139,11 @@ add_executable(sliding_node
     src/sliding.cpp
 )
 
+add_executable(sliding_node2
+    src/sliding.cpp
+)
+
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -150,12 +155,18 @@ add_executable(sliding_node
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(sliding_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(sliding_node2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
 
 target_link_libraries(sliding_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(sliding_node2
   ${catkin_LIBRARIES}
 )
 
