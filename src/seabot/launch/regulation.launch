@@ -24,7 +24,7 @@
         <param name="frequency" value="1.0" />
 
         <!-- Equilibrium of the float -->
-        <param name="equilibrium_piston" value="2220" />
+        <param name="equilibrium_piston" value="2100" />
 
         <!-- Regulation parameters -->
         <param name="K_factor" value="200.0" />

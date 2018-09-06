@@ -117,15 +117,15 @@ if(len(time_regulation_debug)>0):
     dock_regulation3 = Dock("Regulation 3")
     area.addDock(dock_regulation3, 'above', dock_battery)
 
-    pg_regulation_depth_error1 = pg.PlotWidget()
-    pg_regulation_depth_error1.addLegend()
-    pg_regulation_depth_error1.plot(time_regulation_debug, regulation_debug_depth_error, pen=(255,0,0), name="depth error")
-    pg_regulation_depth_error1.setLabel('left', "Depth error factor", units="m")
-    dock_regulation3.addWidget(pg_regulation_depth_error1)
+    pg_velocity = pg.PlotWidget()
+    pg_velocity.addLegend()
+    pg_velocity.plot(time_fusion_depth, fusion_velocity, pen=(255,0,0), name="velocity")
+    pg_velocity.setLabel('left', "Velocity", units="ms^-1")
+    dock_regulation3.addWidget(pg_velocity)
 
     pg_regulation_velocity = pg.PlotWidget()
     pg_regulation_velocity.addLegend()
-    pg_regulation_velocity.plot(time_regulation_debug, regulation_debug_velocity, pen=(255,0,0), name="velocity")
+    pg_regulation_velocity.plot(time_regulation_debug, regulation_debug_velocity, pen=(255,0,0), name="velocity factor")
     pg_regulation_velocity.setLabel('left', "Velocity factor", units="m/s")
     dock_regulation3.addWidget(pg_regulation_velocity)
 
@@ -135,8 +135,8 @@ if(len(time_regulation_debug)>0):
     pg_regulation_acceleration.setLabel('left', "Acceleration factor", units="m^2/s^2")
     dock_regulation3.addWidget(pg_regulation_acceleration)
 
-    pg_regulation_velocity.setXLink(pg_regulation_depth_error1)
-    pg_regulation_acceleration.setXLink(pg_regulation_depth_error1)
+    pg_regulation_velocity.setXLink(pg_velocity)
+    pg_regulation_acceleration.setXLink(pg_velocity)
 
 #################### Sensor Internal ####################
 if(len(time_sensor_internal)>0):

@@ -114,7 +114,9 @@ int main(int argc, char *argv[]){
         vector<double> velocity_memory;
         for(size_t i=0; i<filter_velocity_window_size; i++){
           // Delta_depth / Delta_dt
-          velocity_memory.push_back((depth_memory[i].first-depth_memory[velocity_dt_sample+i].first)/(depth_memory[i].second-depth_memory[velocity_dt_sample+i].second).toSec());
+          double dt = (depth_memory[i].second-depth_memory[velocity_dt_sample+i].second).toSec();
+          if(dt!=0)
+            velocity_memory.push_back((depth_memory[i].first-depth_memory[velocity_dt_sample+i].first)/dt);
         }
         sort(velocity_memory.begin(), velocity_memory.end());
         const double n_mid_velocity = velocity_memory.size()/2.0;

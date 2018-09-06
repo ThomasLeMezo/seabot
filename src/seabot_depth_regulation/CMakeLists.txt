@@ -53,6 +53,7 @@ find_package(catkin REQUIRED
  add_message_files(
    FILES
    RegulationDebug.msg
+   RegulationDebug2.msg
  )
 
 # Generate services in the 'srv' folder
@@ -140,7 +141,7 @@ add_executable(sliding_node
 )
 
 add_executable(sliding_node2
-    src/sliding.cpp
+    src/sliding2.cpp
 )
 
 

@@ -374,6 +374,11 @@ int main(int argc, char *argv[]){
       warning_number = 6;
     }
 
+    if(piston_switch_in && piston_switch_out){
+      safety_msg.depressurization = true;
+      warning_number = 7;
+    }
+
     if(safety_msg.depressurization == true){
       ROS_WARN("[Safety] Sealing issue detected %i (p=%f, t=%f, h=%f)", warning_number, internal_pressure, internal_temperature, internal_humidity);
       ROS_WARN("[Safety] Ratio (%f / %f)", p_t_ratio, p_t_ratio_ref);

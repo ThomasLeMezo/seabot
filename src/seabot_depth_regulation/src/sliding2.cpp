@@ -5,7 +5,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_regulation/RegulationDebug2.h>
 #include <seabot_mission/Waypoint.h>
 #include <std_srvs/SetBool.h>
 
@@ -35,7 +35,7 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   depth = msg->depth;
-  velocity= msg->velocity;
+  velocity = msg->velocity;
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
@@ -70,8 +70,8 @@ int main(int argc, char *argv[]){
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double set_point_following = n_private.param<double>("set_point_following", 10.0);
 
-  const double K_factor = n_private.param<double>("K_factor", 0.0);
-  double K_velocity = n_private.param<double>("K_velocity", 0.0);
+  const double K_factor = n_private.param<double>("K_factor", 200.0);
+  double K_velocity = n_private.param<double>("K_velocity", 1.0);
 
   vector_field_velocity = n_private.param<double>("vector_field_velocity", 0.05);
   vector_field_approach_threshold = n_private.param<double>("vector_field_approach_threshold", 2.0);
@@ -86,10 +86,10 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);
-  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug>("debug", 1);
+  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug2>("debug", 1);
 
   seabot_piston_driver::PistonPosition position_msg;
-  seabot_depth_regulation::RegulationDebug debug_msg;
+  seabot_depth_regulation::RegulationDebug2 debug_msg;
 
   // Server
   ros::ServiceServer server_emergency = n.advertiseService("emergency", emergency_service);
@@ -114,13 +114,15 @@ int main(int argc, char *argv[]){
     ros::WallTime t = ros::WallTime::now();
     double dt = (t-t_old).toSec();
     t_old = t;
+
     if(depth_set_point>0.2 && !emergency){
 
       /// *********** Compressibility (Linear model) + Equilibrium *********** ///
       double offset_piston = equilibrium_piston + depth*compressibility_coeff;
 
       /// ********************** Command law ****************** ///
-      double v = K_velocity*(vector_field(depth, depth_set_point)-velocity);
+      double v_target = vector_field(depth, depth_set_point);
+      double v = K_velocity*(v_target-velocity);
       double u = K_factor*dt*(v);
 
       double piston_set_point_new = piston_set_point + u;
@@ -151,9 +153,10 @@ int main(int argc, char *argv[]){
       }
 
       // Debug msg
-      debug_msg.acceleration = 0.0;
-      debug_msg.velocity = v;
+      debug_msg.velocity_error = v;
       debug_msg.depth_error = (depth_set_point-depth);
+      debug_msg.vector_field_target = v_target;
+
       debug_msg.u = u;
       debug_msg.piston_set_point = piston_set_point;
       debug_msg.piston_set_point_offset = piston_set_point_offset;

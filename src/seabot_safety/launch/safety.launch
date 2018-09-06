@@ -19,7 +19,7 @@
         <param name="time_delay_depth_msg" value="2.0" />
         <param name="time_delay_piston_state_msg" value="2.0" />
 
-        <param name="delta_volume_allowed" value="0.001" />
+        <param name="delta_volume_allowed" value="1000.0" />
         <param name="delta_ref_allowed" value="3.0" />
         <param name="volume_ref" value="6.0" />
         <param name="pressure_internal_max" value="850.0" />
