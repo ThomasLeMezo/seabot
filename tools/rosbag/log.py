@@ -346,8 +346,30 @@ if(len(time_safety)>0):
     pg_safety.plot(time_safety, safety_depth_limit, pen=(0,255,0), name="depth_limit")
     pg_safety.plot(time_safety, safety_batteries_limit, pen=(0,0,255), name="batteries_limit")
     pg_safety.plot(time_safety, safety_depressurization, pen=(255,255,0), name="depressurization")
-
     dock_safety.addWidget(pg_safety)
+
+    p_t_ratio = np.array(sensor_fusion_internal_pressure)/np.array(sensor_fusion_internal_temperature)
+
+    pg_depressure = pg.PlotWidget()
+    pg_depressure.addLegend()
+    pg_depressure.plot(time_fusion_sensor_internal, p_t_ratio - p_t_ratio[0], pen=(255,0,0), name="p_t_ratio")
+    dock_safety.addWidget(pg_depressure)
+
+    # piston*tick_to_volume*(1.0-p_t_ratio/p_t_ratio_ref)
+    f_piston = interpolate.interp1d(time_piston_state, piston_state_position, bounds_error=False)
+    piston_interp = f_piston(time_fusion_sensor_internal)
+    tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
+    # volume = piston_interp*tick_to_volume*(1.0-p_t_ratio/p_t_ratio[0])
+    p_t_ratio_ref = np.mean(p_t_ratio[0:10])
+    volume = piston_interp*tick_to_volume*(p_t_ratio/(p_t_ratio_ref-p_t_ratio))
+
+    pg_depressure2 = pg.PlotWidget()
+    pg_depressure2.addLegend()
+    pg_depressure2.plot(time_fusion_sensor_internal, volume, pen=(255,0,0), name="volume")
+    dock_safety.addWidget(pg_depressure2)
+
+    pg_depressure.setXLink(pg_safety)
+    pg_depressure2.setXLink(pg_safety)
 
 #################### Temperature / Depth ####################
 if(len(time_sensor_external)>0 and len(time_fusion_depth)>0):
