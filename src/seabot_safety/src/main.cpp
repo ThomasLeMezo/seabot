@@ -14,6 +14,7 @@
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <seabot_power_driver/Battery.h>
 #include <seabot_safety/SafetyLog.h>
+#include <seabot_safety/SafetyDebug.h>
 
 #include <cmath>
 
@@ -198,6 +199,7 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
+  ros::Publisher safety_debug_pub = n.advertise<seabot_safety::SafetyDebug>("debug", 1);
 
   // Service
   ROS_DEBUG("[Safety] Wait for zero depth service from fusion");
@@ -251,11 +253,11 @@ int main(int argc, char *argv[]){
       cpt++;
     }
     else
-      ROS_WARN("[Safety] Not receiving internal sensor data or piston state data (%f, %f)", d_internal_sensor.toSec(), d_piston_state.toSec());
+      ROS_WARN("[Safety] Not receiving internal sensor data or piston state data yet (%f, %f)", d_internal_sensor.toSec(), d_piston_state.toSec());
     dt.sleep();
   }
-  p_t_ratio_ref /= (double)nb_sample;
-  piston_position_ref /= (double) nb_sample;
+  p_t_ratio_ref /= (double) cpt;
+  piston_position_ref /= (double) cpt;
 
   // Clearance of regulation
   call_emergency_depth(false);
@@ -269,6 +271,7 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
     bool enable_emergency_depth = false;
     seabot_safety::SafetyLog safety_msg;
+    seabot_safety::SafetyDebug safety_debug_msg;
 
     ///*******************************************************
     ///**************** Sensor published data ****************
@@ -299,11 +302,13 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Flash at surface ********************
-    if(enable_flash){
-      if(depth < limit_depth_flash_enable)
-        call_flash_enable(true);
-      else
-        call_flash_enable(false);
+    if(enable_flash && depth < limit_depth_flash_enable){
+      call_flash_enable(true);
+      safety_debug_msg.flash = true;
+    }
+    else{
+      call_flash_enable(false);
+      safety_debug_msg.flash = false;
     }
 
     ///*******************************************************
@@ -332,24 +337,35 @@ int main(int argc, char *argv[]){
     safety_msg.depressurization = false;
     int warning_number = 0;
     double p_t_ratio;
-    if(internal_temperature!=273.15){
+    if(internal_temperature!=0.0){
       p_t_ratio = internal_pressure/internal_temperature;
       double piston = piston_position-piston_position_ref;
 
-      // PV=nRT law
-      if(abs(piston)<620.0){ // Case piston near zero
-        if(abs(p_t_ratio-p_t_ratio_ref)>delta_ref_allowed){
+      /// ********* PV=nRT law ********* ///
+      // Case piston near zero
+      if(abs(piston)<620.0){
+
+        double delta = p_t_ratio-p_t_ratio_ref;
+        if(abs(delta)>delta_ref_allowed){
           safety_msg.depressurization = true;
           warning_number = 1;
         }
+
+        safety_debug_msg.ratio_p_t = p_t_ratio;
+        safety_debug_msg.ratio_delta = delta;
       }
-      else{ // General case
+      // General case
+      else{
         if(p_t_ratio != p_t_ratio_ref){
           double volume = piston*tick_to_volume*p_t_ratio/(p_t_ratio-p_t_ratio_ref);
-          if(abs(volume-volume_ref)>delta_volume_allowed){
-           safety_msg.depressurization = true;
-           warning_number = 2;
+          double volume_delta = volume-volume_ref;
+          if(abs(volume_delta)>delta_volume_allowed){
+            safety_msg.depressurization = true;
+            warning_number = 2;
           }
+
+          safety_debug_msg.volume = volume;
+          safety_debug_msg.volume_delta = volume_delta;
         }
         else{
           safety_msg.depressurization = true;
@@ -393,6 +409,7 @@ int main(int argc, char *argv[]){
       call_emergency_depth(true);
 
     safety_pub.publish(safety_msg);
+    safety_debug_pub.publish(safety_debug_msg);
     loop_rate.sleep();
   }
 

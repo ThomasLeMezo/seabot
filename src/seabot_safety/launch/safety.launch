@@ -8,7 +8,7 @@
         <param name="pressure_limit" value="6.2" />
         <param name="time_before_pressure_emergency" value="3.0" />
 
-        <param name="enable_flash" value="false"/>
+        <param name="enable_flash" value="true"/>
         <param name="limit_depth_flash_enable" value="0.5"/>
 
         <param name="battery_limit" value="10.0" />

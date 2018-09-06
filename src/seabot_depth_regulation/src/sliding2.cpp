@@ -107,7 +107,7 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
 
   // Main regulation loop
-  ROS_INFO("[DepthRegulation] Start Ok");
+  ROS_INFO("[DepthRegulation2] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]){
 
       // Antiwindup for switch
       if((piston_switch_out && piston_set_point_offset_new<piston_position) // To zero
-         || piston_switch_in && piston_set_point_offset_new>piston_position) // To max set point
+         || (piston_switch_in && piston_set_point_offset_new>piston_position)) // To max set point
         antiwindup = true;
 
       /// ********************** Write command ****************** ///

@@ -356,7 +356,7 @@ if(len(time_sensor_external)>0 and len(time_fusion_depth)>0):
     if(len(fusion_depth)>0):
         pg_temp = pg.PlotWidget()
         pg_temp.addLegend()
-
+        
         f_temp = interpolate.interp1d(time_sensor_external, sensor_external_temperature, bounds_error=False)
         f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
 

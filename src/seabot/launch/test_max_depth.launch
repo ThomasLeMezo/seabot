@@ -1,0 +1,7 @@
+<launch>
+    <include file="$(find seabot)/launch/base.launch"/>
+    <include file="$(find seabot_safety)/launch/safety.launch"/>
+
+	<node name="regulation_max_depth" pkg="seabot" type="test_depth.py" output="screen" />
+
+</launch>
