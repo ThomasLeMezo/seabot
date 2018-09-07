@@ -2,7 +2,7 @@
     <node name="safety_node" pkg="seabot_safety" type="safety_node" output="screen" ns="safety" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
 
-        <param name="safety_battery" value="true"/>
+        <param name="safety_battery" value="false"/>
         <param name="safety_pressure_limit" value="true"/>
         <param name="safety_depressure" value="true"/>
 

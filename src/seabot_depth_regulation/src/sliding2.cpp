@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
   const double K_factor = n_private.param<double>("K_factor", 200.0);
   double K_velocity = n_private.param<double>("K_velocity", 1.0);
 
-  vector_field_velocity = n_private.param<double>("vector_field_velocity", 0.05);
+  vector_field_velocity = n_private.param<double>("vector_field_velocity", 0.02);
   vector_field_approach_threshold = n_private.param<double>("vector_field_approach_threshold", 2.0);
 
   const double equilibrium_piston = n_private.param<double>("equilibrium_piston", 0.0);

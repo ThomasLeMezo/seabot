@@ -27,7 +27,7 @@
         <param name="equilibrium_piston" value="2100" />
 
         <!-- Regulation parameters -->
-        <param name="K_factor" value="700.0" />
+        <param name="K_factor" value="400.0" />
         <param name="K_velocity" value="1.0" />
 
         <param name="vector_field_approach_threshold" value="0.5" />

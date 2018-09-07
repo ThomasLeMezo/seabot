@@ -14,12 +14,14 @@ import numpy as np
 from math import *
 
 depth_limit = 18.0
-piston_position_sink = 2300
-emergency = True
+piston_position_sink = 2350
 
 piston_speed = 15 # default 15
 piston_speed_max = 45 # max 50
 velocity_min = 10.0 # 10 ticks/s
+
+emergency = False
+depth=0.0
 
 ## ToDo : service reset zero pression + depth_set_point
 
@@ -59,7 +61,7 @@ def callback_piston_velocity(data):
 
 def regulation_node():
     global depth, velocity, depth_limit, piston_position, piston_velocity
-    global piston_position_pub
+    global piston_position_pub, piston_speed
     global speed_motor
     rospy.init_node('regulation_depth_limit', anonymous=True)
 
@@ -93,10 +95,10 @@ def regulation_node():
     while(depth < 2.0):
         set_piston_position(0)
         rospy.sleep(1.0)
-        if(abs(piston_velocity) < velocity_min and piston_speed < piston_speed_max):
+        if(abs(piston_velocity) < velocity_min and piston_speed < piston_speed_max and piston_position>100):
             piston_speed += 5.0
             set_piston_speed(min(piston_speed, piston_speed_max))
-            rospy.loginfo("[Test_Depth] Increase speed to " + min(piston_speed, piston_speed_max))
+            rospy.loginfo("[Test_Depth] Increase speed to " + str(min(piston_speed, piston_speed_max)))
 
 if __name__ == '__main__':
     try:

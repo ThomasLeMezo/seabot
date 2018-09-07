@@ -1,7 +1,49 @@
 <launch>
-    <include file="$(find seabot)/launch/base.launch"/>
-    <include file="$(find seabot_safety)/launch/safety.launch"/>
+ <node pkg="rosbag" type="record" name="record" output="screen" args="--split --size 1024 --all" respawn="true" respawn_delay="5"/>
+ <group ns="driver">
+     <node name="power_node" pkg="seabot_power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
+         <param name="frequency" value="0.2" />
+     </node>
 
+     <node name="piston_node" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
+         <param name="frequency" value="5.0" />
+
+         <param name="distance_fast_move" value="3000" />
+         <!-- If speed_fast_move is too high, disturbances are create on I2C external pressure sensor -->
+         <param name="speed_fast_move" value="25" />
+
+         <param name="speed_in_offset" value="15" />
+         <param name="speed_out_offset" value="15" />
+
+         <param name="adaptative_speed" value="false" />
+         <param name="speed_in_slope" value="0.0" />
+         <param name="speed_out_slope" value="0.0" />
+
+         <param name="reached_switch_off" value="true" />
+         <param name="error_interval" value="6" />
+     </node>
+
+     <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
+         <param name="frequency" value="5.0" />
+     </node>
+
+     <node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true" respawn_delay="5">
+         <param name="frequency" value="5.0" />
+     </node>
+
+     <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
+         <param name="frequency" value="15.0" />
+         <param name="coeff_cmd_to_pwm" value="9" />
+     </node>
+
+     <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>
+
+     <include file="$(find i2c_imu)/launch/mpu_9250_param.launch"/>
+ </group>
+
+ <include file="$(find seabot_fusion)/launch/filter.launch"/>
+ <include file="$(find seabot_fusion)/launch/lambert.launch"/>
+
+ <include file="$(find seabot_safety)/launch/safety.launch"/>
 	<node name="regulation_max_depth" pkg="seabot" type="test_depth.py" output="screen" />
-
 </launch>
