@@ -82,10 +82,13 @@ def regulation_node():
 
     while(depth < depth_limit):
         if(emergency):
-            set_piston_position(0)
+            break
         else:
             set_piston_position(piston_position_sink)
         rospy.sleep(1.0)
+
+    set_piston_position(0)
+    rospy.sleep(4.0)
 
     while(depth < 2.0):
         set_piston_position(0)

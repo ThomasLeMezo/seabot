@@ -27,10 +27,10 @@
         <param name="equilibrium_piston" value="2100" />
 
         <!-- Regulation parameters -->
-        <param name="K_factor" value="200.0" />
+        <param name="K_factor" value="700.0" />
         <param name="K_velocity" value="1.0" />
 
-        <param name="vector_field_approach_threshold" value="2.0" />
+        <param name="vector_field_approach_threshold" value="0.5" />
         <param name="vector_field_velocity" value="0.02" />
 
         <param name="set_point_following" value="10.0" />

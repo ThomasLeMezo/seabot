@@ -179,7 +179,6 @@ int main(int argc, char *argv[]){
   const double d_piston_state_ref = n_private.param<double>("time_delay_piston_state_msg", 2.0);
 
   battery_limit = n_private.param<double>("battery_limit", 10.0);
-
   pressure_limit = n_private.param<double>("pressure_limit", 6.2);
 
   double tick_to_volume = (1.75e-3/48.0)*(pow((0.05/2.0),2))*M_PI;
@@ -189,6 +188,10 @@ int main(int argc, char *argv[]){
   const double pressure_internal_max = 1e2*n_private.param<double>("pressure_internal_max", 850.0); // in Pa
 
   const double humidity_limit = n_private.param<double>("humidity_limit", 75.0);
+
+  const bool enable_safety_battery = n_private.param<bool>("safety_battery", true);
+  const bool enable_safety_pressure_limit = n_private.param<bool>("safety_pressure_limit", true);
+  const bool enable_safety_depressure = n_private.param<bool>("safety_depressure", true);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -302,7 +305,7 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Flash at surface ********************
-    if(enable_flash && depth < limit_depth_flash_enable){
+    if(depth < limit_depth_flash_enable){
       call_flash_enable(true);
       safety_debug_msg.flash = true;
     }
@@ -323,7 +326,7 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Batteries ****************************
-    if(battery_limit_reached){
+    if(battery_limit_reached && enable_safety_battery){
       ROS_WARN("[Safety] Batteries limit detected");
       enable_emergency_depth = true;
       // ToDo : shutdown ? => launch with iridium sleep ?
@@ -402,7 +405,7 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Summary ******************************
-    if(safety_msg.batteries_limit || safety_msg.depressurization || safety_msg.depth_limit || safety_msg.published_frequency)
+    if((enable_safety_battery && safety_msg.batteries_limit) || (enable_safety_depressure && safety_msg.depressurization) || (enable_safety_pressure_limit && safety_msg.depth_limit) || safety_msg.published_frequency)
       enable_emergency_depth = true;
 
     if(enable_emergency_depth)

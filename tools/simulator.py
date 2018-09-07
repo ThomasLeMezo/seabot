@@ -27,7 +27,7 @@ print("tick_to_volume", tick_to_volume)
 C_f_estim = C_f
 # K_velocity = 120.0
 # K_acc = 3000.0
-K_e = 10.0
+K_e = 0.0
 K_velocity = 1.0
 K_acc = 0.0
 # K_i = 3000.0
@@ -35,7 +35,7 @@ K_acc = 0.0
 # K_acc = 0.0
 K_i = 0.0
 
-K_factor = 200.0
+K_factor = 2000.0
 delta_t_regulation = 1.0 # sec
 set_point_following = 10.0
 

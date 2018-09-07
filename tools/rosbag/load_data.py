@@ -181,15 +181,15 @@ def load_bag(filename):
 			fusion_depth.append(msg.depth)
 			fusion_velocity.append(msg.velocity)
 
-		elif(topic=="/regulation/debug"):
-			time_regulation_debug.append((t-startTime).to_sec())
-			regulation_debug_acceleration.append(msg.acceleration)
-			regulation_debug_velocity.append(msg.velocity)
-			regulation_debug_depth_error.append(msg.depth_error)
-			regulation_debug_u.append(msg.u)
-			regulation_debug_piston_set_point.append(msg.piston_set_point)
-			regulation_debug_piston_set_point_offset.append(msg.piston_set_point_offset)
-			regulation_antiwindup.append(msg.antiwindup)
+		# elif(topic=="/regulation/debug"):
+		# 	time_regulation_debug.append((t-startTime).to_sec())
+		# 	regulation_debug_acceleration.append(msg.acceleration)
+		# 	regulation_debug_velocity.append(msg.velocity)
+		# 	regulation_debug_depth_error.append(msg.depth_error)
+		# 	regulation_debug_u.append(msg.u)
+		# 	regulation_debug_piston_set_point.append(msg.piston_set_point)
+		# 	regulation_debug_piston_set_point_offset.append(msg.piston_set_point_offset)
+		# 	regulation_antiwindup.append(msg.antiwindup)
 
 		elif(topic=="/fusion/pose"):
 			time_fusion_pose.append((t-startTime).to_sec())

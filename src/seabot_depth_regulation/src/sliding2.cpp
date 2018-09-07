@@ -19,6 +19,8 @@ double piston_position = 0;
 bool piston_switch_in = false;
 bool piston_switch_out = false;
 
+bool is_surface = true;
+
 double depth_set_point = 0.0;
 ros::WallTime t_old;
 
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]){
       // Avoid add too much energy (and so oscillations) to the command if motor is too slow
       double e_old = abs(piston_set_point_offset-piston_position);
       double e_new = abs(piston_set_point_offset_new-piston_position);
-      if(e_old>set_point_following && e_new>e_old)
+      if(e_old>set_point_following && e_new>e_old && !is_surface)
         antiwindup = true;
 
       // Antiwindup for switch
@@ -162,10 +164,13 @@ int main(int argc, char *argv[]){
       debug_msg.piston_set_point_offset = piston_set_point_offset;
       debug_msg.antiwindup = antiwindup;
       debug_pub.publish(debug_msg);
+
+      is_surface = false;
     }
     else{
       // Position set point
       position_msg.position = 0;
+      is_surface = true;
     }
     position_pub.publish(position_msg);
 
