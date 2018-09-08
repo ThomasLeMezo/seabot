@@ -58,7 +58,7 @@ double vector_field(const double &depth, const double &set_point){
   if(abs(e)>vector_field_approach_threshold)
     return copysign(vector_field_velocity, e);
   else
-    return atan(e*vector_field_velocity/vector_field_approach_threshold);
+    return atan(tan(1)*e/vector_field_approach_threshold)*vector_field_velocity;
 }
 
 int main(int argc, char *argv[]){

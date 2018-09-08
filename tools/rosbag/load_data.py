@@ -66,12 +66,12 @@ fusion_velocity = []
 
 # /regulation/debug
 time_regulation_debug = []
-regulation_debug_acceleration = []
-regulation_debug_velocity = []
-regulation_debug_depth_error = []
-regulation_debug_u = []
-regulation_debug_piston_set_point = []
-regulation_debug_piston_set_point_offset = []
+regulation_velocity_error = []
+regulation_depth_error = []
+regulation_vector_field_target = []
+regulation_u = []
+regulation_piston_set_point = []
+regulation_piston_set_point_offset = []
 regulation_antiwindup = []
 
 # /regulation/depth_set_point
@@ -99,6 +99,14 @@ safety_published_frequency = []
 safety_depth_limit = []
 safety_batteries_limit = []
 safety_depressurization = []
+
+# /safety/debug
+time_safety_debug = []
+safety_debug_flash = []
+safety_debug_ratio_p_t = []
+safety_debug_ratio_delta = []
+safety_debug_volume = []
+safety_debug_volume_delta = []
 
 def load_bag(filename):
 
@@ -181,15 +189,18 @@ def load_bag(filename):
 			fusion_depth.append(msg.depth)
 			fusion_velocity.append(msg.velocity)
 
-		# elif(topic=="/regulation/debug"):
-		# 	time_regulation_debug.append((t-startTime).to_sec())
-		# 	regulation_debug_acceleration.append(msg.acceleration)
-		# 	regulation_debug_velocity.append(msg.velocity)
-		# 	regulation_debug_depth_error.append(msg.depth_error)
-		# 	regulation_debug_u.append(msg.u)
-		# 	regulation_debug_piston_set_point.append(msg.piston_set_point)
-		# 	regulation_debug_piston_set_point_offset.append(msg.piston_set_point_offset)
-		# 	regulation_antiwindup.append(msg.antiwindup)
+		elif(topic=="/regulation/debug"):
+			time_regulation_debug.append((t-startTime).to_sec())
+			regulation_velocity_error.append(msg.velocity_error)
+			regulation_depth_error.append(msg.depth_error)
+			regulation_vector_field_target.append(msg.vector_field_target)
+			regulation_u.append(msg.u)
+			regulation_piston_set_point.append(msg.piston_set_point)
+			regulation_piston_set_point_offset.append(msg.piston_set_point_offset)
+			if(msg.antiwindup):
+				regulation_antiwindup.append(1)
+			else:
+				regulation_antiwindup.append(0)
 
 		elif(topic=="/fusion/pose"):
 			time_fusion_pose.append((t-startTime).to_sec())
@@ -236,6 +247,17 @@ def load_bag(filename):
 				safety_depressurization.append(1)
 			else:
 				safety_depressurization.append(0)
+
+		elif(topic=="/safety/debug"):
+			time_safety_debug.append((t-startTime).to_sec())
+			if(msg.flash):
+				safety_debug_flash.append(1)
+			else:
+				safety_debug_flash.append(0)
+			safety_debug_ratio_p_t.append(msg.ratio_p_t)
+			safety_debug_ratio_delta.append(msg.ratio_delta)
+			safety_debug_volume.append(msg.volume)
+			safety_debug_volume_delta.append(msg.volume_delta)
 
 	bag.close()
 

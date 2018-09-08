@@ -2,7 +2,7 @@
     <node name="safety_node" pkg="seabot_safety" type="safety_node" output="screen" ns="safety" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
 
-        <param name="safety_battery" value="false"/>
+        <param name="safety_battery" value="true"/>
         <param name="safety_pressure_limit" value="true"/>
         <param name="safety_depressure" value="true"/>
 
@@ -23,12 +23,13 @@
         <param name="time_delay_depth_msg" value="2.0" />
         <param name="time_delay_piston_state_msg" value="2.0" />
 
-        <param name="delta_volume_allowed" value="1000.0" />
-        <param name="delta_ref_allowed" value="3.0" />
-        <param name="volume_ref" value="6.0" />
+        <param name="delta_volume_allowed" value="0.01" />
+        <param name="delta_ref_allowed" value="10.0" />
+        <param name="volume_ref" value="0.006" />
+        <param name="transition_tick_law" value="1000.0" />
         <param name="pressure_internal_max" value="850.0" />
 
-        <param name="humidity_limit" value="75.0" />
+        <param name="humidity_limit" value="70.0" />
 
     </node>
 </launch>

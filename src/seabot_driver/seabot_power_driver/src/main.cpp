@@ -24,10 +24,7 @@ bool flash_is_enable = false;
 bool flash_enable(std_srvs::SetBool::Request  &req,
                   std_srvs::SetBool::Response &res){
   p.set_flash_enable(req.data);
-  if(req.data)
-    flash_is_enable = true;
-  else
-    flash_is_enable = false;
+  flash_is_enable = req.data;
   res.success = true;
   return true;
 }

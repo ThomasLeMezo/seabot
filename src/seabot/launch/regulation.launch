@@ -37,7 +37,7 @@
         <param name="hysteresis_piston" value="0.6" />
 
         <!-- Compressibility coeff -->
-        <param name="compressibility_coeff" value="10.0" />
+        <param name="compressibility_coeff" value="20.0" />
     </node>
 
 <!--    <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

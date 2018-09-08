@@ -141,11 +141,10 @@ void call_flash_enable(const bool &val){
   if(val != flash_is_enable){
     std_srvs::SetBool srv;
     srv.request.data = val;
-    if (!service_flash_enable.call(srv)){
-      ROS_ERROR("[Safety] Failed to call flash enable");
-    }
-    else
+    if (service_flash_enable.call(srv))
       flash_is_enable = val;
+    else
+      ROS_ERROR("[Safety] Failed to call flash enable");
   }
 }
 
@@ -182,10 +181,11 @@ int main(int argc, char *argv[]){
   pressure_limit = n_private.param<double>("pressure_limit", 6.2);
 
   double tick_to_volume = (1.75e-3/48.0)*(pow((0.05/2.0),2))*M_PI;
-  const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.001);
-  const double delta_ref_allowed = n_private.param<double>("delta_ref_allowed", 1.5);
-  const double volume_ref = n_private.param<double>("volume_ref", 6.0);
+  const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.002);
+  const double delta_ref_allowed = n_private.param<double>("delta_ref_allowed", 3.0);
+  const double volume_ref = n_private.param<double>("volume_ref", 0.006);
   const double pressure_internal_max = 1e2*n_private.param<double>("pressure_internal_max", 850.0); // in Pa
+  const double transition_tick_law = n_private.param<double>("transition_tick_law", 1000.0);
 
   const double humidity_limit = n_private.param<double>("humidity_limit", 75.0);
 
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]){
 
       /// ********* PV=nRT law ********* ///
       // Case piston near zero
-      if(abs(piston)<620.0){
+      if(abs(piston)<transition_tick_law){
 
         double delta = p_t_ratio-p_t_ratio_ref;
         if(abs(delta)>delta_ref_allowed){
