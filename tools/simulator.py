@@ -38,7 +38,7 @@ K_factor = 400.0
 K_velocity = 1.0
 
 vector_field_velocity = 0.02
-vector_field_approach_threshold = 2.0
+vector_field_approach_threshold = 0.5
 
 delta_t_regulation = 1.0 # sec
 set_point_following = 10.0
@@ -77,7 +77,8 @@ depth_delayed = 0.0
 # waypoints = [[5.0, 60*60*1]]
 # waypoints = [[0.0, 100]]
 # waypoints = [[5.0, 60*60], [10.0, 60*60], [0.0, 60*60], [5.0, 60*60]]
-waypoints = [[5.0, 10*60], [15.0, 10*60], [0.0, 10*60]]
+# waypoints = [[5.0, 10*60], [15.0, 10*60], [0.0, 10*60]]
+waypoints = [[5.0, 15*60]]
 
 ########## Simulation ##########
 dt=0.01
@@ -135,17 +136,12 @@ def euler(x, u, dt):
 
 	return y
 
-def K_e_v(e):
-	return max(0, -750.0*abs(e)+1000)
-
 def vector_field(z, set_point):
 	e = set_point-z
 	if(abs(e)>vector_field_approach_threshold):
 		return np.sign(e)*vector_field_velocity
 	else:
-		# return 0.0
-		# return atan(e*vector_field_velocity/vector_field_approach_threshold)
-		return atan(tan(1)*e/vector_field_approach_threshold)*vector_field_velocity
+		return atan(e*tan(1)/vector_field_approach_threshold)*vector_field_velocity
 
 def depth_estimator(t):
 	global pressure_memory, depth_estim, depth_memory, velocity_estim
@@ -181,25 +177,14 @@ def control(set_point, x, tick_target, tick_target_compensated, dt):
 	global a_log, v_log, e_log, i_acc
 
 	d_noise = depth_estim
-	ddot_noise = velocity_estim-velocity_estim*0.5
-	# d_noise = x[0] + np.random.standard_normal()*0.5e-3 # noise around centimeter
-	# ddot_noise = x[1] + np.random.standard_normal()*1e-3
-
-	# V_piston = -(x[3]-equilibrium_tick+equilibrium_tick_error)*tick_to_volume
+	ddot_noise = velocity_estim
+	V_piston = -(x[3]-equilibrium_tick+equilibrium_tick_error)*tick_to_volume
 
 	# a = K_acc*(-g*((V_piston+d_noise*volume_compression)*rho_eau) - (0.5*C_f_estim*x[1]*abs(x[1])*rho_eau))
-	# e = K_e*(set_point-d_noise)
-	# v = K_velocity*ddot_noise
-	# # v = K_velocity*ddot_noise*K_e_v(e)
-	# i_acc += (set_point-d_noise)*tick_to_volume
-	# # i_acc = min(a/K_i, i_acc)*np.sign(i_acc)
-	# i=K_i*i_acc
-	# cmd = K_factor*delta_t_regulation*(-v+e-a+i)
 
 	v = K_velocity*(vector_field(d_noise, set_point) - ddot_noise)
 
 	cmd = K_factor*delta_t_regulation*(v)
-
 
 	# e_log.append(e)
 	v_log.append(v)	
@@ -217,7 +202,6 @@ def set_point_depth():
 	if(t>=next_time_waypoint and nb_waypoint<len(waypoints)):
 		next_time_waypoint = t+waypoints[nb_waypoint][1]
 		set_point = waypoints[nb_waypoint][0]
-		# i_acc=0.0
 		nb_waypoint+=1
 
 command_memory = []
@@ -271,8 +255,6 @@ for k in range(0, int(time_simulation/dt)):
 	## Euler
 	x = euler(x, round(tick_target_compensated_delayed)-x[3], dt)
 
-	# print(y[1])
-
 	## Save results
 	result_x.append(x)
 	result_tick_target_compensated.append(tick_target_compensated)
@@ -286,62 +268,34 @@ for k in range(0, int(time_simulation/dt)):
 ############### 	Plots	####################
 ################################################
 
-plt.figure(1, figsize=(15,7))
-plt.subplot(411)
-plt.ylabel('depth')
-plt.plot(result_t, np.transpose(result_x)[0], 'r')
-plt.plot(result_t, result_depth_estim, 'b')
+fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+
+# ax1.subplot(411)
+
+# x, y = np.meshgrid(np.arange(0., 1., 1.0), np.arange(0., 1., 1.0))
+# u = np.ones(np.shape(x))
+# v = np.sign((5.0-y))*vector_field_velocity
+# R=np.sqrt(u**2+v**2)
+# print(u)
+# print(v)
+# ax1.quiver(x, y, u, v, units='xy', scale_units='xy', scale=0.05) #, width=1.
+
+
+ax1.set_ylabel('depth')
+ax1.plot(result_t, np.transpose(result_x)[0], 'r')
+ax1.plot(result_t, result_depth_estim, 'b')
 # plt.plot(result_t, np.transpose(result_set_point), 'b')
 
-plt.subplot(412)
-plt.ylabel('Ticks')
-plt.plot(result_t, np.transpose(result_x)[3], 'b')
-plt.plot(result_t, u_log, 'r')
 
-# plt.subplot(212)
-# plt.ylabel('Volume')
-# plt.plot(result_t, np.transpose(result_x)[2])
 
-plt.subplot(413)
-plt.ylabel('Velocity')
-plt.plot(result_t, np.transpose(result_x)[1])
-plt.plot(result_t, result_velocity_estim, 'b')
+# ax2.set_ylabel('Ticks')
+# ax2.plot(result_t, np.transpose(result_x)[3], 'b')
+# ax2.plot(result_t, u_log, 'r')
 
-plt.subplot(414)
-plt.ylabel('VF')
-plt.plot(vf_log)
-
-# plt.figure(2)
-# plt.subplot(311)
-# plt.ylabel('tick_target_compensated')
-# plt.plot(result_t, result_tick_target_compensated, 'r')
-
-# plt.subplot(411)
-# plt.ylabel('e')
-# plt.plot(e_log, 'r')
-
-# plt.subplot(412)
-# plt.ylabel('v')
-# plt.plot(v_log, 'r')
-
-# plt.subplot(413)
-# plt.ylabel('a')
-# plt.plot(a_log, 'r')
-
-# plt.subplot(414)
-# plt.ylabel('i')
-# plt.plot(i_log, 'r')
-
-# plt.subplot(515)
-# plt.ylabel('ticks')
-# plt.plot(np.transpose(result_x)[3], 'r')
+ax2.set_ylabel('Velocity')
+ax2.plot(result_t, np.transpose(result_x)[1], label='Velocity')
+ax2.plot(result_t, result_velocity_estim, 'b')
+ax2.plot(result_t, vf_log, 'r', label='Desired Velocity')
+ax2.legend()
 
 plt.show()
-
-# try:
-#   while True:
-#     pass
-# except KeyboardInterrupt:
-#   pass
-
-

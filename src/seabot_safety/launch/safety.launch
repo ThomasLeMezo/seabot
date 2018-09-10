@@ -26,7 +26,7 @@
         <param name="delta_volume_allowed" value="0.01" />
         <param name="delta_ref_allowed" value="10.0" />
         <param name="volume_ref" value="0.006" />
-        <param name="transition_tick_law" value="1000.0" />
+        <param name="transition_tick_law" value="650.0" />
         <param name="pressure_internal_max" value="850.0" />
 
         <param name="humidity_limit" value="70.0" />
