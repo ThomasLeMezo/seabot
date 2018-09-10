@@ -19,8 +19,8 @@ tick_compression = 20.0 # ticks per meters
 
 tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
-speed_in = 32.0 # tick/s
-speed_out = 32.0 # tick/s
+speed_in = 320000.0 # tick/s
+speed_out = 320000.0 # tick/s
 
 piston_tick_max = 2400
 piston_tick_min = 0
@@ -114,22 +114,22 @@ def euler(x, u, dt):
 	y[1] += dt*(-g*((x[2]+x[0]*volume_compression)*rho_eau) - (0.5*C_f*x[1]*abs(x[1])*rho_eau))/m
 
 	# Simulation limits
-	if(x[0]>=depth_seafloor and y[1]>=0.0):
-		y[0] = x[0]
-		y[1] = 0.0
-	if(x[0]<=0 and y[1]<=0.0):
-		y[0] = x[0]
-		y[1] = 0.0
+	# if(x[0]>=depth_seafloor and y[1]>=0.0):
+	# 	y[0] = x[0]
+	# 	y[1] = 0.0
+	# if(x[0]<=0 and y[1]<=0.0):
+	# 	y[0] = x[0]
+	# 	y[1] = 0.0
 
-	if(u>=0):
-		y[3] += min(speed_out*dt, u)
-	else:
-		y[3] -= min(speed_in*dt, abs(u))
+	# if(u>=0):
+	# 	y[3] += min(speed_out*dt, u)
+	# else:
+	# 	y[3] -= min(speed_in*dt, abs(u))
 
-	if(y[3]>piston_tick_max):
-		y[3]=piston_tick_max
-	elif(y[3]<piston_tick_min):
-		y[3]=piston_tick_min
+	# if(y[3]>piston_tick_max):
+	# 	y[3]=piston_tick_max
+	# elif(y[3]<piston_tick_min):
+	# 	y[3]=piston_tick_min
 
 	# if tick increase => volume decrease
 	y[2] = (-y[3]+equilibrium_tick)*tick_to_volume
@@ -172,6 +172,11 @@ def depth_estimator(t):
 		s_v.pop(-1)
 		velocity_estim = np.mean(np.array(s_v))
 
+y_log = []
+dy_log = []
+ddy_log = []
+sum_log = []
+u2_log = []
 
 def control(set_point, x, tick_target, tick_target_compensated, dt):
 	global a_log, v_log, e_log, i_acc
@@ -185,6 +190,32 @@ def control(set_point, x, tick_target, tick_target_compensated, dt):
 	v = K_velocity*(vector_field(d_noise, set_point) - ddot_noise)
 
 	cmd = K_factor*delta_t_regulation*(v)
+
+	eV = 0.0
+
+	A = g*rho_eau/m
+	B = 0.5*rho_eau*C_f_estim/m
+	e = set_point - d_noise
+	x1 = ddot_noise
+	x2 = d_noise
+	x3 = V_piston + eV
+	x1d = -A*x3-B*(x2**2)*np.sign(x2)
+	beta = np.pi/2.0
+	l = 4.0
+
+	u = (1./A)*(-2.*B*x2*x1*np.sign(x2)+(2.*beta*(x1**2)*e-beta*x1d*(1.+e**2))/((1.+e**2)**2)+l*(x1d-beta*x1/(1.+e**2))+x1+beta*atan(e))
+	cmd = -delta_t_regulation*u/tick_to_volume
+
+	v_y_log = x1 + beta * atan(e)
+	v_dy_log = x1d-beta*x1/(1.+e**2)
+	v_ddy_log = -A*u-2.*B*x2*x1*np.sign(x2)+(2*beta*x1**2*e-beta*x1d*(1.+e**2))/(1+e**2)**2
+	v_sum_log = v_y_log+l*v_dy_log+v_ddy_log
+
+	y_log.append(v_y_log)
+	dy_log.append(v_dy_log)
+	ddy_log.append(v_ddy_log)
+	sum_log.append(v_sum_log)
+	u2_log.append(u)
 
 	# e_log.append(e)
 	v_log.append(v)	
@@ -268,7 +299,7 @@ for k in range(0, int(time_simulation/dt)):
 ############### 	Plots	####################
 ################################################
 
-fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex=True)
 
 # ax1.subplot(411)
 
@@ -286,16 +317,22 @@ ax1.plot(result_t, np.transpose(result_x)[0], 'r')
 ax1.plot(result_t, result_depth_estim, 'b')
 # plt.plot(result_t, np.transpose(result_set_point), 'b')
 
-
-
-# ax2.set_ylabel('Ticks')
-# ax2.plot(result_t, np.transpose(result_x)[3], 'b')
-# ax2.plot(result_t, u_log, 'r')
-
 ax2.set_ylabel('Velocity')
 ax2.plot(result_t, np.transpose(result_x)[1], label='Velocity')
 ax2.plot(result_t, result_velocity_estim, 'b')
 ax2.plot(result_t, vf_log, 'r', label='Desired Velocity')
 ax2.legend()
+
+ax3.set_ylabel('Ticks')
+ax3.plot(result_t, np.transpose(result_x)[3], 'b')
+ax3.plot(result_t, u_log, 'r')
+
+fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5,1, sharex=True)
+
+ax1.plot(y_log, label='y_log')
+ax2.plot(dy_log, label='dy_log')
+ax3.plot(ddy_log, label='ddy_log')
+ax4.plot(sum_log, label='sum_log')
+ax5.plot(u2_log	, label='u_log')
 
 plt.show()
