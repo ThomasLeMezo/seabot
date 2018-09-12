@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 g = 9.81
 rho = 1025.0 # kg/m3
-m=8.3
+m=8.870
 Cf = np.pi*(0.12)**2
 
 A=g*rho/m
-B=0*0.5*rho*Cf/m
+B=0.5*rho*Cf/m
 tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
 alpha = -0.*tick_to_volume
@@ -16,17 +16,16 @@ alpha = -0.*tick_to_volume
 x1=0.
 x2=0.
 x3=0.
-v_error = 50.*tick_to_volume
-x3_estim = x3 + v_error
+v_error = 100.*tick_to_volume
 dt=0.01
 set_point=5.
 
 u=0.
 
-xhat = np.array([[0],[0],[0],[0]])
+xhat = np.array([[0],[0],[0],[10.*tick_to_volume]])
 gamma = 10000*np.eye(4)
 gamma_alpha = np.diag([1e-4, 1e-6, 1e-6, 1e-10])
-gamma_beta = np.diag([1e-6, 1e-20])
+gamma_beta = np.diag([1e-6, 1e-10])
 
 
 def kalman_predict(xup,Gup,u,gamma_alpha,A):
@@ -55,37 +54,52 @@ def euler(u):
 	x3= x3+u*dt
 
 def control():
-	global xhat, u, gamma, gamma_alpha, gamma_beta, x2, x3_estim
+	global xhat, u, gamma, gamma_alpha, gamma_beta, x2
+	v_mesure = x3+v_error
 	# m=8.3
 	# Cf = 1.1*np.pi*(0.12)**2
 	# A=g*rho/m
 	# B=0.5*rho*Cf/m
 	xhat1, xhat2, xhat3, xhat4 = xhat.flatten()
-	Ak = np.eye(4)+dt*np.array([[0, A*alpha, -A, -A],
+	Ak = np.eye(4)+dt*np.array([[-2.*B*abs(x1), A*alpha, -A, A],
 								[1, 0, 0, 0],
 								[0, 0, 0, 0],
 								[0, 0, 0, 0]])
 	Ck = np.array([[0,1,0,0], [0,0,1,0]])
-	measure = np.array([[x2],[x3 + v_error]]) + gamma_beta @ np.random.randn(2,1)
+	measure = np.array([[x2],[v_mesure]]) + gamma_beta @ np.random.randn(2,1)
 	#zk = measure - np.array([[xhat2]])
 	xhat, gamma = kalman(xhat,gamma,np.array([[0],[0],[u],[0]]),measure,gamma_alpha,gamma_beta,Ak,Ck)
 
-	x3_estim = xhat[2][0] - xhat[3][0]
+	# V_eq = xhat[2][0] - xhat[3][0]
+	if(abs(gamma[3][0])<1e-7):
+		x1_m = xhat[0][0]
+		x2_m = xhat[1][0]
+		v_eq = xhat[2][0]+xhat[3][0]
+	else:
+		x1_m = 0.0
+		x2_m = x2
+		v_eq = x3
+	# 	v_eq = v_mesure
+	x1_m = x1
+	x2_m = x2
+	v_eq = x3
+
 
 	#print("estime : " + str(xhat))
-	#print("reel : ", x1, x2, x3, x3_estim-x3)
+	#print("reel : ", x1, x2, x3, v_eq-x3)
+
 
 	beta = -0.02*np.pi/2.0
-	l = 100.
+	l = 10.
 
-	e=set_point-x2
-	dx1 = -A*x3_estim-B*(x1**2)*np.sign(x1)
+	e=set_point-x2_m
+	dx1 = -A*v_eq-B*(x1_m**2)*np.sign(x1_m)
 
-	y = x1 + beta * atan(e)
-	dy = dx1-beta*x1/(1.+e**2)
+	y = x1_m + beta * atan(e)
+	dy = dx1-beta*x1_m/(1.+e**2)
 
-	u = (1./A)*(-2.*B*x1*dx1*np.sign(x1) -beta*(2.*(x1**2)*e + dx1*(1.+e**2))/((1.+e**2)**2) +l*dy+y)
-	ddy = -A*u-2.*B*x1*dx1*np.sign(x1)-beta*(2*x1**2*e+dx1*(1.+e**2))/((1+e**2)**2)
+	u = (1./A)*(-2.*B*x1_m*dx1*np.sign(x1_m) -beta*(2.*(x1_m**2)*e + dx1*(1.+e**2))/((1.+e**2)**2) +l*dy+y)
+	ddy = -A*u-2.*B*x1_m*dx1*np.sign(x1_m)-beta*(2*x1_m**2*e+dx1*(1.+e**2))/((1+e**2)**2)
 
 	eq = y+l*dy+ddy
 
@@ -93,6 +107,9 @@ def control():
 	dy_log.append(dy)
 	ddy_log.append(ddy)
 	eq_log.append(y+l*dy+ddy)
+
+	if(abs(u)>30.0*tick_to_volume):
+		u = np.sign(u)*30.0*tick_to_volume
 
 	return u
 
@@ -110,10 +127,9 @@ xhat2_log = []
 xhat3_log = []
 xhat4_log = []
 
-for i in range(100000):
+for i in range((int)(60.*5./dt)):
 	# euler()
 	u = control()
-	
 	euler(u)
 	
 	x1_log.append(x1)
@@ -123,7 +139,7 @@ for i in range(100000):
 	
 	xhat1_log.append(xhat[0][0])
 	xhat2_log.append(xhat[1][0])
-	xhat3_log.append(xhat[2][0])
+	xhat3_log.append(xhat[2][0]-v_error)
 	xhat4_log.append(xhat[3][0])
 
 print(gamma)
