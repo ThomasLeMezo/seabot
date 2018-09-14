@@ -72,14 +72,14 @@ int main(int argc, char *argv[]){
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double set_point_following = n_private.param<double>("set_point_following", 10.0);
 
-  const double K_factor = n_private.param<double>("K_factor", 200.0);
+  const double K_factor = n_private.param<double>("K_factor", 400.0);
   double K_velocity = n_private.param<double>("K_velocity", 1.0);
 
   vector_field_velocity = n_private.param<double>("vector_field_velocity", 0.02);
-  vector_field_approach_threshold = n_private.param<double>("vector_field_approach_threshold", 2.0);
+  vector_field_approach_threshold = n_private.param<double>("vector_field_approach_threshold", 0.5);
 
-  const double equilibrium_piston = n_private.param<double>("equilibrium_piston", 0.0);
-  const double compressibility_coeff = n_private.param<double>("compressibility_coeff", 10.0);
+  const double equilibrium_piston = n_private.param<double>("equilibrium_piston", 2100.0);
+  const double compressibility_coeff = n_private.param<double>("compressibility_coeff", 20.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
     if(depth_set_point>0.2 && !emergency){
 
       /// *********** Compressibility (Linear model) + Equilibrium *********** ///
-      double offset_piston = equilibrium_piston + depth*compressibility_coeff;
+      double offset_piston = equilibrium_piston - depth*compressibility_coeff;
 
       /// ********************** Command law ****************** ///
       double v_target = vector_field(depth, depth_set_point);
@@ -136,13 +136,18 @@ int main(int argc, char *argv[]){
       // Avoid add too much energy (and so oscillations) to the command if motor is too slow
       double e_old = abs(piston_set_point_offset-piston_position);
       double e_new = abs(piston_set_point_offset_new-piston_position);
-      if(e_old>set_point_following && e_new>e_old && !is_surface)
+      if(e_old>set_point_following && e_new>e_old && !is_surface && !piston_switch_out && !piston_switch_in){
         antiwindup = true;
+      }
 
       // Antiwindup for switch
       if((piston_switch_out && piston_set_point_offset_new<piston_position) // To zero
-         || (piston_switch_in && piston_set_point_offset_new>piston_position)) // To max set point
+         || (piston_switch_in && piston_set_point_offset_new>piston_position)){ // To max set point
         antiwindup = true;
+
+        piston_set_point = piston_position - offset_piston;
+        piston_set_point_offset = piston_position;
+    }
 
       /// ********************** Write command ****************** ///
       if(!antiwindup){
@@ -160,8 +165,8 @@ int main(int argc, char *argv[]){
       debug_msg.vector_field_target = v_target;
 
       debug_msg.u = u;
-      debug_msg.piston_set_point = piston_set_point;
-      debug_msg.piston_set_point_offset = piston_set_point_offset;
+      debug_msg.piston_set_point = piston_set_point_new;
+      debug_msg.piston_set_point_offset = piston_set_point_offset_new;
       debug_msg.antiwindup = antiwindup;
       debug_pub.publish(debug_msg);
 

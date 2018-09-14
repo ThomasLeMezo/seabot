@@ -118,23 +118,48 @@ if(len(time_regulation_debug)>0):
     pg_regulation_velocity_error.setXLink(pg_regulation_vector_field)
 
 #################### Regulation 2 ####################
-# if(len(time_regulation_debug)>0):
-#     dock_regulation2 = Dock("Regulation 2")
-#     area.addDock(dock_regulation2, 'above', dock_battery)
 
-#     pg_regulation_depth_error = pg.PlotWidget()
-#     pg_regulation_depth_error.addLegend()
-#     pg_regulation_depth_error.plot(time_regulation_debug, regulation_debug_depth_error, pen=(255,0,0), name="depth error")
-#     pg_regulation_depth_error.setLabel('left', "Depth error", units="m")
-#     dock_regulation2.addWidget(pg_regulation_depth_error)
+# time_regulation_debug = []
+# regulation_velocity_error = []
+# regulation_depth_error = []
+# regulation_vector_field_target = []
+# regulation_u = []
+# regulation_piston_set_point = []
+# regulation_piston_set_point_offset = []
+# regulation_antiwindup = []
 
-#     pg_regulation_depth1 = pg.PlotWidget()
-#     pg_regulation_depth1.addLegend()
-#     pg_regulation_depth1.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-#     pg_regulation_depth1.setLabel('left', "Depth", units="m")
-#     dock_regulation2.addWidget(pg_regulation_depth1)
 
-#     pg_regulation_depth1.setXLink(pg_regulation_depth_error)
+if(len(time_regulation_debug)>0):
+    dock_regulation2 = Dock("Regulation 2")
+    area.addDock(dock_regulation2, 'above', dock_battery)
+
+    pg_regulation_depth = pg.PlotWidget()
+    pg_regulation_depth.addLegend()
+    pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="Depth")
+    pg_regulation_depth.setLabel('left', "depth")
+    dock_regulation2.addWidget(pg_regulation_depth)
+
+    pg_regulation_u = pg.PlotWidget()
+    pg_regulation_u.addLegend()
+    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
+    pg_regulation_u.setLabel('left', "u")
+    dock_regulation2.addWidget(pg_regulation_u)
+
+    pg_regulation_antiwindup = pg.PlotWidget()
+    pg_regulation_antiwindup.addLegend()
+    pg_regulation_antiwindup.plot(time_regulation_debug, regulation_antiwindup, pen=(255,0,0), name="antiwindup")
+    pg_regulation_antiwindup.setLabel('left', "antiwindup")
+    dock_regulation2.addWidget(pg_regulation_antiwindup)
+
+    pg_regulation_set_point = pg.PlotWidget()
+    pg_regulation_set_point.addLegend()
+    pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
+    pg_regulation_set_point.setLabel('left', "set_point")
+    dock_regulation2.addWidget(pg_regulation_set_point)
+
+    pg_regulation_antiwindup.setXLink(pg_regulation_u)
+    pg_regulation_u.setXLink(pg_regulation_depth)
+    pg_regulation_set_point.setXLink(pg_regulation_depth)
 
 #################### Regulation 3 ####################
 # if(len(time_regulation_debug)>0):
