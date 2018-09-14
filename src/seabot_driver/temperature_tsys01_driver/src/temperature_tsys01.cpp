@@ -63,7 +63,7 @@ int Temperature_TSYS01::init_sensor(){
 
 bool Temperature_TSYS01::measure(){
     i2c_smbus_write_byte(m_file, CMD_ADC_CONV);
-    ros::Duration(0.05).sleep();
+    ros::Duration(0.06).sleep();
     unsigned char buff[3] = {0, 0, 0};
     if (i2c_smbus_read_i2c_block_data(m_file, CMD_ADC_READ, 3, buff)!=3){
         ROS_WARN("[Temperature_TSYS01] Error Reading T");
