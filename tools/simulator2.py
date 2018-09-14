@@ -8,7 +8,7 @@ m=8.870
 Cf = np.pi*(0.12)**2
 
 A=g*rho/m
-B=0.5*rho*Cf/m
+B=0.5*rho*Cf/m*0.
 tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
 alpha = -0.*tick_to_volume
@@ -22,29 +22,37 @@ set_point=5.
 
 u=0.
 
-xhat = np.array([[0],[0],[0],[10.*tick_to_volume]])
-gamma = 10000*np.eye(4)
+xhat = np.array([[x1],[x2],[x3],[v_error]])
+# gamma = 10000*np.eye(4)
+gamma = np.diag([5.**2, 1**2, 0.001**2, 0.001**2])
 gamma_alpha = np.diag([1e-4, 1e-6, 1e-6, 1e-10])
 gamma_beta = np.diag([1e-6, 1e-10])
 
 
-def kalman_predict(xup,Gup,u,gamma_alpha,A):
-    gamma_1 = A @ Gup @ A.T + gamma_alpha
-    x1 = A @ xup + u    
-    return(x1,gamma_1)
+def kalman_predict(xup,Gup,u,gamma_alpha,Ak):
+	global A, B
+	gamma_1 = Ak @ Gup @ Ak.T + gamma_alpha
+	
+	xnew = xup
+	xnew[0] = [-A*(xup[2][0]+xup[3][0]-alpha*xup[1][0])-B*xup[0][0]**2*np.sign(xup[0][0])]
+	xnew[1]= [xup[0]]
+	xnew[2]= [u[0]]
+
+	# x1 = A @ xup + u    
+	return(xnew,gamma_1)
 
 def kalman_correc(x0,gamma_0,y,gamma_beta,C):
-    S = C @ gamma_0 @ C.T + gamma_beta        
-    K = gamma_0 @ C.T @ np.linalg.inv(S)           
-    ytilde = y - C @ x0   
-    Gup = (np.eye(len(x0))-K @ C) @ gamma_0
-    xup = x0 + K@ytilde
-    return(xup,Gup) 
-    
-def kalman(x0,gamma_0,u,y,gamma_alpha,gamma_beta,A,C):
-    xup,Gup = kalman_correc(x0,gamma_0,y,gamma_beta,C)
-    x1,gamma_1=kalman_predict(xup,Gup,u,gamma_alpha,A)
-    return(x1,gamma_1)     
+	S = C @ gamma_0 @ C.T + gamma_beta        
+	K = gamma_0 @ C.T @ np.linalg.inv(S)           
+	ytilde = y - C @ x0   
+	Gup = (np.eye(len(x0))-K @ C) @ gamma_0
+	xup = x0 + K@ytilde
+	return(xup,Gup) 
+	
+def kalman(x0,gamma_0,u,y,gamma_alpha,gamma_beta,Ak,C):
+	xup,Gup = kalman_correc(x0,gamma_0,y,gamma_beta,C)
+	x1,gamma_1=kalman_predict(xup,Gup,u,gamma_alpha,Ak)
+	return(x1,gamma_1)     
 
 
 def euler(u):
@@ -61,7 +69,7 @@ def control():
 	# A=g*rho/m
 	# B=0.5*rho*Cf/m
 	xhat1, xhat2, xhat3, xhat4 = xhat.flatten()
-	Ak = np.eye(4)+dt*np.array([[-2.*B*abs(x1), A*alpha, -A, A],
+	Ak = np.eye(4)+dt*np.array([[-2.*B*abs(x1), A*alpha, -A, -A],
 								[1, 0, 0, 0],
 								[0, 0, 0, 0],
 								[0, 0, 0, 0]])
@@ -74,7 +82,7 @@ def control():
 	if(abs(gamma[3][0])<1e-7):
 		x1_m = xhat[0][0]
 		x2_m = xhat[1][0]
-		v_eq = xhat[2][0]+xhat[3][0]
+		v_eq = xhat[2][0]-xhat[3][0]
 	else:
 		x1_m = 0.0
 		x2_m = x2
@@ -108,9 +116,8 @@ def control():
 	ddy_log.append(ddy)
 	eq_log.append(y+l*dy+ddy)
 
-	if(abs(u)>30.0*tick_to_volume):
-		u = np.sign(u)*30.0*tick_to_volume
-
+	# if(abs(u)>30.0*tick_to_volume):
+	# 	u = np.sign(u)*30.0*tick_to_volume
 	return u
 
 x1_log = [x1]
