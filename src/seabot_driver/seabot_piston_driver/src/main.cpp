@@ -80,11 +80,11 @@ int main(int argc, char *argv[]){
     const double frequency = n_private.param<double>("frequency", 5.0);
     const bool adaptative_speed = n_private.param<bool>("adaptative_speed", false);
 
-    const double speed_in_slope = n_private.param<double>("speed_in_slope", 1.0/20.0);
-    const double speed_out_slope = n_private.param<double>("speed_out_slope", 1.0/20.0);
+    const double speed_in_slope = n_private.param<double>("speed_in_slope", 0.2);
+    const double speed_out_slope = n_private.param<double>("speed_out_slope", 0.2);
 
-    const int speed_in_offset = n_private.param<int>("speed_in_offset", 10);
-    const int speed_out_offset = n_private.param<int>("speed_out_offset", 10);
+    const int speed_in_offset = n_private.param<int>("speed_in_offset", 15);
+    const int speed_out_offset = n_private.param<int>("speed_out_offset", 15);
 
     const double distance_fast_move = n_private.param<double>("distance_fast_move", 100);
     const int speed_fast_move = n_private.param<int>("speed_fast_move", 30);
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
     const int error_interval = n_private.param<int>("error_interval", 6);
 
     const double max_speed = 100.0;
-    const double min_speed = 10.0;
+    const double min_speed = 0.0;
     const double nb_step = 20.0;
 
     // Service (ON/OFF)

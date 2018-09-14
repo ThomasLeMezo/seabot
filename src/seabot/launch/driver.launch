@@ -14,9 +14,9 @@
             <param name="speed_in_offset" value="15" />
             <param name="speed_out_offset" value="15" />
 
-            <param name="adaptative_speed" value="false" />
-            <param name="speed_in_slope" value="0.0" />
-            <param name="speed_out_slope" value="0.0" />
+            <param name="adaptative_speed" value="true" />
+            <param name="speed_in_slope" value="0.2" />
+            <param name="speed_out_slope" value="0.2" />
 
             <param name="reached_switch_off" value="true" />
             <param name="error_interval" value="6" />
@@ -30,10 +30,10 @@
             <param name="frequency" value="5.0" />
         </node>
 
-        <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
+<!--        <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
             <param name="frequency" value="15.0" />
             <param name="coeff_cmd_to_pwm" value="9" />
-        </node>
+        </node>-->
 
         <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>
 
