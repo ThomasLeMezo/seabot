@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0)
 project(seabot_fusion)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -19,6 +19,10 @@ find_package(catkin REQUIRED
   pressure_bme280_driver
   seabot_power_driver
 )
+
+find_package(Eigen3 REQUIRED NO_MODULE)
+include_directories(${Eigen3_INCLUDE_DIRS})
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -60,6 +64,7 @@ add_message_files(
   GnssPose.msg
   TemperaturePose.msg
   InternalPose.msg
+  Kalman.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -160,6 +165,10 @@ add_executable(internal_sensor_filter_node
     src/internal_sensor_filter.cpp
 )
 
+add_executable(kalman_node
+    src/kalman.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -174,6 +183,7 @@ add_dependencies(lambert_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 add_dependencies(batteries_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(temperature_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(internal_sensor_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(kalman_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(depth_filter_node
@@ -194,6 +204,10 @@ target_link_libraries(temperature_filter_node
 )
 
 target_link_libraries(internal_sensor_filter_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(kalman_node
   ${catkin_LIBRARIES}
 )
 

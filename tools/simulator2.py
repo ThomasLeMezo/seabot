@@ -8,7 +8,7 @@ m=8.870
 Cf = np.pi*(0.12)**2
 
 A=g*rho/m
-B=0.5*rho*Cf/m*0.
+B=0.5*rho*Cf/m
 tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
 alpha = -20.*tick_to_volume
@@ -32,6 +32,8 @@ gamma = np.diag([5.**2, 1**2, 0.001**2, 0.001**2])
 gamma_alpha = np.diag([1e-4, 1e-6, 1e-6, 1e-10])
 gamma_beta = np.diag([1e-6, 1e-10])
 
+x1_m = 0.0
+
 
 def kalman_predict(xup,Gup,u,gamma_alpha,Ak):
 	global A, B
@@ -51,11 +53,13 @@ def kalman_correc(x0,gamma_0,y,gamma_beta,C):
 	ytilde = y - C @ x0   
 	Gup = (np.eye(len(x0))-K @ C) @ gamma_0
 	xup = x0 + K@ytilde
+
 	return(xup,Gup) 
 	
 def kalman(x0,gamma_0,u,y,gamma_alpha,gamma_beta,Ak,C):
 	xup,Gup = kalman_correc(x0,gamma_0,y,gamma_beta,C)
 	x1,gamma_1=kalman_predict(xup,Gup,u,gamma_alpha,Ak)
+
 	return(x1,gamma_1)     
 
 
@@ -66,14 +70,14 @@ def euler(u):
 	x3= x3+u*dt
 
 def control():
-	global xhat, u, gamma, gamma_alpha, gamma_beta, x2
+	global xhat, u, gamma, gamma_alpha, gamma_beta, x2, x1_m
 	v_mesure = x3+v_error
 	# m=8.3
 	# Cf = 1.1*np.pi*(0.12)**2
 	# A=g*rho/m
 	# B=0.5*rho*Cf/m
 	xhat1, xhat2, xhat3, xhat4 = xhat.flatten()
-	Ak = np.eye(4)+dt*np.array([[-2.*B*abs(x1), A*alpha, -A, -A],
+	Ak = np.eye(4)+dt*np.array([[-2.*B*abs(x1_m), A*alpha, -A, -A],
 								[1, 0, 0, 0],
 								[0, 0, 0, 0],
 								[0, 0, 0, 0]])

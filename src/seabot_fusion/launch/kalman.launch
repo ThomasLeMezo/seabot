@@ -1,0 +1,26 @@
+<launch>
+  <node name="kalman_node" pkg="seabot_fusion" type="kalman_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+    <param name="frequency" value="5" />
+
+    <param name="rho" value="1020.0" />
+    <param name="g" value="9.81" />
+    <param name="m" value="8.800" />
+    <param name="diam_collerette" value="0.24" />
+    <param name="compressibility_tick" value="20.0" />
+    <param name="screw_thread" value="1.75e-3" />
+    <param name="tick_per_turn" value="48" />
+    <param name="piston_diameter" value="0.05" />
+    <param name="piston_ref_eq" value="2100" />
+  </node>
+
+</launch>
+
+
+  
+  
+  
+  
+  
+  
+  
+  
