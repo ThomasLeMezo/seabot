@@ -11,7 +11,7 @@ A=g*rho/m
 B=0.5*rho*Cf/m
 tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
-alpha = -20.*tick_to_volume
+alpha = 0.*tick_to_volume
 
 x1=0.
 x2=0.
@@ -22,15 +22,29 @@ set_point=5.
 
 u=0.
 
-alpha_real = -15.*tick_to_volume
+alpha_real = alpha*0.9
 A_real = A*0.99
 B_real = B*1.1
 
-xhat = np.array([[x1],[x2],[x3],[v_error]])
+alpha_real = alpha
+A_real = A
+B_real = B
+
+xhat = np.array([[x1],[x2],[x3],[-v_error]])
 # gamma = 10000*np.eye(4)
-gamma = np.diag([5.**2, 1**2, 0.001**2, 0.001**2])
-gamma_alpha = np.diag([1e-4, 1e-6, 1e-6, 1e-10])
-gamma_beta = np.diag([1e-6, 1e-10])
+gamma = np.diag([(1.)**2, (25.)**2, (1e-3)**2, (1e-3)**2])
+gamma_alpha = np.diag([(1e-2)**2, (1e-3)**2, (1e-5)**2, (1e-8)**2])
+gamma_beta = np.diag([(1e-3)**2, (3e-6)**2]) # 
+
+# gamma(0,0) = pow(1.0, 2); // velocity
+# gamma(1,1) = pow(25.0, 2); // Depth
+# gamma(2,2) = pow(1e-3, 2); // Piston Volume (m3)
+# gamma(3,3) = pow(1e-3, 2); // Error offset;
+
+# gamma_alpha(0,0) = pow(1e-2, 2); // velocity
+# gamma_alpha(1,1) = pow(1e-3, 2); // Depth
+# gamma_alpha(2,2) = pow(1e-5, 2); // Piston Volume (m3)
+# gamma_alpha(3,3) = pow(1e-8, 2); // Error offset;
 
 x1_m = 0.0
 
@@ -42,7 +56,7 @@ def kalman_predict(xup,Gup,u,gamma_alpha,Ak):
 	xnew = xup
 	xnew[0] = [xup[0] + (-A*(xup[2][0]+xup[3][0]-alpha*xup[1][0])-B*xup[0][0]**2*np.sign(xup[0][0]))*dt]
 	xnew[1]= [xup[1] + xup[0]*dt]
-	xnew[2]= [xup[2] + u[0]*dt]
+	xnew[2]= [xup[2] + u[2]*dt]
 
 	# x1 = A @ xup + u    
 	return(xnew,gamma_1)
