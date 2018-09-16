@@ -11,6 +11,10 @@ A=g*rho/m
 B=0.5*rho*Cf/m
 tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
 
+print("A = ", A)
+print("B = ", B)
+print("Tick_to_volume = ", tick_to_volume)
+
 alpha = 0.*tick_to_volume
 
 x1=0.
