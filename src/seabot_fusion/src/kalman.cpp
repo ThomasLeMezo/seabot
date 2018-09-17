@@ -208,30 +208,30 @@ int main(int argc, char *argv[]){
     /// ******************** Test Euler ********************
 //    u(2) = sin(t.toSec()/100.)*100.*tick_to_volume;
 //    u(2) = 1.0*tick_to_volume*sin(t.toSec()/100.);
-    u(2) = 1.0*tick_to_volume;
-    euler(x, u, dt);
-    Ak(0,0) = -2.*coeff_B*abs(x(0));
-    measure(0) = x(1);
-    measure(1) = x(2)+20*tick_to_volume;
-    command(2) = u(2);
+//    u(2) = 1.0*tick_to_volume;
+//    euler(x, u, dt);
+//    Ak(0,0) = -2.*coeff_B*abs(x(0));
+//    measure(0) = x(1);
+//    measure(1) = x(2)+20*tick_to_volume;
+//    command(2) = u(2);
 
-    kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak,Ck, dt);
-    ROS_INFO("Veq = %.5e, Veq_hat = %.5e, gamma(3,3)=%5.e", x(2), xhat(2)+xhat(3), gamma(3,3));
+//    kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak,Ck, dt);
+//    ROS_INFO("Veq = %.5e, Veq_hat = %.5e, gamma(3,3)=%5.e", x(2), xhat(2)+xhat(3), gamma(3,3));
     /// ******************** Test Euler ********************
 
-//    t = ros::Time::now();
-//    dt = (t-t_last).toSec();
-//    t_last = t;
+    t = ros::Time::now();
+    dt = (t-t_last).toSec();
+    t_last = t;
 
-//    if(depth>0.5 && (t-time_last_depth).toSec()<0.1 && depth_valid){
-//      Ak(0,0) = -2.*coeff_B*abs(xhat(0));
-//      measure(0) = depth;
-//      measure(1) = (piston_ref_eq - piston_position)*tick_to_volume;
-//      command(2) = -piston_variation*tick_to_volume;
+    if(depth>0.5 && (t-time_last_depth).toSec()<0.1 && depth_valid){
+      Ak(0,0) = -2.*coeff_B*abs(xhat(0));
+      measure(0) = depth;
+      measure(1) = (piston_ref_eq - piston_position)*tick_to_volume;
+      command(2) = -piston_variation*tick_to_volume;
 
-//      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak,Ck, dt);
-//      depth_valid = false;
-//    }
+      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak,Ck, dt);
+      depth_valid = false;
+    }
 //    else{
 //      xhat(0) = 0.0;
 //      xhat(1) = depth;
