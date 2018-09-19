@@ -45,6 +45,9 @@ void GPSDClient::process_data(struct gps_data_t* p) {
     process_data_gps(p);
     m_last_fix_state =  new_fix_state;
   }
+  else{
+    ROS_INFO("[gpsd] Debug fix = %i", p->fix.mode);
+  }
 }
 
 void GPSDClient::process_data_gps(struct gps_data_t* p) {

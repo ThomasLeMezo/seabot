@@ -373,8 +373,8 @@ if(len(time_mag)>0):
     pg_mag1 = pg.PlotWidget()
     pg_mag1.addLegend()
     pg_mag1.plot(time_mag, mag_x, pen=(255,0,0), name="mag x")
-    pg_mag1.plot(time_mag, mag_y, pen=(255,0,0), name="mag y")
-    pg_mag1.plot(time_mag, mag_z, pen=(255,0,0), name="mag z")
+    pg_mag1.plot(time_mag, mag_y, pen=(0,255,0), name="mag y")
+    pg_mag1.plot(time_mag, mag_z, pen=(0,0,255), name="mag z")
     dock_mag.addWidget(pg_mag1)
 
     pg_mag2 = pg.PlotWidget()

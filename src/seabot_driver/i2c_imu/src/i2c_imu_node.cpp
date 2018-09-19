@@ -76,7 +76,7 @@ I2cImu::I2cImu() :
   // do all the ros parameter reading & pulbishing
   private_nh_.param<std::string>("frame_id", imu_frame_id_, "imu_link");
 
-  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("data",10);
+  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",10);
 
   bool magnetometer;
   private_nh_.param("publish_magnetometer", magnetometer, false);
