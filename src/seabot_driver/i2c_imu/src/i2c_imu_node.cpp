@@ -141,6 +141,9 @@ I2cImu::I2cImu() :
   imu_->setAccelEnable(true);
   imu_->setCompassEnable(true);
 
+  imu_->setCompassCalibrationMode(false);
+  imu_->setAccelCalibrationMode(false);
+
 }
 
 void I2cImu::update()

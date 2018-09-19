@@ -13,11 +13,11 @@ int main(int argc, char ** argv) {
     return -1;
 
   ROS_INFO("[GPSD_Client] Start Ok");
-  ros::Rate loop_rate(1.0);
+//  ros::Rate loop_rate(1.0);
   while(ros::ok()) {
 //    ros::spinOnce();
     client.step();
-    loop_rate.sleep();
+//    loop_rate.sleep();
   }
 
   client.stop();

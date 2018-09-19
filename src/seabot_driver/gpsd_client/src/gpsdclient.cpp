@@ -20,7 +20,7 @@ bool GPSDClient::start() {
 }
 
 void GPSDClient::step() {
-  if (!gps->waiting(1e6)) // us ?
+  if (!gps->waiting(0.5e6)) // us ?
     return;
 
   gps_data_t *p;
@@ -37,16 +37,18 @@ void GPSDClient::stop() {
 }
 
 void GPSDClient::process_data(struct gps_data_t* p) {
-  if (!p->online)
+  if (p->online==0){
+    ROS_INFO("[GPSD_Client] Online = 0");
     return;
+  }
 
   bool new_fix_state = (p->fix.mode>=MODE_2D)?true:false;
   if(new_fix_state ||(m_last_fix_state!=new_fix_state)){
     process_data_gps(p);
     m_last_fix_state =  new_fix_state;
   }
-  else{
-    ROS_INFO("[gpsd] Debug fix = %i", p->fix.mode);
+  else if(p->fix.mode==MODE_NOT_SEEN){
+    ROS_INFO("[GPSD_Client] fix = MODE_NOT_SEEN");
   }
 }
 
