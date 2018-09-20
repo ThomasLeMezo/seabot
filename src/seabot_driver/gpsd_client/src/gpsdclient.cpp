@@ -20,7 +20,7 @@ bool GPSDClient::start() {
 }
 
 void GPSDClient::step() {
-  if (!gps->waiting(0.5e6)) // us ?
+  if (!gps->waiting(2e6)) // us ?
     return;
 
   gps_data_t *p;

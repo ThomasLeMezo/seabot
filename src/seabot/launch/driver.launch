@@ -30,10 +30,14 @@
             <param name="frequency" value="5.0" />
         </node>
 
-<!--        <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
+        <node name="temperature_sensor_ext" pkg="temperature_tsys01_driver" type="temperature_tsys01_node" output="screen">
+            <param name="frequency" value="5.0" />
+        </node>
+
+        <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
             <param name="frequency" value="15.0" />
             <param name="coeff_cmd_to_pwm" value="9" />
-        </node>-->
+        </node>
 
         <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>
 
