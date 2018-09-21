@@ -58,6 +58,12 @@ void Piston::set_piston_speed(const __u8 &speed_in, const __u8 &speed_out) const
     usleep(100);
 }
 
+void Piston::set_piston_speed_reset(const __u8 &speed) const{
+    if(i2c_smbus_write_byte_data(m_file, 0x14, speed)<0)
+        ROS_WARN("[Piston_driver] I2C bus Failure - Set Speed Reset");
+    usleep(100);
+}
+
 void Piston::set_piston_position(__u16 position) const{
     // S Addr Wr [A] Comm [A] DataLow [A] DataHigh [A] P
 

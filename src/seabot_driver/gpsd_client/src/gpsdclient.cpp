@@ -20,7 +20,7 @@ bool GPSDClient::start() {
 }
 
 void GPSDClient::step() {
-  if (!gps->waiting(2e6)) // us ?
+  if (!gps->waiting(1e6)) // us ? => 1s
     return;
 
   gps_data_t *p;
@@ -50,6 +50,7 @@ void GPSDClient::process_data(struct gps_data_t* p) {
   else if(p->fix.mode==MODE_NOT_SEEN){
     ROS_INFO("[GPSD_Client] fix = MODE_NOT_SEEN");
   }
+
 }
 
 void GPSDClient::process_data_gps(struct gps_data_t* p) {

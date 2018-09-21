@@ -13,6 +13,7 @@
 
             <param name="speed_in_offset" value="15" />
             <param name="speed_out_offset" value="15" />
+            <param name="speed_reset" value="25" />
 
             <param name="adaptative_speed" value="true" />
             <param name="speed_in_slope" value="0.2" />

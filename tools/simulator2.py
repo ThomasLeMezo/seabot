@@ -123,7 +123,7 @@ def control():
 	#print("reel : ", x1, x2, x3, v_eq-x3)
 
 
-	beta = -0.02*np.pi/2.0
+	beta = -0.06*np.pi/2.0
 	l = 10.
 
 	e=set_point-x2_m

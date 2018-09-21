@@ -72,6 +72,12 @@ public:
   void set_piston_speed(const __u8 &speed_in, const __u8 &speed_out) const;
 
   /**
+   * @brief set_piston_speed_reset
+   * @param speed
+   */
+  void set_piston_speed_reset(const __u8 &speed) const;
+
+  /**
    * @brief set_piston_position
    * @param position
    */

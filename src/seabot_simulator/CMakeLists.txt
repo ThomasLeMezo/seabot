@@ -125,6 +125,7 @@ catkin_package(
 include_directories(
 # include
  ${catkin_INCLUDE_DIRS}
+ src/vibes
 )
 
 ## Declare a C++ library
@@ -145,6 +146,11 @@ add_executable(simulator_node
     src/simulator.cpp
 )
 
+add_executable(test_node
+    src/test.cpp
+    src/vibes/vibes.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -158,6 +164,10 @@ add_dependencies(simulator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXP
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(simulator_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(test_node
   ${catkin_LIBRARIES}
 )
 

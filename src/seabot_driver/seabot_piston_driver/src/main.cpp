@@ -86,6 +86,8 @@ int main(int argc, char *argv[]){
     const int speed_in_offset = n_private.param<int>("speed_in_offset", 15);
     const int speed_out_offset = n_private.param<int>("speed_out_offset", 15);
 
+    const int speed_reset = n_private.param<int>("speed_reset", 30);
+
     const double distance_fast_move = n_private.param<double>("distance_fast_move", 100);
     const int speed_fast_move = n_private.param<int>("speed_fast_move", 30);
 
@@ -130,6 +132,7 @@ int main(int argc, char *argv[]){
     p.set_error_interval(error_interval);
     p.set_reached_switch_off(reached_switch_off);
     p.set_piston_speed(speed_in_offset, speed_out_offset);
+    p.set_piston_speed_reset(speed_reset);
 
     ROS_DEBUG("[Piston_driver] Start Ok");
     ros::Rate loop_rate(frequency);
