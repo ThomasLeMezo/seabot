@@ -56,8 +56,6 @@ Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<
   y(1) = x(0);
   y(2) = u(2);
   y(3) = 0.0;
-//  ROS_INFO("y(0) = %f, y(1) = %f, y(2) = %.4e, y(3) = %.4e", y(0), y(1), y(2), y(3));
-//  ROS_INFO("x(0) = %f, x(1) = %f, x(2) = %.4e, x(3) = %.4e", x(0), x(1), x(2), x(3));
   return y;
 }
 
@@ -101,15 +99,6 @@ void kalman(Matrix<double,NB_STATES, 1> &x,
   Matrix<double, NB_STATES, NB_STATES> Gup;
   kalman_correc(x, gamma, y, gamma_beta, C, xup, Gup);
   kalman_predict(xup, Gup, u, gamma_alpha, Ak, dt, x, gamma);
-}
-
-void euler(Matrix<double,NB_STATES, 1> &x, const Matrix<double,NB_STATES, 1> &u, double dt){
-  Matrix<double,NB_STATES, 1> y;
-  y(0) = -coeff_A*(x(2)+x(3)-coeff_compressibility*x(1))-coeff_B*copysign(x(0)*x(0), x(0));
-  y(1) = x(0);
-  y(2) = u(2);
-  y(3) = 0.0;
-  x += y*dt;
 }
 
 int main(int argc, char *argv[]){
@@ -203,21 +192,7 @@ int main(int argc, char *argv[]){
   ROS_INFO("[FUSION depth] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
-//    ros::spinOnce();
-
-    /// ******************** Test Euler ********************
-//    u(2) = sin(t.toSec()/100.)*100.*tick_to_volume;
-//    u(2) = 1.0*tick_to_volume*sin(t.toSec()/100.);
-//    u(2) = 1.0*tick_to_volume;
-//    euler(x, u, dt);
-//    Ak(0,0) = -2.*coeff_B*abs(x(0));
-//    measure(0) = x(1);
-//    measure(1) = x(2)+20*tick_to_volume;
-//    command(2) = u(2);
-
-//    kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak,Ck, dt);
-//    ROS_INFO("Veq = %.5e, Veq_hat = %.5e, gamma(3,3)=%5.e", x(2), xhat(2)+xhat(3), gamma(3,3));
-    /// ******************** Test Euler ********************
+    ros::spinOnce();
 
     t = ros::Time::now();
     dt = (t-t_last).toSec();
@@ -225,11 +200,13 @@ int main(int argc, char *argv[]){
 
     if(depth>0.5 && (t-time_last_depth).toSec()<0.1 && depth_valid){
       Ak(0,0) = -2.*coeff_B*abs(xhat(0));
+      Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
+
       measure(0) = depth;
       measure(1) = (piston_ref_eq - piston_position)*tick_to_volume;
       command(2) = -piston_variation*tick_to_volume;
 
-      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak,Ck, dt);
+      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
       depth_valid = false;
     }
 //    else{

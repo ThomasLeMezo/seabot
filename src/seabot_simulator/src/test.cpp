@@ -109,9 +109,23 @@ void draw_result(const string &name, const vector<double> &x, const vector<doubl
   vibes::axisAuto();
 }
 
+double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
+  double beta = -0.03*M_PI/2.0;
+  double l = 10.;
+
+  double e=set_point-x(1);
+  double v_eq = x(2)+x(3);
+  double dx1 = -coeff_A*v_eq-coeff_B*abs(x(0))*x(0);
+  double y = x(0) + beta * atan(e);
+  double e2_1 = 1.+pow(e,2);
+  double dy = dx1-beta*x(0)/e2_1;
+
+  return (1./coeff_A)*(-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
+}
+
 int main(int argc, char *argv[]){
 
-  double frequency = 5.;
+  double frequency = 30.;
   double dt = 1./frequency;
 
   // Loop variables
@@ -164,14 +178,20 @@ int main(int argc, char *argv[]){
   array<vector<double>, 4> x_list, xhat_list, cov_list;
   vector<double> time;
 
+  double energy;
+  vector<double> energy_list, command_list;
+
+  double set_point = 5.;
+
   for(double t=0.0; t<200.; t+=dt){
-    u(2) = 1.0e-6*sin(t/30.0);
+//    u(2) = 1.0e-6*sin(t/30.0);
+    u(2) = compute_u(xhat, set_point);
 
     euler(x, u, dt);
 
     Ak(0,0) = -2.*coeff_B*abs(x(0));
     measure(0) = x(1); // Position
-    measure(1) = x(2)+0.*tick_to_volume; // Volume
+    measure(1) = x(2)+100.*tick_to_volume; // Volume
     command(2) = u(2);
 
     Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt+Matrix<double, NB_STATES, NB_STATES>::Identity();
@@ -183,13 +203,17 @@ int main(int argc, char *argv[]){
     x_list[3].push_back(x(3));
     xhat_list[0].push_back(xhat(0));
     xhat_list[1].push_back(xhat(1));
-    xhat_list[2].push_back(xhat(2));
+    xhat_list[2].push_back(xhat(2)+xhat(3));
     xhat_list[3].push_back(xhat(3));
     cov_list[0].push_back(gamma(0, 0));
     cov_list[1].push_back(gamma(1, 1));
     cov_list[2].push_back(gamma(2, 2));
     cov_list[3].push_back(gamma(3, 3));
     time.push_back(t);
+
+    energy+= coeff_B*pow(x(0), 4);
+    energy_list.push_back(energy);
+    command_list.push_back(u(2));
   }
 
 
@@ -197,8 +221,12 @@ int main(int argc, char *argv[]){
   double height = 300;
   draw_result("Position", time, x_list[1], xhat_list[1], width, height, 0, 0);
   draw_result("Velocity", time, x_list[0], xhat_list[0], width, height, width+100, 0);
+  draw_result("Command", time, command_list, width, height, 2*width+150, 0);
+
   draw_result("Volume", time, x_list[2], xhat_list[2], width, height, 0, height+100);
   draw_result("Offset", time, xhat_list[3], width, height, width+100, height+100);
+  draw_result("Energy", time, energy_list, width, height, 2*width+150, height+100);
+
 
 //  draw_result("Cov V", time, cov_list[1], width, height, 2*width+100, height+100);
 
