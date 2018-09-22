@@ -55,7 +55,7 @@ bool piston_emergency(std_srvs::SetBool::Request  &req,
                       std_srvs::SetBool::Response &res){
     if(req.data == true){
         new_cmd_position_piston = 0;
-        p.set_piston_speed(125, 125);
+        p.set_piston_speed(45, 45);
         p.set_piston_position(0);
         state_emergency = true;
     }

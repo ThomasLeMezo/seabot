@@ -1,46 +1,11 @@
 <launch>
-<!--     <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5"> -->
-<!--         <param name="frequency" value="1.0" /> -->
-<!--  -->
-        <!-- Equilibrium of the float -->
-<!--         <param name="offset_piston" value="2220" /> -->
-<!--  -->
-        <!-- Regulation parameters -->
-<!--         <param name="K_factor" value="0.2" /> -->
-<!--         <param name="K_velocity" value="500.0" /> -->
-<!--         <param name="K_acc" value="0.0" /> -->
-<!--         <param name="set_point_following" value="10.0" /> -->
-<!--         <param name="hysteresis_piston" value="0.6" /> -->
-<!--  -->
-        <!-- Compressibility offset -->
-        <!-- min between depth and max_depth_compression_validity -->
-        <!-- offset = cf_x2*depth^2 + cf_x1*depth -->
-<!--         <param name="cf_x2" value="0.0" /> -->
-<!--         <param name="cf_x1" value="-10.0" /> -->
-<!--         <param name="max_depth_compression_validity" value="50.0" /> -->
-<!--     </node> -->
-
-    <node name="sliding_node2" pkg="seabot_depth_regulation" type="sliding_node2" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+    <node name="state_feedback" pkg="seabot_depth_regulation" type="state_feedback_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
-
-        <!-- Equilibrium of the float -->
-        <param name="equilibrium_piston" value="2100" />
-
-        <!-- Regulation parameters -->
-        <param name="K_factor" value="400.0" />
-        <param name="K_velocity" value="1.0" />
-
-        <param name="vector_field_approach_threshold" value="0.5" />
-        <param name="vector_field_velocity" value="0.02" />
-
-        <param name="set_point_following" value="10.0" />
-        <param name="hysteresis_piston" value="0.6" />
-
-        <!-- Compressibility coeff -->
-        <param name="compressibility_coeff" value="20.0" />
+        <param name="velocity_target" value="0.05" />
+        <param name="time_constant" value="10.0" />
     </node>
 
-<!--    <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+    <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="frequency" value="10.0" />
         <param name="delta_valid_time" value="3.0" />
         <param name="coeff_P" value="1.0" />
@@ -48,7 +13,7 @@
         <param name="hysteresis_circle_out" value="30.0" />
         <param name="linear_speed" value="1.0" />
         <param name="depth_limit_switch_off" value="0.5" />
-    </node>-->
+    </node>
 
 </launch>
 

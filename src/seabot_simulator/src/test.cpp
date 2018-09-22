@@ -26,7 +26,7 @@ const double coeff_A = g*rho/m;
 const double Cf = M_PI*pow(diam_collerette/2., 2);
 const double coeff_B = 0.5*rho*Cf/m;
 const double tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
-const double coeff_compressibility = 0.*compressibility_tick*tick_to_volume;
+const double coeff_compressibility = compressibility_tick*tick_to_volume;
 
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
@@ -115,12 +115,12 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
 
   double e=set_point-x(1);
   double v_eq = x(2)+x(3);
-  double dx1 = -coeff_A*v_eq-coeff_B*abs(x(0))*x(0);
+  double dx1 = -coeff_A*(v_eq-coeff_compressibility*x(1))-coeff_B*abs(x(0))*x(0);
   double y = x(0) + beta * atan(e);
   double e2_1 = 1.+pow(e,2);
   double dy = dx1-beta*x(0)/e2_1;
 
-  return (1./coeff_A)*(-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
+  return (1./coeff_A)*(coeff_A*coeff_compressibility*x(0)-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
 }
 
 int main(int argc, char *argv[]){

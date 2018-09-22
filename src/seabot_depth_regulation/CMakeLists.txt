@@ -16,6 +16,9 @@ find_package(catkin REQUIRED
   pressure_bme280_driver
 )
 
+find_package(Eigen3 REQUIRED NO_MODULE)
+include_directories(${Eigen3_INCLUDE_DIRS})
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -144,6 +147,10 @@ add_executable(sliding_node2
     src/sliding2.cpp
 )
 
+add_executable(state_feedback_node
+    src/state_feedback.cpp
+)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -158,6 +165,8 @@ add_dependencies(sliding_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 
 add_dependencies(sliding_node2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(state_feedback_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -168,6 +177,10 @@ target_link_libraries(sliding_node
 )
 
 target_link_libraries(sliding_node2
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(state_feedback_node
   ${catkin_LIBRARIES}
 )
 

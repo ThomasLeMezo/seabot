@@ -23,7 +23,7 @@ using namespace Eigen;
 
 double depth = 0.0;
 double piston_position = 0.0;
-double piston_variation = 0.0;
+double piston_comand = 0.0;
 
 double coeff_A = 0.0;
 double coeff_B = 0.0;
@@ -45,9 +45,9 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
 
 void regulation_callback(const seabot_depth_regulation::RegulationDebug2::ConstPtr& msg){
   if(!msg->antiwindup)
-    piston_variation = msg->u;
+    piston_comand = msg->u;
   else
-    piston_variation = 0.0;
+    piston_comand = 0.0;
 }
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
@@ -109,21 +109,21 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 5.0);
 
-  const double rho = n_private.param<double>("rho", 1025.0);
-  const double g = n_private.param<double>("g", 9.81);
-  const double m = n_private.param<double>("m", 8.800);
-  const double diam_collerette = n_private.param<double>("diam_collerette", 0.24);
-  const double compressibility_tick = n_private.param<double>("compressibility_tick", 20.0);
-  const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
-  const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
-  const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
-  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100);
+  const double rho = n.param<double>("/rho", 1025.0);
+  const double g = n.param<double>("/g", 9.81);
+  const double m = n.param<double>("/m", 8.800);
+  const double diam_collerette = n.param<double>("/diam_collerette", 0.24);
+  const double compressibility_tick = n.param<double>("/compressibility_tick", 20.0);
+  const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
+  const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
+  const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
+  const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
 
   coeff_A = g*rho/m;
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   coeff_B = 0.5*rho*Cf/m;
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
-  coeff_compressibility = compressibility_tick*tick_to_volume*0.;
+  coeff_compressibility = compressibility_tick*tick_to_volume;
 
   //  ROS_INFO("tick_to_volume = %.10e", tick_to_volume);
   ROS_INFO("Coeff_A %.10e", coeff_A);
@@ -195,27 +195,29 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
 
     t = ros::Time::now();
-    dt = (t-t_last).toSec();
-    t_last = t;
 
     if(depth>0.5 && (t-time_last_depth).toSec()<0.1 && depth_valid){
+      dt = (t-t_last).toSec();
+      t_last = t;
+      if(dt>10./frequency)
+        dt=10./frequency;
+
       Ak(0,0) = -2.*coeff_B*abs(xhat(0));
       Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
 
       measure(0) = depth;
       measure(1) = (piston_ref_eq - piston_position)*tick_to_volume;
-      command(2) = -piston_variation*tick_to_volume;
+      command(2) = piston_comand;
 
       kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
       depth_valid = false;
     }
-//    else{
-//      xhat(0) = 0.0;
-//      xhat(1) = depth;
-//      xhat(2) = (piston_ref_eq - piston_position)*tick_to_volume;
-//      xhat(3) = xhat(3);
-//      ROS_INFO("No Message or depth<=0.5");
-//    }
+    else if(depth<=0.5){
+      xhat(0) = 0.0;
+      xhat(1) = depth;
+      xhat(2) = (piston_ref_eq - piston_position)*tick_to_volume;
+      xhat(3) = xhat(3);
+    }
 
     msg.velocity = xhat(0);
     msg.depth = xhat(1);
@@ -223,20 +225,20 @@ int main(int argc, char *argv[]){
     msg.offset = xhat(3);
 
     msg.covariance[0] = gamma(0,0);
-//    msg.covariance[1] = gamma(1,0);
-//    msg.covariance[2] = gamma(2,0);
-//    msg.covariance[3] = gamma(3,0);
-//    msg.covariance[4] = gamma(0,1);
+    msg.covariance[1] = gamma(1,0);
+    msg.covariance[2] = gamma(2,0);
+    msg.covariance[3] = gamma(3,0);
+    msg.covariance[4] = gamma(0,1);
     msg.covariance[5] = gamma(1,1);
-//    msg.covariance[6] = gamma(2,1);
-//    msg.covariance[7] = gamma(3,1);
-//    msg.covariance[8] = gamma(0,2);
-//    msg.covariance[9] = gamma(1,2);
+    msg.covariance[6] = gamma(2,1);
+    msg.covariance[7] = gamma(3,1);
+    msg.covariance[8] = gamma(0,2);
+    msg.covariance[9] = gamma(1,2);
     msg.covariance[10] = gamma(2,2);
-//    msg.covariance[11] = gamma(3,2);
-//    msg.covariance[12] = gamma(0,3);
-//    msg.covariance[13] = gamma(1,3);
-//    msg.covariance[14] = gamma(2,3);
+    msg.covariance[11] = gamma(3,2);
+    msg.covariance[12] = gamma(0,3);
+    msg.covariance[13] = gamma(1,3);
+    msg.covariance[14] = gamma(2,3);
     msg.covariance[15] = gamma(3,3);
 
     kalman_pub.publish(msg);
