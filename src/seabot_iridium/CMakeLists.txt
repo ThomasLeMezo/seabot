@@ -14,6 +14,7 @@ find_package(catkin REQUIRED
     gpsd_client
     pressure_bme280_driver
     seabot_safety
+    std_srvs
     )
 
 ## System dependencies are found with CMake's conventions

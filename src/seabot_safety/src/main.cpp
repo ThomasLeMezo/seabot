@@ -305,13 +305,15 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Flash at surface ********************
-    if(depth < limit_depth_flash_enable){
-      call_flash_enable(true);
-      safety_debug_msg.flash = true;
-    }
-    else{
-      call_flash_enable(false);
-      safety_debug_msg.flash = false;
+    if(enable_flash){
+      if(depth < limit_depth_flash_enable){
+        call_flash_enable(true);
+        safety_debug_msg.flash = true;
+      }
+      else{
+        call_flash_enable(false);
+        safety_debug_msg.flash = false;
+      }
     }
 
     ///*******************************************************

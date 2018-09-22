@@ -11,6 +11,9 @@
 #include <seabot_safety/SafetyLog.h>
 #include <seabot_mission/Waypoint.h>
 
+#include <std_srvs/Empty.h>
+#include <seabot_power_driver/SleepModeParam.h>
+
 #include "iridium.h"
 
 using namespace std;
@@ -22,6 +25,8 @@ bool is_surface = false;
 ros::WallTime time_last_communication;
 
 Iridium iridium;
+
+ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission;
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   if(msg->depth < depth_surface_limit){
@@ -57,10 +62,10 @@ void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
 }
 
 void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
-    iridium.logTDT.m_batteries[0] = msg->battery1;
-    iridium.logTDT.m_batteries[1] = msg->battery2;
-    iridium.logTDT.m_batteries[2] = msg->battery3;
-    iridium.logTDT.m_batteries[3] = msg->battery4;
+  iridium.logTDT.m_batteries[0] = msg->battery1;
+  iridium.logTDT.m_batteries[1] = msg->battery2;
+  iridium.logTDT.m_batteries[2] = msg->battery3;
+  iridium.logTDT.m_batteries[3] = msg->battery4;
 }
 
 void sensor_internal_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
@@ -84,6 +89,31 @@ bool call_iridium(){
     return false;
 }
 
+void call_sleep_param(const int &hours, const int &min, const int &sec, const int &sec_to_sleep){
+  seabot_power_driver::SleepModeParam srv;
+  srv.request.sec = sec;
+  srv.request.min = min;
+  srv.request.hours = hours;
+  srv.request.sec_to_sleep = sec_to_sleep;
+  if (!service_sleep_param.call(srv)){
+    ROS_ERROR("[Iridium] Failed to call sleep param");
+  }
+}
+
+void call_sleep(){
+  std_srvs::Empty srv;
+  if(!service_sleep_mode.call(srv)){
+    ROS_ERROR("[Iridium] Failed to call sleep mode");
+  }
+}
+
+void call_reload_mission(){
+  std_srvs::Empty srv;
+  if(!service_reload_mission.call(srv)){
+    ROS_ERROR("[Iridium] Failed to call reload mission");
+  }
+}
+
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "iridium_node");
   ros::NodeHandle n;
@@ -103,6 +133,15 @@ int main(int argc, char *argv[]){
   const double duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
+
+  // Services
+  ros::service::waitForService("/driver/power/sleep_mode");
+  ros::service::waitForService("/driver/power/sleep_mode_param");
+  ros::service::waitForService("/mission/reload_mission");
+
+  service_sleep_mode = n.serviceClient<std_srvs::Empty>("/driver/power/sleep_mode");
+  service_sleep_param = n.serviceClient<seabot_power_driver::SleepModeParam>("/driver/power/sleep_mode_param");
+  service_reload_mission = n.serviceClient<std_srvs::Empty>("/mission/reload_mission");
 
   iridium.uart_init();
   iridium.enable_com(true);

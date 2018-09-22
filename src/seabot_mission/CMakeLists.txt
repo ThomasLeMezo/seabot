@@ -13,6 +13,7 @@ find_package(catkin REQUIRED
     message_generation
     seabot_depth_regulation
     seabot_power_driver
+    std_srvs
 )
 
 ## System dependencies are found with CMake's conventions
