@@ -57,6 +57,8 @@ bool piston_emergency(std_srvs::SetBool::Request  &req,
         new_cmd_position_piston = 0;
         p.set_piston_speed(45, 45);
         p.set_piston_position(0);
+        speed_in_last = 45;
+        speed_out_last = 45;
         state_emergency = true;
     }
     else{
@@ -94,9 +96,11 @@ int main(int argc, char *argv[]){
     const bool reached_switch_off = n_private.param<bool>("reached_switch_off", true);
     const int error_interval = n_private.param<int>("error_interval", 6);
 
-    const double max_speed = 100.0;
-    const double min_speed = 0.0;
-    const double nb_step = 20.0;
+    const double tick_max = n_private.param<double>("tick_max", 2500);
+
+    const double max_speed = 50.0;
+    const double min_speed = 10.0;
+    const int speed_step = 5;
 
     // Service (ON/OFF)
     ros::ServiceServer service_speed = n.advertiseService("speed", piston_speed);
@@ -176,15 +180,17 @@ int main(int argc, char *argv[]){
 
           // Analyze depth to change motor speed
           if(adaptative_speed && !fast_move){
-              int speed_in = (max_speed/nb_step)*round(max(min(depth*speed_in_slope+speed_in_offset, max_speed), min_speed)*(nb_step/max_speed));
-              int speed_out = (max_speed/nb_step)*round(max(min(depth*speed_out_slope+speed_out_offset, max_speed), min_speed)*(nb_step/max_speed));
+              double speed_in = depth*speed_in_slope+speed_in_offset;
+              double speed_out = depth*speed_out_slope+speed_out_offset;
+              speed_in = max(min(speed_in, max_speed), min_speed);
+              speed_out = max(min(speed_out, max_speed), min_speed);
 
               // Hysteresis
-              if(abs(speed_in-speed_in_last)>(max_speed/nb_step)/2.0
-                      || abs(speed_out-speed_out_last)>(max_speed/nb_step)/2.0){
-                  p.set_piston_speed((uint16_t) speed_in, (uint16_t) speed_out);
-                  speed_in_last = speed_in;
-                  speed_out_last = speed_out;
+              if(abs(speed_in-speed_in_last)>speed_step
+                      || abs(speed_out-speed_out_last)>speed_step){
+                  speed_in_last = round(speed_in);
+                  speed_out_last = round(speed_out);
+                  p.set_piston_speed((uint16_t) speed_in_last, (uint16_t) speed_out_last);
                   speed_msg.speed_in = speed_in;
                   speed_msg.speed_out = speed_out;
                   speed_pub.publish(speed_msg);
@@ -198,6 +204,8 @@ int main(int argc, char *argv[]){
         /// ********************************************
         p.get_piston_all_data();
         state_msg.position = p.m_position;
+        if(state_msg.position > tick_max) // Filter
+          state_msg.position = tick_max;
         state_msg.switch_out = p.m_switch_out;
         state_msg.switch_in = p.m_switch_in;
         state_msg.state = p.m_state;

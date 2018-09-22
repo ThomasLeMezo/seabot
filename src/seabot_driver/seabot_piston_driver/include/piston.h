@@ -113,6 +113,11 @@ public:
   void set_piston_reset() const;
 
   /**
+   * @brief set_piston_emergency
+   */
+  void set_piston_emergency() const;
+
+  /**
    * @brief update_piston_all_data
    */
   void get_piston_all_data();

@@ -68,7 +68,7 @@ unsigned short time_zero_shift_error = 5;
 
 // State machine
 unsigned short motor_on = 1;
-enum robot_state {RESET_OUT,REGULATION};
+enum robot_state {RESET_OUT,REGULATION,EMERGENCY};
 unsigned char state = RESET_OUT;
 
 // Watchdog
@@ -116,17 +116,19 @@ void i2c_read_data_from_buffer(){
                 if(rxbuffer_tab[i+1] <=50)
                   motor_speed_out = rxbuffer_tab[i+1];
                 break;
-            case 0x14:  // consigne de vitesse out
+            case 0x14:  // consigne de vitesse out (reset)
                 if(rxbuffer_tab[i+1] <=50)
                   motor_speed_out_reset = rxbuffer_tab[i+1];
                 break;
-
             case 0xA0:  // Wait until release couple
                 if(nb_data >= i+2){
                     position_reached_max_value = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
                     i++;
                 }
-                break;  
+                break;
+            case 0xB0: // emergency mode
+                state = EMERGENCY;
+                break;
             default:
                 break;
         }
@@ -169,6 +171,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     case 0x07:
         SSPBUF = motor_speed_out;
         break;
+    case 0x08:
+        SSPBUF = system_default;
+        break;
     case 0xA0:
         SSPBUF = error;
         break;
@@ -192,12 +197,13 @@ void read_butee(){
         butee_out = 1;
         LED1 = 1;
     }
-    else{
+    else
         butee_out = 0;
-        LED1 = 0;
-    }
-    if (RA1_bit == 0)
+
+    if (RA1_bit == 0){
         butee_in = 1;
+        LED1 = 1;
+    }
     else
         butee_in = 0;
 }
@@ -472,9 +478,17 @@ void main(){
                 set_motor_cmd_stop();
 
             break;
+
+        case EMERGENCY:
+            LED2 = 1;
+            set_motor_cmd_out(motor_speed_out_reset);
+            break;
+
         default:
             break;
         }
+
+
 
         // I2C
         if(nb_rx_octet>1 && SSPSTAT.P == 1){
@@ -536,7 +550,8 @@ void interrupt(){
           watchdog_restart = watchdog_restart_default;
         }
 
-        if(position_set_point==0 && motor_current_speed == MOTOR_STOP && nb_pulse<error_interval && butee_out==0){
+        // Auto reset if wrong zero ref
+        if(position_set_point==0 && motor_current_speed == MOTOR_STOP && nb_pulse>error_interval && butee_out==0){
             if(zero_shift_error<time_zero_shift_error)
                 zero_shift_error++;
             else{
@@ -546,6 +561,8 @@ void interrupt(){
         }
         else
             zero_shift_error=0;
+
+        
 
         TMR0H = 0x0B;
         TMR0L = 0xDC;

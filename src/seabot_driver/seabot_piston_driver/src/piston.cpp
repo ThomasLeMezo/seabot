@@ -26,6 +26,13 @@ int Piston::i2c_open(){
     return 0;
 }
 
+void Piston::set_piston_emergency() const{
+    ROS_DEBUG("[Piston_driver] Start piston emergency");
+    if(i2c_smbus_write_byte_data(m_file, 0xB0, 0x01)<0)
+        ROS_WARN("[Piston_driver] I2C bus Failure - Piston Reset");
+    usleep(100);
+}
+
 void Piston::set_piston_reset() const{
     ROS_DEBUG("[Piston_driver] Start reseting piston");
     if(i2c_smbus_write_byte_data(m_file, 0x01, 0x01)<0)
