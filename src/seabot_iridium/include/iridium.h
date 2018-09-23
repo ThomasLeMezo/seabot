@@ -67,10 +67,17 @@ public:
      */
     void get_new_log_files();
 
+    /**
+     * @brief process_cmd_file
+     * @param file_name
+     */
+    void process_cmd_file(const string &file_name);
+
 public:
     bool m_iridium_power_state = false;
 
     LogTDT logTDT;
+    std::vector<LogTDT> m_cmd_list;
 
 private:
     uint64_t m_imei = 300234065392110;

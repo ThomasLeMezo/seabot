@@ -252,6 +252,7 @@ bool Iridium::send_and_receive_data(){
       }
     }
 
+    // ToDo : process cmd_files !
 
     TIS_clean(&m_tis);
     m_files_to_send.clear();
@@ -280,5 +281,11 @@ const std::string Iridium::get_new_tdt_file(){
   sstream << std::hex << wall_time_now; // Print in hex
   sstream << ".tdt";
   return sstream.str();
+}
+
+void Iridium::process_cmd_file(const string &file_name){
+  LogTDT l();
+  l.deserialize_log_CMD(file_name);
+  m_cmd_list.push_back(l);
 }
 

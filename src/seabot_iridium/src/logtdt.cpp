@@ -271,7 +271,7 @@ bool LogTDT::deserialize_log_TDT1(const string &file_name){
 }
 
 bool LogTDT::deserialize_log_CMD(const string &file_name){
-  cout << "Deserialize log TDT1" << endl;
+  cout << "Deserialize log CMD" << endl;
   ifstream save_file;
   save_file.open(file_name);
 
@@ -295,9 +295,11 @@ bool LogTDT::deserialize_log_CMD(const string &file_name){
   switch(message_type){
   case CMD_SLEEP:
     m_cmd_type = CMD_SLEEP;
+    cout << "CMD Sleep" << endl;
     deserialize_log_CMD_sleep(file_name);
     break;
   case CMD_MISSION:
+    cout << "CMD Mission" << endl;
     m_cmd_type = CMD_MISSION;
     deserialize_log_CMD_mission(file_name);
     break;

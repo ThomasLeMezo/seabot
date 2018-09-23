@@ -83,6 +83,19 @@ bool call_iridium(){
   if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
     iridium.get_new_log_files();
     iridium.send_and_receive_data();
+
+    // ToDo : process cmd files
+    for(LogTDT &l:iridium.m_cmd_list){
+      switch(l.m_cmd_type){
+        case CMD_SLEEP:
+          // ToDo
+        break;
+      case CMD_MISSION:
+          // ToDO
+        break;
+      }
+    }
+
     return true;
   }
   else
