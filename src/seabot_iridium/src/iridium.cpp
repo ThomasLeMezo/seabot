@@ -252,6 +252,7 @@ bool Iridium::send_and_receive_data(){
       }
     }
 
+
     TIS_clean(&m_tis);
     m_files_to_send.clear();
   }
