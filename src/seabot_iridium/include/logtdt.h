@@ -99,7 +99,7 @@ private:
    * @return
    */
   template<typename _T>
-  int deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, unsigned int &value);
+  int deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, unsigned int &value);  
 
 public:
   /**
@@ -114,7 +114,7 @@ public:
    * @param type
    * @return
    */
-  bool deserialize_log_CMD(const std::string &file_name, CMD_TYPE &type);
+  bool deserialize_log_CMD(const std::string &file_name);
 
   /**
    * @brief serialize_log_TDT1
@@ -145,6 +145,13 @@ public:
    */
   bool serialize_log_CMD_mission(const std::string &file_name);
 
+  /**
+   * @brief deserialize_log_CMD_mission
+   * @param file_name
+   * @return
+   */
+  bool deserialize_log_CMD_mission(const std::string &file_name);
+
 private:
 
   /**
@@ -154,6 +161,13 @@ private:
    * @return
    */
   bool serialize_log_CMD_waypoint(std::ofstream &save_file, const Waypoint &w);
+
+  /**
+   * @brief LogTDT::deserialize_log_CMD_waypoint
+   * @param save_file
+   * @return
+   */
+  bool deserialize_log_CMD_waypoint(std::ifstream &save_file);
 
 public:
   double m_east = 42.0; // 2^21-1
@@ -174,7 +188,7 @@ public:
   std::vector<Waypoint> m_waypoint_list;
   double m_offset_east = 0.;
   double m_offset_north = 0.;
-  double m_offset_time = 0.; // in sec
+  double m_offset_time = TIME_POSIX_START; // in sec
 
   CMD_TYPE m_cmd_type;
 };
