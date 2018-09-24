@@ -26,7 +26,7 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x01
+#define CODE_VERSION 0x02
 
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
@@ -68,7 +68,7 @@ unsigned short time_zero_shift_error = 5;
 
 // State machine
 unsigned short motor_on = 1;
-enum robot_state {RESET_OUT,REGULATION,EMERGENCY};
+enum robot_state {RESET_OUT,REGULATION,EMERGENCY, STOP};
 unsigned char state = RESET_OUT;
 
 // Watchdog
@@ -129,6 +129,9 @@ void i2c_read_data_from_buffer(){
             case 0xB0: // emergency mode
                 state = EMERGENCY;
                 break;
+            case 0xB1:
+                state = STOP;
+                break;
             default:
                 break;
         }
@@ -170,9 +173,6 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         break;
     case 0x07:
         SSPBUF = motor_speed_out;
-        break;
-    case 0x08:
-        SSPBUF = system_default;
         break;
     case 0xA0:
         SSPBUF = error;
