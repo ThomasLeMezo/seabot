@@ -51,7 +51,7 @@ unsigned short butee_in = 0;
 // Motor
 unsigned short motor_speed_in = 15; // 2 octets
 unsigned short motor_speed_out = 15; // 2 octets
-unsigned short motor_speed_out_reset = 20; // 2 octets
+unsigned short motor_speed_out_reset = 30; // 2 octets
 unsigned short motor_current_speed = 50; // 2 octets
 #define MOTOR_STOP 50
 
@@ -193,6 +193,8 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
  * @brief Lecture des valeurs des butees
  */
 void read_butee(){
+    LED1 = 0;
+    
     if (RA0_bit == 0){
         butee_out = 1;
         LED1 = 1;
@@ -482,6 +484,10 @@ void main(){
         case EMERGENCY:
             LED2 = 1;
             set_motor_cmd_out(motor_speed_out_reset);
+            break;
+
+        case STOP:
+            set_motor_cmd_stop();
             break;
 
         default:
