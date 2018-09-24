@@ -3,6 +3,10 @@
         <param name="frequency" value="1.0" />
         <param name="velocity_target" value="0.05" />
         <param name="time_constant" value="10.0" />
+
+        <param name="hysteresis_piston" value="0.6" />
+        <param name="limit_depth_regulation" value="1.0" />
+        <param name="speed_volume_sink" value="5.0" />
     </node>
 
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

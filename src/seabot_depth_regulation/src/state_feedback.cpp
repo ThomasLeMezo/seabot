@@ -35,8 +35,11 @@ double coeff_B = 0.;
 double tick_to_volume = 0.;
 double coeff_compressibility = 0.;
 
-#define NB_STATES 3
-// [Velocity; Depth; Volume]
+enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION};
+STATE_MACHINE regulation_state = STATE_SURFACE;
+
+#define NB_STATES 4
+// [Velocity; Depth; Volume; Offset]
 Matrix<double, NB_STATES, 1> x = Matrix<double, NB_STATES, 1>::Zero();
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
@@ -48,7 +51,8 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
 void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(0) = msg->velocity;
   x(1) = msg->depth;
-  x(2) = msg->volume+msg->offset;
+  x(2) = msg->volume;
+  x(3) = msg->offset;
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
@@ -84,12 +88,12 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
-  const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
-
-  const double set_point_following = n_private.param<double>("set_point_following", 10.0);
-
   beta = n_private.param<double>("velocity_target", 0.05)*M_PI_2;
   l = n_private.param<double>("time_constant", 10.0);
+  double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 1.0);
+  double speed_volume_sink = n_private.param<double>("speed_volume_sink", 5.0);
+
+  const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
 
   const double rho = n.param<double>("/rho", 1025.0);
   const double g = n.param<double>("/g", 9.81);
@@ -129,6 +133,8 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
 
   double piston_position_old = 0.;
+  double u = 0.; // in m3
+  double piston_set_point;
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation2] Start Ok");
@@ -136,8 +142,17 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
 
     if(depth_set_point>0.2 && !emergency){
-      double u = compute_u(x, depth_set_point);
-      double piston_position = piston_ref_eq - u/tick_to_volume;
+
+      if(regulation_state == STATE_SURFACE){
+        if(x(1)<limit_depth_regulation)
+          u = -speed_volume_sink*tick_to_volume;
+        else
+          regulation_state = STATE_REGULATION;
+      }
+      else
+        u = compute_u(x, depth_set_point);
+
+      piston_set_point = x(3)/tick_to_volume + piston_ref_eq - u/tick_to_volume;
 
       // Mechanical limits (in = v_min, out = v_max)
       if((piston_switch_in && u<0) || (piston_switch_out && u>0))
@@ -145,9 +160,9 @@ int main(int argc, char *argv[]){
 
       /// ********************** Write command ****************** ///
       //  Hysteresis to limit motor movement
-      if(abs(piston_position_old - piston_position)>hysteresis_piston){
-        position_msg.position = round(piston_position);
-        piston_position_old = piston_position;
+      if(abs(piston_position_old - piston_set_point)>hysteresis_piston){
+        position_msg.position = round(piston_set_point);
+        piston_position_old = piston_set_point;
       }
 
       // Debug msg
@@ -158,6 +173,7 @@ int main(int argc, char *argv[]){
     }
     else{
       // Position set point
+      regulation_state = STATE_SURFACE;
       position_msg.position = 0;
       is_surface = true;
     }

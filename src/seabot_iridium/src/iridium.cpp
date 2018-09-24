@@ -284,7 +284,7 @@ const std::string Iridium::get_new_tdt_file(){
 }
 
 void Iridium::process_cmd_file(const string &file_name){
-  LogTDT l();
+  LogTDT l;
   l.deserialize_log_CMD(file_name);
   m_cmd_list.push_back(l);
 }

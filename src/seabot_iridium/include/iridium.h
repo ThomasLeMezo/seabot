@@ -71,7 +71,7 @@ public:
      * @brief process_cmd_file
      * @param file_name
      */
-    void process_cmd_file(const string &file_name);
+    void process_cmd_file(const std::string &file_name);
 
 public:
     bool m_iridium_power_state = false;
