@@ -6,6 +6,7 @@
 #include "thruster.h"
 #include "seabot_thruster_driver/Engine.h"
 #include "seabot_thruster_driver/Velocity.h"
+#include "geometry_msgs/Twist.h"
 
 #include "std_srvs/SetBool.h"
 
@@ -14,15 +15,27 @@ float linear_velocity = 0.0;
 float angular_velocity = 0.0;
 bool state_enable = true;
 
+float coeff_cmd_to_pwm = 9.0;
+
 Thruster t;
 ros::Time time_last_cmd;
 bool stop_sent = false;
 bool send_cmd = true;
 
+float manual_linear_velocity = 0.0;
+float manual_angular_velocity = 0.0;
+ros::Time manual_time_last_cmd;
+
 void velocity_callback(const seabot_thruster_driver::Velocity::ConstPtr& msg){
   linear_velocity = msg->linear;
   angular_velocity = msg->angular;
   time_last_cmd = ros::Time::now();
+}
+
+void manual_velocity_callback(const geometry_msgs::Twist::ConstPtr& msg){
+  manual_linear_velocity = msg->linear.x;
+  manual_angular_velocity = msg->angular.z;
+  manual_time_last_cmd = ros::Time::now();
 }
 
 bool engine_enable(std_srvs::SetBool::Request  &req,
@@ -35,18 +48,30 @@ bool engine_enable(std_srvs::SetBool::Request  &req,
   return true;
 }
 
+uint8_t convert_u(const float &u){
+  uint8_t cmd = round(u*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
+
+  if(cmd>MAX_PWM)
+    cmd = MAX_PWM;
+  if(cmd<MIN_PWM)
+    cmd = MIN_PWM;
+
+  return cmd;
+}
+
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "thruster_node");
   ros::NodeHandle n;
 
   // Parameters
   ros::NodeHandle n_private("~");
-  double frequency = n_private.param<double>("frequency", 10.0);
-  float coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 9.0);
-  double delay_stop = n_private.param<float>("delay_stop", 3.0);
+  const double frequency = n_private.param<double>("frequency", 10.0);
+  coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 9.0);
+  const double delay_stop = n_private.param<float>("delay_stop", 0.5);
 
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);
+  ros::Subscriber manual_velocity_sub = n.subscribe("/cmd_vel", 1, manual_velocity_callback);
 
   // Publisher
   ros::Publisher cmd_pub = n.advertise<seabot_thruster_driver::Engine>("engine", 1);
@@ -58,6 +83,10 @@ int main(int argc, char *argv[]){
   // Sensor initialization
   t.i2c_open();
 
+  time_last_cmd = ros::Time::now();
+  manual_time_last_cmd = ros::Time::now();
+  ros::Duration(delay_stop*1.1).sleep();
+
   ROS_INFO("[Thruster] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
@@ -65,22 +94,14 @@ int main(int argc, char *argv[]){
 
     if(state_enable){
       uint8_t cmd_left, cmd_right;
-      if((ros::Time::now() - time_last_cmd).toSec() < delay_stop){
-        float u_left = linear_velocity + angular_velocity;
-        float u_right = linear_velocity - angular_velocity;
 
-        cmd_left = round(u_left*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
-        cmd_right = round(u_right*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
-
-        if(cmd_left>MAX_PWM)
-          cmd_left = MAX_PWM;
-        if(cmd_left<MIN_PWM)
-          cmd_left = MIN_PWM;
-
-        if(cmd_right>MAX_PWM)
-          cmd_right = MAX_PWM;
-        if(cmd_right<MIN_PWM)
-          cmd_right = MIN_PWM;
+      if((ros::Time::now() - manual_time_last_cmd).toSec() < delay_stop){
+        cmd_left = convert_u(manual_linear_velocity + manual_angular_velocity);
+        cmd_right = convert_u(manual_linear_velocity - manual_angular_velocity);
+      }
+      else if((ros::Time::now() - time_last_cmd).toSec() < delay_stop){
+        cmd_left = convert_u(linear_velocity + angular_velocity);
+        cmd_right = convert_u(linear_velocity - angular_velocity);
       }
       else{
         cmd_right = MOTOR_PWM_STOP;
