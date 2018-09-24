@@ -385,6 +385,23 @@ if(len(time_mag)>0):
 
     pg_mag2.setXLink(pg_mag1)
 
+#################### Euler ####################
+if(len(time_euler)>0):
+    dock_euler = Dock("Euler")
+    area.addDock(dock_euler, 'above', dock_battery)
+    pg_euler1 = pg.PlotWidget()
+    pg_euler1.addLegend()
+    # pg_euler1.plot(time_euler, euler_x, pen=(255,0,0), name="euler x")
+    # pg_euler1.plot(time_euler, euler_y, pen=(0,255,0), name="euler y")
+    pg_euler1.plot(time_euler, euler_z, pen=(0,0,255), name="Heading")
+    dock_euler.addWidget(pg_euler1)
+
+    # pg_euler_depth = pg.PlotWidget()
+    # pg_euler_depth.addLegend()
+    # pg_euler_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
+    # pg_euler_depth.setLabel('left', "Depth", units="m")
+    # dock_euler.addWidget(pg_euler_depth)
+
 #################### Safety ####################
 if(len(time_safety)>0):
     dock_safety = Dock("Safety")

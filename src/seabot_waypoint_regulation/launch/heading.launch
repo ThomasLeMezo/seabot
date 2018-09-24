@@ -1,0 +1,12 @@
+<launch>
+
+    <node name="heading_node" pkg="seabot_waypoint_regulation" type="heading_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+        <param name="frequency" value="10.0" />
+        <param name="delta_valid_time" value="1.0" />
+        <param name="coeff_P" value="0.5" />
+        <param name="linear_speed" value="1.0" />
+        <param name="depth_limit_switch_off" value="0.5" />
+    </node>
+
+</launch>
+

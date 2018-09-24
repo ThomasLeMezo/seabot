@@ -15,6 +15,7 @@ publish_magnetometer: True
 # RTIMU_XEAST_YNORTH    -> 5
 # RTIMU_XSOUTH_YEAST    -> 6
 # RTIMU_XWEST_YSOUTH    -> 7
+
 # RTIMU_XUP_YNORTH      -> 8
 # RTIMU_XUP_YEAST       -> 9
 # RTIMU_XUP_YSOUTH      -> 10
@@ -23,6 +24,7 @@ publish_magnetometer: True
 # RTIMU_XDOWN_YEAST     -> 13
 # RTIMU_XDOWN_YSOUTH    -> 14
 # RTIMU_XDOWN_YWEST     -> 15
+
 # RTIMU_XNORTH_YUP      -> 16
 # RTIMU_XEAST_YUP       -> 17
 # RTIMU_XSOUTH_YUP      -> 18

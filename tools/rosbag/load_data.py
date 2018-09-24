@@ -108,6 +108,12 @@ safety_debug_ratio_delta = []
 safety_debug_volume = []
 safety_debug_volume_delta = []
 
+# /driver/euler
+time_euler = []
+euler_x = []
+euler_y = []
+euler_z = []
+
 def load_bag(filename):
 
 	bag = rosbag.Bag(filename, 'r')
@@ -227,6 +233,12 @@ def load_bag(filename):
 			mag_x.append(msg.magnetic_field.x)
 			mag_y.append(msg.magnetic_field.y)
 			mag_z.append(msg.magnetic_field.z)
+
+		elif(topic=="/driver/euler"):
+			time_euler.append((t-startTime).to_sec())
+			euler_x.append(msg.x)
+			euler_y.append(msg.y)
+			euler_z.append(msg.z)
 
 		elif(topic=="/safety/safety"):
 			time_safety.append((t-startTime).to_sec())
