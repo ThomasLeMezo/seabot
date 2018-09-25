@@ -5,6 +5,7 @@ Power::Power(){
 }
 
 Power::~Power(){
+  set_flash_enable(false);
   close(m_file);
 }
 

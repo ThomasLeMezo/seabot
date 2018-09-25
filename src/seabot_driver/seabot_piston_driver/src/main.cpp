@@ -128,6 +128,7 @@ int main(int argc, char *argv[]){
     p.i2c_open();
     sleep(1); // 1s sleep (wait until i2c open)
 
+    p.set_piston_reset();
     // Wait reset_out
     while(p.m_state!=1){
         p.get_piston_all_data();

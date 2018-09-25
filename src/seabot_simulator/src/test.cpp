@@ -184,6 +184,10 @@ int main(int argc, char *argv[]){
   double set_point = 5.;
 
   for(double t=0.0; t<200.; t+=dt){
+
+    if(t>100)
+      set_point = 3.;
+
 //    u(2) = 1.0e-6*sin(t/30.0);
     u(2) = compute_u(xhat, set_point);
 

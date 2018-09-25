@@ -114,6 +114,14 @@ euler_x = []
 euler_y = []
 euler_z = []
 
+# /fusion/kalman
+time_kalman = []
+kalman_depth = []
+kalman_volume = []
+kalman_velocity = []
+kalman_offset = []
+kalman_error_velocity = []
+
 def load_bag(filename):
 
 	bag = rosbag.Bag(filename, 'r')
@@ -195,18 +203,18 @@ def load_bag(filename):
 			fusion_depth.append(msg.depth)
 			fusion_velocity.append(msg.velocity)
 
-		# elif(topic=="/regulation/debug"):
-		# 	time_regulation_debug.append((t-startTime).to_sec())
-		# 	regulation_velocity_error.append(msg.velocity_error)
-		# 	regulation_depth_error.append(msg.depth_error)
-		# 	regulation_vector_field_target.append(msg.vector_field_target)
-		# 	regulation_u.append(msg.u)
-		# 	regulation_piston_set_point.append(msg.piston_set_point)
-		# 	regulation_piston_set_point_offset.append(msg.piston_set_point_offset)
-		# 	if(msg.antiwindup):
-		# 		regulation_antiwindup.append(1)
-		# 	else:
-		# 		regulation_antiwindup.append(0)
+		elif(topic=="/regulation/debug"):
+			time_regulation_debug.append((t-startTime).to_sec())
+			# regulation_velocity_error.append(msg.velocity_error)
+			# regulation_depth_error.append(msg.depth_error)
+			# regulation_vector_field_target.append(msg.vector_field_target)
+			regulation_u.append(msg.u)
+			regulation_piston_set_point.append(msg.piston_set_point)
+			# regulation_piston_set_point_offset.append(msg.piston_set_point_offset)
+			# if(msg.antiwindup):
+			# 	regulation_antiwindup.append(1)
+			# else:
+			# 	regulation_antiwindup.append(0)
 
 		elif(topic=="/fusion/pose"):
 			time_fusion_pose.append((t-startTime).to_sec())
@@ -239,6 +247,14 @@ def load_bag(filename):
 			euler_x.append(msg.x)
 			euler_y.append(msg.y)
 			euler_z.append(msg.z)
+
+		elif(topic=="/fusion/kalman"):
+			time_kalman.append((t-startTime).to_sec())
+			kalman_depth.append(msg.depth)
+			kalman_volume.append(msg.volume)
+			kalman_velocity.append(msg.velocity)
+			kalman_offset.append(msg.offset)
+			kalman_error_velocity.append(msg.covariance[6])
 
 		elif(topic=="/safety/safety"):
 			time_safety.append((t-startTime).to_sec())

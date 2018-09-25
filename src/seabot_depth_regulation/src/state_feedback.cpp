@@ -25,6 +25,7 @@ bool is_surface = true;
 
 double depth_set_point = 0.0;
 ros::WallTime t_old;
+ros::Time time_last_state;
 
 bool emergency = true; // Wait safety clearance on startup
 
@@ -53,6 +54,7 @@ void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(1) = msg->depth;
   x(2) = msg->volume;
   x(3) = msg->offset;
+  time_last_state = ros::Time::now();
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
@@ -78,7 +80,6 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
 
   return (1./coeff_A)*(coeff_A*coeff_compressibility*x(0)-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
 }
-
 
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "sliding_node");
@@ -111,6 +112,8 @@ int main(int argc, char *argv[]){
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
   coeff_compressibility = compressibility_tick*tick_to_volume;
 
+  const double piston_speed_max = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume;
+
   // Subscriber
   ros::Subscriber kalman_sub = n.subscribe("/fusion/kalman", 1, kalman_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
@@ -126,7 +129,6 @@ int main(int argc, char *argv[]){
   // Server
   ros::ServiceServer server_emergency = n.advertiseService("emergency", emergency_service);
 
-
   // Variables
   position_msg.position = 0.0;
   t_old = ros::WallTime::now() - ros::WallDuration(1);
@@ -134,14 +136,14 @@ int main(int argc, char *argv[]){
 
   double piston_position_old = 0.;
   double u = 0.; // in m3
-  double piston_set_point;
+  double piston_set_point=0.;
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation2] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 
-    if(depth_set_point>0.2 && !emergency){
+    if(depth_set_point>=limit_depth_regulation && !emergency){
 
       if(regulation_state == STATE_SURFACE){
         if(x(1)<limit_depth_regulation)
@@ -149,14 +151,30 @@ int main(int argc, char *argv[]){
         else
           regulation_state = STATE_REGULATION;
       }
-      else
-        u = compute_u(x, depth_set_point);
+      else{
+        if(x(1)>=limit_depth_regulation){
+          if((ros::Time::now()-time_last_state).toSec()<1.0){
+            u = compute_u(x, depth_set_point);
 
-      piston_set_point = x(3)/tick_to_volume + piston_ref_eq - u/tick_to_volume;
+            if(abs(u)>piston_speed_max)
+              u=std::copysign(piston_speed_max, u);
 
-      // Mechanical limits (in = v_min, out = v_max)
-      if((piston_switch_in && u<0) || (piston_switch_out && u>0))
-        u = 0.0;
+            // Mechanical limits (in = v_min, out = v_max)
+            if((piston_switch_in && u<0) || (piston_switch_out && u>0))
+              u = 0.0;
+          }
+          else{
+            u=speed_volume_sink*tick_to_volume;
+            ROS_INFO("[DepthRegulation] timing issue");
+          }
+        }
+        else{
+          regulation_state = STATE_SURFACE;
+        }
+      }
+
+      piston_set_point = piston_ref_eq -(x(2)+u)/tick_to_volume;
+
 
       /// ********************** Write command ****************** ///
       //  Hysteresis to limit motor movement
@@ -167,6 +185,7 @@ int main(int argc, char *argv[]){
 
       // Debug msg
       debug_msg.u = u;
+      debug_msg.piston_set_point = piston_set_point;
       debug_pub.publish(debug_msg);
 
       is_surface = false;

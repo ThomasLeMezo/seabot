@@ -1,11 +1,11 @@
 <launch>
     <node name="state_feedback" pkg="seabot_depth_regulation" type="state_feedback_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
-        <param name="velocity_target" value="0.05" />
-        <param name="time_constant" value="10.0" />
+        <param name="velocity_target" value="0.02" />
+        <param name="time_constant" value="100.0" />
 
         <param name="hysteresis_piston" value="0.6" />
-        <param name="limit_depth_regulation" value="1.0" />
+        <param name="limit_depth_regulation" value="0.5" />
         <param name="speed_volume_sink" value="5.0" />
     </node>
 

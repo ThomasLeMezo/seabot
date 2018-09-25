@@ -87,17 +87,23 @@ if(len(time_regulation_debug)>0):
     pg_regulation_depth.setLabel('left', "Depth", units="m")
     dock_regulation1.addWidget(pg_regulation_depth)
 
-    pg_regulation_vector_field = pg.PlotWidget()
-    pg_regulation_vector_field.addLegend()
-    pg_regulation_vector_field.plot(time_regulation_debug, regulation_vector_field_target, pen=(255,0,0), name="vector field")
-    pg_regulation_vector_field.setLabel('left', "vector_field_target")
-    dock_regulation1.addWidget(pg_regulation_vector_field)
+    pg_regulation_u = pg.PlotWidget()
+    pg_regulation_u.addLegend()
+    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
+    pg_regulation_u.setLabel('left', "u")
+    dock_regulation1.addWidget(pg_regulation_u)
 
-    pg_regulation_velocity_error = pg.PlotWidget()
-    pg_regulation_velocity_error.addLegend()
-    pg_regulation_velocity_error.plot(time_regulation_debug, regulation_velocity_error, pen=(255,0,0), name="velocity error")
-    pg_regulation_velocity_error.setLabel('left', "velocity error")
-    dock_regulation1.addWidget(pg_regulation_velocity_error)
+    pg_regulation_set_point = pg.PlotWidget()
+    pg_regulation_set_point.addLegend()
+    pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
+    pg_regulation_set_point.setLabel('left', "set_point")
+    dock_regulation1.addWidget(pg_regulation_set_point)
+
+    # pg_regulation_velocity_error = pg.PlotWidget()
+    # pg_regulation_velocity_error.addLegend()
+    # pg_regulation_velocity_error.plot(time_regulation_debug, regulation_velocity_error, pen=(255,0,0), name="velocity error")
+    # pg_regulation_velocity_error.setLabel('left', "velocity error")
+    # dock_regulation1.addWidget(pg_regulation_velocity_error)
 
     # pg_regulation_u = pg.PlotWidget()
     # pg_regulation_u.addLegend()
@@ -113,9 +119,10 @@ if(len(time_regulation_debug)>0):
     # pg_regulation_set_point.setLabel('left', "set point")
     # dock_regulation1.addWidget(pg_regulation_set_point)
 
-    pg_regulation_depth.setXLink(pg_regulation_vector_field)
-    pg_regulation_depth.setXLink(pg_regulation_velocity_error)
-    pg_regulation_velocity_error.setXLink(pg_regulation_vector_field)
+    pg_regulation_u.setXLink(pg_regulation_depth)
+    pg_regulation_set_point.setXLink(pg_regulation_depth)
+    # pg_regulation_depth.setXLink(pg_regulation_velocity_error)
+    # pg_regulation_velocity_error.setXLink(pg_regulation_vector_field)
 
 #################### Regulation 2 ####################
 
@@ -126,40 +133,40 @@ if(len(time_regulation_debug)>0):
 # regulation_u = []
 # regulation_piston_set_point = []
 # regulation_piston_set_point_offset = []
-# regulation_antiwindup = []
+# pg_regulation_antiwindupdup = []
 
 
-if(len(time_regulation_debug)>0):
-    dock_regulation2 = Dock("Regulation 2")
-    area.addDock(dock_regulation2, 'above', dock_battery)
+# if(len(time_regulation_debug)>0):
+#     dock_regulation2 = Dock("Regulation 2")
+#     area.addDock(dock_regulation2, 'above', dock_battery)
 
-    pg_regulation_depth = pg.PlotWidget()
-    pg_regulation_depth.addLegend()
-    pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="Depth")
-    pg_regulation_depth.setLabel('left', "depth")
-    dock_regulation2.addWidget(pg_regulation_depth)
+#     pg_regulation_depth = pg.PlotWidget()
+#     pg_regulation_depth.addLegend()
+#     pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="Depth")
+#     pg_regulation_depth.setLabel('left', "depth")
+#     dock_regulation2.addWidget(pg_regulation_depth)
 
-    pg_regulation_u = pg.PlotWidget()
-    pg_regulation_u.addLegend()
-    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
-    pg_regulation_u.setLabel('left', "u")
-    dock_regulation2.addWidget(pg_regulation_u)
+#     pg_regulation_u = pg.PlotWidget()
+#     pg_regulation_u.addLegend()
+#     pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
+#     pg_regulation_u.setLabel('left', "u")
+#     dock_regulation2.addWidget(pg_regulation_u)
 
-    pg_regulation_antiwindup = pg.PlotWidget()
-    pg_regulation_antiwindup.addLegend()
-    pg_regulation_antiwindup.plot(time_regulation_debug, regulation_antiwindup, pen=(255,0,0), name="antiwindup")
-    pg_regulation_antiwindup.setLabel('left', "antiwindup")
-    dock_regulation2.addWidget(pg_regulation_antiwindup)
+#     pg_regulation_antiwindup = pg.PlotWidget()
+#     pg_regulation_antiwindup.addLegend()
+#     pg_regulation_antiwindup.plot(time_regulation_debug, regulation_antiwindup, pen=(255,0,0), name="antiwindup")
+#     pg_regulation_antiwindup.setLabel('left', "antiwindup")
+#     dock_regulation2.addWidget(pg_regulation_antiwindup)
 
-    pg_regulation_set_point = pg.PlotWidget()
-    pg_regulation_set_point.addLegend()
-    pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
-    pg_regulation_set_point.setLabel('left', "set_point")
-    dock_regulation2.addWidget(pg_regulation_set_point)
+#     pg_regulation_set_point = pg.PlotWidget()
+#     pg_regulation_set_point.addLegend()
+#     pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
+#     pg_regulation_set_point.setLabel('left', "set_point")
+#     dock_regulation2.addWidget(pg_regulation_set_point)
 
-    pg_regulation_antiwindup.setXLink(pg_regulation_u)
-    pg_regulation_u.setXLink(pg_regulation_depth)
-    pg_regulation_set_point.setXLink(pg_regulation_depth)
+#     pg_regulation_antiwindup.setXLink(pg_regulation_u)
+#     pg_regulation_u.setXLink(pg_regulation_depth)
+#     pg_regulation_set_point.setXLink(pg_regulation_depth)
 
 #################### Regulation 3 ####################
 # if(len(time_regulation_debug)>0):
@@ -284,7 +291,14 @@ if(len(time_piston_state)>0):
     pg_piston_switch.setLabel('left', "Switch")
     dock_piston.addWidget(pg_piston_switch)
 
+    pg_piston_state = pg.PlotWidget()
+    pg_piston_state.addLegend()
+    pg_piston_state.plot(time_piston_state, piston_state_state, pen=(0,255,0), name="state")
+    pg_piston_state.setLabel('left', "State")
+    dock_piston.addWidget(pg_piston_state)    
+
     pg_piston_switch.setXLink(pg_piston_state_position)
+    pg_piston_state.setXLink(pg_piston_state_position)
 
 #################### Piston2 ####################
 if(len(time_piston_state)>0):
@@ -401,6 +415,41 @@ if(len(time_euler)>0):
     # pg_euler_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
     # pg_euler_depth.setLabel('left', "Depth", units="m")
     # dock_euler.addWidget(pg_euler_depth)
+
+#################### Kalman ####################
+if(len(time_kalman)>0):
+    dock_kalman = Dock("Kalman")
+    area.addDock(dock_kalman, 'above', dock_battery)
+
+    pg_kalman_velocity = pg.PlotWidget()
+    pg_kalman_velocity.addLegend()
+    pg_kalman_velocity.plot(time_kalman, kalman_velocity, pen=(255,0,0), name="velocity")
+    dock_kalman.addWidget(pg_kalman_velocity)
+
+    pg_kalman_depth = pg.PlotWidget()
+    pg_kalman_depth.addLegend()
+    pg_kalman_depth.plot(time_kalman, kalman_depth, pen=(255,0,0), name="depth")
+    dock_kalman.addWidget(pg_kalman_depth)
+
+    pg_kalman_volume = pg.PlotWidget()
+    pg_kalman_volume.addLegend()
+    pg_kalman_volume.plot(time_kalman, kalman_volume, pen=(255,0,0), name="volume")
+    dock_kalman.addWidget(pg_kalman_volume)
+
+    pg_kalman_offset = pg.PlotWidget()
+    pg_kalman_offset.addLegend()
+    pg_kalman_offset.plot(time_kalman, kalman_offset, pen=(255,0,0), name="offset")
+    dock_kalman.addWidget(pg_kalman_offset)
+
+    # pg_kalman_error_velocity = pg.PlotWidget()
+    # pg_kalman_error_velocity.addLegend()
+    # pg_kalman_error_velocity.plot(time_kalman, kalman_error_velocity, pen=(255,0,0), name="error velocity")
+    # dock_kalman.addWidget(pg_kalman_error_velocity)
+
+    pg_kalman_depth.setXLink(pg_kalman_velocity)
+    pg_kalman_volume.setXLink(pg_kalman_velocity)
+    pg_kalman_offset.setXLink(pg_kalman_velocity)
+    # pg_kalman_error_velocity.setXLink(pg_kalman_velocity)
 
 #################### Safety ####################
 if(len(time_safety)>0):
