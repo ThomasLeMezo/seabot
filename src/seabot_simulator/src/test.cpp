@@ -28,6 +28,8 @@ const double coeff_B = 0.5*rho*Cf/m;
 const double tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
 const double coeff_compressibility = compressibility_tick*tick_to_volume;
 
+vector<double> y_list, dy_list, ddy_list;
+vector<double> time_y_list;
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
   Matrix<double,NB_STATES, 1> y = Matrix<double,NB_STATES, 1>::Zero();
@@ -111,7 +113,7 @@ void draw_result(const string &name, const vector<double> &x, const vector<doubl
 
 double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
   double beta = -0.03*M_PI/2.0;
-  double l = 10.;
+  double l = 100.;
 
   double e=set_point-x(1);
   double v_eq = x(2)+x(3);
@@ -120,13 +122,51 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
   double e2_1 = 1.+pow(e,2);
   double dy = dx1-beta*x(0)/e2_1;
 
+  y_list.push_back(y);
+
   return (1./coeff_A)*(coeff_A*coeff_compressibility*x(0)-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
 }
 
-int main(int argc, char *argv[]){
+double compute_u_v2(const Matrix<double, NB_STATES, 1> &x, double set_point){
+  double beta = 0.03*M_PI/2.0;
+  double l1 = 400.0;
+  double l2 = 300.0;
+  double l3 = 200.0;
+  double l4 = 100.0;
 
-  double frequency = 30.;
-  double dt = 1./frequency;
+  double x1 = x(0);
+  double x2 = x(1);
+  double x3 = x(2);
+  double x4 = x(3);
+
+  double alpha = coeff_compressibility;
+  double A = coeff_A;
+  double B = coeff_B;
+
+  double e = set_point - x2;
+  double y = beta*atan(e);
+  double D = 1+e*e;
+  double D2 = D*D;
+  double D4 = pow(D, 4);
+  double dy = -beta*x1/D;
+  double dx1 = -A*(x3+x4-alpha*x2)-B*x1*abs(x1);
+  double ddy = beta*(2*e*x1-dx1*D)/D2;
+
+  double u1 = l4*y+l3*dy+l2*ddy;
+
+  double E = 2*(1+e*e)*(-2*e*x1);
+  double u2 = beta/D4*(2*(e*dx1-x1*x1)*D2-2*e*x1*E+dx1*E*D+D*D*x1*dx1*2*e);
+
+  double u = ((u1+l1*u2)/(l1*D)+2*B*dx1*abs(x1))/(-A)-alpha*x1;
+
+  y_list.push_back(y);
+  dy_list.push_back(dy);
+  ddy_list.push_back(ddy);
+
+  return u;
+}
+
+int main(int argc, char *argv[]){
 
   // Loop variables
   // Line, Row
@@ -172,6 +212,7 @@ int main(int argc, char *argv[]){
   x(1) = 0.0;
   x(0) = 0.0;
   x(2) = 0.0;
+  x(3) = 0.0;
   Matrix<double,NB_STATES, 1> u = Matrix<double,NB_STATES, 1>::Zero();
 
   vibes::beginDrawing();
@@ -183,41 +224,67 @@ int main(int argc, char *argv[]){
 
   double set_point = 5.;
 
-  for(double t=0.0; t<200.; t+=dt){
+  double frequency = 30.;
+  double dt = 1./frequency;
+  int k_kalman = frequency/5.;
+  int k_command = 30.;
+  double dt_kalman = 1/5.;
 
-    if(t>100)
-      set_point = 3.;
+  const int k_kalman_default = k_kalman;
+  const int k_command_default = k_command;
+
+  double u_max = 10000*tick_to_volume;
+
+  for(double t=0.0; t<5000.; t+=dt){
+
+//    if(t>100)
+//      set_point = 3.;
 
 //    u(2) = 1.0e-6*sin(t/30.0);
-    u(2) = compute_u(xhat, set_point);
 
     euler(x, u, dt);
 
-    Ak(0,0) = -2.*coeff_B*abs(x(0));
-    measure(0) = x(1); // Position
-    measure(1) = x(2)+100.*tick_to_volume; // Volume
-    command(2) = u(2);
+    if((--k_kalman) == 0){
+      Ak(0,0) = -2.*coeff_B*abs(x(0));
+      measure(0) = x(1); // Position
+      measure(1) = x(2)+100.*tick_to_volume; // Volume
+      command(2) = u(2);
 
-    Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt+Matrix<double, NB_STATES, NB_STATES>::Identity();
-    kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
+      Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt_kalman+Matrix<double, NB_STATES, NB_STATES>::Identity();
+      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
 
-    x_list[0].push_back(x(0));
-    x_list[1].push_back(x(1));
-    x_list[2].push_back(x(2));
-    x_list[3].push_back(x(3));
-    xhat_list[0].push_back(xhat(0));
-    xhat_list[1].push_back(xhat(1));
-    xhat_list[2].push_back(xhat(2)+xhat(3));
-    xhat_list[3].push_back(xhat(3));
-    cov_list[0].push_back(gamma(0, 0));
-    cov_list[1].push_back(gamma(1, 1));
-    cov_list[2].push_back(gamma(2, 2));
-    cov_list[3].push_back(gamma(3, 3));
-    time.push_back(t);
+      x_list[0].push_back(x(0));
+      x_list[1].push_back(x(1));
+      x_list[2].push_back(x(2));
+      x_list[3].push_back(x(3));
+      xhat_list[0].push_back(xhat(0));
+      xhat_list[1].push_back(xhat(1));
+      xhat_list[2].push_back(xhat(2)+xhat(3));
+      xhat_list[3].push_back(xhat(3));
+      cov_list[0].push_back(gamma(0, 0));
+      cov_list[1].push_back(gamma(1, 1));
+      cov_list[2].push_back(gamma(2, 2));
+      cov_list[3].push_back(gamma(3, 3));
+      time.push_back(t);
 
-    energy+= coeff_B*pow(x(0), 4);
-    energy_list.push_back(energy);
-    command_list.push_back(u(2));
+      energy+= coeff_B*pow(x(0), 4);
+      energy_list.push_back(energy);
+      command_list.push_back(u(2));
+      k_kalman=k_kalman_default;
+    }
+
+    if((--k_command)==0){
+      u(2) = compute_u_v2(x, set_point);
+      k_command = k_command_default;
+      time_y_list.push_back(t);
+
+//      if(abs(u(2)>u_max))
+//        u(2) = copysign(u_max, u(2));
+    }
+
+    if(isnan(u(2)))
+      break;
+
   }
 
 
@@ -230,6 +297,10 @@ int main(int argc, char *argv[]){
   draw_result("Volume", time, x_list[2], xhat_list[2], width, height, 0, height+100);
   draw_result("Offset", time, xhat_list[3], width, height, width+100, height+100);
   draw_result("Energy", time, energy_list, width, height, 2*width+150, height+100);
+
+  draw_result("y", time_y_list, y_list, width, height, 2*width+150, 2*height+100);
+  draw_result("dy", time_y_list, dy_list, width, height, 2*width+150, 2*height+100);
+  draw_result("ddy", time_y_list, ddy_list, width, height, 2*width+150, 2*height+100);
 
 
 //  draw_result("Cov V", time, cov_list[1], width, height, 2*width+100, height+100);
