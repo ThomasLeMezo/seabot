@@ -5,7 +5,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug2.h>
+#include <seabot_depth_regulation/RegulationDebug3.h>
 #include <seabot_mission/Waypoint.h>
 
 #include <std_srvs/SetBool.h>
@@ -30,7 +30,8 @@ ros::Time time_last_state;
 bool emergency = true; // Wait safety clearance on startup
 
 double beta = 0.;
-double l = 0.;
+double l1 = 0.;
+double l2 = 0.;
 double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
@@ -38,6 +39,8 @@ double coeff_compressibility = 0.;
 
 enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION};
 STATE_MACHINE regulation_state = STATE_SURFACE;
+
+seabot_depth_regulation::RegulationDebug3 debug_msg;
 
 #define NB_STATES 4
 // [Velocity; Depth; Volume; Offset]
@@ -71,14 +74,26 @@ bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Respo
 }
 
 double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
-  double e=set_point-x(1);
-  double v_eq = x(2)+x(3);
-  double dx1 = -coeff_A*(v_eq-coeff_compressibility*x(1))-coeff_B*abs(x(0))*x(0);
-  double y = x(0) + beta * atan(e);
-  double e2_1 = 1.+pow(e,2);
-  double dy = dx1-beta*x(0)/e2_1;
+  const double x1 = x(0);
+  const double x2 = x(1);
+  const double x3 = x(2);
+  const double x4 = x(3);
+  const double A = coeff_A;
+  const double B = coeff_B;
+  const double alpha = coeff_compressibility;
 
-  return (1./coeff_A)*(coeff_A*coeff_compressibility*x(0)-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
+  double e = set_point-x2;
+  double y = x1-beta*atan(e);
+  double dx1 = -A*(x3+x4-alpha*x2)-B*abs(x1)*x1;
+  double D = 1+pow(e,2);
+  double dy = dx1 + beta*x1/D;
+
+  debug_msg.y = y;
+  debug_msg.dy = dy;
+
+  double u = (l1*dy+l2*y-beta*(2*e*pow(x1,2)-dx1*D)/pow(D,2)-2*B*abs(x1)*dx1)/A +alpha*x1;
+
+  return u;
 }
 
 int main(int argc, char *argv[]){
@@ -89,8 +104,9 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
-  beta = n_private.param<double>("velocity_target", 0.05)*M_PI_2;
-  l = n_private.param<double>("time_constant", 10.0);
+  beta = n_private.param<double>("velocity_target", 0.02)*M_PI_2;
+  l1 = n_private.param<double>("lambda_1", 10.0);
+  l2 = n_private.param<double>("lambda_2", 10.0);
   double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 1.0);
   double speed_volume_sink = n_private.param<double>("speed_volume_sink", 5.0);
 
@@ -121,10 +137,9 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);
-  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug2>("debug", 1);
+  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug3>("debug", 1);
 
   seabot_piston_driver::PistonPosition position_msg;
-  seabot_depth_regulation::RegulationDebug2 debug_msg;
 
   // Server
   ros::ServiceServer server_emergency = n.advertiseService("emergency", emergency_service);
@@ -137,6 +152,7 @@ int main(int argc, char *argv[]){
   double piston_position_old = 0.;
   double u = 0.; // in m3
   double piston_set_point=0.;
+  bool start_sink = true;
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation2] Start Ok");
@@ -150,6 +166,13 @@ int main(int argc, char *argv[]){
           u = -speed_volume_sink*tick_to_volume;
         else
           regulation_state = STATE_REGULATION;
+
+        if(start_sink){
+          start_sink = false;
+          piston_set_point = piston_ref_eq;
+        }
+
+        piston_set_point += u;
       }
       else{
         if(x(1)>=limit_depth_regulation){
@@ -170,10 +193,11 @@ int main(int argc, char *argv[]){
         }
         else{
           regulation_state = STATE_SURFACE;
+          start_sink = true;
         }
-      }
 
-      piston_set_point = piston_ref_eq -(x(2)+u)/tick_to_volume;
+        piston_set_point = piston_ref_eq -(x(2)+u)/tick_to_volume;
+      }
 
 
       /// ********************** Write command ****************** ///
@@ -186,6 +210,7 @@ int main(int argc, char *argv[]){
       // Debug msg
       debug_msg.u = u;
       debug_msg.piston_set_point = piston_set_point;
+      debug_msg.mode = regulation_state;
       debug_pub.publish(debug_msg);
 
       is_surface = false;

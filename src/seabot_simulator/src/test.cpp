@@ -127,6 +127,30 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
   return (1./coeff_A)*(coeff_A*coeff_compressibility*x(0)-2.*coeff_B*dx1*abs(x(0)) -beta*(2.*pow(x(0), 2)*e + dx1*e2_1)/pow(e2_1,2) +l*dy+y);
 }
 
+double compute_u_v3(const Matrix<double, NB_STATES, 1> &x, double set_point){
+  const double x1 = x(0);
+  const double x2 = x(1);
+  const double x3 = x(2);
+  const double x4 = x(3);
+  const double A = coeff_A;
+  const double B = coeff_B;
+  const double alpha = coeff_compressibility;
+
+  double l1 = 0.1;
+  double l2 = 0.1;
+  double beta = 0.02*M_PI_2;
+
+  double e = set_point-x2;
+  double y = x1-beta*atan(e);
+  double dx1 = -A*(x3+x4-alpha*x2)-B*abs(x1)*x1;
+  double D = 1+pow(e,2);
+  double dy = dx1 + beta*x1/D;
+
+  double u = (l1*dy+l2*y-beta*(2*e*pow(x1,2)-dx1*D)/pow(D,2)-2*B*abs(x1)*dx1)/A +alpha*x1;
+
+  return u;
+}
+
 double compute_u_v2(const Matrix<double, NB_STATES, 1> &x, double set_point){
   double beta = 0.03*M_PI/2.0;
   double l1 = 400.0;
@@ -226,16 +250,16 @@ int main(int argc, char *argv[]){
 
   double frequency = 30.;
   double dt = 1./frequency;
-  int k_kalman = frequency/5.;
+  int k_kalman = frequency/1.;
   int k_command = 30.;
-  double dt_kalman = 1/5.;
 
   const int k_kalman_default = k_kalman;
   const int k_command_default = k_command;
 
-  double u_max = 10000*tick_to_volume;
+  double u_max = 10*tick_to_volume;
+  double last_t_kalman = 0.0;
 
-  for(double t=0.0; t<5000.; t+=dt){
+  for(double t=0.0; t<400.; t+=dt){
 
 //    if(t>100)
 //      set_point = 3.;
@@ -250,8 +274,11 @@ int main(int argc, char *argv[]){
       measure(1) = x(2)+100.*tick_to_volume; // Volume
       command(2) = u(2);
 
+      double dt_kalman = t-last_t_kalman;
+      last_t_kalman = t;
+
       Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt_kalman+Matrix<double, NB_STATES, NB_STATES>::Identity();
-      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
+      kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt_kalman);
 
       x_list[0].push_back(x(0));
       x_list[1].push_back(x(1));
@@ -260,7 +287,7 @@ int main(int argc, char *argv[]){
       xhat_list[0].push_back(xhat(0));
       xhat_list[1].push_back(xhat(1));
       xhat_list[2].push_back(xhat(2)+xhat(3));
-      xhat_list[3].push_back(xhat(3));
+      xhat_list[3].push_back(xhat(3)/tick_to_volume);
       cov_list[0].push_back(gamma(0, 0));
       cov_list[1].push_back(gamma(1, 1));
       cov_list[2].push_back(gamma(2, 2));
@@ -274,12 +301,12 @@ int main(int argc, char *argv[]){
     }
 
     if((--k_command)==0){
-      u(2) = compute_u_v2(x, set_point);
+      u(2) = compute_u_v3(xhat, set_point);
       k_command = k_command_default;
       time_y_list.push_back(t);
 
-//      if(abs(u(2)>u_max))
-//        u(2) = copysign(u_max, u(2));
+      if(abs(u(2)>u_max))
+        u(2) = copysign(u_max, u(2));
     }
 
     if(isnan(u(2)))
@@ -298,9 +325,9 @@ int main(int argc, char *argv[]){
   draw_result("Offset", time, xhat_list[3], width, height, width+100, height+100);
   draw_result("Energy", time, energy_list, width, height, 2*width+150, height+100);
 
-  draw_result("y", time_y_list, y_list, width, height, 2*width+150, 2*height+100);
-  draw_result("dy", time_y_list, dy_list, width, height, 2*width+150, 2*height+100);
-  draw_result("ddy", time_y_list, ddy_list, width, height, 2*width+150, 2*height+100);
+//  draw_result("y", time_y_list, y_list, width, height, 2*width+150, 2*height+100);
+//  draw_result("dy", time_y_list, dy_list, width, height, 2*width+150, 2*height+100);
+//  draw_result("ddy", time_y_list, ddy_list, width, height, 2*width+150, 2*height+100);
 
 
 //  draw_result("Cov V", time, cov_list[1], width, height, 2*width+100, height+100);

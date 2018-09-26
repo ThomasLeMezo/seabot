@@ -57,6 +57,7 @@ include_directories(${Eigen3_INCLUDE_DIRS})
    FILES
    RegulationDebug.msg
    RegulationDebug2.msg
+   RegulationDebug3.msg
  )
 
 # Generate services in the 'srv' folder
