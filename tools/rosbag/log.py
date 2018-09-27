@@ -543,7 +543,7 @@ if(len(time_safety_debug)>0):
 
 #################### Temperature / Depth ####################
 if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
-    dock_temp = Dock("Temperature")
+    dock_temp = Dock("T/P")
     area.addDock(dock_temp, 'above', dock_battery)
     if(len(fusion_depth)>0):
         pg_temp = pg.PlotWidget()

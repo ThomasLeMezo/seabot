@@ -362,8 +362,7 @@ bool I2cImu::ImuSettings::loadSettings()
 void I2cImu::spin()
 {
   ros::Rate r(1.0 / (imu_->IMUGetPollInterval() / 1000.0));
-  while (ros::ok())
-  {
+  while (ros::ok()){
     update();
     r.sleep();
   }

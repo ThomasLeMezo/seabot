@@ -80,6 +80,7 @@ int main(int argc, char *argv[]){
   ros::ServiceServer service_sleep_mode_param = n.advertiseService("sleep_mode_param", sleep_mode_param);
 
   p.set_sleep_mode_countdown(1, 0, 0, 250);
+  p.set_flash_delay(20);
   ROS_DEBUG("[POWER] Set sleep mode to 1 hour");
 
   // ToDo : Add serices to turn off/on Iridium, GPS

@@ -37,7 +37,7 @@ double coeff_B = 0.;
 double tick_to_volume = 0.;
 double coeff_compressibility = 0.;
 
-enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION};
+enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION, STATE_STATIONARY};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
 seabot_depth_regulation::RegulationDebug3 debug_msg;
@@ -105,10 +105,10 @@ int main(int argc, char *argv[]){
   const double frequency = n_private.param<double>("frequency", 1.0);
 
   beta = n_private.param<double>("velocity_target", 0.02)*M_PI_2;
-  l1 = n_private.param<double>("lambda_1", 10.0);
-  l2 = n_private.param<double>("lambda_2", 10.0);
-  double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 1.0);
-  double speed_volume_sink = n_private.param<double>("speed_volume_sink", 5.0);
+  l1 = n_private.param<double>("lambda_1", 0.1);
+  l2 = n_private.param<double>("lambda_2", 0.1);
+  double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
+  double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
 
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
 
@@ -121,6 +121,12 @@ int main(int argc, char *argv[]){
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
+
+  const double dead_zone_position_exit = n.param<double>("dead_zone_position_exit", 0.1);
+  const double dead_zone_position_enter = n.param<double>("dead_zone_position_enter", 0.05);
+  const double dead_zone_velocity_enter = n.param<double>("dead_zone_velocity_enter", 0.005);
+  const double duration_to_stationary_mode = n.param<double>("duration_to_stationary_mode", 10.0);
+  const bool enable_stationary_mode = n.param<double>("enable_stationary_mode", true);
 
   coeff_A = g*rho/m;
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
@@ -154,6 +160,9 @@ int main(int argc, char *argv[]){
   double piston_set_point=0.;
   bool start_sink = true;
 
+  double duration_at_correct_depth = 0;
+  double piston_position_lock = 0.0;
+
   // Main regulation loop
   ROS_INFO("[DepthRegulation2] Start Ok");
   while (ros::ok()){
@@ -161,7 +170,9 @@ int main(int argc, char *argv[]){
 
     if(depth_set_point>=limit_depth_regulation && !emergency){
 
-      if(regulation_state == STATE_SURFACE){
+      switch(regulation_state){
+      case STATE_SURFACE:
+
         if(x(1)<limit_depth_regulation)
           u = -speed_volume_sink*tick_to_volume;
         else
@@ -173,8 +184,8 @@ int main(int argc, char *argv[]){
         }
 
         piston_set_point += -u/tick_to_volume;
-      }
-      else{
+        break;
+      case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
             u = compute_u(x, depth_set_point);
@@ -197,7 +208,33 @@ int main(int argc, char *argv[]){
         }
 
         piston_set_point = piston_ref_eq -(x(2)+u)/tick_to_volume;
+
+        if(enable_stationary_mode
+           && abs(x(1)-depth_set_point)<dead_zone_position_enter
+           && abs(x(0))<dead_zone_velocity_enter){
+          duration_at_correct_depth += 1./frequency;
+          if(duration_at_correct_depth>duration_to_stationary_mode){
+            regulation_state = STATE_STATIONARY;
+            duration_at_correct_depth = 0.0;
+            piston_position_lock = piston_position;
+          }
+        }
+        else{
+          duration_at_correct_depth = 0.;
+        }
+
+        break;
+
+      case STATE_STATIONARY:
+//        piston_set_point = piston_ref_eq -x(3)/tick_to_volume;
+        piston_set_point = piston_position_lock;
+        if(abs(x(1)-depth_set_point)>dead_zone_position_exit)
+          regulation_state = STATE_REGULATION;
+        break;
+      default:
+        break;
       }
+
 
 
       /// ********************** Write command ****************** ///
