@@ -7,7 +7,7 @@
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
-#include <seabot_depth_regulation/RegulationDebug2.h>
+#include <seabot_depth_regulation/RegulationDebug3.h>
 #include <seabot_fusion/Kalman.h>
 
 #include <algorithm>    // std::sort
@@ -43,11 +43,8 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   time_last_depth = ros::Time::now();
 }
 
-void regulation_callback(const seabot_depth_regulation::RegulationDebug2::ConstPtr& msg){
-  if(!msg->antiwindup)
+void regulation_callback(const seabot_depth_regulation::RegulationDebug3::ConstPtr& msg){
     piston_command_u = msg->u;
-  else
-    piston_command_u = 0.0;
 }
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){

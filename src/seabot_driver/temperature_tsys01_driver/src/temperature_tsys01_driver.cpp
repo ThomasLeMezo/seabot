@@ -35,6 +35,8 @@ int main(int argc, char *argv[]){
             msg.temperature = p1.get_temperature();
             pub.publish(msg);
         }
+        else
+          ROS_INFO("[Temperature] Error reading temperature");
         loop_rate.sleep();
     }
     return 0;

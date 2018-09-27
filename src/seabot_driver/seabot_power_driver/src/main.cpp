@@ -21,10 +21,12 @@ Power p;
 double flash_sec_left = 0.0;
 bool flash_is_enable = false;
 bool flash_counter_enable = false;
+bool flash_manual_enable = false;
 
 bool flash_enable(std_srvs::SetBool::Request  &req,
                   std_srvs::SetBool::Response &res){
   p.set_flash_enable(req.data);
+  flash_manual_enable = req.data;
   flash_is_enable = req.data;
   res.success = true;
   return true;
@@ -96,16 +98,20 @@ int main(int argc, char *argv[]){
     battery_pub.publish(battery_msg);
 
     if(flash_sec_left>0){
-      if(!flash_counter_enable){
+      if(!flash_is_enable){
         p.set_flash_enable(true);
+        flash_is_enable = true;
       }
       flash_sec_left -= 1./frequency;
     }
     else{
       if(flash_counter_enable){
         flash_counter_enable = false;
-        if(!flash_is_enable)
+
+        if(!flash_manual_enable){
+          flash_is_enable = false;
           p.set_flash_enable(false);
+        }
       }
     }
 

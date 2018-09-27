@@ -273,6 +273,16 @@ if(len(time_fusion_depth)>0):
 
     pg_piston_state_position2.setXLink(pg_fusion_depth)
 
+#################### Temperature ####################
+if(len(time_sensor_temperature)>0):
+    dock_temperature = Dock("Temperature")
+    area.addDock(dock_temperature, 'above', dock_battery)
+    pg_sensor_temperature = pg.PlotWidget()
+    pg_sensor_temperature.addLegend()
+    pg_sensor_temperature.plot(time_sensor_temperature, sensor_temperature, pen=(255,0,0), name="temperature")
+    pg_sensor_temperature.setLabel('left', "Temperature", units="C")
+    dock_temperature.addWidget(pg_sensor_temperature)
+
 #################### Piston ####################
 if(len(time_piston_state)>0):
     dock_piston = Dock("Piston")
@@ -532,17 +542,17 @@ if(len(time_safety_debug)>0):
 #################### Regulation Debug ####################
 
 #################### Temperature / Depth ####################
-if(len(time_sensor_external)>0 and len(time_fusion_depth)>0):
+if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
     dock_temp = Dock("Temperature")
     area.addDock(dock_temp, 'above', dock_battery)
     if(len(fusion_depth)>0):
         pg_temp = pg.PlotWidget()
         pg_temp.addLegend()
         
-        f_temp = interpolate.interp1d(time_sensor_external, sensor_external_temperature, bounds_error=False)
+        f_temp = interpolate.interp1d(time_sensor_temperature, sensor_temperature, bounds_error=False)
         f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
 
-        time_interp = np.linspace(time_sensor_external[0], time_sensor_external[-1], 50000)
+        time_interp = np.linspace(time_fusion_depth[0], time_fusion_depth[-1], 50000)
         temperature_interp = f_temp(time_interp)
         depth_interp = f_depth(time_interp)
 

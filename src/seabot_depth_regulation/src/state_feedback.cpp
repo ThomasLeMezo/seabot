@@ -172,7 +172,7 @@ int main(int argc, char *argv[]){
           piston_set_point = piston_ref_eq;
         }
 
-        piston_set_point += u;
+        piston_set_point += -u/tick_to_volume;
       }
       else{
         if(x(1)>=limit_depth_regulation){

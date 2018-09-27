@@ -136,8 +136,8 @@ double compute_u_v3(const Matrix<double, NB_STATES, 1> &x, double set_point){
   const double B = coeff_B;
   const double alpha = coeff_compressibility;
 
-  double l1 = 0.1;
-  double l2 = 0.1;
+  double l1 = 0.05;
+  double l2 = 0.05;
   double beta = 0.02*M_PI_2;
 
   double e = set_point-x2;

@@ -122,6 +122,10 @@ kalman_velocity = []
 kalman_offset = []
 kalman_error_velocity = []
 
+# /driver/sensor_temperature
+time_sensor_temperature = []
+sensor_temperature = []
+
 def load_bag(filename):
 
 	bag = rosbag.Bag(filename, 'r')
@@ -247,6 +251,10 @@ def load_bag(filename):
 			euler_x.append(msg.x)
 			euler_y.append(msg.y)
 			euler_z.append(msg.z)
+
+		elif(topic=="/driver/sensor_temperature"):
+			time_sensor_temperature.append((t-startTime).to_sec())
+			sensor_temperature.append(msg.temperature)
 
 		elif(topic=="/fusion/kalman"):
 			time_kalman.append((t-startTime).to_sec())
