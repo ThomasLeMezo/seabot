@@ -8,9 +8,12 @@ project(seabot)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
-	rospy
-	message_generation
+    rospy
+    message_generation
 )
+
+find_package(catkin REQUIRED COMPONENTS roslaunch)
+roslaunch_add_file_check(launch)
 
 ###################################
 ## catkin specific configuration ##

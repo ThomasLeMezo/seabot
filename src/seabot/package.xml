@@ -16,4 +16,5 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>message_runtime</depend>
+  <build_depend>roslaunch</build_depend>
 </package>

@@ -12,6 +12,7 @@
 #include "seabot_piston_driver/PistonSpeedDebug.h"
 #include "seabot_piston_driver/PistonVelocity.h"
 #include "seabot_piston_driver/PistonErrorInterval.h"
+#include "seabot_piston_driver/PistonDistanceTravelled.h"
 #include "seabot_fusion/DepthPose.h"
 
 using namespace std;
@@ -28,6 +29,9 @@ __u16 piston_set_point = 0;
 size_t cpt_error_zero = 0;
 
 bool fast_move = false;
+
+double distance_travelled = 0;
+double last_piston_position_hf = 0.0;
 
 bool piston_reset(std_srvs::Empty::Request  &req,
                   std_srvs::Empty::Response &res){
@@ -112,9 +116,11 @@ int main(int argc, char *argv[]){
     ros::Publisher state_pub = n.advertise<seabot_piston_driver::PistonState>("state", 1);
     ros::Publisher speed_pub = n.advertise<seabot_piston_driver::PistonSpeedDebug>("speed", 1);
     ros::Publisher velocity_pub = n.advertise<seabot_piston_driver::PistonVelocity>("velocity", 1);
+    ros::Publisher distance_travelled_pub = n.advertise<seabot_piston_driver::PistonDistanceTravelled>("distance_travelled", 1);
     seabot_piston_driver::PistonState state_msg;
     seabot_piston_driver::PistonSpeedDebug speed_msg;
     seabot_piston_driver::PistonVelocity velocity_msg;
+    seabot_piston_driver::PistonDistanceTravelled distance_travelled_msg;
 
     // Subscriber
     ros::Subscriber piston_position_sub = n.subscribe("position", 1, position_callback);
@@ -225,6 +231,12 @@ int main(int argc, char *argv[]){
             velocity_msg.velocity =velocity;
             velocity_pub.publish(velocity_msg);
         }
+
+        // Distance travelled
+        distance_travelled += abs(p.m_position-last_piston_position_hf);
+        last_piston_position_hf = p.m_position;
+        distance_travelled_msg.distance = round(distance_travelled);
+        distance_travelled_pub.publish(distance_travelled_msg);
 
         loop_rate.sleep();
     }
