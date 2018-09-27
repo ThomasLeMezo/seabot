@@ -90,10 +90,19 @@ bool call_iridium(){
     for(LogTDT &l:iridium.m_cmd_list){
       switch(l.m_cmd_type){
         case CMD_SLEEP:
-          // ToDo
+          int sleep_time = l.m_sleep_time;
+          int hours = floor(sleep_time/60.);
+          int min = sleep_time-hours*60;
+          call_sleep_param(hours, min, 0, 200);
+          call_sleep();
         break;
       case CMD_MISSION:
-          // ToDO
+          // ToDO : write new mission file
+        call_reload_mission();
+        break;
+      case CMD_PARAMETERS:
+        // Enable/Diseable
+        // safety, flash, mission, sink etc.
         break;
       }
     }

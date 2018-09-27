@@ -13,7 +13,7 @@ using boost::multiprecision::cpp_int;
 #define L93_NORTH_MIN 6000000
 #define L93_NORTH_MAX 7200000
 
-enum CMD_TYPE:unsigned int {CMD_SLEEP=1, CMD_MISSION=2};
+enum CMD_TYPE:unsigned int {CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
 
 #define NB_BITS_LOG1 112
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_LOG1, NB_BITS_LOG1, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_log1_t;
