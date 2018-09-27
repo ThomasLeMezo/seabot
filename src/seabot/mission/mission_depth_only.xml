@@ -11,15 +11,25 @@
 </offset>
 
 <paths type ="1">
-<!-- <loop number="4" depth_increment="0.0">-->
+ <loop number="10" depth_increment="0.0">
    <waypoint>
-    <duration>600</duration>
-    <depth>1.0</depth>
+    <duration>3600</duration>
+    <depth>5.0</depth>
    </waypoint>
 
    <waypoint>
-    <duration>600</duration>
-    <depth>1.5</depth>
+    <duration>3600</duration>
+    <depth>15.0</depth>
    </waypoint>
-<!--  </loop>-->
+
+   <waypoint>
+    <duration>3600</duration>
+    <depth>2.0</depth>
+   </waypoint>
+
+   <waypoint>
+    <duration>300</duration>
+    <depth>0.0</depth>
+   </waypoint>
+  </loop>
 </paths>

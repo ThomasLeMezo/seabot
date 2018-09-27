@@ -13,7 +13,7 @@
         <param name="dead_zone_position_enter" value="0.02" />
         <param name="dead_zone_velocity_enter" value="0.005" />
         <param name="duration_to_stationary_mode" value="10" />
-        <param name="enable_stationary_mode" value="True" />
+        <param name="enable_stationary_mode" value="False" />
     </node>
 
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

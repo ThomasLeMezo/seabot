@@ -10,7 +10,7 @@
     <param name="screw_thread" value="1.75e-3" />
     <param name="tick_per_turn" value="48" />
     <param name="piston_diameter" value="0.05" />
-    <param name="piston_ref_eq" value="500" />
+    <param name="piston_ref_eq" value="2000" />
     <param name="piston_speed_max_tick" value="10" />
 
     <include file="$(find seabot)/launch/driver.launch"/>
