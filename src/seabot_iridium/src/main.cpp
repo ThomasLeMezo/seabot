@@ -25,6 +25,7 @@ bool is_surface = false;
 ros::WallTime time_last_communication;
 
 Iridium iridium;
+bool demo_mode=false;
 
 ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission;
 
@@ -83,8 +84,9 @@ bool call_iridium(){
   if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
     iridium.get_new_log_files();
     iridium.send_and_receive_data();
+    iridium.process_cmd_file();
 
-    // ToDo : process cmd files
+    // Process cmd files
     for(LogTDT &l:iridium.m_cmd_list){
       switch(l.m_cmd_type){
         case CMD_SLEEP:
@@ -95,6 +97,9 @@ bool call_iridium(){
         break;
       }
     }
+
+    // Clean cmd list
+    iridium.m_cmd_list.clear();
 
     return true;
   }
@@ -146,6 +151,7 @@ int main(int argc, char *argv[]){
   const double duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
+  demo_mode = n_private.param<double>("demo", false);
 
   // Services
   ros::service::waitForService("/driver/power/sleep_mode");
@@ -159,6 +165,7 @@ int main(int argc, char *argv[]){
   iridium.uart_init();
   iridium.enable_com(true);
   iridium.iridium_power(true);
+  iridium.set_demo_mode(demo_mode);
 
   ros::Rate loop_rate(frequency);
   time_last_communication.fromSec(0);

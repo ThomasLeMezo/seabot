@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 
 #include "boost/filesystem.hpp"
+#include <boost/range/iterator_range.hpp>
 
 #include <fstream>
 #include <string>
@@ -29,11 +30,19 @@ using boost::multiprecision::cpp_int;
 Iridium::Iridium(){
   struct passwd *pw = getpwuid(getuid());
   const char *homedir = pw->pw_dir;
-  m_path_received_full = string(homedir) + "/" + m_path_received;
+  m_homedir = string(homedir);
 
-  boost::filesystem::path p(m_path_received_full);
-  if (boost::filesystem::create_directories(p))
-    ROS_INFO("[Iridium] Directory to store msg received was not found, create a new one");
+  m_path_received = m_homedir + "/iridium/received";
+  m_path_received_tmp = m_homedir + "/iridium/tmp";
+  m_path_send = m_homedir + "/iridium/send";
+
+  boost::filesystem::path p_received(m_path_received);
+  boost::filesystem::path p_received_tmp(m_path_received_tmp);
+  boost::filesystem::path p_send(m_path_send);
+
+  boost::filesystem::create_directories(p_received);
+  boost::filesystem::create_directories(p_received_tmp);
+  boost::filesystem::create_directories(p_send);
 }
 
 int32_t Iridium::uart_init(){
@@ -184,28 +193,28 @@ int32_t uart_release(void *serial_struct){
 bool Iridium::iridium_power(const bool &enable){
   if(enable != m_iridium_power_state){
 
-  string gpio_file = "/sys/class/gpio/gpio" + to_string(m_gpio_power) + "/value";
+    string gpio_file = "/sys/class/gpio/gpio" + to_string(m_gpio_power) + "/value";
 
-  ofstream setvalgpio(gpio_file.c_str()); // open value file for gpio
-  if (!setvalgpio.is_open()){
-    ROS_WARN("[IRIDIUM] Unable to write power on on GPIO %u", m_gpio_power);
-    return false;
-  }
+    ofstream setvalgpio(gpio_file.c_str()); // open value file for gpio
+    if (!setvalgpio.is_open()){
+      ROS_WARN("[IRIDIUM] Unable to write power on on GPIO %u", m_gpio_power);
+      return false;
+    }
 
-  setvalgpio << enable?1:0;//write value to value file
-  setvalgpio.close();// close value file
+    setvalgpio << enable?1:0;//write value to value file
+    setvalgpio.close();// close value file
 
-  m_iridium_power_state = enable;
+    m_iridium_power_state = enable;
   }
   return true;
 }
 
 ////Cete fonction prend en paramètre un tableau contenant des pointeurs vers le nom des fichiers à envoyer ainsi que le nombre de fichier à renvoyer.
 bool Iridium::send_and_receive_data(){
-  if(m_files_to_send.size()>0  && m_enable_iridium && !m_demo_mode){
+  if(m_enable_iridium && !m_demo_mode){
     ROS_INFO("[Iridium] Start send/receive data");
     if (TIS_init(&m_tis,
-                 reinterpret_cast<uint8_t *>(&m_path_received_full[0]),				//"CMD" est le chemin du dossier qui contiendra les fichier reçus.
+                 reinterpret_cast<uint8_t *>(&m_path_received_tmp[0]),				//"CMD" est le chemin du dossier qui contiendra les fichier reçus.
                  TIS_MODEM_9602,	//Modèle du modem
                  m_imei,	//Numéro IMEI du modem
                  TIS_SERVICE_SBD,	//Service SBD
@@ -229,7 +238,7 @@ bool Iridium::send_and_receive_data(){
 
     int enable_transmission = m_transmission_number_attempt;
     while(enable_transmission>0){
-//      iridium_power(true); // Power On Iridium
+      //      iridium_power(true); // Power On Iridium
       int result = TIS_transmission(&m_tis, 10); // Launch transmission
 
       ///***** Diagnostic Result *****///
@@ -248,11 +257,9 @@ bool Iridium::send_and_receive_data(){
       }
       else{
         enable_transmission = 0;
-//        iridium_power(false); // Power Off Iridium
+        //        iridium_power(false); // Power Off Iridium
       }
     }
-
-    // ToDo : process cmd_files !
 
     TIS_clean(&m_tis);
     m_files_to_send.clear();
@@ -261,29 +268,40 @@ bool Iridium::send_and_receive_data(){
 }
 
 void Iridium::get_new_log_files(){
-  string file_name = get_new_tdt_file();
+  string file_name = get_new_tdt_filename();
   if(logTDT.serialize_log_TDT1(file_name))
     m_files_to_send.push_back(file_name);
 }
 
-const std::string Iridium::get_new_tdt_file(){
-  struct passwd *pw = getpwuid(getuid());
-  const char *homedir = pw->pw_dir;
+const std::string Iridium::get_new_tdt_filename(){
   long int wall_time_now = round(ros::WallTime::now().toSec());
 
   std::stringstream sstream;
-  sstream << homedir << "/" << m_path_send << "/";
-
-  boost::filesystem::path p(sstream.str());
-  if (boost::filesystem::create_directories(p))
-    ROS_DEBUG("[Iridium] Directory to store msg send was not found, create a new one");
+  sstream << m_path_send << "/";
 
   sstream << std::hex << wall_time_now; // Print in hex
   sstream << ".tdt";
   return sstream.str();
 }
 
-void Iridium::process_cmd_file(const string &file_name){
+void Iridium::process_cmd_file(){
+  // List files received
+  boost::filesystem::path p(m_path_received_tmp);
+  for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})){
+    if(boost::filesystem::is_regular_file(entry.path())){
+      ROS_INFO("[Iridium] Received %s", entry.path().c_str());
+      deserialize_cmd_file(entry.path().string());
+
+      // Move file to archive
+      string file_name = entry.path().filename().string();
+      boost::filesystem::path p_old(entry.path());
+      boost::filesystem::path p_new(m_path_received + "/" + file_name);
+      boost::filesystem::rename(p_old, p_new);
+    }
+  }
+}
+
+void Iridium::deserialize_cmd_file(const string &file_name){
   LogTDT l;
   l.deserialize_log_CMD(file_name);
   m_cmd_list.push_back(l);

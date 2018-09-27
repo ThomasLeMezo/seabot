@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "logtdt.h"
+#include "boost/filesystem.hpp"
 
 extern "C"{
     #include "tis.h"
@@ -51,16 +52,22 @@ public:
     int32_t uart_init();
 
     /**
-     * @brief get_new_tdt_file
+     * @brief get_new_tdt_filename
      * @return
      */
-    const std::string get_new_tdt_file();
+    const std::string get_new_tdt_filename();
 
     /**
      * @brief is_demo_mode
      * @return
      */
     bool is_demo_mode() const;
+
+    /**
+     * @brief set_demo_mode
+     * @param mode
+     */
+    void set_demo_mode(bool &mode);
 
     /**
      * @brief Iridium::get_new_log_files
@@ -71,7 +78,13 @@ public:
      * @brief process_cmd_file
      * @param file_name
      */
-    void process_cmd_file(const std::string &file_name);
+    void process_cmd_file();
+
+    /**
+     * @brief deserialize_cmd_file
+     * @param file_name
+     */
+    void deserialize_cmd_file(const std::string &file_name);
 
 public:
     bool m_iridium_power_state = false;
@@ -81,10 +94,11 @@ public:
 
 private:
     uint64_t m_imei = 300234065392110;
-    std::string m_path_received = "iridium/received";
-    std::string m_path_received_full = "";
-    std::string m_path_send = "iridium/send";
-    unsigned int m_gpio_power = 5;
+
+    std::string m_homedir = "";
+    std::string m_path_received;
+    std::string m_path_received_tmp;
+    std::string m_path_send;
 
     int m_transmission_number_attempt = 10;
     int m_transmission_sleep_time = 30;
@@ -94,8 +108,9 @@ private:
     TIS_properties m_tis;
     int m_uart_fd = 0;
 
-    bool m_enable_iridium = false;
+    unsigned int m_gpio_power = 5;
 
+    bool m_enable_iridium = false;
     bool m_demo_mode = false;
 };
 
@@ -113,6 +128,10 @@ inline void Iridium::enable_com(bool val){
 
 inline bool Iridium::is_demo_mode()const{
   return m_demo_mode;
+}
+
+inline void Iridium::set_demo_mode(bool &mode){
+  m_demo_mode &= mode;
 }
 
 #endif // IRIDIUM_H
