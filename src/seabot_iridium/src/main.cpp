@@ -79,43 +79,6 @@ void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){
   iridium.logTDT.m_current_waypoint = msg->waypoint_number;
 }
 
-bool call_iridium(){
-  // Test if is at surface for sufficient period of time
-  if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
-    iridium.get_new_log_files();
-    iridium.send_and_receive_data();
-    iridium.process_cmd_file();
-
-    // Process cmd files
-    for(LogTDT &l:iridium.m_cmd_list){
-      switch(l.m_cmd_type){
-        case CMD_SLEEP:
-          int sleep_time = l.m_sleep_time;
-          int hours = floor(sleep_time/60.);
-          int min = sleep_time-hours*60;
-          call_sleep_param(hours, min, 0, 200);
-          call_sleep();
-        break;
-      case CMD_MISSION:
-          // ToDO : write new mission file
-        call_reload_mission();
-        break;
-      case CMD_PARAMETERS:
-        // Enable/Diseable
-        // safety, flash, mission, sink etc.
-        break;
-      }
-    }
-
-    // Clean cmd list
-    iridium.m_cmd_list.clear();
-
-    return true;
-  }
-  else
-    return false;
-}
-
 void call_sleep_param(const int &hours, const int &min, const int &sec, const int &sec_to_sleep){
   seabot_power_driver::SleepModeParam srv;
   srv.request.sec = sec;
@@ -139,6 +102,51 @@ void call_reload_mission(){
   if(!service_reload_mission.call(srv)){
     ROS_ERROR("[Iridium] Failed to call reload mission");
   }
+}
+
+bool call_iridium(){
+  // Test if is at surface for sufficient period of time
+  if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
+    iridium.get_new_log_files();
+    iridium.send_and_receive_data();
+    iridium.process_cmd_file();
+
+    // Process cmd files
+    for(LogTDT &l:iridium.m_cmd_list){
+      switch(l.m_cmd_type){
+      case CMD_SLEEP:
+      {
+        int sleep_time = l.m_sleep_time;
+        int hours = floor(sleep_time/60.);
+        int min = sleep_time-hours*60;
+        call_sleep_param(hours, min, 0, 200);
+        call_sleep();
+        break;
+      }
+      case CMD_MISSION:
+      {
+        // ToDO : write new mission file
+        call_reload_mission();
+        break;
+      }
+      case CMD_PARAMETERS:
+      {
+        // Enable/Diseable
+        // safety, flash, mission, sink etc.
+        break;
+      }
+      default:
+        break;
+      }
+    }
+
+    // Clean cmd list
+    iridium.m_cmd_list.clear();
+
+    return true;
+  }
+  else
+    return false;
 }
 
 int main(int argc, char *argv[]){
