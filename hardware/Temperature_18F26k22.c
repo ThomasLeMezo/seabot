@@ -40,7 +40,7 @@ Hardware:
 
 //sbit LED at LATA.B0; // sortie LED
 sbit LED at RA0_bit; // sortie LED
-#define CODE_VERSION 0x00
+#define CODE_VERSION 0x01
 
 // I2C
 #define TSYS01_ADDR 0xEE
@@ -375,9 +375,9 @@ void init_i2c(){
   SSP2CON1.WCOL = 0; // Write Collision Detect bit
   SSP2CON1.SSPOV = 0; // Receive Overflow Indicator bit
   SSP2CON1.CKP = 1; // SCK Release Control bit (1=Release clock)
-  SSP2CON1.SSPM3 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled (1-> with S/P, 0 -> without)
+  SSP2CON1.SSPM3 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled (1-> with S/P, 0 -> without)
   SSP2CON1.SSPM2 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
-  SSP2CON1.SSPM1 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
+  SSP2CON1.SSPM1 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSP2CON1.SSPM0 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
 
   // (START the I2C Module)

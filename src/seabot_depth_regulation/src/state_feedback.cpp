@@ -191,6 +191,11 @@ int main(int argc, char *argv[]){
             double u1 = compute_u(x, depth_set_point, beta_min);
             double u2 = compute_u(x, depth_set_point, beta_max);
 
+            double u_tmp = min(abs(u1), abs(u2));
+            if(abs(u1) == u_tmp)
+              u=u1;
+            else
+              u=u2;
 
             if(abs(u)>piston_speed_max)
               u=std::copysign(piston_speed_max, u);

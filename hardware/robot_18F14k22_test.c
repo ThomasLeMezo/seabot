@@ -26,7 +26,7 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x02
+#define CODE_VERSION 0x03
 
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8

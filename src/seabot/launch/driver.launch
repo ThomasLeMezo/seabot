@@ -16,8 +16,8 @@
             <param name="speed_reset" value="25" />
 
             <param name="adaptative_speed" value="true" />
-            <param name="speed_in_slope" value="0.2" />
-            <param name="speed_out_slope" value="0.2" />
+            <param name="speed_in_slope" value="1.0" />
+            <param name="speed_out_slope" value="1.0" />
 
             <param name="reached_switch_off" value="true" />
             <param name="error_interval" value="6" />
