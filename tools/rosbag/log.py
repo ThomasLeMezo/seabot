@@ -543,7 +543,7 @@ if(len(time_safety_debug)>0):
 
 #################### Temperature / Depth ####################
 if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
-    dock_temp = Dock("T/P")
+    dock_temp = Dock("T/depth")
     area.addDock(dock_temp, 'above', dock_battery)
     if(len(fusion_depth)>0):
         pg_temp = pg.PlotWidget()
@@ -556,8 +556,11 @@ if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
         temperature_interp = f_temp(time_interp)
         depth_interp = f_depth(time_interp)
 
-        pg_temp.plot(depth_interp, temperature_interp, pen=(255,0,0), name="temperature")
-        pg_temp.setLabel('left', "Temperature")
+        pg_temp.plot(temperature_interp, depth_interp, pen=(255,0,0), name="Temperature")
+        pg_temp.setLabel('left', "Depth")
+        pg_temp.setLabel('bottom', "Temperature")
+        
+        pg_temp.getViewBox().invertY(True)
         dock_temp.addWidget(pg_temp)
 
 ###################################################

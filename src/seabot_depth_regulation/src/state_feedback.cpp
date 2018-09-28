@@ -29,7 +29,6 @@ ros::Time time_last_state;
 
 bool emergency = true; // Wait safety clearance on startup
 
-double beta = 0.;
 double l1 = 0.;
 double l2 = 0.;
 double coeff_A = 0.;
@@ -73,7 +72,7 @@ bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Respo
   return true;
 }
 
-double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point){
+double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double beta){
   const double x1 = x(0);
   const double x2 = x(1);
   const double x3 = x(2);
@@ -104,7 +103,8 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
-  beta = n_private.param<double>("velocity_target", 0.02)*M_PI_2;
+  const double beta_min = n_private.param<double>("velocity_target_min", 0.02)*M_PI_2;
+  const double beta_max = n_private.param<double>("velocity_target_max", 0.03)*M_PI_2;
   l1 = n_private.param<double>("lambda_1", 0.1);
   l2 = n_private.param<double>("lambda_2", 0.1);
   double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
@@ -188,7 +188,9 @@ int main(int argc, char *argv[]){
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
-            u = compute_u(x, depth_set_point);
+            double u1 = compute_u(x, depth_set_point, beta_min);
+            double u2 = compute_u(x, depth_set_point, beta_max);
+
 
             if(abs(u)>piston_speed_max)
               u=std::copysign(piston_speed_max, u);

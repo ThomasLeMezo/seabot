@@ -557,7 +557,7 @@ void interrupt(){
         }
 
         // Auto reset if wrong zero ref
-        if(position_set_point==0 && motor_current_speed == MOTOR_STOP && nb_pulse>error_interval && butee_out==0){
+        if(position_set_point==0 && motor_current_speed == MOTOR_STOP && butee_out==0){
             if(zero_shift_error<time_zero_shift_error)
                 zero_shift_error++;
             else{
