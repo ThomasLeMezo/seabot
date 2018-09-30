@@ -83,6 +83,10 @@ int main(int argc, char *argv[]){
   // Sensor initialization
   t.i2c_open();
 
+  if(t.get_version()!=0x01){
+    ROS_WARN("[Thruster] Wrong PIC code version");
+  }
+
   time_last_cmd = ros::Time::now();
   manual_time_last_cmd = ros::Time::now();
   ros::Duration(delay_stop*1.1).sleep();

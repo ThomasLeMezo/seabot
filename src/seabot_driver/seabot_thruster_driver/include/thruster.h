@@ -22,17 +22,37 @@
 class Thruster
 {
 public:
+  /**
+   * @brief Thruster
+   */
   Thruster();
+
   ~Thruster();
 
+  /**
+   * @brief i2c_open
+   * @return
+   */
   int i2c_open();
 
+  /**
+   * @brief write_cmd
+   * @param left
+   * @param right
+   */
   void write_cmd(const uint8_t &left, const uint8_t &right) const;
+
+  /**
+   * @brief get_version
+   */
+  uint8_t& get_version();
 
 private:
   int m_file;
   const int m_i2c_addr = 0x20;
   const char* m_i2c_periph = "/dev/i2c-1";
+
+  uint8_t m_version=0;
 };
 
 #endif // THRUSTER_H

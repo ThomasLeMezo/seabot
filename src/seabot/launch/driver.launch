@@ -9,15 +9,14 @@
 
             <param name="distance_fast_move" value="100" />
             <!-- If speed_fast_move is too high, disturbances are create on I2C external pressure sensor -->
-            <param name="speed_fast_move" value="25" />
-
-            <param name="speed_in_offset" value="15" />
-            <param name="speed_out_offset" value="15" />
+            <param name="speed_fast_move_factor" value="2.0" />
             <param name="speed_reset" value="25" />
 
-            <param name="adaptative_speed" value="true" />
-            <param name="speed_in_slope" value="1.0" />
-            <param name="speed_out_slope" value="1.0" />
+            <param name="speed_out_min" value="15" />
+            <param name="speed_in_min" value="15" />
+
+            <param name="speed_out_slope" value="0.5" />
+            <param name="speed_in_slope" value="0.5" />
 
             <param name="reached_switch_off" value="true" />
             <param name="error_interval" value="6" />

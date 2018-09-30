@@ -128,6 +128,11 @@ public:
   void get_piston_set_point();
 
   /**
+   * @brief get_version
+   */
+  uint8_t& get_version();
+
+  /**
    * @brief write_cmd
    * @param left
    * @param right
@@ -144,6 +149,8 @@ public:
   bool m_enable_on = true;
   uint16_t m_position_set_point = 0;
   uint16_t m_motor_speed = 0;
+
+  uint8_t m_version=0;
 
 private:
   int m_file;

@@ -14,16 +14,18 @@ class Waypoint{
 public:
   Waypoint(){}
 
-  Waypoint(const ros::WallTime &time_end_param, const double &depth_param, const double &north_param, const double &east_param){
+  Waypoint(const ros::WallTime &time_end_param, const double &depth_param, const double &north_param, const double &east_param, const double&velocity_depth_param){
     time_end = time_end_param;
     depth = depth_param;
     east = east_param;
     north = north_param;
+    velocity_depth = velocity_depth_param;
   }
 public:
   double north = 0.0;
   double east = 0.0;
   double depth = 0.0;
+  double velocity_depth = 0.0;
   ros::WallTime time_end;
 };
 
@@ -53,7 +55,7 @@ public:
      * @param east
      * @param depth
      */
-  bool compute_command(double &north, double &east, double &depth, double &ratio);
+  bool compute_command(double &north, double &east, double &depth, double &velocity_depth, double &ratio);
 
   /**
      * @brief load_mission
@@ -85,6 +87,12 @@ public:
    */
   double get_time_to_next_waypoint() const;
 
+  /**
+   * @brief set_velocity_depth_default
+   * @param vel
+   */
+  void set_velocity_depth_default(const double &vel);
+
 private:
   void decode_waypoint(boost::property_tree::ptree::value_type &v, ros::WallTime &last_time, const double &depth_offset);
 
@@ -102,6 +110,7 @@ private:
   ros::WallTime m_time_start;
   double m_offset_north = 0.0;
   double m_offset_east = 0.0;
+  double m_velocity_depth_default = 0.02;
 };
 
 inline bool SeabotMission::is_mission_enable() const{
@@ -119,4 +128,10 @@ inline size_t SeabotMission::get_current_waypoint() const{
 inline double SeabotMission::get_time_to_next_waypoint() const{
   return m_duration_next_waypoint.toSec();
 }
+
+inline void SeabotMission::set_velocity_depth_default(const double &vel){
+  m_velocity_depth_default = vel;
+}
+
+
 #endif // SEABOTMISSION_H

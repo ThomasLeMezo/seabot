@@ -67,6 +67,12 @@ void Power::get_batteries(){
   m_level_battery[3] = (buff[6] | buff[7] << 8) * ADC_BATTERY_LEVEL_CONV;
 }
 
+uint8_t& Power::get_version(){
+  m_version = i2c_smbus_read_byte_data(m_file, 0xC0);
+  usleep(100);
+  return m_version;
+}
+
 
 
 

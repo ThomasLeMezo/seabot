@@ -67,7 +67,17 @@ public:
    */
   void get_batteries();
 
+  /**
+   * @brief get_level_battery
+   * @param id
+   * @return
+   */
   const float &get_level_battery(size_t id) const;
+
+  /**
+   * @brief get_version
+   */
+  uint8_t& get_version();
 
 private:
   int m_file;
@@ -75,6 +85,8 @@ private:
   const char* m_i2c_periph = "/dev/i2c-1";
 
   float m_level_battery[4] =  {0.0, 0.0, 0.0, 0.0};
+
+  uint8_t m_version=0;
 };
 
 inline const float& Power::get_level_battery(size_t id) const{

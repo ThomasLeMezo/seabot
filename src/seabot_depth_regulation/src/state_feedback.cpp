@@ -24,6 +24,7 @@ bool piston_switch_out = false;
 bool is_surface = true;
 
 double depth_set_point = 0.0;
+double velocity_depth = 0.0;
 ros::WallTime t_old;
 ros::Time time_last_state;
 
@@ -64,6 +65,7 @@ void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
     depth_set_point = msg->depth;
   else
     depth_set_point = 0.0;
+  velocity_depth = msg->velocity_depth;
 }
 
 bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res){
@@ -72,7 +74,7 @@ bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Respo
   return true;
 }
 
-double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double beta){
+double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double velocity_depth){
   const double x1 = x(0);
   const double x2 = x(1);
   const double x3 = x(2);
@@ -80,6 +82,7 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   const double A = coeff_A;
   const double B = coeff_B;
   const double alpha = coeff_compressibility;
+  const double beta = velocity_depth/M_PI_2;
 
   double e = set_point-x2;
   double y = x1-beta*atan(e);
@@ -103,8 +106,9 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
-  const double beta_min = n_private.param<double>("velocity_target_min", 0.02)*M_PI_2;
-  const double beta_max = n_private.param<double>("velocity_target_max", 0.03)*M_PI_2;
+  const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", -0.01);
+  const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.01);
+
   l1 = n_private.param<double>("lambda_1", 0.1);
   l2 = n_private.param<double>("lambda_2", 0.1);
   double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
@@ -188,8 +192,8 @@ int main(int argc, char *argv[]){
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
-            double u1 = compute_u(x, depth_set_point, beta_min);
-            double u2 = compute_u(x, depth_set_point, beta_max);
+            double u1 = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
+            double u2 = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
 
             double u_tmp = min(abs(u1), abs(u2));
             if(abs(u1) == u_tmp)

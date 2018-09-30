@@ -18,7 +18,7 @@ SeabotMission::SeabotMission(std::string folder_path){
   m_folder_path = folder_path;
 }
 
-bool SeabotMission::compute_command(double &north, double &east, double &depth, double &ratio){
+bool SeabotMission::compute_command(double &north, double &east, double &depth, double &velocity_depth, double &ratio){
   // Test if last waypoint
   bool is_new_waypoint = false;
   if(m_current_waypoint < m_waypoints.size()){
@@ -30,6 +30,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       depth = 0.0;
       north = m_waypoints[m_current_waypoint].north;
       east = m_waypoints[m_current_waypoint].east;
+      velocity_depth = m_waypoints[m_current_waypoint].velocity_depth;
       ratio = 0;
       m_duration_next_waypoint = m_time_start-t_now;
     }
@@ -45,6 +46,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       }
 
       depth = m_waypoints[m_current_waypoint].depth;
+      velocity_depth = m_waypoints[m_current_waypoint].velocity_depth;
 
       ros::WallTime t1;
       if(m_current_waypoint==0)
@@ -67,6 +69,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
     if(m_mission_enable == true)
       ROS_INFO("[Mission] End of waypoints");
     depth = 0.0;
+    velocity_depth = 0.0;
     north = m_waypoints[m_waypoints.size()-1].north;
     east = m_waypoints[m_waypoints.size()-1].east;
     ratio = 1;
@@ -167,6 +170,12 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
       }
       else
         throw(std::runtime_error("(No time or duration founded for a waypoint)"));
+
+      boost::optional<double> vel = v.second.get_optional<double>("velocity_depth");
+      if(vel.is_initialized())
+        w.velocity_depth = vel.value();
+      else
+        w.velocity_depth = m_velocity_depth_default;
     }
     catch(std::exception const&  ex) {
       ROS_FATAL("[Seabot_Mission] Wrong xml file %s", ex.what());

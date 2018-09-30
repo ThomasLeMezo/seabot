@@ -34,3 +34,8 @@ void Thruster::write_cmd(const uint8_t &left, const uint8_t &right) const{
     ROS_WARN("[Thruster_driver] I2C Bus Failure - Write cmd");
 }
 
+uint8_t& Thruster::get_version(){
+  m_version = i2c_smbus_read_byte_data(m_file, 0xC0);
+  usleep(100);
+  return m_version;
+}
