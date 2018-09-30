@@ -15,21 +15,25 @@
    <waypoint>
     <duration>3600</duration>
     <depth>5.0</depth>
+    <velocity_depth>0.02</velocity_depth>
    </waypoint>
 
    <waypoint>
     <duration>3600</duration>
     <depth>15.0</depth>
+    <velocity_depth>0.02</velocity_depth>
    </waypoint>
 
    <waypoint>
     <duration>3600</duration>
     <depth>2.0</depth>
+    <velocity_depth>0.02</velocity_depth>
    </waypoint>
 
    <waypoint>
     <duration>300</duration>
     <depth>0.0</depth>
+    <velocity_depth>0.02</velocity_depth>
    </waypoint>
   </loop>
 </paths>

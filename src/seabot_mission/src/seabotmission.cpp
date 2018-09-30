@@ -184,7 +184,7 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
     last_time = w.time_end;
     m_waypoints.push_back(w);
 
-    ROS_INFO("[Seabot_Mission] Load Waypoint %zu (t_end=%li, d=%lf, E=%lf, N=%lf)", m_waypoints.size(), (long int)w.time_end.toSec(), w.depth, w.east, w.north);
+    ROS_INFO("[Seabot_Mission] Load Waypoint %zu (t_end=%li, d=%lf, E=%lf, N=%lf, s=%f)", m_waypoints.size(), (long int)w.time_end.toSec(), w.depth, w.east, w.north, w.velocity_depth);
   }
   else if(v.first == "loop"){
     const int nb_loop = v.second.get<int>("<xmlattr>.number", 1);

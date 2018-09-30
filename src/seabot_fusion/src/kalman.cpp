@@ -47,14 +47,14 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
-//  depth = msg->depth;
-//  depth_valid = true;
-//  time_last_depth = ros::Time::now();
+  //  depth = msg->depth;
+  //  depth_valid = true;
+  //  time_last_depth = ros::Time::now();
   zero_depth_pressure = msg->zero_depth_pressure;
 }
 
 void regulation_callback(const seabot_depth_regulation::RegulationDebug3::ConstPtr& msg){
-    piston_command_u = msg->u;
+  piston_command_u = msg->u;
 }
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
@@ -200,7 +200,6 @@ int main(int argc, char *argv[]){
   Matrix<double,NB_STATES, 1> x = Matrix<double,NB_STATES, 1>::Zero();
   x(1) = 10.0;
   x(0) = 0.0;
-  Matrix<double,NB_STATES, 1> u = Matrix<double,NB_STATES, 1>::Zero();
 
   ROS_INFO("[FUSION depth] Start Ok");
   ros::Rate loop_rate(frequency);
@@ -208,6 +207,7 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
 
     t = ros::Time::now();
+    bool update = false;
 
     if(depth>limit_min_depth && (t-time_last_depth).toSec()<0.1 && depth_valid){
       dt = (t-t_last).toSec();
@@ -227,37 +227,41 @@ int main(int argc, char *argv[]){
 
       kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
       depth_valid = false;
+      update = true;
     }
     else if(depth<=limit_min_depth){
       xhat(0) = 0.0;
       xhat(1) = depth;
       xhat(2) = (piston_ref_eq - piston_position)*tick_to_volume;
       xhat(3) = xhat(3);
+      update = true;
     }
 
-    msg.velocity = xhat(0);
-    msg.depth = xhat(1);
-    msg.volume = xhat(2);
-    msg.offset = xhat(3);
+    if(update){
+      msg.velocity = xhat(0);
+      msg.depth = xhat(1);
+      msg.volume = xhat(2);
+      msg.offset = xhat(3);
 
-    msg.covariance[0] = gamma(0,0);
-    msg.covariance[1] = gamma(1,0);
-    msg.covariance[2] = gamma(2,0);
-    msg.covariance[3] = gamma(3,0);
-    msg.covariance[4] = gamma(0,1);
-    msg.covariance[5] = gamma(1,1);
-    msg.covariance[6] = gamma(2,1);
-    msg.covariance[7] = gamma(3,1);
-    msg.covariance[8] = gamma(0,2);
-    msg.covariance[9] = gamma(1,2);
-    msg.covariance[10] = gamma(2,2);
-    msg.covariance[11] = gamma(3,2);
-    msg.covariance[12] = gamma(0,3);
-    msg.covariance[13] = gamma(1,3);
-    msg.covariance[14] = gamma(2,3);
-    msg.covariance[15] = gamma(3,3);
+      msg.covariance[0] = gamma(0,0);
+      msg.covariance[1] = gamma(1,0);
+      msg.covariance[2] = gamma(2,0);
+      msg.covariance[3] = gamma(3,0);
+      msg.covariance[4] = gamma(0,1);
+      msg.covariance[5] = gamma(1,1);
+      msg.covariance[6] = gamma(2,1);
+      msg.covariance[7] = gamma(3,1);
+      msg.covariance[8] = gamma(0,2);
+      msg.covariance[9] = gamma(1,2);
+      msg.covariance[10] = gamma(2,2);
+      msg.covariance[11] = gamma(3,2);
+      msg.covariance[12] = gamma(0,3);
+      msg.covariance[13] = gamma(1,3);
+      msg.covariance[14] = gamma(2,3);
+      msg.covariance[15] = gamma(3,3);
 
-    kalman_pub.publish(msg);
+      kalman_pub.publish(msg);
+    }
 
     loop_rate.sleep();
   }

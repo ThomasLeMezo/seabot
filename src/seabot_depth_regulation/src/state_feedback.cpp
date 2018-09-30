@@ -98,6 +98,8 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   return u;
 }
 
+bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }
+
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "sliding_node");
   ros::NodeHandle n;
@@ -108,6 +110,8 @@ int main(int argc, char *argv[]){
 
   const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", -0.01);
   const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.01);
+  const double delta_position_lb = n_private.param<double>("delta_position_lb", -0.01);
+  const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.01);
 
   l1 = n_private.param<double>("lambda_1", 0.1);
   l2 = n_private.param<double>("lambda_2", 0.1);
@@ -130,7 +134,7 @@ int main(int argc, char *argv[]){
   const double dead_zone_position_enter = n.param<double>("dead_zone_position_enter", 0.05);
   const double dead_zone_velocity_enter = n.param<double>("dead_zone_velocity_enter", 0.005);
   const double duration_to_stationary_mode = n.param<double>("duration_to_stationary_mode", 10.0);
-  const bool enable_stationary_mode = n.param<double>("enable_stationary_mode", true);
+  const bool enable_stationary_mode = n.param<double>("enable_stationary_mode", false);
 
   coeff_A = g*rho/m;
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
@@ -192,17 +196,19 @@ int main(int argc, char *argv[]){
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
-            double u1 = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
-            double u2 = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
+            array<double, 4> u_tab;
+            u_tab[0] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_lb);
+            u_tab[1] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_ub);
+            u_tab[2] = compute_u(x, depth_set_point-delta_position_lb, velocity_depth+delta_velocity_lb);
+            u_tab[3] = compute_u(x, depth_set_point-delta_position_lb, velocity_depth+delta_velocity_ub);
 
-            double u_tmp = min(abs(u1), abs(u2));
-            if(abs(u1) == u_tmp)
-              u=u1;
-            else
-              u=u2;
-
-            if(abs(u)>piston_speed_max)
-              u=std::copysign(piston_speed_max, u);
+            sort(u_tab.begin(), u_tab.end());
+            if(u_tab[0]<0 && u_tab[4]>0)
+              u = 0.0;
+            else{
+              sort(u_tab.begin(), u_tab.end(), sortCommandAbs);
+              u=u_tab[0];
+            }
 
             // Mechanical limits (in = v_min, out = v_max)
             if((piston_switch_in && u<0) || (piston_switch_out && u>0))
