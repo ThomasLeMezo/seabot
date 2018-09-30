@@ -259,7 +259,7 @@ int main(int argc, char *argv[]){
     distance_travelled_pub.publish(distance_travelled_msg);
 
     // Analyze speed issue (update speed_table)
-    if(p.m_motor_speed!=50 && abs(velocity)==0.0){
+    if(p.m_motor_speed!=50 && abs(velocity)==0.0 && p.m_state==1){
       if(!velocity_issue_detected){
         time_velocity_issue_detected = ros::WallTime::now();
         velocity_issue_detected = true;

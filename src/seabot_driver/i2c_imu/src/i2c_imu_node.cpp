@@ -69,63 +69,45 @@ private:
   } imu_settings_;
 };
 
-I2cImu::I2cImu() :
-  nh_(), private_nh_("~"), imu_settings_(&private_nh_)
-{
-
+I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   // do all the ros parameter reading & pulbishing
   private_nh_.param<std::string>("frame_id", imu_frame_id_, "imu_link");
 
   imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",10);
 
-  bool magnetometer;
-  private_nh_.param("publish_magnetometer", magnetometer, false);
-  if (magnetometer)
-  {
+  if(private_nh_.param<bool>("publish_magnetometer", false))
     magnetometer_pub_ = nh_.advertise<sensor_msgs::MagneticField>("mag", 10, false);
-  }
 
-  bool euler;
-  private_nh_.param("publish_euler", euler, false);
-  if (euler)
-  {
+  if(private_nh_.param<bool>("publish_euler", false))
     euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
-  }
 
   std::vector<double> orientation_covariance, angular_velocity_covariance, linear_acceleration_covariance;
-  if (private_nh_.getParam("orientation_covariance", orientation_covariance) && orientation_covariance.size() == 9)
-  {
-    for(int i=0; i<9; i++)
-    {
+  if (private_nh_.getParam("orientation_covariance", orientation_covariance) && orientation_covariance.size() == 9){
+    for(int i=0; i<9; i++){
       imu_msg.orientation_covariance[i]=orientation_covariance[i];
     }
   }
 
-  if (private_nh_.getParam("angular_velocity_covariance", angular_velocity_covariance) && angular_velocity_covariance.size() == 9)
-  {
-    for(int i=0; i<9; i++)
-    {
+  if (private_nh_.getParam("angular_velocity_covariance", angular_velocity_covariance) && angular_velocity_covariance.size() == 9){
+    for(int i=0; i<9; i++){
       imu_msg.angular_velocity_covariance[i]=angular_velocity_covariance[i];
     }
   }
 
-  if (private_nh_.getParam("linear_acceleration_covariance", linear_acceleration_covariance) && linear_acceleration_covariance.size() == 9)
-  {
-    for(int i=0; i<9; i++)
-    {
+  if (private_nh_.getParam("linear_acceleration_covariance", linear_acceleration_covariance) && linear_acceleration_covariance.size() == 9){
+    for(int i=0; i<9; i++){
       imu_msg.linear_acceleration_covariance[i]=linear_acceleration_covariance[i];
     }
   }
 
   imu_settings_.loadSettings();
 
-  private_nh_.param("magnetic_declination", declination_radians_, 0.0);
+  declination_radians_ = private_nh_.param<double>("magnetic_declination", 0.0);
 
   // now set up the IMU
 
   imu_ = RTIMU::createIMU(&imu_settings_);
-  if (imu_ == nullptr)
-  {
+  if (imu_ == nullptr){
     ROS_FATAL("I2cImu - %s - Failed to open the i2c device", __FUNCTION__);
     ROS_BREAK();
   }
@@ -205,17 +187,22 @@ void I2cImu::update()
 bool I2cImu::ImuSettings::loadSettings()
 {
   ROS_DEBUG("[IMU] %s: reading IMU parameters from param server", __FUNCTION__);
-  int temp_int;
 
   // General
   settings_nh_->getParam("imu_type", m_imuType);
   settings_nh_->getParam("fusion_type", m_fusionType);
 
-  if(settings_nh_->getParam("i2c_bus", temp_int))
-    m_I2CBus = (unsigned char) temp_int;
+  if(settings_nh_->param<bool>("is_i2c", true))
+    m_busIsI2C = true;
+  else
+    m_busIsI2C = false;
 
-  if(settings_nh_->getParam("i2c_slave_address", temp_int))
-    m_I2CSlaveAddress = (unsigned char) temp_int;
+  m_I2CSlaveAddress = (unsigned int)settings_nh_->param<int>("i2c_slave_address", 0x68);
+  m_I2CBus = (unsigned int)settings_nh_->param<int>("i2c_bus", 1);
+
+  m_SPIBus = (unsigned char)settings_nh_->param<int>("spi_bus", 0);
+  m_SPISelect = (unsigned char)settings_nh_->param<int>("spi_select", 0);
+  m_SPISpeed = (unsigned char)settings_nh_->param<int>("spi_speed", 256);
 
   settings_nh_->getParam("axis_rotation", m_axisRotation);
 
