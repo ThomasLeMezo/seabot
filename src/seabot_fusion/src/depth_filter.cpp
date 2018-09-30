@@ -134,6 +134,7 @@ int main(int argc, char *argv[]){
 
       msg.depth = depth;
       msg.velocity = velocity;
+      msg.zero_depth_pressure = zero_depth;
       depth_pub.publish(msg);
 
       new_data = false;

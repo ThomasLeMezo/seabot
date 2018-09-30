@@ -30,17 +30,27 @@ double coeff_B = 0.0;
 double tick_to_volume = 0.0;
 double coeff_compressibility = 0.0;
 
+double g_rho_bar = 0.0;
+
 ros::Time time_last_depth;
 bool depth_valid = false;
+double zero_depth_pressure = 1.024;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
 }
 
-void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
-  depth = msg->depth;
+void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& msg){
+  depth = (msg->pressure - zero_depth_pressure) / (g_rho_bar);
+  time_last_depth = msg->header.stamp;
   depth_valid = true;
-  time_last_depth = ros::Time::now();
+}
+
+void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
+//  depth = msg->depth;
+//  depth_valid = true;
+//  time_last_depth = ros::Time::now();
+  zero_depth_pressure = msg->zero_depth_pressure;
 }
 
 void regulation_callback(const seabot_depth_regulation::RegulationDebug3::ConstPtr& msg){
@@ -117,6 +127,8 @@ int main(int argc, char *argv[]){
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
 
   const double limit_min_depth = n.param<double>("limit_min_depth", 0.5);
+
+  g_rho_bar = g*rho/1e5;
 
   coeff_A = g*rho/m;
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
