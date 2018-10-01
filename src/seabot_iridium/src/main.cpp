@@ -15,6 +15,7 @@
 #include <seabot_power_driver/SleepModeParam.h>
 
 #include "iridium.h"
+#include "missionxml.h"
 
 using namespace std;
 
@@ -26,6 +27,8 @@ ros::WallTime time_last_communication;
 
 Iridium iridium;
 bool demo_mode=false;
+
+string mission_file_path;
 
 ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission;
 
@@ -126,6 +129,8 @@ bool call_iridium(){
       case CMD_MISSION:
       {
         // ToDO : write new mission file
+        MissionXML m(l);
+        m.write(mission_file_path);
         call_reload_mission();
         break;
       }
@@ -169,6 +174,10 @@ int main(int argc, char *argv[]){
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
   demo_mode = n_private.param<double>("demo", false);
+
+  const string mission_file_name = n.param<string>("mission_file_name", "mission_test.xml");
+  const string mission_path = n.param<string>("mission_path", "");
+  mission_file_path = mission_path + "/" + mission_file_name;
 
   // Services
   ros::service::waitForService("/driver/power/sleep_mode");

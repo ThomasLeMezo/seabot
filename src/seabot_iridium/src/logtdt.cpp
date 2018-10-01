@@ -64,6 +64,66 @@ bool LogTDT::deserialize_log_CMD_sleep(const string &file_name){
   return true;
 }
 
+bool LogTDT::serialize_CMD_parameters(const string &file_name){
+  ofstream save_file;
+  save_file.open(file_name);
+
+  if(!save_file.is_open()){
+    cerr << "Unable to open " << file_name << " new cmd file : " << errno << endl;
+    return false;
+  }
+
+  //  size_t nb_bits = 5*4; // must be a multiple of 4
+  uint_cmd_parameters_t data = (uint_cmd_parameters_t(1)<<NB_BITS_CMD_PARAMETERS) -1;
+
+  int bit_position = 0;
+  bit_position += serialize_data<uint_cmd_parameters_t>(data, 4, bit_position, CMD_PARAMETERS);
+
+  // ToDo
+  bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_mission);
+  bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_flash);
+  bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_depth);
+  bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_engine);
+
+  save_file.write((char*)&data, NB_BITS_CMD_PARAMETERS/8);
+  save_file.close();
+
+  return true;
+}
+
+bool LogTDT::deserialize_log_CMD_parameters(const string &file_name){
+  cout << "Deserialize log parameters" << endl;
+  ifstream save_file;
+  save_file.open(file_name);
+
+  if(!save_file.is_open()){
+    cout << "File cannot be open" << strerror(errno) << endl;
+    return false;
+  }
+
+  uint_cmd_parameters_t data = (uint_cmd_parameters_t(1) << NB_BITS_CMD_PARAMETERS) - 1;
+
+  try{
+    save_file.read((char*)data.backend().limbs(), NB_BITS_CMD_PARAMETERS/8);
+  }
+  catch(std::ios_base::failure& e){
+    cout << "ERROR Reading : " << e.what() << endl;
+  }
+  save_file.close();
+
+  cout << "Start deserializing data" << endl;
+  int bit_position = 0;
+  unsigned int tmp;
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 4, bit_position, tmp);
+  m_cmd_type = (CMD_TYPE)tmp;
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_mission);
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_flash);
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_depth);
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_engine);
+
+  return true;
+}
+
 bool LogTDT::serialize_log_CMD_waypoint(ofstream &save_file, const Waypoint &w){
   if(!save_file.is_open()){
     cerr << "Unable to open file : " << errno << endl;

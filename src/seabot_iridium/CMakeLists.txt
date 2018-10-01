@@ -153,11 +153,13 @@ add_executable(iridium_node
     src/iridium.cpp
     src/main.cpp
     src/logtdt.cpp
-    )
+				src/missionxml.cpp
+)
 
 add_executable(decode_iridium
     src/logtdt.cpp
     src/tdt.cpp
+				src/missionxml.cpp
 )
 
 ## Rename C++ executable without prefix
