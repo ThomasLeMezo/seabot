@@ -4,7 +4,7 @@ imu_frame: imu_link
 is_i2C: False
 i2c_bus: 1 
 i2c_slave_address: 104
-spi_speed: 256
+spi_speed: 976000
 spi_select: 0
 spi_bus: 1
 
@@ -56,14 +56,8 @@ mpu9250:
 
 #Calibration
 calib:
-  compass_min: [-5.14e-5, -3.9e-5, -1.1e-4]
-  compass_max: [6.7e-5, 4.0e-5, -2.7e-5]
-
-  #ellipsoid_offset: [ 9.72661313e-06,-2.26280365e-06,-6.78840460e-05]
-
-  #ellipsoid_matrix0: [ 0.89066572, -0.43002807, -0.00989343]
-  #ellipsoid_matrix1: [-0.43002807,  1.34774245 , 0.018474  ]
-  #ellipsoid_matrix2: [-0.00989343,  0.018474    ,0.98504609]
+  compass_min: [0.0, 0.0, 0.0]
+  compass_max: [0.0, 0.0, 0.0]
 
   ellipsoid_offset: [ 0.0, 0.0, 0.0]
 

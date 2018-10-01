@@ -198,7 +198,7 @@ int main(int argc, char *argv[]){
   t_last = ros::Time::now();
 
   Matrix<double,NB_STATES, 1> x = Matrix<double,NB_STATES, 1>::Zero();
-  x(1) = 10.0;
+  x(1) = 0.0;
   x(0) = 0.0;
 
   ROS_INFO("[FUSION depth] Start Ok");

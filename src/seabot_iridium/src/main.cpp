@@ -31,7 +31,7 @@ bool demo_mode=false;
 
 string mission_file_path;
 
-ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission;
+ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission, service_enable_mission;
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   if(msg->depth < depth_surface_limit){
@@ -108,15 +108,14 @@ void call_reload_mission(){
   }
 }
 
-//void call_enable_mission(const bool &enable_mission, const bool &enable depth, const bool &enable_engine){
-//  seabot_mission::MissionEnable srv;
-//  srv.request.enable_mission = enable_mission;
-//  srv.request.enable_engine = enable_engine;
-//  srv.request.enable_depth = enable_depth;
-//  if(!service_mission_enable.call(srv)){
-//    ROS_ERROR("[Iridium] Failed to call reload mission");
-//  }
-//}
+void call_enable_mission(const bool &enable_mission, const bool &enable_depth, const bool &enable_engine){
+  seabot_mission::MissionEnable srv;
+  srv.request.enable_mission = enable_mission;
+  srv.request.enable_engine = enable_engine;
+  srv.request.enable_depth = enable_depth;
+  if(!service_enable_mission.call(srv))
+    ROS_ERROR("[Iridium] Failed to call reload mission");
+}
 
 bool call_iridium(){
   // Test if is at surface for sufficient period of time
@@ -149,11 +148,7 @@ bool call_iridium(){
       {
         // Enable/Diseable
         // safety, flash, mission, sink etc.
-        if(!l.m_enable_mission){
-        }
-        else{
-
-        }
+        call_enable_mission(l.m_enable_mission, l.m_enable_depth, l.m_enable_engine);
         break;
       }
       default:
@@ -199,10 +194,12 @@ int main(int argc, char *argv[]){
   ros::service::waitForService("/driver/power/sleep_mode");
   ros::service::waitForService("/driver/power/sleep_mode_param");
   ros::service::waitForService("/mission/reload_mission");
+  ros::service::waitForService("/mission/enable_mission");
 
   service_sleep_mode = n.serviceClient<std_srvs::Empty>("/driver/power/sleep_mode");
   service_sleep_param = n.serviceClient<seabot_power_driver::SleepModeParam>("/driver/power/sleep_mode_param");
   service_reload_mission = n.serviceClient<std_srvs::Empty>("/mission/reload_mission");
+  service_enable_mission = n.serviceClient<seabot_mission::MissionEnable>("/mission/enable_mission");
 
   iridium.uart_init();
   iridium.enable_com(true);
