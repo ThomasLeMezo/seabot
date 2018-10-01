@@ -10,6 +10,7 @@
 #include <seabot_fusion/InternalPose.h>
 #include <seabot_safety/SafetyLog.h>
 #include <seabot_mission/Waypoint.h>
+#include <seabot_mission/MissionEnable.h>
 
 #include <std_srvs/Empty.h>
 #include <seabot_power_driver/SleepModeParam.h>
@@ -107,6 +108,16 @@ void call_reload_mission(){
   }
 }
 
+//void call_enable_mission(const bool &enable_mission, const bool &enable depth, const bool &enable_engine){
+//  seabot_mission::MissionEnable srv;
+//  srv.request.enable_mission = enable_mission;
+//  srv.request.enable_engine = enable_engine;
+//  srv.request.enable_depth = enable_depth;
+//  if(!service_mission_enable.call(srv)){
+//    ROS_ERROR("[Iridium] Failed to call reload mission");
+//  }
+//}
+
 bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
@@ -138,6 +149,11 @@ bool call_iridium(){
       {
         // Enable/Diseable
         // safety, flash, mission, sink etc.
+        if(!l.m_enable_mission){
+        }
+        else{
+
+        }
         break;
       }
       default:

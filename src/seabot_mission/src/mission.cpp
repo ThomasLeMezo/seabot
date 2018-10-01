@@ -7,14 +7,26 @@
 #include "seabot_power_driver/Battery.h"
 #include "seabot_power_driver/FlashCounter.h"
 #include "std_srvs/Empty.h"
+#include "seabot_mission/MissionEnable.h"
 
 using namespace std;
 
 bool reload_mission = false;
+bool enable_depth = true;
+bool enable_engine = true;
+bool enable_mission = true;
 
 bool reload_mission_callback(std_srvs::Empty::Request  &req,
                              std_srvs::Empty::Response &res){
   reload_mission = true;
+  return true;
+}
+
+bool mission_enable_callback(seabot_mission::MissionEnable::Request  &req,
+                             seabot_mission::MissionEnable::Response &res){
+  enable_depth = req.enable_depth;
+  enable_engine = req.enable_engine;
+  enable_mission = req.enable_mission;
   return true;
 }
 
@@ -42,6 +54,7 @@ int main(int argc, char *argv[]){
 
   // Services
   ros::ServiceServer service_reload_mission = n.advertiseService("reload_mission", reload_mission_callback);
+  ros::ServiceServer service_enable_mission = n.advertiseService("enable_mission", mission_enable_callback);
 
   // Variable
   ros::Rate loop_rate(frequency);
@@ -63,12 +76,25 @@ int main(int argc, char *argv[]){
     }
 
     bool is_new_waypoint = m.compute_command(north, east, depth, velocity_depth, ratio);
-    waypoint_msg.depth_only = m.is_depth_only();
-    waypoint_msg.depth = depth;
+
+    if(!enable_engine)
+      waypoint_msg.depth_only = true;
+    else
+      waypoint_msg.depth_only = m.is_depth_only();
+
+    if(enable_depth)
+      waypoint_msg.depth = depth;
+    else
+      waypoint_msg.depth = 0.0;
+
     waypoint_msg.north = north;
     waypoint_msg.east = east;
     waypoint_msg.velocity_depth = velocity_depth;
-    waypoint_msg.mission_enable = m.is_mission_enable();
+
+    if(!enable_mission)
+      waypoint_msg.mission_enable = false;
+    else
+      waypoint_msg.mission_enable = m.is_mission_enable();
     waypoint_msg.waypoint_number = m.get_current_waypoint();
     waypoint_msg.wall_time = ros::WallTime::now().toSec();
     waypoint_msg.time_to_next_waypoint = m.get_time_to_next_waypoint();
