@@ -128,11 +128,10 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
 
 }
 
-void I2cImu::update()
-{
+void I2cImu::update(){
 
-  while (imu_->IMURead() && ros::ok())
-  {
+//  while ( && ros::ok()){
+    imu_->IMURead();
     RTIMU_DATA imuData = imu_->getIMUData();
 
     ros::Time current_time = ros::Time::now();
@@ -179,13 +178,12 @@ void I2cImu::update()
       euler_pub_.publish(msg);
     }
 
-    ros::spinOnce();
-  }
+//    ros::spinOnce();
+//  }
 
 }
 
-bool I2cImu::ImuSettings::loadSettings()
-{
+bool I2cImu::ImuSettings::loadSettings(){
   ROS_DEBUG("[IMU] %s: reading IMU parameters from param server", __FUNCTION__);
 
   // General
@@ -202,7 +200,7 @@ bool I2cImu::ImuSettings::loadSettings()
 
   m_SPIBus = (unsigned char)settings_nh_->param<int>("spi_bus", 0);
   m_SPISelect = (unsigned char)settings_nh_->param<int>("spi_select", 0);
-  m_SPISpeed = (unsigned char)settings_nh_->param<int>("spi_speed", 256);
+  m_SPISpeed = (unsigned char)settings_nh_->param<int>("spi_speed", 500000);
 
   settings_nh_->getParam("axis_rotation", m_axisRotation);
 
@@ -346,8 +344,7 @@ bool I2cImu::ImuSettings::loadSettings()
   return true;
 }
 
-void I2cImu::spin()
-{
+void I2cImu::spin(){
   ros::Rate r(1.0 / (imu_->IMUGetPollInterval() / 1000.0));
   while (ros::ok()){
     update();

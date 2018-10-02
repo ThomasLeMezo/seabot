@@ -1,17 +1,17 @@
 imu_type: 7
 imu_frame: imu_link
 
-is_i2C: False
+is_i2c: false
 i2c_bus: 1 
 i2c_slave_address: 104
-spi_speed: 976000
+spi_speed: 500000
 spi_select: 0
-spi_bus: 1
+spi_bus: 0
 
 fusion_type: 1
 
-publish_euler: True
-publish_magnetometer: True
+publish_euler: true
+publish_magnetometer: true
 
 # RTIMU_XNORTH_YEAST    -> 0
 # RTIMU_XEAST_YSOUTH    -> 1
