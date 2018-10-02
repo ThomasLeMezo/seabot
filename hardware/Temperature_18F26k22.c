@@ -1,5 +1,5 @@
 /*  PIC18F14K22  mikroC PRO for PIC v6.4
-Oscillateur interne 16MHZ (attention l'edit project ne marche pas, paramétrer 
+Oscillateur interne 16MHZ (attention l'edit project ne marche pas, paramÃ©trer 
 l'oscillateur en dur)
 
 
@@ -137,6 +137,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
   case 0xAB:
     SSP2BUF = coefficient_tab[5]; //K0
     break;
+  case 0xC0:
+    SSP2BUF = CODE_VERSION;
+    break;
   default:
     SSP2BUF = 0x00;
     break;
@@ -146,7 +149,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 
 /**
  * @brief init_io
- * Initialisation des entrées sorties du PIC
+ * Initialisation des entrÃ©es sorties du PIC
  */
 void init_io(){
   ANSELA = 0x00;
@@ -182,7 +185,7 @@ void reset_TSYS01_sequence(){
 
 /**
  * @brief prom_read_TSYS01_sequence
- * Lecture de la mémoire du capteur, lecture des adresses 1 à 5, pour récupérer
+ * Lecture de la mÃ©moire du capteur, lecture des adresses 1 Ã  5, pour rÃ©cupÃ©rer
  * les coefficients k0,k1,k2,k3,k4.
  * 0xA2 --> K4
  * 0XA4 --> k3
@@ -225,7 +228,7 @@ void test_prom_read_sequence(){
 
 /**
  * @brief read_result_TSYS01_sequence
- * Lecture du résultat de la conversion
+ * Lecture du rÃ©sultat de la conversion
  */
 void read_TSYS01_sequence(){
   I2C1_Start();
@@ -276,8 +279,8 @@ void main(){
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
 
   init_io(); // Initialisation des I/O
-  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N°2
-  I2C1_Init(100000);// initialize I2C communication bus I2C N°1
+  init_i2c(); // Initialisation de l'I2C en esclave bus I2C NÂ°2
+  I2C1_Init(100000);// initialize I2C communication bus I2C NÂ°1
   
   LED = 0; // sortie LED
 
@@ -285,7 +288,7 @@ void main(){
   UART1_Init(9600);
 
   RCON.IPEN = 1;  //Enable priority levels on interrupts
-  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N°2
+  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C NÂ°2
   INTCON.GIEH = 1; //enable all high-priority interrupts
   INTCON.GIEL = 1; //enable all low-priority interrupts
 
@@ -345,8 +348,8 @@ void main(){
 void init_i2c(){
 
   // **** IO I2C **** //
-  TRISB1_bit = 1; // RB4 en entrée
-  TRISB2_bit = 1; // RB6 en entrée
+  TRISB1_bit = 1; // RB4 en entrÃ©e
+  TRISB2_bit = 1; // RB6 en entrÃ©e
 
   // **** Interruptions **** //
   PIE3.SSP2IE = 1; // Synchronous Serial Port Interrupt Enable bit
@@ -357,8 +360,8 @@ void init_i2c(){
 
   // **** ADDRESS **** //
   SSP2ADD = (ADDRESS_I2C << 1); // Address Register, Get address (7-1 bit). Lsb is read/write flag
-  SSP2MSK = 0xFF; // A zero (‘0’) bit in the SSPMSK register has the effect of making
-                 // the corresponding bit in the SSPSR register a “don’t care”
+  SSP2MSK = 0xFF; // A zero (Â‘0Â’) bit in the SSPMSK register has the effect of making
+                 // the corresponding bit in the SSPSR register a Â“donÂ’t careÂ”
 
   // **** SSPSTAT **** //
   SSP2STAT.SMP = 1; // Slew Rate Control bit
