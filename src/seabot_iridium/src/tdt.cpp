@@ -2,6 +2,7 @@
 #include "missionxml.h"
 #include <iostream>
 #include <fstream>
+#include <array>
 
 using namespace std;
 
@@ -21,8 +22,21 @@ void test1(){
   m.write("/home/lemezoth/mission_test.xml");
 }
 
+bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }
+
+void test2(){
+  array<double, 4> u_tab;
+  u_tab[3] = -1;
+  u_tab[2] = 2;
+  u_tab[1] = -3;
+  u_tab[0] = 4;
+  cout << u_tab[0] << endl;
+  sort(u_tab.begin(), u_tab.end(), &sortCommandAbs);
+  cout << u_tab[0] << endl;
+}
+
 int main(int argc, char *argv[]){
-  test1();
+  test2();
 
 
 //  std::ofstream outfile("/mnt/webperso/iridium/log_TDT1.txt");
@@ -53,3 +67,4 @@ int main(int argc, char *argv[]){
 
   return 0;
 }
+

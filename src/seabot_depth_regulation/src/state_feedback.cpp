@@ -108,10 +108,10 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
-  const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", -0.01);
-  const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.01);
-  const double delta_position_lb = n_private.param<double>("delta_position_lb", -0.01);
-  const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.01);
+  const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", 0.0);
+  const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.0);
+  const double delta_position_lb = n_private.param<double>("delta_position_lb", 0.0);
+  const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.0);
 
   l1 = n_private.param<double>("lambda_1", 0.1);
   l2 = n_private.param<double>("lambda_2", 0.1);
@@ -196,19 +196,23 @@ int main(int argc, char *argv[]){
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
-            array<double, 4> u_tab;
-            u_tab[0] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_lb);
-            u_tab[1] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_ub);
-            u_tab[2] = compute_u(x, depth_set_point-delta_position_lb, velocity_depth+delta_velocity_lb);
-            u_tab[3] = compute_u(x, depth_set_point-delta_position_lb, velocity_depth+delta_velocity_ub);
+            array<double, 2> u_tab;
+//            u_tab[0] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_lb);
+//            u_tab[1] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_ub);
+//            u_tab[2] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_lb);
+//            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_ub);
+
+            u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
+            u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
 
             sort(u_tab.begin(), u_tab.end());
-            if(u_tab[0]<0 && u_tab[4]>0)
+            if(u_tab[0]<0.0 && u_tab[u_tab.size()-1]>0.0)
               u = 0.0;
             else{
               sort(u_tab.begin(), u_tab.end(), sortCommandAbs);
               u=u_tab[0];
             }
+//            u = compute_u(x, depth_set_point, velocity_depth);
 
             // Mechanical limits (in = v_min, out = v_max)
             if((piston_switch_in && u<0) || (piston_switch_out && u>0))

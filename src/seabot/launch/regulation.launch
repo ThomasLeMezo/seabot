@@ -7,8 +7,10 @@
         <param name="lambda_1" value="0.4" />
         <param name="lambda_2" value="0.4" />
 
-        <param name="delta_velocity_lb" value="-0.01" />
-        <param name="delta_velocity_ub" value="0.01" />
+								<param name="delta_velocity_lb" value="-0.01" />
+								<param name="delta_velocity_ub" value="0.01" />
+								<param name="delta_position_lb" value="-0.01" />
+								<param name="delta_position_ub" value="0.01" />
 
         <param name="hysteresis_piston" value="0.6" />
         <param name="limit_depth_regulation" value="0.5" />

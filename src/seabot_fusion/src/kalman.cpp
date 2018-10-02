@@ -41,15 +41,15 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
 }
 
 void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& msg){
-  depth = (msg->pressure - zero_depth_pressure) / (g_rho_bar);
-  time_last_depth = msg->header.stamp;
-  depth_valid = true;
+//  depth = (msg->pressure - zero_depth_pressure) / (g_rho_bar);
+//  time_last_depth = msg->header.stamp;
+//  depth_valid = true;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
-  //  depth = msg->depth;
-  //  depth_valid = true;
-  //  time_last_depth = ros::Time::now();
+    depth = msg->depth;
+    depth_valid = true;
+    time_last_depth = ros::Time::now();
   zero_depth_pressure = msg->zero_depth_pressure;
 }
 
@@ -147,6 +147,7 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
+  ros::Subscriber pressure_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
   ros::Subscriber regulator_sub = n.subscribe("/regulation/debug", 1, regulation_callback);
 
   // Publisher
