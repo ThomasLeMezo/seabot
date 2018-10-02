@@ -3,6 +3,11 @@
 #include <iostream>
 #include <fstream>
 #include <array>
+#include <cstring>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 using namespace std;
 
@@ -36,34 +41,41 @@ void test2(){
 }
 
 int main(int argc, char *argv[]){
-  test2();
+  string file_name(argv[1]);
+  logTDT.deserialize_log_TDT1(file_name);
 
-
-//  std::ofstream outfile("/mnt/webperso/iridium/log_TDT1.txt");
-//  string file_name(argv[1]);
-//  logTDT.deserialize_log_TDT1(file_name);
-//  cout << "file open : " << outfile.is_open() << endl;
-
-//  outfile << "file_name = " << file_name << endl;
+  stringstream data;
+  data << "file_name: " << file_name << endl;
   
-//  outfile << "east = " << std::fixed << logTDT.m_east << endl;
-//  outfile << "north = " << std::fixed << logTDT.m_north << endl;
-//  outfile << "gnss_speed = " << logTDT.m_gnss_speed << endl;
-//  outfile << "gnss_heading = " << logTDT.m_gnss_heading << endl;
+  data << "east: " << std::fixed << logTDT.m_east << endl;
+  data << "north: " << std::fixed << logTDT.m_north << endl;
+  data << "gnss_speed: " << logTDT.m_gnss_speed << endl;
+  data << "gnss_heading: " << logTDT.m_gnss_heading << endl;
 
-//  outfile << "seabot_state = " << logTDT.m_seabot_state << endl;
+  data << "seabot_state: " << logTDT.m_seabot_state << endl;
 
-//  outfile << "batteries[0] = " << logTDT.m_batteries[0] << endl;
-//  outfile << "batteries[1] = " << logTDT.m_batteries[1] << endl;
-//  outfile << "batteries[2] = " << logTDT.m_batteries[2] << endl;
-//  outfile << "batteries[3] = " << logTDT.m_batteries[3] << endl;
+  data << "batteries[0]: " << logTDT.m_batteries[0] << endl;
+  data << "batteries[1]: " << logTDT.m_batteries[1] << endl;
+  data << "batteries[2]: " << logTDT.m_batteries[2] << endl;
+  data << "batteries[3]: " << logTDT.m_batteries[3] << endl;
 
-//  outfile << "internal_pressure = " << logTDT.m_internal_pressure << endl;
-//  outfile << "internal_temperature = " << logTDT.m_internal_temperature << endl;
+  data << "internal_pressure: " << logTDT.m_internal_pressure << endl;
+  data << "internal_temperature: " << logTDT.m_internal_temperature << endl;
 
-//  outfile << "current_waypoint = " << logTDT.m_current_waypoint << endl;
+  data << "current_waypoint: " << logTDT.m_current_waypoint << endl;
 
-//  outfile.close();
+
+  string output_filename1 = string(argv[1]) + "_decode.yaml";
+  std::ofstream outfile(output_filename1);
+  outfile << data.str();
+  outfile.close();
+
+  struct passwd *pw = getpwuid(getuid());
+  const char *homedir = pw->pw_dir;
+  string output_filename2 = string(homedir) + "/last_tdt1.yaml";
+  std::ofstream outfile2(output_filename2);
+  outfile2 << data.str();
+  outfile2.close();
 
   return 0;
 }

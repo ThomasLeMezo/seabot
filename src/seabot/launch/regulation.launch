@@ -1,5 +1,5 @@
 <launch>
-    <param name="velocity_depth_default" value="0.02" />
+    <param name="velocity_depth_default" value="0.04" />
 
     <node name="state_feedback" pkg="seabot_depth_regulation" type="state_feedback_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
@@ -7,10 +7,10 @@
         <param name="lambda_1" value="0.4" />
         <param name="lambda_2" value="0.4" />
 
-								<param name="delta_velocity_lb" value="-0.01" />
-								<param name="delta_velocity_ub" value="0.01" />
-								<param name="delta_position_lb" value="-0.01" />
-								<param name="delta_position_ub" value="0.01" />
+        <param name="delta_velocity_lb" value="-0.01" />
+        <param name="delta_velocity_ub" value="0.01" />
+        <param name="delta_position_lb" value="0.0" />
+        <param name="delta_position_ub" value="0.0" />
 
         <param name="hysteresis_piston" value="0.6" />
         <param name="limit_depth_regulation" value="0.5" />

@@ -12,7 +12,7 @@ def technical_datas(file, IMEI):
 	call_string = dir_path[:-3]+ "instruments/"+ str(IMEI)+ "/technical_datas/" + str(file)
 	print(call_string)
 	subprocess.call(["rosrun", "seabot_iridium", "decode_iridium", call_string])
-	subprocess.call(["mv", "log_TDT1.txt", "/mnt/webperso/iridium/"])
+
 	return "finit"
 
 global logs

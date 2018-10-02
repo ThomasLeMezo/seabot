@@ -71,8 +71,3 @@ calib:
   gyro_bias: [0.0, 0.0, 0.0]
 
   mag_declination: -1.722
-
-
-             
-  
-  
