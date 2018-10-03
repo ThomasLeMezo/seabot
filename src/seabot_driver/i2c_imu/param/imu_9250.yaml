@@ -55,7 +55,7 @@ mpu9250:
   gyro_full_scale_range: 16
 
 #Calibration
-calib:
+seabot1:
   compass_min: [-1.03e-4, -6.7e-5, -4.4e-5]
   compass_max: [1.5e-5, 1.6e-5, 2.88e-5]
 
@@ -65,6 +65,23 @@ calib:
   ellipsoid_matrix1: [ 0.0, 1.0, 0.0]
   ellipsoid_matrix2: [ 0.0, 0.0, 1.0]
   
+  accel_min: [-1.0, -1.0, -1.0]
+  accel_max: [1.0,  1.0,  1.0]
+
+  gyro_bias: [0.0, 0.0, 0.0]
+
+  mag_declination: -1.722
+
+seabot2:
+  compass_min: [-1, -1, -1]
+  compass_max: [1, 1, 1]
+
+  ellipsoid_offset: [ 0.0, 0.0, 0.0]
+
+  ellipsoid_matrix0: [ 1.0, 0.0, 0.0]
+  ellipsoid_matrix1: [ 0.0, 1.0, 0.0]
+  ellipsoid_matrix2: [ 0.0, 0.0, 1.0]
+
   accel_min: [-1.0, -1.0, -1.0]
   accel_max: [1.0,  1.0,  1.0]
 

@@ -25,6 +25,9 @@
 #include "RTIMULib.h"
 #include "RTIMUSettings.h"
 
+#include <unistd.h>
+#include <cstring>
+
 #define G_2_MPSS 9.80665
 #define uT_2_T 1000000
 
@@ -262,10 +265,15 @@ bool I2cImu::ImuSettings::loadSettings(){
   settings_nh_->getParam("LSM9DS0/gyro_bandwidth",m_LSM9DS0GyroBW);
 
   /// ************** SENSOR CALIBRATION ************** ///
+  char name[256];
+  gethostname(name, 256);
+  std::string hostname(name);
+  ROS_INFO("[IMU] Hostname = %s", hostname.c_str());
+
   // Max/min Compass
   std::vector<double> compass_max, compass_min;
-  if (settings_nh_->getParam("calib/compass_min", compass_min)
-      && settings_nh_->getParam("calib/compass_max", compass_max)
+  if (settings_nh_->getParam(hostname+"/compass_min", compass_min)
+      && settings_nh_->getParam(hostname+"/compass_max", compass_max)
       && compass_min.size() == 3 && compass_max.size() == 3){
     m_compassCalMin = RTVector3(compass_min[0], compass_min[1], compass_min[2]);
     m_compassCalMax = RTVector3(compass_max[0],compass_max[1], compass_max[2]);
@@ -279,7 +287,7 @@ bool I2cImu::ImuSettings::loadSettings(){
   // Ellipsoid offset Compass
   m_compassCalEllipsoidValid = true;
   std::vector<double> compass_ellipsoid_offset;
-  if (settings_nh_->getParam("calib/ellipsoid_offset", compass_ellipsoid_offset)
+  if (settings_nh_->getParam(hostname + "/ellipsoid_offset", compass_ellipsoid_offset)
       && compass_ellipsoid_offset.size() == 3){
     m_compassCalEllipsoidOffset = RTVector3(compass_ellipsoid_offset[0], compass_ellipsoid_offset[1], compass_ellipsoid_offset[2]);
     ROS_DEBUG("[IMU] Got Calibration Ellipsoid Offset for Compass");
@@ -290,9 +298,9 @@ bool I2cImu::ImuSettings::loadSettings(){
   }
 
   std::vector<double> ellipsoid_corr0, ellipsoid_corr1, ellipsoid_corr2;
-  if (settings_nh_->getParam("calib/ellipsoid_matrix0", ellipsoid_corr0)
-      && settings_nh_->getParam("calib/ellipsoid_matrix1", ellipsoid_corr1)
-      && settings_nh_->getParam("calib/ellipsoid_matrix2", ellipsoid_corr2)
+  if (settings_nh_->getParam(hostname + "/ellipsoid_matrix0", ellipsoid_corr0)
+      && settings_nh_->getParam(hostname + "/ellipsoid_matrix1", ellipsoid_corr1)
+      && settings_nh_->getParam(hostname + "/ellipsoid_matrix2", ellipsoid_corr2)
       && ellipsoid_corr0.size() == 3 && ellipsoid_corr1.size() == 3 && ellipsoid_corr2.size() == 3){
     m_compassCalEllipsoidCorr[0][1] = ellipsoid_corr0[0];
     m_compassCalEllipsoidCorr[0][2] = ellipsoid_corr0[1];
@@ -312,7 +320,7 @@ bool I2cImu::ImuSettings::loadSettings(){
 
   // Compas Biais
   std::vector<double> gyro_biais;
-  if (settings_nh_->getParam("calib/gyro_biais", gyro_biais)
+  if (settings_nh_->getParam(hostname + "/gyro_biais", gyro_biais)
       && compass_ellipsoid_offset.size() == 3){
     m_gyroBias = RTVector3(gyro_biais[0], gyro_biais[1], gyro_biais[2]);
     m_gyroBiasValid = true;
@@ -324,8 +332,8 @@ bool I2cImu::ImuSettings::loadSettings(){
 
   // Min/Max Acc
   std::vector<double> accel_max, accel_min;
-  if (settings_nh_->getParam("calib/accel_min", accel_min)
-      && settings_nh_->getParam("calib/accel_max", accel_max)
+  if (settings_nh_->getParam(hostname + "/accel_min", accel_min)
+      && settings_nh_->getParam(hostname + "/accel_max", accel_max)
       && accel_min.size() == 3 && accel_max.size() == 3)
   {
     m_accelCalMin = RTVector3(accel_min[0], accel_min[1], accel_min[2]);
@@ -339,7 +347,7 @@ bool I2cImu::ImuSettings::loadSettings(){
   }
 
   // Mag Declination
-  settings_nh_->getParam("calib/mag_declination",m_compassAdjDeclination);
+  settings_nh_->getParam(hostname + "/mag_declination",m_compassAdjDeclination);
 
   return true;
 }
