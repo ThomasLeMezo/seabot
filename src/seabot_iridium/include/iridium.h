@@ -5,6 +5,7 @@
 #include <vector>
 #include "logtdt.h"
 #include "boost/filesystem.hpp"
+#include "ros/ros.h"
 
 extern "C"{
     #include "tis.h"
@@ -23,7 +24,7 @@ public:
      * @param files
      * @param files_count
      */
-    bool send_and_receive_data();
+    bool send_and_receive_data(ros::Publisher &iridium_pub);
 
     /**
      * @brief serialize_log_TDT1
@@ -106,8 +107,8 @@ private:
     std::string m_path_received_tmp;
     std::string m_path_send;
 
-    int m_transmission_number_attempt = 10;
-    int m_transmission_sleep_time = 30;
+    int m_transmission_number_attempt = 5;
+    int m_transmission_sleep_time = 5;
 
     std::vector<std::string> m_files_to_send;
 

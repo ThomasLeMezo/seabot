@@ -18,6 +18,8 @@
 #include "iridium.h"
 #include "missionxml.h"
 
+#include "seabot_iridium/IridiumLog.h"
+
 using namespace std;
 
 double depth_surface_limit = 0.5;
@@ -32,6 +34,7 @@ bool demo_mode=false;
 string mission_file_path;
 
 ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission, service_enable_mission;
+ros::Publisher iridium_pub;
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   if(msg->depth < depth_surface_limit){
@@ -121,7 +124,8 @@ bool call_iridium(){
   // Test if is at surface for sufficient period of time
   if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
     iridium.get_new_log_files();
-    iridium.send_and_receive_data();
+
+    bool transmission_successful = iridium.send_and_receive_data(iridium_pub);
     iridium.process_cmd_file();
 
     // Process cmd files
@@ -159,7 +163,7 @@ bool call_iridium(){
     // Clean cmd list
     iridium.m_cmd_list.clear();
 
-    return true;
+    return transmission_successful;
   }
   else
     return false;
@@ -191,6 +195,9 @@ int main(int argc, char *argv[]){
   const string mission_file_name = n.param<string>("mission_file_name", "mission_test.xml");
   const string mission_path = n.param<string>("mission_path", "");
   mission_file_path = mission_path + "/" + mission_file_name;
+
+  // Publisher
+  iridium_pub = n.advertise<seabot_iridium::IridiumLog>("transmission", 1);
 
   // Services
   ros::service::waitForService("/driver/power/sleep_mode");
