@@ -30,13 +30,16 @@ while 1:
 
     # current_waypoint = data_yaml['current_waypoint']
     longitude,latitude = transform(inProj,outProj,east, north)
+    # print(longitude, latitude)
     aismsg = aislib.AISPositionReportMessage(
         mmsi = 0,
         status = 8,
         sog = int(round(data_yaml['gnss_speed']*19.4384)), # vitesse en dixieme de noeuds
         pa = 1, # position accuracy (1bit)
-        lat = int(round(ceil(latitude)*60+(latitude-ceil(latitude))*100.)), # en 1/10 000 de minutes, Ouest negatif
-        lon = int(round(ceil(longitude)*60+(longitude-ceil(longitude))*100.)),
+        # lat = int(round(floor(latitude)*60+(latitude-floor(latitude))*100.)), # en 1/10 000 de minutes, Ouest negatif
+        # lon = int(round(floor(longitude)*60+(longitude-floor(longitude))*100.)),
+        lat = int(round(latitude*60e4)),
+        lon = int(round(longitude*60e4)),
         cog = int(data_yaml['gnss_heading']*10.), # max 3600
         ts = 40, # max 511
         raim = 1,
