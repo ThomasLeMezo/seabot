@@ -47,10 +47,9 @@ void GPSDClient::process_data(struct gps_data_t* p) {
     process_data_gps(p);
     m_last_fix_state =  new_fix_state;
   }
-  else if(p->fix.mode==MODE_NOT_SEEN){
-    ROS_INFO("[GPSD_Client] fix = MODE_NOT_SEEN");
-  }
-
+//  else if(p->fix.mode==MODE_NOT_SEEN){
+//    ROS_INFO("[GPSD_Client] fix = MODE_NOT_SEEN");
+//  }
 }
 
 void GPSDClient::process_data_gps(struct gps_data_t* p) {

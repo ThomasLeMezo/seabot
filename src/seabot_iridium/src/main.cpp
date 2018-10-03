@@ -185,6 +185,8 @@ int main(int argc, char *argv[]){
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
   demo_mode = n_private.param<double>("demo", false);
+  string imei_string = n_private.param<string>("imei", "0");
+  uint64_t imei = atoll(imei_string.c_str());
 
   const string mission_file_name = n.param<string>("mission_file_name", "mission_test.xml");
   const string mission_path = n.param<string>("mission_path", "");
@@ -205,6 +207,7 @@ int main(int argc, char *argv[]){
   iridium.enable_com(true);
   iridium.iridium_power(true);
   iridium.set_demo_mode(demo_mode);
+  iridium.set_imei(imei);
 
   ros::Rate loop_rate(frequency);
   time_last_communication.fromSec(0);

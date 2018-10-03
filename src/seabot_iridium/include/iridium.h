@@ -86,6 +86,12 @@ public:
      */
     void deserialize_cmd_file(const std::string &file_name);
 
+    /**
+     * @brief set_imei
+     * @param imei
+     */
+    void set_imei(const uint64_t &imei);
+
 public:
     bool m_iridium_power_state = false;
 
@@ -132,6 +138,10 @@ inline bool Iridium::is_demo_mode()const{
 
 inline void Iridium::set_demo_mode(bool &mode){
   m_demo_mode &= mode;
+}
+
+inline void Iridium::set_imei(const uint64_t &imei){
+  m_imei = imei;
 }
 
 #endif // IRIDIUM_H

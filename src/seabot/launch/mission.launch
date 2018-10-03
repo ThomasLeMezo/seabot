@@ -1,7 +1,7 @@
 <launch>
 
-				<param name="mission_file_name" value="mission_depth_only.xml"/>
-				<param name="mission_path" value="$(find seabot)/mission" />
+    <param name="mission_file_name" value="mission_depth_only.xml"/>
+    <param name="mission_path" value="$(find seabot)/mission" />
 
     <include file="$(find seabot)/launch/base.launch"/>
     <include file="$(find seabot)/launch/regulation.launch"/>

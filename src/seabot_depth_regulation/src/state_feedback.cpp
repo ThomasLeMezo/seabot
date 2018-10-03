@@ -197,13 +197,13 @@ int main(int argc, char *argv[]){
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
             array<double, 2> u_tab;
-//            u_tab[0] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_lb);
-//            u_tab[1] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_ub);
-//            u_tab[2] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_lb);
-//            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_ub);
+            u_tab[0] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_lb);
+            u_tab[1] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_ub);
+            u_tab[2] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_lb);
+            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_ub);
 
-            u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
-            u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
+//            u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
+//            u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
 
             sort(u_tab.begin(), u_tab.end());
             if(u_tab[0]<0.0 && u_tab[u_tab.size()-1]>0.0)

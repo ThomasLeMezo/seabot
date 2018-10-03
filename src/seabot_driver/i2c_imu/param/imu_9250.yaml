@@ -56,8 +56,8 @@ mpu9250:
 
 #Calibration
 calib:
-		compass_min: [-1.0, -1.0, -1.0]
-		compass_max: [1.0, 1.0, 1.0]
+  compass_min: [-1.03e-4, -6.7e-5, -4.4e-5]
+  compass_max: [1.5e-5, 1.6e-5, 2.88e-5]
 
   ellipsoid_offset: [ 0.0, 0.0, 0.0]
 
