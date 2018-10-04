@@ -242,6 +242,7 @@ bool Iridium::send_and_receive_data(ros::Publisher &iridium_pub){
     int enable_transmission = m_transmission_number_attempt;
     while(enable_transmission>0){
       //      iridium_power(true); // Power On Iridium
+      int signal_strenght = TIS_signal_strenght(&m_tis);
       int result = TIS_transmission(&m_tis, 10); // Launch transmission
 
       seabot_iridium::IridiumLog msg;
@@ -251,6 +252,7 @@ bool Iridium::send_and_receive_data(ros::Publisher &iridium_pub){
       msg.message_receive = m_tis.SBD_received_without_error;
       msg.message_receive_total = m_tis.SBD_received_without_error + m_tis.SBD_received_with_error;
       msg.message_waiting = m_tis.SBD_waiting_messages;
+      msg.signal_strength = signal_strenght;
 
       for (size_t i = 0; i < m_files_to_send.size(); i++){
         msg.message_sent_name.push_back(m_files_to_send[i]);

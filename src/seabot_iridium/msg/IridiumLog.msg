@@ -1,3 +1,4 @@
+int8 signal_strength
 uint8 error_code
 uint8 message_sent
 uint8 message_sent_total
