@@ -139,6 +139,8 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     break;
   case 0xC0:
     SSP2BUF = CODE_VERSION;
+  case 0xC1:
+    SSP2BUF = state;
     break;
   default:
     SSP2BUF = 0x00;
@@ -236,13 +238,13 @@ void read_TSYS01_sequence(){
   I2C1_Wr(0x48);   // Start ADC Temperature Conversion --> 0x48
   I2C1_Stop();
 
-  delay_ms(10);
+  delay_ms(20);
 
   I2C1_Start();
   I2C1_Wr(TSYS01_ADDR);  // Read ADC Temperature Result --> 0x00
   I2C1_Wr(0x00);
   I2C1_Stop();
-     
+  
   I2C1_Start();
   I2C1_Wr(TSYS01_ADDR+1);
   octet1 = I2C1_Rd(1);
@@ -303,34 +305,29 @@ void main(){
     //UART1_Write(state);
     
     switch (state){
-    
-    case IDLE: // Idle state
-      
-      if(reset == 1)
-        state = RESET_TSYS01;
-      else if(conversion == 1)
-        state = CONVERSION_READ;
+      case IDLE: // Idle state
+        LED = 0;
+        if(reset == 1)
+          state = RESET_TSYS01;
+        else if(conversion == 1)
+          state = CONVERSION_READ;
 
-      break;
+        break;
 
-    case RESET_TSYS01:
-    
-      reset_TSYS01_sequence();
-      prom_read_TSYS01_sequence();
-      state = IDLE;
-      LED = 1;
-      break;
+      case RESET_TSYS01:
+        LED = 1;
+        reset_TSYS01_sequence();
+        prom_read_TSYS01_sequence();
+        state = IDLE;
+        break;
 
-    case CONVERSION_READ:
-    
-      LED = 0;
-      read_TSYS01_sequence();
-      state = IDLE;
-      break;
-
-    default:
-      break;
-
+      case CONVERSION_READ:
+        LED = 1;
+        read_TSYS01_sequence();
+        state = IDLE;
+        break;
+      default:
+        break;
     }
 
     // I2C

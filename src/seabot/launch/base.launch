@@ -4,7 +4,7 @@
 
     <param name="rho" value="1025.0" />
     <param name="g" value="9.81" />
-    <param name="m" value="8.870" />
+				<param name="m" value="9.045" />
     <param name="diam_collerette" value="0.24" />
     <param name="compressibility_tick" value="20.0" />
     <param name="screw_thread" value="1.75e-3" />
