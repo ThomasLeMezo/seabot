@@ -96,7 +96,7 @@ int32_t Iridium::uart_init(){
   options.c_oflag &= ~(OPOST | ONLCR | ONOCR | ONLRET | OCRNL);
 
   options.c_cc[VMIN] = 0; // Minimum number of characters to read.
-  options.c_cc[VTIME] = 4000/100; // Time to wait for every character read in tenths of seconds. (ms/100)
+  options.c_cc[VTIME] = 20000/100; // Time to wait for every character read in tenths of seconds. (ms/100)
 
   tcsetattr(m_uart_fd, TCSADRAIN, &options);
 

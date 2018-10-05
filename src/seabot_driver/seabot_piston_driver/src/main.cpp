@@ -35,6 +35,9 @@ double last_piston_position_hf = 0.0;
 ros::WallTime time_velocity_issue_detected;
 bool velocity_issue_detected=false;
 
+bool is_sealing_issue = false;
+ros::Time time_sealing_issue;
+
 #define NB_SPEED_STEPS 10
 
 bool piston_reset(std_srvs::Empty::Request  &req,
@@ -282,6 +285,25 @@ int main(int argc, char *argv[]){
     }
     else
       velocity_issue_detected=false;
+
+    if(p.m_switch_in && p.m_switch_out){
+      if(!is_sealing_issue){
+        ROS_WARN("[Piston_driver] Sealing issue detected");
+        time_sealing_issue = ros::Time::now();
+        is_sealing_issue = true;
+      }
+      else{
+        if((ros::Time::now()-time_sealing_issue).toSec()>15.0){
+          ROS_WARN("[Piston_driver] Sealing issue detected - Start emergency procedure");
+          p.set_piston_emergency();
+          sleep(30);
+          p.set_piston_reset();
+        }
+      }
+    }
+    else{
+      is_sealing_issue = false;
+    }
 
     loop_rate.sleep();
   }

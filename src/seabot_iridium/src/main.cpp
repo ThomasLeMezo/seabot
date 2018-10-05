@@ -225,6 +225,7 @@ int main(int argc, char *argv[]){
 
     ros::WallTime t = ros::WallTime::now();
     if((is_surface || iridium.is_demo_mode()) && ((t-time_last_communication).toSec()>duration_between_msg)){
+      ROS_INFO("[Iridium] Call Iridium");
       if(call_iridium()){
         time_last_communication = t;
       }
