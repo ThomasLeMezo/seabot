@@ -245,6 +245,7 @@ bool Iridium::send_and_receive_data(ros::Publisher &iridium_pub){
       int signal_strenght = TIS_signal_strenght(&m_tis);
       int result = TIS_transmission(&m_tis, 10); // Launch transmission
 
+      ///***** Diagnostic Result *****///
       seabot_iridium::IridiumLog msg;
       msg.error_code = result;
       msg.message_sent = m_tis.SBD_sent_without_error;
@@ -259,15 +260,6 @@ bool Iridium::send_and_receive_data(ros::Publisher &iridium_pub){
         msg.message_sent_progress.push_back(TIS_get_file_progress(&m_tis, i));
       }
       iridium_pub.publish(msg);
-
-      ///***** Diagnostic Result *****///
-//      if (result != TIS_ERROR_SUCCESS) // Get diagnostic info
-//        ROS_WARN("[Iridium] Error while transmitting : %i", result);
-//      ROS_INFO("[Iridium] Send messages : (%i / %i)\n", m_tis.SBD_sent_without_error, m_tis.SBD_sent_without_error + m_tis.SBD_sent_with_error);
-//      ROS_INFO("[Iridium] Received messages : (%i / %i)\n", m_tis.SBD_received_without_error, m_tis.SBD_received_without_error + m_tis.SBD_received_with_error);
-//      ROS_INFO("[Iridium] Waiting to receive messages : %i\n", m_tis.SBD_waiting_messages);
-//      for (size_t i = 0; i < m_files_to_send.size(); i++)
-//        ROS_INFO("[Iridium] File %s was send at %i/100", m_files_to_send[i].c_str(), TIS_get_file_progress(&m_tis, i));
 
       // Test if transmission is over
       if ((TIS_remaining_file_to_send(&m_tis) != 0) || (TIS_waiting_incoming_data(&m_tis) == true)){

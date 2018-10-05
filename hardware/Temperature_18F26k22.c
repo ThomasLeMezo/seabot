@@ -40,7 +40,7 @@ Hardware:
 
 //sbit LED at LATA.B0; // sortie LED
 sbit LED at RA0_bit; // sortie LED
-#define CODE_VERSION 0x01
+#define CODE_VERSION 0x02
 
 // I2C
 #define TSYS01_ADDR 0xEE
@@ -280,15 +280,18 @@ void main(){
   // Oscillateur interne de 16Mhz
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
 
+  // UART1_Init(9600);
   init_io(); // Initialisation des I/O
-  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N°2
+
   I2C1_Init(100000);// initialize I2C communication bus I2C N°1
+  delay_ms(10);
+  
+  reset_TSYS01_sequence();
+  prom_read_TSYS01_sequence();
+
+  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N°2
   
   LED = 0; // sortie LED
-
-  delay_ms(2000);
-  UART1_Init(9600);
-
   RCON.IPEN = 1;  //Enable priority levels on interrupts
   IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N°2
   INTCON.GIEH = 1; //enable all high-priority interrupts
@@ -296,9 +299,6 @@ void main(){
 
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
-
-  reset_TSYS01_sequence();
-  prom_read_TSYS01_sequence();
 
   while(1){
 
