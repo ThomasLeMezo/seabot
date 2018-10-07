@@ -139,6 +139,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     break;
   case 0xC0:
     SSP2BUF = CODE_VERSION;
+    break;
   case 0xC1:
     SSP2BUF = state;
     break;
