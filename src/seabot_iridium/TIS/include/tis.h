@@ -31,7 +31,7 @@
 *			 	 UART_wait_data,	//Fonction utilisant les appelles système de la plateforme pour attendre des données sur la liaison série
 *			 	 UART_flush_TX,		//Fonction utilisant les appelles système de la plateforme pour vider le tampon de sortie de la liaison série
 *			 	 UART_flush_RX		//Fonction utilisant les appelles système de la plateforme pour vider le tampon d'entrée de la liaison série
-*		) != TIS_ERROR_SUCCESS) {
+*		) != TIS_SUCCESS) {
 *		return FALSE;
 *	}
 *
@@ -54,7 +54,7 @@
 *		Iridium_OFF(); //(dépend de votre plateforme et non de la librairie)
 *
 *		//Affiche des informations de diagnostiques
-*		if (result != TIS_ERROR_SUCCESS) {
+*		if (result != TIS_SUCCESS) {
 *			printf("Iridium : erreur %ld s'est produite pendant la transmission", result);
 *		}
 *		printf("Iridium : informations de diagnostiques : \n");

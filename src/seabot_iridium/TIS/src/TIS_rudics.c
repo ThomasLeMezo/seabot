@@ -46,7 +46,7 @@ int32_t TIS_RUDICS_transmission(TIS_properties * properties, int32_t maximum_con
 	//Etablit la connection
 	do {
 		result = TIS_AT_D(properties, properties->RUDICS_dial_number);
-		if ((result != TIS_ERROR_SUCCESS) && (result != TIS_ERROR_DIALUP)) {
+		if ((result != TIS_SUCCESS) && (result != TIS_ERROR_DIALUP)) {
 			TIS_delete_temporary_file(identification);
 			return result;
 		}
@@ -104,7 +104,7 @@ int32_t TIS_RUDICS_transmission(TIS_properties * properties, int32_t maximum_con
 	
 	printf("fin envoi zmodem\n");
 	
-	return TIS_ERROR_SUCCESS;
+	return TIS_SUCCESS;
 	
 	#endif
 }
@@ -114,7 +114,7 @@ int32_t TIS_send_byte(void * properties, uint8_t data, uint32_t timeout) {
 	
   	endwait = clock() + timeout * CLOCKS_PER_SEC ;
   	while (clock() < endwait) {
-		if (((TIS_properties*)properties)->send_data(((TIS_properties*)properties)->serial_struct, &data, 1) == TIS_ERROR_SUCCESS) {
+		if (((TIS_properties*)properties)->send_data(((TIS_properties*)properties)->serial_struct, &data, 1) == TIS_SUCCESS) {
 			return 0;
 		}
 	}
@@ -128,7 +128,7 @@ int32_t TIS_receive_byte(void * properties, uint32_t timeout) {
 	
   	endwait = clock() + timeout * CLOCKS_PER_SEC ;
   	while (clock() < endwait) {
-		if (((TIS_properties*)properties)->receive_data(((TIS_properties*)properties)->serial_struct, &data, 1) == TIS_ERROR_SUCCESS) {
+		if (((TIS_properties*)properties)->receive_data(((TIS_properties*)properties)->serial_struct, &data, 1) == TIS_SUCCESS) {
 			return ((int32_t)data) & 0xff;
 		}
 	}
@@ -140,7 +140,7 @@ void TIS_flush_TX(void * properties) {
 }
 
 bool TIS_wait_data(void * properties, uint32_t timeout) {
-	if (((TIS_properties*)properties)->wait_data(((TIS_properties*)properties)->serial_struct, timeout) == TIS_ERROR_SUCCESS) {
+	if (((TIS_properties*)properties)->wait_data(((TIS_properties*)properties)->serial_struct, timeout) == TIS_SUCCESS) {
 		return TRUE;
 	} else {
 		return FALSE;

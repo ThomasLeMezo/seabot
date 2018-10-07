@@ -1,4 +1,4 @@
-
+#!/usr/bin/env zsh
 I2C_ADD_PISTON=0x38
 I2C_ADD_POWER=0x39
 I2C_ADD_ENGINE=0x20

@@ -1,3 +1,4 @@
+#!/usr/bin/env zsh
 ADC_COEFF=0.015625
 
 B1_hex=`i2cget -y 1 0x39 0x00 w`

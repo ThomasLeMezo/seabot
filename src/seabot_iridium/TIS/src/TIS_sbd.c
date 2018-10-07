@@ -32,7 +32,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 		
 	//Vide les tampons SBD du modem
 	result = TIS_AT_SBDD(properties, TRUE, TRUE); 
-	if (result != TIS_ERROR_SUCCESS) {
+	if (result != TIS_SUCCESS) {
 		return result;
 	}
 	
@@ -117,12 +117,12 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 				//Envoie du message vers le modem
 				do {
 					result = TIS_AT_SBDWB(properties, MO_message, MO_count);
-					if (result == TIS_ERROR_SUCCESS) {
+					if (result == TIS_SUCCESS) {
 						break;				
 					}
 				} while (++consecutive_errors < maximum_consecutive_errors);
 				if (consecutive_errors >= maximum_consecutive_errors) {
-					return TIS_ERROR_SERIAL_ERROR;
+          return TIS_ERROR_SERIAL_ERROR_MAXIMUM_CONSECUTIVE_ERRORS;
 				}
 			}
 			
@@ -134,7 +134,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 		MT_queued_previous = MT_queued;
 		result = TIS_AT_SBDI(properties, &MO_status, &MT_status, &MT_queued);
 			
-		if (result != TIS_ERROR_SUCCESS) {
+		if (result != TIS_SUCCESS) {
 			MO_status = TIS_AT_SBDI_MO_STATUS_ERROR;
 			MT_status = TIS_AT_SBDI_MT_STATUS_ERROR;
 			consecutive_errors++;
@@ -185,7 +185,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 			//On copie le message entrant depuis le modem
 			do {
 				result = TIS_AT_SBDRB(properties, MT_message, &MT_count); //Lie le message contenue dans le modem	
-				if (result == TIS_ERROR_SUCCESS) {
+				if (result == TIS_SUCCESS) {
 					break;				
 				}
 			} while (--consecutive_errors < maximum_consecutive_errors);
@@ -195,7 +195,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 						
 			//On stocke le message entrant
 			result = TIS_SBD_store_received_message(properties, MT_message, MT_count);
-			if (result != TIS_ERROR_SUCCESS) {
+			if (result != TIS_SUCCESS) {
 				return result;
 			}
 		}
@@ -206,7 +206,7 @@ int32_t TIS_SBD_transmission(TIS_properties * properties, int32_t maximum_consec
 		return TIS_ERROR_TOO_MANY_CONSECUTIVE_ERRORS;
 	}
 	
-	return TIS_ERROR_SUCCESS;
+	return TIS_SUCCESS;
 }
 
 int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * message, int32_t message_count) {
@@ -360,7 +360,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 							
 							//On écrit la suite du fichier
 							result = TIS_file_append(properties->SBD_files[current_index], properties->SBD_files[next_index]);
-							if (result != TIS_ERROR_SUCCESS) {
+							if (result != TIS_SUCCESS) {
 								return result;
 							}
 							
@@ -394,7 +394,7 @@ int32_t TIS_SBD_store_received_message(TIS_properties * properties, uint8_t * me
 		properties->SBD_file_status[current_index] = TIS_SBD_INCOMMING_FILE_EMPTY;
 	}
 	
-	return TIS_ERROR_SUCCESS;
+	return TIS_SUCCESS;
 }
 
 int32_t TIS_file_append(FILE * destination, FILE * source) {
@@ -416,7 +416,7 @@ int32_t TIS_file_append(FILE * destination, FILE * source) {
 		}
 	}
 	
-	return TIS_ERROR_SUCCESS;
+	return TIS_SUCCESS;
 }
 
 int32_t TIS_filelength(FILE * fp) {

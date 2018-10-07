@@ -102,7 +102,7 @@ int32_t Iridium::uart_init(){
 
   // ToDo : read the IMEI value
 
-  return TIS_ERROR_SUCCESS;
+  return TIS_SUCCESS;
 }
 
 int32_t uart_send_data(void *serial_struct, uint8_t *data, int32_t count){
@@ -120,7 +120,7 @@ int32_t uart_send_data(void *serial_struct, uint8_t *data, int32_t count){
     error += tmp;
   }
 
-  return TIS_ERROR_SUCCESS;
+  return TIS_SUCCESS;
 }
 
 int32_t uart_receive_data(void *serial_struct, uint8_t *data, int32_t count){
@@ -138,7 +138,7 @@ int32_t uart_receive_data(void *serial_struct, uint8_t *data, int32_t count){
     error += tmp;
   }
 
-  return TIS_ERROR_SUCCESS;
+  return TIS_SUCCESS;
 }
 
 int32_t uart_wait_data(void *serial_struct, uint32_t timeout){
@@ -159,7 +159,7 @@ int32_t uart_wait_data(void *serial_struct, uint32_t timeout){
     return TIS_ERROR_TIMEOUT;
   }
   else
-    return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 }
 
 int32_t uart_flush_TX(void *serial_struct){
@@ -169,7 +169,7 @@ int32_t uart_flush_TX(void *serial_struct){
     return TIS_ERROR_SERIAL_ERROR;
   }
   else
-    return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 }
 
 int32_t uart_flush_RX(void *serial_struct){
@@ -179,7 +179,7 @@ int32_t uart_flush_RX(void *serial_struct){
     return TIS_ERROR_SERIAL_ERROR;
   }
   else
-    return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 }
 
 int32_t uart_release(void *serial_struct){
@@ -189,7 +189,7 @@ int32_t uart_release(void *serial_struct){
     return TIS_ERROR_SERIAL_ERROR;
   }
   else
-    return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 }
 
 bool Iridium::iridium_power(const bool &enable){
@@ -231,7 +231,7 @@ bool Iridium::send_and_receive_data(ros::Publisher &iridium_pub){
                  uart_wait_data,	//Fonction utilisant les appelles système de la plateforme pour attendre des données sur la liaison série
                  uart_flush_TX,		//Fonction utilisant les appelles système de la plateforme pour vider le tampon de sortie de la liaison série
                  uart_flush_RX		//Fonction utilisant les appelles système de la plateforme pour vider le tampon d'entrée de la liaison série
-                 ) != TIS_ERROR_SUCCESS) {
+                 ) != TIS_SUCCESS) {
       return false;
     }
 
@@ -319,3 +319,6 @@ void Iridium::deserialize_cmd_file(const string &file_name){
   m_cmd_list.push_back(l);
 }
 
+void Iridium::test(){
+//int32_t uart_send_data(void *serial_struct, uint8_t *data, int32_t count)
+}

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(seabot_iridium)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -fopenmp)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -17,6 +17,8 @@ find_package(catkin REQUIRED
     std_srvs
 				message_generation
 )
+
+find_package(OpenMP REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -153,13 +155,21 @@ add_executable(iridium_node
     src/iridium.cpp
     src/main.cpp
     src/logtdt.cpp
-				src/missionxml.cpp
+    src/missionxml.cpp
+    src/sbd.cpp
+
+    src/AsyncSerial.cpp
+    src/BufferedAsyncSerial.cpp
 )
 
 add_executable(decode_iridium
     src/logtdt.cpp
     src/tdt.cpp
-				src/missionxml.cpp
+    src/missionxml.cpp
+
+    src/sbd.cpp
+    src/AsyncSerial.cpp
+    src/BufferedAsyncSerial.cpp
 )
 
 ## Rename C++ executable without prefix
@@ -176,11 +186,13 @@ add_dependencies(iridium_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 target_link_libraries(iridium_node
     TIS
     ${catkin_LIBRARIES}
+    ${OpenMP_CXX_FLAGS}
     )
 
 target_link_libraries(decode_iridium
     TIS
     ${catkin_LIBRARIES}
+    ${OpenMP_CXX_FLAGS}
     )
 
 #############

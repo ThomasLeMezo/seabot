@@ -110,7 +110,7 @@ int32_t TIS_init(TIS_properties *	properties,
 	properties->flush_TX = flush_TX;
 	properties->flush_RX = flush_RX;
 	
-	return TIS_ERROR_SUCCESS;
+  return TIS_SUCCESS;
 }
 
 void TIS_clean(TIS_properties * properties) {
@@ -224,51 +224,18 @@ uint8_t TIS_remaining_file_to_send(TIS_properties * properties) {
 }
 
 int32_t TIS_transmission(TIS_properties * properties, int32_t maximum_consecutive_errors) {
-	int32_t result;
-	int32_t errors;
-
-	if (properties == NULL) {
+  if (properties == NULL)
 		return TIS_ERROR_UNDEFINED_PARAMETER;
-	}
 	
 	properties->SBD_sent_without_error = 0;
 	properties->SBD_sent_with_error = 0;
 	properties->SBD_received_without_error = 0;
 	properties->SBD_received_with_error = 0;
-	properties->SBD_waiting_messages = 0;
-	properties->RUDICS_disconnections = 0;
-	properties->RUDICS_incomplete_files = 0;
+  properties->SBD_waiting_messages = 0;
 	
-	//Si le modem à une carte SIM, envoie le code PIN
-	if (properties->modem.sim_card == TRUE) {
-		result = TIS_AT_CPIN(properties, properties->pin);
-		if (result != TIS_ERROR_SUCCESS) {
-			return result;
-		}
-		
-		//Attend que le modem soit associé avec le réseau
-		errors = 0;
-		do {
-			//Attend 10 seconde pour laisser le temps du modem pour s'enregistrer
-			clock_t endwait;
-			endwait = clock() + 10 * CLOCKS_PER_SEC;
-			while (clock() < endwait) {}
-			
-			result = TIS_AT_CREG(properties);
-		} while ((result != TIS_ERROR_SUCCESS) && (++errors < maximum_consecutive_errors));
-		
-		if (errors >= maximum_consecutive_errors) {
-			return TIS_ERROR_NOT_REGISTERED;
-		}
-	}
-		
-	//Lance la session du protocole adapté				
-	if (properties->service == TIS_SERVICE_SBD) {
-		return TIS_SBD_transmission(properties, maximum_consecutive_errors);
-	} else {
-		return TIS_RUDICS_transmission(properties, maximum_consecutive_errors);
-	}
-	return TIS_ERROR_SUCCESS;
+  // Check if modem is register ?
+
+  return TIS_SBD_transmission(properties, maximum_consecutive_errors);
 }
 
 int32_t TIS_signal_strenght(TIS_properties * properties) {
@@ -278,14 +245,14 @@ int32_t TIS_signal_strenght(TIS_properties * properties) {
 	//Si le modem à une carte SIM, envoie le code PIN
 	if (properties->modem.sim_card == TRUE) {
 		result = TIS_AT_CPIN(properties, properties->pin);
-		if (result != TIS_ERROR_SUCCESS) {
+    if (result != TIS_SUCCESS) {
 			return result;
 		}
 	}
 	
 	
 	result = TIS_AT_CSQ(properties, &strength);
-	if (result != TIS_ERROR_SUCCESS) {
+  if (result != TIS_SUCCESS) {
 		return -1;
 	} else {
 		return strength;
@@ -294,7 +261,7 @@ int32_t TIS_signal_strenght(TIS_properties * properties) {
 
 int32_t TIS_power_off_gps(TIS_properties * properties) {
 	if (properties->modem.gps) {
-		return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 	} else {
 		return TIS_ERROR_NOT_AVAILABLE;
 	}
@@ -302,7 +269,7 @@ int32_t TIS_power_off_gps(TIS_properties * properties) {
 
 int32_t TIS_power_on_gps(TIS_properties * properties) {
 	if (properties->modem.gps) {
-		return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 	} else {
 		return TIS_ERROR_NOT_AVAILABLE;
 	}
@@ -310,16 +277,16 @@ int32_t TIS_power_on_gps(TIS_properties * properties) {
 
 int32_t TIS_get_gps_position(TIS_properties * properties) {
 	if (properties->modem.gps) {
-		return TIS_ERROR_SUCCESS;
+    return TIS_SUCCESS;
 	} else {
 		return TIS_ERROR_NOT_AVAILABLE;
 	}
 }
 
 int32_t TIS_power_off_iridium() {
-	return TIS_ERROR_SUCCESS;
+  return TIS_SUCCESS;
 }
 
 int32_t TIS_power_on_iridium() {
-	return TIS_ERROR_SUCCESS;
+  return TIS_SUCCESS;
 }

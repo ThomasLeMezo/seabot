@@ -93,6 +93,8 @@ public:
      */
     void set_imei(const uint64_t &imei);
 
+    void test();
+
 public:
     bool m_iridium_power_state = false;
 

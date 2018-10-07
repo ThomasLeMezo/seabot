@@ -13,10 +13,10 @@
 #define	TIS_ERRORS_H
 
 /***********************************************************************//**
- * \def TIS_ERROR_SUCCESS
+ * \def TIS_SUCCESS
  * \brief La fonction s'est terminé avec succès.
  ***********************************************************************/
-#define TIS_ERROR_SUCCESS						 0
+#define TIS_SUCCESS						 0
 
 /***********************************************************************//**
  * \def TIS_ERROR_UNKNOWN
@@ -38,6 +38,7 @@
  * A la réception de cette erreur, il est conseillé de redémarrer le modem.
  ***********************************************************************/
 #define TIS_ERROR_SERIAL_ERROR  				 3
+#define TIS_ERROR_SERIAL_ERROR_MAXIMUM_CONSECUTIVE_ERRORS 301
 
 /***********************************************************************//**
  * \def TIS_ERROR_FILE_ACCESS
