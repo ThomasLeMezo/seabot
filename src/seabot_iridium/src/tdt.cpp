@@ -77,30 +77,26 @@ void test4(){
         cout << "=> read = " << sbd.cmd_read_message() << endl;
         cin.get();
         sbd.cmd_enable_indicator_reporting();
-        cin.get();
+        sbd.cmd_enable_alert();
 
+        cin.get();
         sbd.set_gnss(48.39475416, -4.48271749);
         sbd.cmd_status();
-        cout << "=> status = " << sbd.m_STATUS_MO << " " << sbd.m_STATUS_MT << " " << sbd.m_waiting << endl;
+        cout << "=> status = " << sbd.get_status_mo() << " " << sbd.get_status_mt() << " " << sbd.get_waiting() << endl;
 
-        //  sbd.cmd_session();
+        cin.get();
+        sbd.cmd_session();
+
+        sleep(10);
+        cout << "MO=" << sbd.get_session_mo() << endl;
+        cout << "MOMSN=" << sbd.get_session_momsn() << endl;
+        cout << "MT=" << sbd.get_session_mt() << endl;
+        cout << "MTMSN=" << sbd.get_session_mtmsn() << endl;
+        cout << "waiting=" << sbd.get_waiting() << endl;
+
       }
     }
   }
-
-  //  sbd.set_gnss(48.39475416, -4.48271749);
-
-
-  //  cout << "MO=" << sbd.m_SESSION_MO << endl;
-  //  cout << "MOMSN=" << sbd.m_SESSION_MOMSN << endl;
-  //  cout << "MT=" << sbd.m_SESSION_MT << endl;
-  //  cout << "MTMSN=" << sbd.m_SESSION_MTMSN << endl;
-  //  cout << "waiting=" << sbd.m_waiting << endl;
-
-  //  cout << sbd.cmd_copy_MO_MT() << endl;
-  //  string test_r = "";
-  //  cout << sbd.cmd_read_message(test_r) << endl;
-  //  cout << "test_r = " << test_r << endl;
 }
 
 void test5(){

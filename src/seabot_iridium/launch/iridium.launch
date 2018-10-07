@@ -3,7 +3,6 @@
 								<param name="duration_between_msg" value="120" />
         <param name="wait_time_surface" value="10" />
         <param name="depth_surface_limit" value="0.5" />
-								<param name="imei" value="300234065981770" type="string"/>
     </node>
 </launch>
 

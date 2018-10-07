@@ -1,5 +1,6 @@
 #include <ros/ros.h>
-#include <cmath>
+#include <omp.h>
+#include <math.h>
 #include <array>
 
 #include <seabot_fusion/GnssPose.h>
@@ -19,6 +20,7 @@
 #include "missionxml.h"
 
 #include "seabot_iridium/IridiumLog.h"
+#include "sbd.h"
 
 using namespace std;
 
@@ -28,62 +30,66 @@ ros::WallTime time_at_surface;
 bool is_surface = false;
 ros::WallTime time_last_communication;
 
-Iridium iridium;
-bool demo_mode=false;
-
 string mission_file_path;
-
 ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission, service_enable_mission;
 ros::Publisher iridium_pub;
+
+double latitude = 0.0;
+double longitude = 0.0;
+
+SBD sbd;
+LogTDT log_state;
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   if(msg->depth < depth_surface_limit){
     if(!is_surface){
       time_at_surface = ros::WallTime::now();
       is_surface = true;
-      ROS_DEBUG("[Iridium] Surface detected");
-      iridium.iridium_power(true);
+//      ROS_DEBUG("[Iridium] Surface detected");
+//      iridium.iridium_power(true);
     }
   }
   else{
     is_surface = false;
-    iridium.iridium_power(false);
+//    iridium.iridium_power(false);
   }
 }
 
 void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
-  iridium.logTDT.m_east = msg->east;
-  iridium.logTDT.m_north = msg->north;
+  log_state.m_east = msg->east;
+  log_state.m_north = msg->north;
 }
 
 void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
-  iridium.logTDT.m_seabot_state = 0;
-  iridium.logTDT.m_seabot_state |= (msg->published_frequency & 0b1) << 0;
-  iridium.logTDT.m_seabot_state |= (msg->depth_limit & 0b1) << 1;
-  iridium.logTDT.m_seabot_state |= (msg->batteries_limit & 0b1) << 2;
-  iridium.logTDT.m_seabot_state |= (msg->depressurization & 0b1) << 3;
+  log_state.m_seabot_state = 0;
+  log_state.m_seabot_state |= (msg->published_frequency & 0b1) << 0;
+  log_state.m_seabot_state |= (msg->depth_limit & 0b1) << 1;
+  log_state.m_seabot_state |= (msg->batteries_limit & 0b1) << 2;
+  log_state.m_seabot_state |= (msg->depressurization & 0b1) << 3;
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
-  iridium.logTDT.m_gnss_speed = msg->speed; // Normaly in m/s
-  iridium.logTDT.m_gnss_heading = msg->track; // Degree from north
+  log_state.m_gnss_speed = msg->speed; // Normaly in m/s (?)
+  log_state.m_gnss_heading = msg->track; // Degree from north
+  latitude = msg->latitude;
+  longitude = msg->longitude;
 }
 
 void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
-  iridium.logTDT.m_batteries[0] = msg->battery1;
-  iridium.logTDT.m_batteries[1] = msg->battery2;
-  iridium.logTDT.m_batteries[2] = msg->battery3;
-  iridium.logTDT.m_batteries[3] = msg->battery4;
+  log_state.m_batteries[0] = msg->battery1;
+  log_state.m_batteries[1] = msg->battery2;
+  log_state.m_batteries[2] = msg->battery3;
+  log_state.m_batteries[3] = msg->battery4;
 }
 
 void sensor_internal_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
-  iridium.logTDT.m_internal_pressure = msg->pressure;
-  iridium.logTDT.m_internal_temperature = msg->temperature;
-  iridium.logTDT.m_internal_temperature = msg->humidity;
+  log_state.m_internal_pressure = msg->pressure;
+  log_state.m_internal_temperature = msg->temperature;
+  log_state.m_internal_temperature = msg->humidity;
 }
 
 void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){
-  iridium.logTDT.m_current_waypoint = msg->waypoint_number;
+  log_state.m_current_waypoint = msg->waypoint_number;
 }
 
 void call_sleep_param(const int &hours, const int &min, const int &sec, const int &sec_to_sleep){
@@ -120,54 +126,58 @@ void call_enable_mission(const bool &enable_mission, const bool &enable_depth, c
     ROS_ERROR("[Iridium] Failed to call reload mission");
 }
 
-bool call_iridium(){
-  // Test if is at surface for sufficient period of time
-  if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
-    iridium.get_new_log_files();
-
-    bool transmission_successful = iridium.send_and_receive_data(iridium_pub);
-    iridium.process_cmd_file();
-
-    // Process cmd files
-    for(LogTDT &l:iridium.m_cmd_list){
-      switch(l.m_cmd_type){
-      case CMD_SLEEP:
-      {
-        int sleep_time = l.m_sleep_time;
-        int hours = floor(sleep_time/60.);
-        int min = sleep_time-hours*60;
-        call_sleep_param(hours, min, 0, 200);
-        call_sleep();
-        break;
-      }
-      case CMD_MISSION:
-      {
-        // ToDO : write new mission file
-        MissionXML m(l);
-        m.write(mission_file_path);
-        call_reload_mission();
-        break;
-      }
-      case CMD_PARAMETERS:
-      {
-        // Enable/Diseable
-        // safety, flash, mission, sink etc.
-        call_enable_mission(l.m_enable_mission, l.m_enable_depth, l.m_enable_engine);
-        break;
-      }
-      default:
-        break;
-      }
-    }
-
-    // Clean cmd list
-    iridium.m_cmd_list.clear();
-
-    return transmission_successful;
-  }
-  else
-    return false;
+void call_decode(const string &message_data){
+// Log in memory the decoded files ?
 }
+
+//bool call_iridium(){
+//  // Test if is at surface for sufficient period of time
+//  if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
+//    iridium.get_new_log_files();
+
+//    bool transmission_successful = iridium.send_and_receive_data(iridium_pub);
+//    iridium.process_cmd_file();
+
+//    // Process cmd files
+//    for(LogTDT &l:iridium.m_cmd_list){
+//      switch(l.m_cmd_type){
+//      case CMD_SLEEP:
+//      {
+//        int sleep_time = l.m_sleep_time;
+//        int hours = floor(sleep_time/60.);
+//        int min = sleep_time-hours*60;
+//        call_sleep_param(hours, min, 0, 200);
+//        call_sleep();
+//        break;
+//      }
+//      case CMD_MISSION:
+//      {
+//        // ToDO : write new mission file
+//        MissionXML m(l);
+//        m.write(mission_file_path);
+//        call_reload_mission();
+//        break;
+//      }
+//      case CMD_PARAMETERS:
+//      {
+//        // Enable/Diseable
+//        // safety, flash, mission, sink etc.
+//        call_enable_mission(l.m_enable_mission, l.m_enable_depth, l.m_enable_engine);
+//        break;
+//      }
+//      default:
+//        break;
+//      }
+//    }
+
+//    // Clean cmd list
+//    iridium.m_cmd_list.clear();
+
+//    return transmission_successful;
+//  }
+//  else
+//    return false;
+//}
 
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "iridium_node");
@@ -188,9 +198,6 @@ int main(int argc, char *argv[]){
   const double duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
-  demo_mode = n_private.param<double>("demo", false);
-  string imei_string = n_private.param<string>("imei", "0");
-  uint64_t imei = atoll(imei_string.c_str());
 
   const string mission_file_name = n.param<string>("mission_file_name", "mission_test.xml");
   const string mission_path = n.param<string>("mission_path", "");
@@ -210,28 +217,74 @@ int main(int argc, char *argv[]){
   service_reload_mission = n.serviceClient<std_srvs::Empty>("/mission/reload_mission");
   service_enable_mission = n.serviceClient<seabot_mission::MissionEnable>("/mission/enable_mission");
 
-  iridium.uart_init();
-  iridium.enable_com(true);
-  iridium.iridium_power(true);
-  iridium.set_demo_mode(demo_mode);
-  iridium.set_imei(imei);
-
   ros::Rate loop_rate(frequency);
   time_last_communication.fromSec(0);
+  ros::WallTime time_last_log_version;
 
+  sbd.init();
   ROS_INFO("[Iridium] Start Ok");
-  while (ros::ok()){
-    ros::spinOnce();
 
-    ros::WallTime t = ros::WallTime::now();
-    if((is_surface || iridium.is_demo_mode()) && ((t-time_last_communication).toSec()>duration_between_msg)){
-      ROS_INFO("[Iridium] Call Iridium");
-      if(call_iridium()){
-        time_last_communication = t;
+  omp_set_num_threads(2);
+#pragma omp parallel
+  {
+#pragma omp single
+    {
+#pragma omp task
+      {
+        // Read Serial Com
+        while(ros::ok())
+          sbd.read();
+      }
+
+#pragma omp task
+      {
+        // Write Serial
+        while(ros::ok()){
+          ros::spinOnce();
+
+          // State machine
+          ros::WallTime t = ros::WallTime::now();
+          if(is_surface
+             && ((t-time_last_communication).toSec()>duration_between_msg)
+             && sbd.get_indicator_service()){
+            ROS_INFO("[Iridium] Call Iridium");
+
+            // Update Log
+            if((t-time_last_log_version).toSec()>30.){
+              string log_sentence = log_state.serialize_log_TDT1();
+              sbd.cmd_write_message(log_sentence);
+              sbd.set_gnss(latitude, longitude);
+            }
+
+            // Send data
+            sbd.cmd_session();
+
+            // Analyse sucess
+            if(sbd.get_session_mo() <= 4){
+              time_last_communication = ros::WallTime::now();
+              sbd.cmd_flush_message(true, false); // Flush data to avoid re-sending it
+            }
+          }
+
+          // Look at received message
+          if(sbd.get_session_mt()==1){
+            std::string message_data = sbd.cmd_read_message();
+            sbd.cmd_flush_message(false, true);
+            call_decode(message_data);
+          }
+
+          // Request a session if ring alert received or waiting data
+          if(sbd.get_indicator_service() && (sbd.get_ring_alert() || sbd.get_waiting()>0)){
+            sbd.cmd_session();
+          }
+
+          // Log Data (ToDo)
+
+          loop_rate.sleep();
+
+        }
       }
     }
-
-    loop_rate.sleep();
   }
 
   return 0;

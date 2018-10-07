@@ -1,18 +1,24 @@
 #include "sbd.h"
 #include <string>
-#include <iostream>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <boost/algorithm/string.hpp>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
+
 #include <sstream>
+#include <iostream>
 #include <iomanip>
+#include <fstream>
+
+#include <ros/ros.h>
 
 using namespace boost;
 using namespace std;
 
-SBD::SBD(const string &serial_port_name, const unsigned int &baud_rate){
+SBD::SBD(){
+  omp_init_lock(&lock_data);
+}
+
+void SBD::init(const string &serial_port_name, const unsigned int &baud_rate){
   try{
     m_serial.open(serial_port_name, baud_rate);
   }
@@ -23,15 +29,21 @@ SBD::SBD(const string &serial_port_name, const unsigned int &baud_rate){
   disable_echo(); // Disable echo from SBD
 }
 
+SBD::SBD(const string &serial_port_name, const unsigned int &baud_rate){
+  omp_init_lock(&lock_data);
+  init();
+}
+
 SBD::~SBD(){
   m_serial.close();
+  omp_destroy_lock(&lock_data);
 }
 
 void SBD::read(){
   string result = m_serial.readStringUntil(SBD_TOKEN_SEPARATOR);
 
   if(result != ""){
-//    cout << result << endl;
+    //    cout << result << endl;
     if(boost::starts_with(result, "OK")){
       m_OK = true;
       m_READY = false;
@@ -44,73 +56,101 @@ void SBD::read(){
       m_READY = false;
       m_OK = false;
     }
+    else if(boost::starts_with(result, "SBDRING")){
+      m_ring_alert = true;
+    }
     else if(boost::starts_with(result, "+CRIS:")){
       vector<string> fields;
       boost::split(fields, result, boost::is_any_of(","), boost::token_compress_on);
-      m_ring_alert = stoi(fields[1]);
+      omp_set_lock(&lock_data);
+      m_ring_alert_code = stoi(fields[1]);
+      omp_unset_lock(&lock_data);
     }
-    else if(boost::starts_with(result, "+CIEV=")){
+    else if(boost::starts_with(result, "+CIEV:")){
       vector<string> fields;
-      boost::split(fields, result, boost::is_any_of(","), boost::token_compress_on);
+      string result0 = result.substr(6);
+      boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
       int indicator = stoi(fields[0]);
+      omp_set_lock(&lock_data);
       switch(indicator){
       case 0:
         m_indicator_signal = stoi(fields[1]);
-        cout << "=> Signal = " << m_indicator_signal << endl;
+        //        cout << "=> Signal = " << m_indicator_signal << endl;
         break;
       case 1:
         m_indicator_service = stoi(fields[1]);
-        cout << "=> Service = " << m_indicator_service << endl;
+        //        cout << "=> Service = " << m_indicator_service << endl;
         break;
       case 2:
         m_indicator_antenna = stoi(fields[1]);
-        cout << "=> Antenna = " << (m_indicator_antenna?"Fault":"OK") << endl;
+        //        cout << "=> Antenna = " << (m_indicator_antenna?"Fault":"OK") << endl;
         break;
       default:
         break;
       }
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "300234")){
+      omp_set_lock(&lock_data);
       m_imei = stoll(result);
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "+CSQ:")){
+      omp_set_lock(&lock_data);
       m_CSQ = stoi(result.substr(6));
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "+CSQF:")){
+      omp_set_lock(&lock_data);
       m_CSQ = stoi(result.substr(6));
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "SBDTC")){
+      omp_set_lock(&lock_data);
       m_copy_MO_MT_size = stoi(result.substr(49));
+      omp_unset_lock(&lock_data);
     }
     else if(m_READY){
       // result after a READY
+      omp_set_lock(&lock_data);
       m_ready_return = stoi(result);
+      m_READY = false;
+      omp_unset_lock(&lock_data);
+
     }
     else if(boost::starts_with(result, "+SBDSX:")){
       vector<string> fields;
       string result0 = result.substr(7);
       boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
       if(fields.size()>=6){
+        omp_set_lock(&lock_data);
         m_STATUS_MO = stoi(fields[0]);
         m_STATUS_MOMSN = stoi(fields[1]);
         m_STATUS_MT = stoi(fields[2]);
         m_STATUS_MTMSN = stoi(fields[3]);
         m_STATUS_RA = stoi(fields[4]);
         m_waiting = stoi(fields[5]);
+
+        if(m_ring_alert && m_STATUS_MT==1)
+          m_ring_alert = false;
+        omp_unset_lock(&lock_data);
       }
     }
     else if(boost::starts_with(result, "+SBDLOE:")){
       vector<string> fields;
       string result0 = result.substr(7);
       boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
+      omp_set_lock(&lock_data);
       m_trafic_management_status = stoi(fields[0]);
       m_trafic_management_time = stoi(fields[1]); // Check format
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "+SBDIX:")){
       vector<string> fields;
       string result0 = result.substr(7);
       boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
 
+      omp_set_lock(&lock_data);
       if(fields.size()>=6){
         m_SESSION_MO = stoi(fields[0]);
         m_SESSION_MOMSN = stoi(fields[1]);
@@ -118,10 +158,24 @@ void SBD::read(){
         m_SESSION_MTMSN = stoi(fields[3]);
         m_waiting = stoi(fields[5]);
       }
+      m_in_session = false;
+      omp_unset_lock(&lock_data);
+    }
+    else if(boost::starts_with(result, "+AREG:")){
+      vector<string> fields;
+      string result0 = result.substr(6);
+      boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
+      omp_set_lock(&lock_data);
+      m_areg_new_event = true;
+      m_areg_event = stoi(fields[0]);
+      m_areg_error_code = stoi(fields[1]);
+      omp_unset_lock(&lock_data);
     }
     else if(m_read_msg){ // Keep at the end
+      omp_set_lock(&lock_data);
       m_read_msg_data = result.substr(2, result.size()-4); // checksum + ending token
       m_read_msg = false;
+      omp_unset_lock(&lock_data);
     }
   }
 
@@ -143,39 +197,63 @@ void SBD::disable_echo(){
 }
 
 int SBD::cmd_CSQ(bool fast){
+  omp_set_lock(&lock_data);
   m_CSQ = -1;
+  omp_unset_lock(&lock_data);
+
   write("AT+CSQ" + string(fast?"F":""));
   usleep(500000);
-  return m_CSQ;
+  omp_set_lock(&lock_data);
+  int result = m_CSQ;
+  omp_unset_lock(&lock_data);
+  return result;
 }
 
 long long SBD::cmd_get_imei(){
   write("AT+CGSN");
   usleep(500000);
-  return m_imei;
+  omp_set_lock(&lock_data);
+  long long result = m_imei;
+  omp_unset_lock(&lock_data);
+  return result;
 }
 
 int SBD::cmd_copy_MO_MT(){
+  omp_set_lock(&lock_data);
   m_copy_MO_MT_size = -1;
+  omp_unset_lock(&lock_data);
   write("AT+SBDTC");
   usleep(500000);
-  return m_copy_MO_MT_size;
+
+  omp_set_lock(&lock_data);
+  int result = m_copy_MO_MT_size;
+  omp_unset_lock(&lock_data);
+  return result;
 }
 
 int SBD::cmd_write_message(const std::string &data){
+  omp_set_lock(&lock_data);
   m_READY = false;
+  omp_unset_lock(&lock_data);
+
   if(data.size()>340)
     return 4;
   string cmd = "AT+SBDWB=" + std::to_string(data.size());
   write(cmd);
 
+  bool valid = false;
   for(size_t i=0; i<100; i++){
-    if(m_READY)
+    omp_set_lock(&lock_data);
+    bool test = m_READY;
+    omp_unset_lock(&lock_data);
+    if(test){
+      valid = true;
       break;
+    }
     usleep(10000);
   }
 
-  if(m_READY){
+  if(valid){
     // Compute checksum
     uint16_t checksum = 0;
     for(size_t i=0; i < data.size(); i++)
@@ -187,7 +265,11 @@ int SBD::cmd_write_message(const std::string &data){
     write(data_checksum);
 
     usleep(100000);
-    return m_ready_return;
+
+    omp_set_lock(&lock_data);
+    int result = m_ready_return;
+    omp_unset_lock(&lock_data);
+    return result;
   }
   else
     return -1;
@@ -195,9 +277,18 @@ int SBD::cmd_write_message(const std::string &data){
 
 std::string SBD::cmd_read_message(){
   string cmd = "AT+SBDRB";
+  omp_set_lock(&lock_data);
+  m_read_msg = true;
+  omp_unset_lock(&lock_data);
+
   write(cmd);
-  usleep(100000);
-  return m_read_msg_data;
+  usleep(500000);
+
+  omp_set_lock(&lock_data);
+  string result = m_read_msg_data;
+  omp_unset_lock(&lock_data);
+
+  return result;
 }
 
 int SBD::cmd_flush_message(const bool &MO, const bool &MT){
@@ -219,34 +310,56 @@ int SBD::cmd_status(){
   return 0;
 }
 
-int SBD::cmd_session(const bool &answer){
-  string cmd = "AT+SBDIX" + string(answer?"A":"");
-  if(m_valid_gnss){
-    int lat_deg = int(m_latitude);
-    double lat_min = int(abs(m_latitude - lat_deg)*60000.)/1000.;
-    int lon_deg = int(m_longitude);
-    double lon_min = int(abs(m_longitude - lon_deg)*60000.)/1000.;
-    cmd += "=";
+int SBD::cmd_session(){
+  omp_set_lock(&lock_data);
+  bool start_mission = m_in_session;
+  bool answer = m_ring_alert;
+  m_SESSION_MO = 5;
+  m_SESSION_MT = 2;
+  omp_unset_lock(&lock_data);
 
-    std::ostringstream lat_string, lon_string;
-    if(lat_deg<0)
-      lat_string << "-";
-    lat_string << setfill('0') << setw(2) << abs(lat_deg);
-    lat_string << std::fixed << std::setprecision(3) << lat_min;
-    cmd += lat_string.str();
+  if(!start_mission){
+    omp_set_lock(&lock_data);
+    m_in_session = true;
+    omp_unset_lock(&lock_data);
 
-    cmd += ",";
+    string cmd = "AT+SBDIX" + string(answer?"A":"");
+    if(m_valid_gnss){
+      int lat_deg = int(m_latitude);
+      double lat_min = int(abs(m_latitude - lat_deg)*60000.)/1000.;
+      int lon_deg = int(m_longitude);
+      double lon_min = int(abs(m_longitude - lon_deg)*60000.)/1000.;
+      cmd += "=";
 
-    if(lon_deg<0)
-      lon_string << "-";
-    lon_string << setfill('0') << setw(3) << abs(lon_deg);
-    lon_string << std::fixed << std::setprecision(3) << lon_min;
-    cmd += lon_string.str();
+      std::ostringstream lat_string, lon_string;
+      if(lat_deg<0)
+        lat_string << "-";
+      lat_string << setfill('0') << setw(2) << abs(lat_deg);
+      lat_string << std::fixed << std::setprecision(3) << lat_min;
+      cmd += lat_string.str();
+
+      cmd += ",";
+
+      if(lon_deg<0)
+        lon_string << "-";
+      lon_string << setfill('0') << setw(3) << abs(lon_deg);
+      lon_string << std::fixed << std::setprecision(3) << lon_min;
+      cmd += lon_string.str();
+    }
+
+    write(cmd);
+
+    for(size_t i=0; i<20; i++){
+      if(is_in_session())
+        break;
+      usleep(250000);
+    }
+
+    return 0;
   }
-
-  write(cmd);
-  usleep(100000);
-  return 0;
+  else{
+    return 1;
+  }
 }
 
 int SBD::cmd_enable_alert(const bool &enable){
@@ -268,6 +381,32 @@ int SBD::cmd_trafic_management_status(){
   string cmd = "AT+SBDLOE";
   write(cmd);
   return 0;
+}
+
+int SBD::cmd_set_registration_mode(const int &mode){
+  string cmd = "AT+SBDAREG=";
+  cmd += to_string(mode);
+  write(cmd);
+  return 0;
+}
+
+bool SBD::sbd_power(const bool &enable){
+  if(enable != m_iridium_power_state){
+
+    string gpio_file = "/sys/class/gpio/gpio" + to_string(m_gpio_power) + "/value";
+
+    ofstream setvalgpio(gpio_file.c_str()); // open value file for gpio
+    if (!setvalgpio.is_open()){
+      ROS_WARN("[IRIDIUM] Unable to write power on on GPIO %u", m_gpio_power);
+      return false;
+    }
+
+    setvalgpio << enable?1:0;//write value to value file
+    setvalgpio.close();// close value file
+
+    m_iridium_power_state = enable;
+  }
+  return true;
 }
 
 

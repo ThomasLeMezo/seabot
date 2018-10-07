@@ -137,6 +137,7 @@ public:
    * @return
    */
   bool serialize_log_TDT1(const std::string &file_name);
+  std::string serialize_log_TDT1();
 
   /**
    * @brief deserialize_log_CMD_sleep

@@ -248,15 +248,7 @@ bool LogTDT::deserialize_log_CMD_mission(const string &file_name){
   return true;
 }
 
-bool LogTDT::serialize_log_TDT1(const string &file_name){
-  ofstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cerr << "Unable to open " << file_name << " new log file : " << errno << endl;
-    return false;
-  }
-
+std::string LogTDT::serialize_log_TDT1(){
   size_t nb_bits = 26*4; // must be a multiple of 4
   uint_log1_t data = (uint_log1_t(1)<<nb_bits) -1;
 
@@ -278,8 +270,20 @@ bool LogTDT::serialize_log_TDT1(const string &file_name){
   bit_position += serialize_data<uint_log1_t>(data, 6, bit_position, m_internal_humidity, 50.0, 100.0);
 
   bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_current_waypoint);
+  return string(data);
+}
 
-  save_file.write((char*)&data, NB_BITS_LOG1/8);
+bool LogTDT::serialize_log_TDT1(const string &file_name){
+  ofstream save_file;
+  save_file.open(file_name);
+
+  if(!save_file.is_open()){
+    cerr << "Unable to open " << file_name << " new log file : " << errno << endl;
+    return false;
+  }
+
+  string data = serialize_log_TDT1();
+  save_file.write(data.c_str(), NB_BITS_LOG1/8);
   save_file.close();
 
   return true;
