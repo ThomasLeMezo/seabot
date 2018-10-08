@@ -34,8 +34,10 @@ string mission_file_path;
 ros::ServiceClient service_sleep_mode, service_sleep_param, service_reload_mission, service_enable_mission;
 ros::Publisher iridium_pub;
 
+bool valid_fix = false;
 double latitude = 0.0;
 double longitude = 0.0;
+ros::WallTime time_last_gnss;
 
 SBD sbd;
 LogTDT log_state;
@@ -69,10 +71,15 @@ void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
+  if(msg->status.status>msg->status.STATUS_MODE_NO_FIX)
+    valid_fix = true;
+  else
+    valid_fix = false;
   log_state.m_gnss_speed = msg->speed; // Normaly in m/s (?)
   log_state.m_gnss_heading = msg->track; // Degree from north
   latitude = msg->latitude;
   longitude = msg->longitude;
+  time_last_gnss = ros::WallTime::now();
 }
 
 void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
@@ -253,7 +260,8 @@ int main(int argc, char *argv[]){
             if((t-time_last_log_version).toSec()>30.){
               string log_sentence = log_state.serialize_log_TDT1();
               sbd.cmd_write_message(log_sentence);
-              sbd.set_gnss(latitude, longitude);
+              if(valid_fix && (t-time_last_gnss).toSec()<10.)
+                sbd.set_gnss(latitude, longitude);
             }
 
             // Send data
