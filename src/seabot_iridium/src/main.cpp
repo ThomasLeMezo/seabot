@@ -16,17 +16,21 @@
 #include <std_srvs/Empty.h>
 #include <seabot_power_driver/SleepModeParam.h>
 
-#include "iridium.h"
 #include "missionxml.h"
 
-#include "seabot_iridium/IridiumLog.h"
+#include "seabot_iridium/IridiumStatus.h"
+#include "seabot_iridium/IridiumSession.h"
+#include "std_msgs/String.h"
 #include "sbd.h"
 
 using namespace std;
 
+double duration_between_msg = 180;
+
 double depth_surface_limit = 0.5;
 double wait_surface_time = 10.0;
 ros::WallTime time_at_surface;
+bool test_surface = false;
 bool is_surface = false;
 ros::WallTime time_last_communication;
 
@@ -40,20 +44,25 @@ double longitude = 0.0;
 ros::WallTime time_last_gnss;
 
 SBD sbd;
-LogTDT log_state;
+LogData log_state;
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   if(msg->depth < depth_surface_limit){
-    if(!is_surface){
+    if(!test_surface){
       time_at_surface = ros::WallTime::now();
-      is_surface = true;
-//      ROS_DEBUG("[Iridium] Surface detected");
-//      iridium.iridium_power(true);
+      test_surface = true;
+    }
+    else{
+      if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time)
+        is_surface = true;
+      //        ROS_DEBUG("[Iridium] Surface detected");
+      //        sbd.sbd_power(true);
     }
   }
   else{
+    test_surface = false;
     is_surface = false;
-//    iridium.iridium_power(false);
+    //    sbd.sbd_power(false);
   }
 }
 
@@ -133,58 +142,41 @@ void call_enable_mission(const bool &enable_mission, const bool &enable_depth, c
     ROS_ERROR("[Iridium] Failed to call reload mission");
 }
 
-void call_decode(const string &message_data){
-// Log in memory the decoded files ?
+
+void call_decode(const string &data_raw){
+  // Test if is at surface for sufficient period of time
+  LogData log_cmd;
+  log_cmd.deserialize_log_CMD(data_raw);
+
+  switch(log_cmd.m_cmd_type){
+  case CMD_SLEEP:
+  {
+    int sleep_time = log_cmd.m_sleep_time;
+    int hours = floor(sleep_time/60.);
+    int min = sleep_time-hours*60;
+    call_sleep_param(hours, min, 0, 200);
+    call_sleep();
+    break;
+  }
+  case CMD_MISSION:
+  {
+    // ToDO : write new mission file
+    MissionXML m(log_cmd);
+    m.write(mission_file_path);
+    call_reload_mission();
+    break;
+  }
+  case CMD_PARAMETERS:
+  {
+    // Enable/Diseable
+    // safety, flash, mission, sink etc.
+    call_enable_mission(log_cmd.m_enable_mission, log_cmd.m_enable_depth, log_cmd.m_enable_engine);
+    break;
+  }
+  default:
+    break;
+  }
 }
-
-//bool call_iridium(){
-//  // Test if is at surface for sufficient period of time
-//  if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time){
-//    iridium.get_new_log_files();
-
-//    bool transmission_successful = iridium.send_and_receive_data(iridium_pub);
-//    iridium.process_cmd_file();
-
-//    // Process cmd files
-//    for(LogTDT &l:iridium.m_cmd_list){
-//      switch(l.m_cmd_type){
-//      case CMD_SLEEP:
-//      {
-//        int sleep_time = l.m_sleep_time;
-//        int hours = floor(sleep_time/60.);
-//        int min = sleep_time-hours*60;
-//        call_sleep_param(hours, min, 0, 200);
-//        call_sleep();
-//        break;
-//      }
-//      case CMD_MISSION:
-//      {
-//        // ToDO : write new mission file
-//        MissionXML m(l);
-//        m.write(mission_file_path);
-//        call_reload_mission();
-//        break;
-//      }
-//      case CMD_PARAMETERS:
-//      {
-//        // Enable/Diseable
-//        // safety, flash, mission, sink etc.
-//        call_enable_mission(l.m_enable_mission, l.m_enable_depth, l.m_enable_engine);
-//        break;
-//      }
-//      default:
-//        break;
-//      }
-//    }
-
-//    // Clean cmd list
-//    iridium.m_cmd_list.clear();
-
-//    return transmission_successful;
-//  }
-//  else
-//    return false;
-//}
 
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "iridium_node");
@@ -202,7 +194,7 @@ int main(int argc, char *argv[]){
   // Parameters
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
-  const double duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
+  duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
 
@@ -211,7 +203,9 @@ int main(int argc, char *argv[]){
   mission_file_path = mission_path + "/" + mission_file_name;
 
   // Publisher
-  iridium_pub = n.advertise<seabot_iridium::IridiumLog>("transmission", 1);
+  ros::Publisher iridium_session_pub = n.advertise<seabot_iridium::IridiumSession>("session", 1);
+  ros::Publisher iridium_data_received_pub = n.advertise<std_msgs::String>("received_raw", 1);
+  ros::Publisher iridium_status_pub = n.advertise<std_msgs::String>("status", 1);
 
   // Services
   ros::service::waitForService("/driver/power/sleep_mode");
@@ -246,6 +240,8 @@ int main(int argc, char *argv[]){
 #pragma omp task
       {
         // Write Serial
+        bool send_data_required = false;
+
         while(ros::ok()){
           ros::spinOnce();
 
@@ -254,40 +250,55 @@ int main(int argc, char *argv[]){
           if(is_surface
              && ((t-time_last_communication).toSec()>duration_between_msg)
              && sbd.get_indicator_service()){
-            ROS_INFO("[Iridium] Call Iridium");
+            send_data_required = true;
 
-            // Update Log
+            // Update LogData
             if((t-time_last_log_version).toSec()>30.){
-              string log_sentence = log_state.serialize_log_TDT1();
+              string log_sentence = log_state.serialize_log_state(ros::WallTime::now().toSec());
               sbd.cmd_write_message(log_sentence);
               if(valid_fix && (t-time_last_gnss).toSec()<10.)
                 sbd.set_gnss(latitude, longitude);
             }
-
-            // Send data
-            sbd.cmd_session();
-
-            // Analyse sucess
-            if(sbd.get_session_mo() <= 4){
-              time_last_communication = ros::WallTime::now();
-              sbd.cmd_flush_message(true, false); // Flush data to avoid re-sending it
-            }
-          }
-
-          // Look at received message
-          if(sbd.get_session_mt()==1){
-            std::string message_data = sbd.cmd_read_message();
-            sbd.cmd_flush_message(false, true);
-            call_decode(message_data);
           }
 
           // Request a session if ring alert received or waiting data
-          if(sbd.get_indicator_service() && (sbd.get_ring_alert() || sbd.get_waiting()>0)){
+          if(sbd.get_indicator_service() && (send_data_required || sbd.get_ring_alert() || sbd.get_waiting()>0)){
             sbd.cmd_session();
+
+            // Analyse success
+            bool flush_mo = false;
+            if(sbd.get_session_mo() <= 4){
+              time_last_communication = ros::WallTime::now();
+              flush_mo = true;
+              send_data_required = false;
+            }
+
+            // Look at received message
+            bool flush_mt = false;
+            if(sbd.get_session_mt()==1){
+              std::string message_data = sbd.cmd_read_message();
+
+              // LogData Raw
+              std_msgs::String msg_raw;
+              msg_raw.data = message_data;
+              iridium_data_received_pub.publish(msg_raw);
+
+              // Decode
+              call_decode(message_data);
+              flush_mt = true;
+            }
+
+            sbd.cmd_flush_message(flush_mo, flush_mt); // Flush data to avoid re-sending it
           }
 
-          // Log Data (ToDo)
-
+          // LogData Data (ToDo)
+          if(is_surface){
+            seabot_iridium::IridiumStatus status_msg;
+            status_msg.service = sbd.get_indicator_service();
+            status_msg.signal_strength = sbd.get_indicator_signal();
+            status_msg.antenna = sbd.get_indicator_antenna();
+            iridium_status_pub.publish(status_msg);
+          }
           loop_rate.sleep();
 
         }
@@ -297,4 +308,9 @@ int main(int argc, char *argv[]){
 
   return 0;
 }
+
+/*
+ * ToDo :
+ *  -> msg to set the frequency of state msg
+*/
 

@@ -1,7 +1,7 @@
 #ifndef MISSIONXML_H
 #define MISSIONXML_H
 
-#include "logtdt.h"
+#include "logData.h"
 
 class MissionXML
 {
@@ -11,7 +11,7 @@ public:
    * @brief MissionXML
    * @param log
    */
-  MissionXML(LogTDT &log);
+  MissionXML(LogData &log);
 
   /**
    * @brief write
@@ -20,7 +20,7 @@ public:
   void write(const std::string &filename) const;
 
 private:
-  LogTDT m_log;
+  LogData m_log;
 };
 
 #endif // MISSIONXML_H

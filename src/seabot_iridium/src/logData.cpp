@@ -1,6 +1,11 @@
-#include "logtdt.h"
+#include "logData.h"
 
 #include "boost/filesystem.hpp"
+#include <boost/multiprecision/cpp_int.hpp>
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <iterator>
 
 #include <fstream>
 #include <string>
@@ -13,49 +18,23 @@
 using namespace std;
 using boost::multiprecision::cpp_int;
 
-bool LogTDT::serialize_log_CMD_sleep(const string &file_name){
-  ofstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cerr << "Unable to open " << file_name << " new cmd file : " << errno << endl;
-    return false;
-  }
-
-  //  size_t nb_bits = 5*4; // must be a multiple of 4
-  uint_cmd_sleep_t data = (uint_cmd_sleep_t(1)<<NB_BITS_CMD_SLEEP) -1;
+std::string LogData::serialize_log_CMD_sleep(){
+  //  size_t nb_bits = 5*4; // must be a multiple of 8
+  uint_cmd_sleep_t data;
 
   int bit_position = 0;
   bit_position += serialize_data<uint_cmd_sleep_t>(data, 4, bit_position, CMD_SLEEP);
   bit_position += serialize_data<uint_cmd_sleep_t>(data, 12, bit_position, min(m_sleep_time, (unsigned int)(1<<12)-1));
 
-  save_file.write((char*)&data, NB_BITS_CMD_SLEEP/8);
-  save_file.close();
-
-  return true;
+  return string((char*)data.backend().limbs(), NB_BITS_CMD_SLEEP/8);
 }
 
-bool LogTDT::deserialize_log_CMD_sleep(const string &file_name){
+bool LogData::deserialize_log_CMD_sleep(const string &message){
   cout << "Deserialize log sleep" << endl;
-  ifstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cout << "File cannot be open" << strerror(errno) << endl;
-    return false;
-  }
 
   uint_cmd_sleep_t data = (uint_cmd_sleep_t(1) << NB_BITS_CMD_SLEEP) - 1;
+  memcpy(data.backend().limbs(), message.c_str(), message.size());
 
-  try{
-    save_file.read((char*)data.backend().limbs(), NB_BITS_CMD_SLEEP/8);
-  }
-  catch(std::ios_base::failure& e){
-    cout << "ERROR Reading : " << e.what() << endl;
-  }
-  save_file.close();
-
-  cout << "Start deserializing data" << endl;
   int bit_position = 0;
   unsigned int tmp;
   bit_position += deserialize_data<uint_cmd_sleep_t>(data, 4, bit_position, tmp);
@@ -64,54 +43,27 @@ bool LogTDT::deserialize_log_CMD_sleep(const string &file_name){
   return true;
 }
 
-bool LogTDT::serialize_CMD_parameters(const string &file_name){
-  ofstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cerr << "Unable to open " << file_name << " new cmd file : " << errno << endl;
-    return false;
-  }
-
+std::string LogData::serialize_CMD_parameters(){
   //  size_t nb_bits = 5*4; // must be a multiple of 4
-  uint_cmd_parameters_t data = (uint_cmd_parameters_t(1)<<NB_BITS_CMD_PARAMETERS) -1;
+  uint_cmd_parameters_t data;
 
   int bit_position = 0;
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 4, bit_position, CMD_PARAMETERS);
 
-  // ToDo
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_mission);
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_flash);
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_depth);
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_engine);
 
-  save_file.write((char*)&data, NB_BITS_CMD_PARAMETERS/8);
-  save_file.close();
-
-  return true;
+  return string((char*)data.backend().limbs(), NB_BITS_CMD_PARAMETERS/8);
 }
 
-bool LogTDT::deserialize_log_CMD_parameters(const string &file_name){
+bool LogData::deserialize_log_CMD_parameters(const string &message){
   cout << "Deserialize log parameters" << endl;
-  ifstream save_file;
-  save_file.open(file_name);
 
-  if(!save_file.is_open()){
-    cout << "File cannot be open" << strerror(errno) << endl;
-    return false;
-  }
+  uint_cmd_parameters_t data;
+  memcpy(data.backend().limbs(), message.c_str(), message.size());
 
-  uint_cmd_parameters_t data = (uint_cmd_parameters_t(1) << NB_BITS_CMD_PARAMETERS) - 1;
-
-  try{
-    save_file.read((char*)data.backend().limbs(), NB_BITS_CMD_PARAMETERS/8);
-  }
-  catch(std::ios_base::failure& e){
-    cout << "ERROR Reading : " << e.what() << endl;
-  }
-  save_file.close();
-
-  cout << "Start deserializing data" << endl;
   int bit_position = 0;
   unsigned int tmp;
   bit_position += deserialize_data<uint_cmd_parameters_t>(data, 4, bit_position, tmp);
@@ -124,12 +76,7 @@ bool LogTDT::deserialize_log_CMD_parameters(const string &file_name){
   return true;
 }
 
-bool LogTDT::serialize_log_CMD_waypoint(ofstream &save_file, const Waypoint &w){
-  if(!save_file.is_open()){
-    cerr << "Unable to open file : " << errno << endl;
-    return false;
-  }
-
+std::string LogData::serialize_log_CMD_waypoint(const Waypoint &w){
   uint_cmd_waypoint_t data = (uint_cmd_waypoint_t(1)<<NB_BITS_CMD_WAYPOINT) -1;
 
   int bit_position = 0;
@@ -141,25 +88,12 @@ bool LogTDT::serialize_log_CMD_waypoint(ofstream &save_file, const Waypoint &w){
   bit_position += serialize_data<uint_cmd_waypoint_t>(data, 16, bit_position, w.north, -50e3, 50e3);
   bit_position += serialize_data<uint_cmd_waypoint_t>(data, 8, bit_position, w.depth, 0.0, 51.2);
 
-  save_file.write((char*)&data, NB_BITS_CMD_WAYPOINT/8);
-
-  return true;
+  return string((char*)data.backend().limbs(), NB_BITS_CMD_WAYPOINT/8);
 }
 
-bool LogTDT::deserialize_log_CMD_waypoint(ifstream &save_file){
-  if(!save_file.is_open()){
-    cerr << "Unable to open file : " << errno << endl;
-    return false;
-  }
-
+bool LogData::deserialize_log_CMD_waypoint(const std::string &message){
   uint_cmd_waypoint_t data = (uint_cmd_waypoint_t(1)<<NB_BITS_CMD_WAYPOINT) -1;
-
-  try{
-    save_file.read((char*)data.backend().limbs(), NB_BITS_CMD_WAYPOINT/8);
-  }
-  catch(std::ios_base::failure& e){
-    cout << "ERROR Reading : " << e.what() << endl;
-  }
+  memcpy(data.backend().limbs(), message.c_str(), message.size());
 
   int bit_position = 0;
   double east, north, depth;
@@ -170,19 +104,11 @@ bool LogTDT::deserialize_log_CMD_waypoint(ifstream &save_file){
   bit_position += deserialize_data<uint_cmd_waypoint_t>(data, 8, bit_position, depth, 0.0, 51.2);
 
   Waypoint w(time_end*60.+m_offset_time,depth, north+m_offset_east, east+m_offset_north);
-
+  m_waypoint_list.push_back(w);
   return true;
 }
 
-bool LogTDT::serialize_log_CMD_mission(const string &file_name){
-  ofstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cerr << "Unable to open " << file_name << " new cmd file : " << errno << endl;
-    return false;
-  }
-
+std::string LogData::serialize_log_CMD_mission(){
   // Write Header
   uint_cmd_mission_header_t data = (uint_cmd_mission_header_t(1)<<NB_BITS_CMD_MISSION_HEADER) -1;
 
@@ -197,36 +123,21 @@ bool LogTDT::serialize_log_CMD_mission(const string &file_name){
   bit_position += serialize_data<uint_cmd_mission_header_t>(data, 21, bit_position, m_offset_east, L93_EAST_MIN, L93_EAST_MAX);
   bit_position += serialize_data<uint_cmd_mission_header_t>(data, 21, bit_position, m_offset_north, L93_NORTH_MIN, L93_NORTH_MAX);
 
-  save_file.write((char*)&data, NB_BITS_CMD_MISSION_HEADER/8);
+  string message = string((char*)data.backend().limbs(), NB_BITS_CMD_MISSION_HEADER/8);
 
   // Write waypoint list
   for(size_t i = 0; i<nb_waypoint; i++){
-    serialize_log_CMD_waypoint(save_file, m_waypoint_list[i]);
+    message += serialize_log_CMD_waypoint(m_waypoint_list[i]);
   }
 
-  save_file.close();
-
-  return true;
+  return message;
 }
 
-bool LogTDT::deserialize_log_CMD_mission(const string &file_name){
+bool LogData::deserialize_log_CMD_mission(const string &message){
   cout << "Deserialize log mission" << endl;
-  ifstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cout << "File cannot be open" << strerror(errno) << endl;
-    return false;
-  }
 
   uint_cmd_mission_header_t data = (uint_cmd_mission_header_t(1) << NB_BITS_CMD_MISSION_HEADER) - 1;
-
-  try{
-    save_file.read((char*)data.backend().limbs(), NB_BITS_CMD_MISSION_HEADER/8);
-  }
-  catch(std::ios_base::failure& e){
-    cout << "ERROR Reading : " << e.what() << endl;
-  }
+  memcpy(data.backend().limbs(), message.c_str(), NB_BITS_CMD_MISSION_HEADER/8);
 
   int bit_position = 0;
   unsigned int cmd_type_tmp, nb_waypoints, offset_time;
@@ -240,19 +151,21 @@ bool LogTDT::deserialize_log_CMD_mission(const string &file_name){
 
   // Write waypoint list
   for(size_t i=0; i<nb_waypoints; i++){
-    deserialize_log_CMD_waypoint(save_file);
+    size_t s_bit = NB_BITS_CMD_MISSION_HEADER/8+i*NB_BITS_CMD_WAYPOINT;
+    deserialize_log_CMD_waypoint(message.substr(s_bit, NB_BITS_CMD_WAYPOINT));
   }
-
-  save_file.close();
 
   return true;
 }
 
-std::string LogTDT::serialize_log_TDT1(){
-  size_t nb_bits = 26*4; // must be a multiple of 4
+std::string LogData::serialize_log_state(const long long &time){
+  size_t nb_bits = 32*4; // must be a multiple of 4
   uint_log1_t data = (uint_log1_t(1)<<nb_bits) -1;
 
   int bit_position = 0;
+
+  unsigned int time_now = max(0.,round((time-TIME_POSIX_START)/60.));
+  bit_position += serialize_data<uint_log1_t>(data, 18, bit_position, time_now, 0, (1<<18 -1));
   bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_east, L93_EAST_MIN, L93_EAST_MAX);
   bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_north, L93_NORTH_MIN, L93_NORTH_MAX);
   bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_speed, 0, 5.0);
@@ -270,10 +183,11 @@ std::string LogTDT::serialize_log_TDT1(){
   bit_position += serialize_data<uint_log1_t>(data, 6, bit_position, m_internal_humidity, 50.0, 100.0);
 
   bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_current_waypoint);
-  return string(data);
+  bit_position += serialize_data<uint_log1_t>(data, 6, bit_position, m_last_cmd_received);
+  return string((char*)data.backend().limbs(), NB_BITS_LOG1/8);
 }
 
-bool LogTDT::serialize_log_TDT1(const string &file_name){
+bool LogData::write_file(const string &file_name, const string &data){
   ofstream save_file;
   save_file.open(file_name);
 
@@ -282,37 +196,37 @@ bool LogTDT::serialize_log_TDT1(const string &file_name){
     return false;
   }
 
-  string data = serialize_log_TDT1();
   save_file.write(data.c_str(), NB_BITS_LOG1/8);
   save_file.close();
 
   return true;
 }
 
-bool LogTDT::deserialize_log_TDT1(const string &file_name){
-  cout << "Deserialize log TDT1" << endl;
-  ifstream save_file;
+std::string LogData::read_file(const std::string &file_name){
+  std::ifstream save_file;
   save_file.open(file_name);
-
   if(!save_file.is_open()){
     cout << "File cannot be open" << strerror(errno) << endl;
-    return false;
+    cout << "file_name = " << file_name << endl;
+    return "";
   }
+  std::string data((std::istreambuf_iterator<char>(save_file)),
+                   std::istreambuf_iterator<char>());
+
+  save_file.close();
+  return data;
+}
+
+bool LogData::deserialize_log_state(const string &data_raw){
 
   uint_log1_t data = (uint_log1_t(1) << NB_BITS_LOG1) - 1;
-
-  try{
-    save_file.read((char*)data.backend().limbs(), NB_BITS_LOG1/8);
-  }
-  catch(std::ios_base::failure& e){
-    cout << "ERROR Reading : " << e.what() << endl;
-  }
-  save_file.close();
-
+  memcpy(data.backend().limbs(), data_raw.c_str(), data_raw.size()); // To be checked !
   cout << data << endl;
 
   cout << "Start deserializing data" << endl;
   int bit_position = 0;
+  unsigned int time_now;
+  bit_position += deserialize_data<uint_log1_t>(data, 18, bit_position, time_now);
   bit_position += deserialize_data<uint_log1_t>(data, 21, bit_position, m_east, 0, 1300000);
   bit_position += deserialize_data<uint_log1_t>(data, 21, bit_position, m_north, 6000000, 7200000);
   bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_speed, 0, 5.0);
@@ -330,42 +244,26 @@ bool LogTDT::deserialize_log_TDT1(const string &file_name){
   bit_position += deserialize_data<uint_log1_t>(data, 6, bit_position, m_internal_humidity,50.0, 100.0);
 
   bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_current_waypoint);
+  bit_position += deserialize_data<uint_log1_t>(data, 6, bit_position, m_last_cmd_received);
+
+  m_time_now = time_now*60.+TIME_POSIX_START;
 
   return true;
 }
 
-bool LogTDT::deserialize_log_CMD(const string &file_name){
-  cout << "Deserialize log CMD" << endl;
-  ifstream save_file;
-  save_file.open(file_name);
-
-  if(!save_file.is_open()){
-    cout << "File cannot be open" << strerror(errno) << endl;
-    return false;
-  }
-
-  // Read heading message type
-  char data;
-  try{
-    save_file.read(&data, 1);
-  }
-  catch(std::ios_base::failure& e){
-    cout << "ERROR Reading : " << e.what() << endl;
-  }
-  save_file.close();
-
-  unsigned char message_type = data & (1<<4 -1);
+bool LogData::deserialize_log_CMD(const string &raw_data){
+  unsigned char message_type = raw_data[0] & 0xF;
 
   switch(message_type){
   case CMD_SLEEP:
     m_cmd_type = CMD_SLEEP;
     cout << "CMD Sleep" << endl;
-    deserialize_log_CMD_sleep(file_name);
+    deserialize_log_CMD_sleep(raw_data);
     break;
   case CMD_MISSION:
     cout << "CMD Mission" << endl;
     m_cmd_type = CMD_MISSION;
-    deserialize_log_CMD_mission(file_name);
+    deserialize_log_CMD_mission(raw_data);
     break;
   default:
     break;

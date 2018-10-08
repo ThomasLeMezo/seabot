@@ -1,5 +1,5 @@
 #include "missionxml.h"
-#include "logtdt.h"
+#include "logData.h"
 
 #include <ctime>
 
@@ -12,7 +12,7 @@
 #include <iostream>
 namespace pt = boost::property_tree;
 
-MissionXML::MissionXML(LogTDT &log){
+MissionXML::MissionXML(LogData &log){
   m_log = log;
 }
 

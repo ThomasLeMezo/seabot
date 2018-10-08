@@ -2,7 +2,6 @@
 #define SBD_H
 
 #include <string>
-//#include "TimeoutSerial.h"
 #include "BufferedAsyncSerial.h"
 #include "omp.h"
 

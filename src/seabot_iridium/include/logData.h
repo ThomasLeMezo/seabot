@@ -1,5 +1,5 @@
-#ifndef LOGTDT_H
-#define LOGTDT_H
+#ifndef LOGDATA_H
+#define LOGDATA_H
 
 #include <string>
 #include <vector>
@@ -15,7 +15,7 @@ using boost::multiprecision::cpp_int;
 
 enum CMD_TYPE:unsigned int {CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
 
-#define NB_BITS_LOG1 112
+#define NB_BITS_LOG1 136
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_LOG1, NB_BITS_LOG1, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_log1_t;
 
 #define NB_BITS_CMD_SLEEP 16
@@ -49,13 +49,13 @@ public:
   unsigned long time_end = 0;
 };
 
-class LogTDT
+class LogData
 {
 public:
   /**
-   * @brief LogTDT
+   * @brief LogData
    */
-  LogTDT(){}
+  LogData(){}
 
 private:
   /**
@@ -118,10 +118,10 @@ private:
 
 public:
   /**
-   * @brief deserialize_log_TDT1
+   * @brief deserialize_log_state
    * @param file_name
    */
-  bool deserialize_log_TDT1(const std::string &file_name);
+  bool deserialize_log_state(const std::string &data_raw);
 
   /**
    * @brief deserialize_log_CMD
@@ -129,22 +129,21 @@ public:
    * @param type
    * @return
    */
-  bool deserialize_log_CMD(const std::string &file_name);
+  bool deserialize_log_CMD(const std::string &raw_data);
 
   /**
-   * @brief serialize_log_TDT1
+   * @brief serialize_log_state
    * @param file_name
    * @return
    */
-  bool serialize_log_TDT1(const std::string &file_name);
-  std::string serialize_log_TDT1();
+  std::string serialize_log_state(const long long &time);
 
   /**
    * @brief deserialize_log_CMD_sleep
    * @param file_name
    * @return
    */
-  bool deserialize_log_CMD_sleep(const std::string &file_name);
+  bool deserialize_log_CMD_sleep(const std::string &data);
 
   /**
    * @brief serialize_log_CMD_sleep
@@ -152,21 +151,36 @@ public:
    * @param min
    * @return
    */
-  bool serialize_log_CMD_sleep(const std::string &file_name);
+  std::string serialize_log_CMD_sleep();
 
   /**
    * @brief serialize_log_CMD_mission
    * @param file_name
    * @return
    */
-  bool serialize_log_CMD_mission(const std::string &file_name);
+  std::string serialize_log_CMD_mission();
 
   /**
    * @brief deserialize_log_CMD_mission
    * @param file_name
    * @return
    */
-  bool deserialize_log_CMD_mission(const std::string &file_name);
+  bool deserialize_log_CMD_mission(const std::string &data);
+
+  /**
+   * @brief write_file
+   * @param file_name
+   * @param data
+   * @return
+   */
+  bool write_file(const std::string &file_name, const std::string &data);
+
+  /**
+   * @brief read_file
+   * @param file_name
+   * @return
+   */
+  std::string read_file(const std::string &file_name);
 
 private:
 
@@ -176,30 +190,32 @@ private:
    * @param w
    * @return
    */
-  bool serialize_log_CMD_waypoint(std::ofstream &save_file, const Waypoint &w);
+  std::string serialize_log_CMD_waypoint(const Waypoint &w);
 
   /**
-   * @brief LogTDT::deserialize_log_CMD_waypoint
+   * @brief LogData::deserialize_log_CMD_waypoint
    * @param save_file
    * @return
    */
-  bool deserialize_log_CMD_waypoint(std::ifstream &save_file);
+  bool deserialize_log_CMD_waypoint(const std::string &message);
 
   /**
    * @brief serialize_CMD_parameters
    * @param file_name
    * @return
    */
-  bool serialize_CMD_parameters(const std::string &file_name);
+  std::string serialize_CMD_parameters();
 
   /**
    * @brief deserialize_log_CMD_parameters
    * @param file_name
    * @return
    */
-  bool deserialize_log_CMD_parameters(const std::string &file_name);
+  bool deserialize_log_CMD_parameters(const std::string &message);
 
 public:
+  double m_time_now = 0.0;
+
   double m_east = 42.0; // 2^21-1
   double m_north = 6000042.0; // 2^21-1 + 6e6
   double m_gnss_speed = 4.2;
@@ -218,18 +234,20 @@ public:
   std::vector<Waypoint> m_waypoint_list;
   double m_offset_east = 0.;
   double m_offset_north = 0.;
-  double m_offset_time = TIME_POSIX_START; // in sec
+  long long m_offset_time = TIME_POSIX_START; // in sec
 
   bool m_enable_mission = true;
   bool m_enable_flash = true;
   bool m_enable_depth = true;
   bool m_enable_engine = true;
 
+  unsigned int m_last_cmd_received = 0;
+
   CMD_TYPE m_cmd_type;
 };
 
 template<typename _T>
-int LogTDT::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double &value_max){
+int LogData::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double &value_max){
   double scale = (double)(1<<nb_bit-1)/(value_max-value_min);
   double bit_max = (1<<nb_bit-1);
   long unsigned int v = (long unsigned int)(std::min(std::max(round((value-value_min)*scale), 0.0), bit_max));
@@ -243,7 +261,7 @@ int LogTDT::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, co
 }
 
 template<typename _T>
-int LogTDT::deserialize_data(_T &bits, const int &nb_bit, const int &start_bit, double &value, const double &value_min, const double &value_max){
+int LogData::deserialize_data(_T &bits, const int &nb_bit, const int &start_bit, double &value, const double &value_min, const double &value_max){
   double scale = (double)(1<<nb_bit-1)/(value_max-value_min);
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
@@ -256,7 +274,7 @@ int LogTDT::deserialize_data(_T &bits, const int &nb_bit, const int &start_bit, 
 }
 
 template<typename _T>
-int LogTDT::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const unsigned int &value){
+int LogData::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const unsigned int &value){
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   bits &= ~mask;
   bits |= (_T(value) & ((_T(1)<<nb_bit)-1)) << start_bit;
@@ -264,7 +282,7 @@ int LogTDT::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, co
 }
 
 template<typename _T>
-int LogTDT::deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, unsigned int &value){
+int LogData::deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, unsigned int &value){
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
 
@@ -273,7 +291,7 @@ int LogTDT::deserialize_data(const _T &bits, const int &nb_bit, const int &start
 }
 
 template<typename _T>
-int LogTDT::deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, bool &value){
+int LogData::deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, bool &value){
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
 
@@ -281,4 +299,4 @@ int LogTDT::deserialize_data(const _T &bits, const int &nb_bit, const int &start
   return nb_bit;
 }
 
-#endif // LOGTDT_H
+#endif // LOGDATA_H
