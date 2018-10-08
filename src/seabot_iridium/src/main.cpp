@@ -176,6 +176,7 @@ void call_decode(const string &data_raw){
   default:
     break;
   }
+  log_state.m_last_cmd_received = log_cmd.m_cmd_type;
 }
 
 int main(int argc, char *argv[]){
@@ -271,6 +272,7 @@ int main(int argc, char *argv[]){
               time_last_communication = ros::WallTime::now();
               flush_mo = true;
               send_data_required = false;
+              log_state.m_last_cmd_received = 0;
             }
 
             // Look at received message
