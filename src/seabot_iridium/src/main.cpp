@@ -170,6 +170,7 @@ void call_decode(const string &data_raw){
   {
     // Enable/Diseable
     // safety, flash, mission, sink etc.
+    duration_between_msg = (log_cmd.m_period_message/10.)*60.;
     call_enable_mission(log_cmd.m_enable_mission, log_cmd.m_enable_depth, log_cmd.m_enable_engine);
     break;
   }

@@ -27,7 +27,7 @@ typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_
 #define NB_BITS_CMD_MISSION_HEADER 72
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_MISSION_HEADER, NB_BITS_CMD_MISSION_HEADER, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_mission_header_t;
 
-#define NB_BITS_CMD_PARAMETERS 8
+#define NB_BITS_CMD_PARAMETERS 16
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_PARAMETERS, NB_BITS_CMD_PARAMETERS, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_parameters_t;
 
 
@@ -242,6 +242,7 @@ public:
   bool m_enable_engine = true;
 
   unsigned int m_last_cmd_received = 0;
+  unsigned int m_period_message = 30; // in 10*min
 
   CMD_TYPE m_cmd_type;
 };
