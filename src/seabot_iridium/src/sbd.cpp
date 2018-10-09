@@ -349,7 +349,7 @@ int SBD::cmd_session(){
 
     write(cmd);
 
-    for(size_t i=0; i<20; i++){
+    for(size_t i=0; i<4*60; i++){
       if(is_in_session())
         break;
       usleep(250000);
