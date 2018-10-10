@@ -18,7 +18,7 @@ while 1:
     t+=dt
     
     home = expanduser("~")
-    with open(home + "/last_tdt1.yaml", 'r') as stream:
+    with open(home + "/iridium/received/last_received.yaml", 'r') as stream:
         try:
             data_yaml = yaml.load(stream)
         except yaml.YAMLError as exc:

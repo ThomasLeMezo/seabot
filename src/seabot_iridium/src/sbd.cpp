@@ -365,7 +365,7 @@ int SBD::cmd_session(){
     write(cmd);
 
     for(size_t i=0; i<4*60; i++){
-      if(!is_in_session())
+      if(is_in_session()==false)
         return 0;
       std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }

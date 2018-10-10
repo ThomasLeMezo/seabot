@@ -229,8 +229,8 @@ int main(int argc, char *argv[]){
 
   sbd.init();
 
-  omp_set_num_threads(2);
-#pragma omp parallel
+//  omp_set_num_threads(2);
+#pragma omp parallel num_threads(2)
   {
 #pragma omp single
     {
@@ -251,6 +251,7 @@ int main(int argc, char *argv[]){
 
         ROS_INFO("[Iridium] Start Ok");
         while(ros::ok()){
+          loop_rate.sleep();
           ros::spinOnce();
 
           // State machine
@@ -312,7 +313,7 @@ int main(int argc, char *argv[]){
             sbd.cmd_flush_message(flush_mo, flush_mt); // Flush data to avoid re-sending it
           }
 
-          // LogData Data (ToDo)
+          // LogData Data
           if(is_surface){
             seabot_iridium::IridiumStatus status_msg;
             status_msg.service = sbd.get_indicator_service();
@@ -320,7 +321,6 @@ int main(int argc, char *argv[]){
             status_msg.antenna = sbd.get_indicator_antenna();
             iridium_status_pub.publish(status_msg);
           }
-          std::this_thread::sleep_for(std::chrono::seconds(1));
         }
       }
     }

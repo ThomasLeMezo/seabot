@@ -15,6 +15,9 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
+#include "ros/ros.h"
 
 #include "omp.h"
 
@@ -177,46 +180,91 @@ void test6(){
   cout << "last_cmd_received: " << d.m_last_cmd_received << endl;
 }
 
+void test7(){
+  ros::Rate loop_rate(0.5);
+
+#pragma omp parallel
+  {
+#pragma omp single
+    {
+#pragma omp task
+      {
+        // Read Serial Com
+        while(1){
+          cout << "Test2" << endl;
+          loop_rate.sleep();
+        }
+      }
+
+#pragma omp task
+      {
+        while(1){
+          sleep(7);
+          cout << "Test7" << endl;
+
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, char *argv[]){
+//  ros::init(argc, argv, "iridium_node");
+//    ros::NodeHandle n;
 
-    test6();
+//    test6();
 
-//    string file_name(argv[1]);
-//    string data_raw = logData.read_file(file_name);
-//    logData.deserialize_log_state(data_raw);
+    std::string login_name(std::getenv("USER"));
 
-//    stringstream data;
-//    data << "file_name: " << file_name << endl;
+    string path_iridium("/home/" + login_name + "/iridium/received/");
+    string path_archive(path_iridium + "archive/");
+
+    boost::filesystem::path dir_archive(path_archive);
+    boost::filesystem::create_directory(dir_archive);
+
+    string dir_path(argv[1]);
+    string file_name(argv[2]);
+    string imei(argv[3]);
+
+    string file_path = dir_path+file_name;
+    string data_raw = logData.read_file(file_path);
+    logData.deserialize_log_state(data_raw);
+
+    stringstream data;
+    data << "file_name: " << file_name << endl;
   
-//    data << "east: " << std::fixed << logData.m_east << endl;
-//    data << "north: " << std::fixed << logData.m_north << endl;
-//    data << "gnss_speed: " << logData.m_gnss_speed << endl;
-//    data << "gnss_heading: " << logData.m_gnss_heading << endl;
+    data << "east: " << std::fixed << logData.m_east << endl;
+    data << "north: " << std::fixed << logData.m_north << endl;
+    data << "gnss_speed: " << logData.m_gnss_speed << endl;
+    data << "gnss_heading: " << logData.m_gnss_heading << endl;
 
-//    data << "seabot_state: " << logData.m_seabot_state << endl;
+    data << "seabot_state: " << logData.m_seabot_state << endl;
 
-//    data << "batteries[0]: " << logData.m_batteries[0] << endl;
-//    data << "batteries[1]: " << logData.m_batteries[1] << endl;
-//    data << "batteries[2]: " << logData.m_batteries[2] << endl;
-//    data << "batteries[3]: " << logData.m_batteries[3] << endl;
+    data << "batteries[0]: " << logData.m_batteries[0] << endl;
+    data << "batteries[1]: " << logData.m_batteries[1] << endl;
+    data << "batteries[2]: " << logData.m_batteries[2] << endl;
+    data << "batteries[3]: " << logData.m_batteries[3] << endl;
 
-//    data << "internal_pressure: " << logData.m_internal_pressure << endl;
-//    data << "internal_temperature: " << logData.m_internal_temperature << endl;
+    data << "internal_pressure: " << logData.m_internal_pressure << endl;
+    data << "internal_temperature: " << logData.m_internal_temperature << endl;
 
-//    data << "current_waypoint: " << logData.m_current_waypoint << endl;
+    data << "current_waypoint: " << logData.m_current_waypoint << endl;
 
+    string path_dir = path_archive + imei + "/";
+    boost::filesystem::path dir(path_dir);
+    boost::filesystem::create_directory(dir);
 
-//    string output_filename1 = string(argv[1]) + "_decode.yaml";
-//    std::ofstream outfile(output_filename1);
-//    outfile << data.str();
-//    outfile.close();
+    string output_filename1 = path_dir + file_name + "_decode.yaml";
+    std::ofstream outfile(output_filename1);
+    outfile << data.str();
+    outfile.close();
 
-//    struct passwd *pw = getpwuid(getuid());
-//    const char *homedir = pw->pw_dir;
-//    string output_filename2 = string(homedir) + "/last_tdt1.yaml";
-//    std::ofstream outfile2(output_filename2);
-//    outfile2 << data.str();
-//    outfile2.close();
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+    string output_filename2 = path_iridium + "/" + "last_received.yaml";
+    std::ofstream outfile2(output_filename2);
+    outfile2 << data.str();
+    outfile2.close();
 
   return 0;
 }
