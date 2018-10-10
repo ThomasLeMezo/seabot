@@ -9,9 +9,11 @@ I2C_RESET = 0x1E
 I2C_MEASURE = 0x48
 
 I2C_STATE = 0xC1
+I2C_CPT = 0xC2
 I2C_VALUES = 0x00
 I2C_PROM = 0xA2
 
+bus.write_byte(I2C_ADD, I2C_RESET)
 
 prom = bus.read_i2c_block_data(I2C_ADD, I2C_PROM, 10)
 k4 = prom[0]<<8 | prom[1]
@@ -47,11 +49,12 @@ try:
         # Read
         data = bus.read_i2c_block_data(I2C_ADD, I2C_VALUES, 3)
         state = bus.read_byte_data(I2C_ADD, I2C_STATE)
+        cpt = bus.read_byte_data(I2C_ADD, I2C_CPT)
 
         T = compute_temperature(data)
-        k+=1
+        k=(k+1)%255
 
-        print("T = ", "%.3f" % T , "\tState = ", state, '\tk =', k, end ="\r") 
+        print(k, '/', cpt, "\tT = ", "%.5f" % T , "\tState = ", state, end ="\r") 
         time.sleep(1)
 
 except KeyboardInterrupt:

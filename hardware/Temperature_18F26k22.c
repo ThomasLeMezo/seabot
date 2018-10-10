@@ -67,6 +67,8 @@ unsigned short conversion = 0;
 enum power_state {IDLE,RESET_TSYS01,CONVERSION_READ};
 unsigned short state = IDLE;
 
+unsigned short cpt = 0;
+
 
 /**
  * @brief i2c_read_data_from_buffer
@@ -143,6 +145,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
   case 0xC1:
     SSP2BUF = state;
     break;
+  case 0xC2:
+    SSP2BUF = cpt;
+    break;
   default:
     SSP2BUF = 0x00;
     break;
@@ -158,7 +163,6 @@ void init_io(){
   ANSELA = 0x00;
   ANSELB = 0x00;
   ANSELC = 0x00;
-
 
   CM1CON0 = 0x00; // Not using the comparators
   CM2CON0 = 0x00;
@@ -200,12 +204,14 @@ void reset_TSYS01_sequence(){
 void prom_read_TSYS01_sequence(){
    unsigned short j = 0;
 
-// Read calibration values
+  // Read calibration values
   for(j = 0 ; j < 8 ; j++ ){
          I2C1_Start();
          I2C1_Wr(TSYS01_ADDR);
          I2C1_Wr(0xA0+j*2);
          I2C1_Stop();
+         
+         delay_us(100);
 
          I2C1_Start();
          I2C1_Wr(TSYS01_ADDR+1);
@@ -214,6 +220,7 @@ void prom_read_TSYS01_sequence(){
          I2C1_Stop();
 
          coefficient_tab[j] = (octet1 << 8) | octet2;
+         delay_us(100);
    }
 }
 
@@ -254,6 +261,7 @@ void read_TSYS01_sequence(){
   I2C1_Stop();
   
   conversion = 0;
+  cpt++;
 }
 
 
@@ -279,19 +287,27 @@ void uart_read_sequence(){
  */
 void main(){
   // Oscillateur interne de 16Mhz
-  OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
+ // OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
 
-  // UART1_Init(9600);
+  /*// UART1_Init(9600);
   init_io(); // Initialisation des I/O
 
+  delay_ms(1000);
+  LED = 1;
   I2C1_Init(100000);// initialize I2C communication bus I2C NÂ°1
-  delay_ms(10);
-  
-  reset_TSYS01_sequence();
-  prom_read_TSYS01_sequence();
+  delay_ms(1000);
+  LED = 0;
 
+  reset_TSYS01_sequence();
+  delay_ms(1000);
+  LED =1;
+  prom_read_TSYS01_sequence();
+  delay_ms(1000);
+
+  LED=0;
   init_i2c(); // Initialisation de l'I2C en esclave bus I2C NÂ°2
-  
+  init_io(); // Initialisation des I/O
+
   LED = 0; // sortie LED
   RCON.IPEN = 1;  //Enable priority levels on interrupts
   IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C NÂ°2
@@ -299,8 +315,33 @@ void main(){
   INTCON.GIEL = 1; //enable all low-priority interrupts
 
   INTCON.GIE = 1; // Global Interrupt Enable bit
+  INTCON.PEIE = 1; // Peripheral Interrupt Enable bit*/
+  
+  // Oscillateur interne de 16Mhz
+  OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
+
+  init_io(); // Initialisation des I/O
+  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N°2
+  I2C1_Init(100000);// initialize I2C communication bus I2C N°1
+
+  LED = 0; // sortie LED
+
+  delay_ms(2000);
+  UART1_Init(9600);
+
+  RCON.IPEN = 1;  //Enable priority levels on interrupts
+  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N°2
+  INTCON.GIEH = 1; //enable all high-priority interrupts
+  INTCON.GIEL = 1; //enable all low-priority interrupts
+
+  INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
+  LED = 1;
+  reset_TSYS01_sequence();
+  prom_read_TSYS01_sequence();
+  LED = 0;
+  
   while(1){
 
     //UART1_Write(state);

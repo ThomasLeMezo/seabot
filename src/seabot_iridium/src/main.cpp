@@ -23,6 +23,9 @@
 #include "std_msgs/String.h"
 #include "sbd.h"
 
+#include <thread>
+#include <chrono>
+
 using namespace std;
 
 double duration_between_msg = 180;
@@ -225,9 +228,6 @@ int main(int argc, char *argv[]){
   ros::WallTime time_last_log_version;
 
   sbd.init();
-  ROS_INFO("[Iridium] Start Ok");
-  sbd.cmd_enable_indicator_reporting(true);
-  sbd.cmd_enable_alert(true);
 
   omp_set_num_threads(2);
 #pragma omp parallel
@@ -245,7 +245,11 @@ int main(int argc, char *argv[]){
       {
         // Write Serial
         bool send_data_required = false;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        sbd.cmd_enable_indicator_reporting(true);
+        sbd.cmd_enable_alert(true);
 
+        ROS_INFO("[Iridium] Start Ok");
         while(ros::ok()){
           ros::spinOnce();
 
@@ -253,7 +257,7 @@ int main(int argc, char *argv[]){
           ros::WallTime t = ros::WallTime::now();
           if(is_surface
              && ((t-time_last_communication).toSec()>duration_between_msg)
-             && sbd.get_indicator_service()){
+             && sbd.get_indicator_service() == 1){
             send_data_required = true;
 
             // Update LogData
@@ -266,8 +270,11 @@ int main(int argc, char *argv[]){
           }
 
           // Request a session if ring alert received or waiting data
-          if(sbd.get_indicator_service() && (send_data_required || sbd.get_ring_alert() || sbd.get_waiting()>0)){
-            sbd.cmd_session();
+          if(sbd.get_indicator_service()==1 && (send_data_required || sbd.get_ring_alert() || sbd.get_waiting()>0)){
+            int result = sbd.cmd_session();
+
+            if(result==1)
+              ROS_INFO("[Iridium] Session not finished yet");
 
             seabot_iridium::IridiumSession session_msg;
             session_msg.mo = sbd.get_session_mo();
@@ -313,8 +320,7 @@ int main(int argc, char *argv[]){
             status_msg.antenna = sbd.get_indicator_antenna();
             iridium_status_pub.publish(status_msg);
           }
-          loop_rate.sleep();
-
+          std::this_thread::sleep_for(std::chrono::seconds(1));
         }
       }
     }

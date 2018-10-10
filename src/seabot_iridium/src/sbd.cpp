@@ -11,6 +11,9 @@
 
 #include <ros/ros.h>
 
+#include <thread>
+#include <chrono>
+
 using namespace boost;
 using namespace std;
 
@@ -55,6 +58,7 @@ void SBD::read(){
       m_ERROR = true;
       m_READY = false;
       m_OK = false;
+      ROS_WARN("[Iridium] Received ERROR");
     }
     else if(boost::starts_with(result, "SBDRING")){
       m_ring_alert = true;
@@ -169,6 +173,7 @@ void SBD::read(){
         m_waiting = stoi(fields[5]);
       }
       m_in_session = false;
+      ROS_INFO("[Iridium] Session result");
       omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "+AREG:")){
@@ -189,7 +194,7 @@ void SBD::read(){
     }
   }
 
-  usleep(10000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 /**
@@ -212,7 +217,7 @@ int SBD::cmd_CSQ(bool fast){
   omp_unset_lock(&lock_data);
 
   write("AT+CSQ" + string(fast?"F":""));
-  usleep(500000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
   omp_set_lock(&lock_data);
   int result = m_CSQ;
   omp_unset_lock(&lock_data);
@@ -221,7 +226,7 @@ int SBD::cmd_CSQ(bool fast){
 
 long long SBD::cmd_get_imei(){
   write("AT+CGSN");
-  usleep(500000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
   omp_set_lock(&lock_data);
   long long result = m_imei;
   omp_unset_lock(&lock_data);
@@ -233,7 +238,7 @@ int SBD::cmd_copy_MO_MT(){
   m_copy_MO_MT_size = -1;
   omp_unset_lock(&lock_data);
   write("AT+SBDTC");
-  usleep(500000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   omp_set_lock(&lock_data);
   int result = m_copy_MO_MT_size;
@@ -260,7 +265,7 @@ int SBD::cmd_write_message(const std::string &data){
       valid = true;
       break;
     }
-    usleep(10000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   if(valid){
@@ -274,7 +279,7 @@ int SBD::cmd_write_message(const std::string &data){
     data_checksum += uint8_t(checksum);
     write(data_checksum);
 
-    usleep(100000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     omp_set_lock(&lock_data);
     int result = m_ready_return;
@@ -292,7 +297,7 @@ std::string SBD::cmd_read_message(){
   omp_unset_lock(&lock_data);
 
   write(cmd);
-  usleep(500000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   omp_set_lock(&lock_data);
   string result = m_read_msg_data;
@@ -316,7 +321,7 @@ int SBD::cmd_flush_message(const bool &MO, const bool &MT){
 int SBD::cmd_status(){
   string cmd = "AT+SBDSX";
   write(cmd);
-  usleep(100000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   return 0;
 }
 
@@ -324,8 +329,8 @@ int SBD::cmd_session(){
   omp_set_lock(&lock_data);
   bool start_mission = m_in_session;
   bool answer = m_ring_alert;
-  m_SESSION_MO = 5;
-  m_SESSION_MT = 2;
+  m_SESSION_MO = -2;
+  m_SESSION_MT = -2;
   omp_unset_lock(&lock_data);
 
   if(!start_mission){
@@ -361,11 +366,11 @@ int SBD::cmd_session(){
 
     for(size_t i=0; i<4*60; i++){
       if(!is_in_session())
-        break;
-      usleep(250000);
+        return 0;
+      std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
 
-    return 0;
+    return 1;
   }
   else{
     return 1;
