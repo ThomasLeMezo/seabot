@@ -207,7 +207,7 @@ int main(int argc, char *argv[]){
   // Publisher
   ros::Publisher iridium_session_pub = n.advertise<seabot_iridium::IridiumSession>("session", 1);
   ros::Publisher iridium_data_received_pub = n.advertise<std_msgs::String>("received_raw", 1);
-  ros::Publisher iridium_status_pub = n.advertise<std_msgs::String>("status", 1);
+  ros::Publisher iridium_status_pub = n.advertise<seabot_iridium::IridiumStatus>("status", 1);
 
   // Services
   ros::service::waitForService("/driver/power/sleep_mode");
@@ -226,6 +226,8 @@ int main(int argc, char *argv[]){
 
   sbd.init();
   ROS_INFO("[Iridium] Start Ok");
+  sbd.cmd_enable_indicator_reporting(true);
+  sbd.cmd_enable_alert(true);
 
   omp_set_num_threads(2);
 #pragma omp parallel
@@ -267,9 +269,18 @@ int main(int argc, char *argv[]){
           if(sbd.get_indicator_service() && (send_data_required || sbd.get_ring_alert() || sbd.get_waiting()>0)){
             sbd.cmd_session();
 
+            seabot_iridium::IridiumSession session_msg;
+            session_msg.mo = sbd.get_session_mo();
+            session_msg.momsn = sbd.get_session_momsn();
+            session_msg.mt = sbd.get_session_mt();
+            session_msg.mtmsn = sbd.get_session_mtmsn();
+            session_msg.waiting = sbd.get_waiting();
+            iridium_session_pub.publish(session_msg);
+
             // Analyse success
             bool flush_mo = false;
-            if(sbd.get_session_mo() <= 4){
+            int session_mo_result = sbd.get_session_mo();
+            if(session_mo_result>=0 && session_mo_result <= 4){
               time_last_communication = ros::WallTime::now();
               flush_mo = true;
               send_data_required = false;

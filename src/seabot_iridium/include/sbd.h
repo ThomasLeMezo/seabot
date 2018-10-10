@@ -163,9 +163,9 @@ private:
   int m_STATUS_RA = -2;
   int m_waiting = -2;
 
-  int m_SESSION_MO = 5;
+  int m_SESSION_MO = -2;
   int m_SESSION_MOMSN = -2;
-  int m_SESSION_MT = 2;
+  int m_SESSION_MT = -2;
   int m_SESSION_MTMSN = -2;
 
   int m_CSQ = -1;
@@ -193,6 +193,9 @@ private:
 
   unsigned int m_gpio_power = 5;
   bool m_iridium_power_state = false;
+
+  int m_reg_status = -1;
+  int m_reg_error_code = -1;
 
 public:
   int get_status_mo();

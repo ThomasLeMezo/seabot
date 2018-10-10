@@ -59,9 +59,19 @@ void SBD::read(){
     else if(boost::starts_with(result, "SBDRING")){
       m_ring_alert = true;
     }
+    else if(boost::starts_with(result, "+SBDREG:")){
+      vector<string> fields;
+      string result0 = result.substr(8);
+      boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
+      omp_set_lock(&lock_data);
+      m_reg_status = stoi(fields[0]);
+      m_reg_error_code = stoi(fields[1]);
+      omp_unset_lock(&lock_data);
+    }
     else if(boost::starts_with(result, "+CRIS:")){
       vector<string> fields;
-      boost::split(fields, result, boost::is_any_of(","), boost::token_compress_on);
+      string result0 = result.substr(6);
+      boost::split(fields, result0, boost::is_any_of(","), boost::token_compress_on);
       omp_set_lock(&lock_data);
       m_ring_alert_code = stoi(fields[1]);
       omp_unset_lock(&lock_data);
@@ -350,7 +360,7 @@ int SBD::cmd_session(){
     write(cmd);
 
     for(size_t i=0; i<4*60; i++){
-      if(is_in_session())
+      if(!is_in_session())
         break;
       usleep(250000);
     }
