@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-import smbus2
+import smbus
 import time
 
-bus = smbus2.SMBus(1)
+bus = smbus.SMBus(1)
 
 I2C_ADD = 0x45
 I2C_RESET = 0x1E
@@ -13,7 +13,7 @@ I2C_VALUES = 0x00
 I2C_PROM = 0xA2
 
 
-prom = bus.read_i2c_block_data(I2C_PROM, 0, 10)
+prom = bus.read_i2c_block_data(I2C_ADD, I2C_PROM, 10)
 k4 = prom[0]<<8 | prom[1]
 k3 = prom[2]<<8 | prom[3]
 k2 = prom[4]<<8 | prom[5]
@@ -37,20 +37,22 @@ def compute_temperature(data):
     return T
 
 try:
+    k=0
     while True:
         # Ask measure
-        bus.write_byte(I2C_MEASURE)
+        bus.write_byte(I2C_ADD, I2C_MEASURE)
 
-        time.sleep(0.04)
+        time.sleep(0.1)
 
         # Read
-        data = bus.read_i2c_block_data(I2C_VALUES, 0, 3)
-        state = bus.read_byte(I2C_STATE)
+        data = bus.read_i2c_block_data(I2C_ADD, I2C_VALUES, 3)
+        state = bus.read_byte_data(I2C_ADD, I2C_STATE)
 
         T = compute_temperature(data)
+        k+=1
 
-        print("T = ", T , "\tState = ", state, end =" ") 
-        time.sleep(1./5.)
+        print("T = ", "%.3f" % T , "\tState = ", state, '\tk =', k, end ="\r") 
+        time.sleep(1)
 
 except KeyboardInterrupt:
     print('interrupted!')
