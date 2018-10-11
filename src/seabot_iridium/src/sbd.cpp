@@ -338,6 +338,7 @@ int SBD::cmd_session(){
     m_in_session = true;
     omp_unset_lock(&lock_data);
 
+    ROS_INFO("[Iridium] Start a session");
     string cmd = "AT+SBDIX" + string(answer?"A":"");
     if(m_valid_gnss){
       int lat_deg = int(m_latitude);
@@ -365,9 +366,9 @@ int SBD::cmd_session(){
     write(cmd);
 
     for(size_t i=0; i<4*60; i++){
+      std::this_thread::sleep_for(std::chrono::milliseconds(250));
       if(is_in_session()==false)
         return 0;
-      std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
 
     return 1;

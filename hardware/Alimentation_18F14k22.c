@@ -100,8 +100,10 @@ unsigned short start_time_to_start = 0;
 unsigned short k = 0;
 
 // Watchdog
-unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
-unsigned int watchdog_restart_default = 3600;
+unsigned short watchdog_restart = 60; // in min
+unsigned short watchdog_restart_default = 60;
+unsigned short watchdog_cpt_sec = 59;
+unsigned short watchdog_cpt_default = 59;
 
 /**
  * @brief i2c_read_data_from_buffer
@@ -142,6 +144,10 @@ void i2c_read_data_from_buffer(){
       break;
     case 0x06:
       default_time_to_stop = rxbuffer_tab[i+1]; // sec
+      break;
+    case 0x07:
+      watchdog_restart_default = rxbuffer_tab[i+1];
+      watchdog_restart = watchdog_restart_default;
       break;
     default:
       break;
@@ -356,7 +362,7 @@ void main(){
       if(battery_global_default == 1)
         led_delay = 5; // 0.5 sec
       else
-        led_delay = 20; // 5 sec
+        led_delay = 20; // 2 sec
 
       if(ILS==0){ // Magnet detected
         ils_cpt--;
@@ -391,7 +397,7 @@ void main(){
 
     case SLEEP:
       ALIM = 0;
-      led_delay = 600;
+      led_delay = 200; // 20 sec
       if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
         state = POWER_ON;
       }
@@ -451,18 +457,24 @@ void interrupt(){
     }
 
     // Watchdog
-    if(state == POWER_ON){
-      if(watchdog_restart>0)
-        watchdog_restart--;
+    if(state == POWER_ON && watchdog_restart_default!=0){
+      if(watchdog_cpt_sec>0)
+        watchdog_cpt_sec--;
       else{
-       // hour, min, sec
-        default_time_to_start[0] = 0;
-        default_time_to_start[1] = 0;
-        default_time_to_start[2] = 2; // 2s
-        time_to_stop = 10;
-        
-        state = WAIT_TO_SLEEP;
-        watchdog_restart = watchdog_restart_default;
+        watchdog_cpt_sec = watchdog_cpt_default;
+
+        if(watchdog_restart>0)
+          watchdog_restart--;
+        else{
+         // hour, min, sec
+          default_time_to_start[0] = 0;
+          default_time_to_start[1] = 0;
+          default_time_to_start[2] = 2; // 2s
+          time_to_stop = default_time_to_stop;
+          
+          state = WAIT_TO_SLEEP;
+          watchdog_restart = watchdog_restart_default;
+        }
       }
     }
     
