@@ -38,7 +38,6 @@ int Temperature_TSYS01::init_sensor(){
     ROS_DEBUG("[Temperature_TSYS01] Sensor initialization");
     reset();
     int return_val = 0;
-    u_int16_t  prom[5];
 
     unsigned char buff[2] = {0, 0};
     for(int i=0; i<5; i++){
