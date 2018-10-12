@@ -79,7 +79,7 @@ int main(int argc, char *argv[]){
   ros::ServiceServer service_sleep_mode = n.advertiseService("sleep_mode", sleep_mode);
   ros::ServiceServer service_sleep_mode_param = n.advertiseService("sleep_mode_param", sleep_mode_param);
 
-  if(p.get_version()!=0x02){
+  if(p.get_version()!=0x03){
     ROS_WARN("[POWER] Wrong PIC code version");
   }
 

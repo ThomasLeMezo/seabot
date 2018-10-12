@@ -26,7 +26,7 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x04
+#define CODE_VERSION 0x01
 
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
@@ -51,7 +51,7 @@ unsigned short butee_in = 0;
 // Motor
 unsigned short motor_speed_in = 15; // 2 octets
 unsigned short motor_speed_out = 15; // 2 octets
-unsigned short motor_speed_out_reset = 30; // 2 octets
+unsigned short motor_speed_out_reset = 20; // 2 octets
 unsigned short motor_current_speed = 50; // 2 octets
 #define MOTOR_STOP 50
 
@@ -68,14 +68,12 @@ unsigned short time_zero_shift_error = 5;
 
 // State machine
 unsigned short motor_on = 1;
-enum robot_state {RESET_OUT,REGULATION,EMERGENCY, STOP};
+enum robot_state {RESET_OUT,REGULATION};
 unsigned char state = RESET_OUT;
 
 // Watchdog
 unsigned short watchdog_restart = 60;
 unsigned short watchdog_restart_default = 60; // 3 s
-
-unsigned short is_init = 1;
 
 void i2c_read_data_from_buffer(){
     unsigned short i = 0;
@@ -118,22 +116,17 @@ void i2c_read_data_from_buffer(){
                 if(rxbuffer_tab[i+1] <=50)
                   motor_speed_out = rxbuffer_tab[i+1];
                 break;
-            case 0x14:  // consigne de vitesse out (reset)
+            case 0x14:  // consigne de vitesse out
                 if(rxbuffer_tab[i+1] <=50)
                   motor_speed_out_reset = rxbuffer_tab[i+1];
                 break;
+
             case 0xA0:  // Wait until release couple
                 if(nb_data >= i+2){
                     position_reached_max_value = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
                     i++;
                 }
-                break;
-            case 0xB0: // emergency mode
-                state = EMERGENCY;
-                break;
-            case 0xB1:
-                state = STOP;
-                break;
+                break;  
             default:
                 break;
         }
@@ -185,9 +178,6 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     case 0xC0:
         SSPBUF = CODE_VERSION;
         break;
-    case 0xC1:
-        SSPBUF = is_init;
-        break;
     default:
         SSPBUF = 0x00;
         break;
@@ -198,19 +188,16 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
  * @brief Lecture des valeurs des butees
  */
 void read_butee(){
-    LED1 = 0;
-    
     if (RA0_bit == 0){
         butee_out = 1;
         LED1 = 1;
     }
-    else
+    else{
         butee_out = 0;
-
-    if (RA1_bit == 0){
-        butee_in = 1;
-        LED1 = 1;
+        LED1 = 0;
     }
+    if (RA1_bit == 0)
+        butee_in = 1;
     else
         butee_in = 0;
 }
@@ -375,19 +362,8 @@ void init_io(){
  * @brief main
  */
 void main(){
-    /** Edit config (Project > Edit Project)
-    *   -> Oscillator Selection : Internal oscillator block 16 MHz
-    *   -> 4xPLL : Diseabled
-  *   -> Watchdog Timer : WDT is controlled by SWDTEN bit of the WDTCON register
-  *   -> Watchdog Time Postscale : 1:256 (32768/31000 = environ 1Hz)
-    *   -> MCLR : disabled (external reset)
-    */
-
     // Oscillateur interne de 16Mhz
     OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
-
-    asm CLRWDT;// Watchdog
-    SWDTEN_bit = 1; //armement du watchdog
 
     init_io(); // Initialisation des I/O
     init_i2C(); // Initialisation de l'I2C en esclave
@@ -458,11 +434,8 @@ void main(){
 
     UART1_Init(115200);
     delay_ms(100);
-    is_init = 0;
 
     while(1){
-        asm CLRWDT;
-
         // Global actions
         read_butee();
 
@@ -499,21 +472,9 @@ void main(){
                 set_motor_cmd_stop();
 
             break;
-
-        case EMERGENCY:
-            LED2 = 1;
-            set_motor_cmd_out(motor_speed_out_reset);
-            break;
-
-        case STOP:
-            set_motor_cmd_stop();
-            break;
-
         default:
             break;
         }
-
-
 
         // I2C
         if(nb_rx_octet>1 && SSPSTAT.P == 1){
@@ -575,8 +536,7 @@ void interrupt(){
           watchdog_restart = watchdog_restart_default;
         }
 
-        // Auto reset if wrong zero ref
-        if(position_set_point==0 && motor_current_speed == MOTOR_STOP && butee_out==0){
+        if(position_set_point==0 && motor_current_speed == MOTOR_STOP && nb_pulse<error_interval && butee_out==0){
             if(zero_shift_error<time_zero_shift_error)
                 zero_shift_error++;
             else{
@@ -586,8 +546,6 @@ void interrupt(){
         }
         else
             zero_shift_error=0;
-
-        
 
         TMR0H = 0x0B;
         TMR0L = 0xDC;

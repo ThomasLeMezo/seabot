@@ -37,7 +37,7 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x03
+#define CODE_VERSION 0x01
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
@@ -48,8 +48,6 @@ unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 
 void init_i2c();
-
-unsigned short is_init = 1;
 
 sbit BAT1 at PORTC.B0; // entrée de controle de tension BAT1
 sbit BAT2 at PORTC.B1; // entrée de controle de tension BAT2
@@ -70,8 +68,8 @@ unsigned short ils_removed = 1;
 // State Machine
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
 unsigned short state = IDLE;
-// unsigned int cpt_wait = 0;
-// #define WAIT_LOOP 10000
+unsigned int cpt_wait = 0;
+#define WAIT_LOOP 10000
 
 // Batteries
 #define WARNING_LOW_VOLTAGE 665 // 0.015625 (quantum) / 10.4 (min tension)
@@ -102,10 +100,8 @@ unsigned short start_time_to_start = 0;
 unsigned short k = 0;
 
 // Watchdog
-unsigned short watchdog_restart = 60; // in min
-unsigned short watchdog_restart_default = 60;
-unsigned short watchdog_cpt_sec = 59;
-unsigned short watchdog_cpt_default = 59;
+unsigned int watchdog_restart = 3600; // 3600 s = 1 hour
+unsigned int watchdog_restart_default = 3600;
 
 /**
  * @brief i2c_read_data_from_buffer
@@ -146,10 +142,6 @@ void i2c_read_data_from_buffer(){
       break;
     case 0x06:
       default_time_to_stop = rxbuffer_tab[i+1]; // sec
-      break;
-    case 0x07:
-      watchdog_restart_default = rxbuffer_tab[i+1];
-      watchdog_restart = watchdog_restart_default;
       break;
     default:
       break;
@@ -195,9 +187,6 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     break;
   case 0xC0:
     SSPBUF = CODE_VERSION;
-    break;
-  case 0xC1:
-    SSPBUF = is_init;
     break;
   default:
     SSPBUF = 0x00;
@@ -295,19 +284,8 @@ void init_io(){
  * @brief main
  */
 void main(){
-  /** Edit config (Project > Edit Project)
-  *   -> Oscillator Selection : Internal oscillator block 16 MHz
-  *   -> 4xPLL : Diseabled
-  *   -> Watchdog Timer : WDT is controlled by SWDTEN bit of the WDTCON register
-  *   -> Watchdog Time Postscale : 1:256 (32768/31000 = environ 1Hz)
-  *   -> MCLR : disabled (external reset)
-  */
-
   // Oscillateur interne de 16Mhz
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
-
-  asm CLRWDT;// Watchdog
-  SWDTEN_bit = 1; //armement du watchdog
 
   init_io(); // Initialisation des I/O
   init_i2c(); // Initialisation de l'I2C en esclave
@@ -324,7 +302,7 @@ void main(){
 
   UART1_Init(115200);
 
-  delay_ms(250);
+  delay_ms(1000);
 
   INTCON3.INT1IP = 0; //INT1 External Interrupt Priority bit, INT0 always a high
   //priority interrupt source
@@ -343,11 +321,7 @@ void main(){
   TMR3IE_bit = 1;  //Enable TIMER3
   TMR3ON_bit = 1; // Start TIMER3
 
-  is_init = 0;
-
   while(1){
-    asm CLRWDT;
-
     read_batteries_voltage();
     analyze_batteries_voltage();
     
@@ -382,7 +356,7 @@ void main(){
       if(battery_global_default == 1)
         led_delay = 5; // 0.5 sec
       else
-        led_delay = 20; // 2 sec
+        led_delay = 20; // 5 sec
 
       if(ILS==0){ // Magnet detected
         ils_cpt--;
@@ -417,7 +391,7 @@ void main(){
 
     case SLEEP:
       ALIM = 0;
-      led_delay = 200; // 20 sec
+      led_delay = 600;
       if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
         state = POWER_ON;
       }
@@ -427,15 +401,15 @@ void main(){
       state = POWER_ON;
       break;
     }
-    delay_ms(500);
-    // for(cpt_wait=0; cpt_wait<WAIT_LOOP; cpt_wait++){
-    //   delay_us(50);
-    //   // I2C
-    //     if(nb_rx_octet>1 && SSPSTAT.P == 1){
-    //         i2c_read_data_from_buffer();
-    //         nb_rx_octet = 0;
-    //     }
-    // }
+    // delay_ms(500);
+    for(cpt_wait=0; cpt_wait<WAIT_LOOP; cpt_wait++){
+      delay_us(50);
+      // I2C
+        if(nb_rx_octet>1 && SSPSTAT.P == 1){
+            i2c_read_data_from_buffer();
+            nb_rx_octet = 0;
+        }
+    }
   }
 }
 
@@ -477,24 +451,18 @@ void interrupt(){
     }
 
     // Watchdog
-    if(state == POWER_ON && watchdog_restart_default!=0){
-      if(watchdog_cpt_sec>0)
-        watchdog_cpt_sec--;
+    if(state == POWER_ON){
+      if(watchdog_restart>0)
+        watchdog_restart--;
       else{
-        watchdog_cpt_sec = watchdog_cpt_default;
-
-        if(watchdog_restart>0)
-          watchdog_restart--;
-        else{
-         // hour, min, sec
-          default_time_to_start[0] = 0;
-          default_time_to_start[1] = 0;
-          default_time_to_start[2] = 2; // 2s
-          time_to_stop = default_time_to_stop;
-          
-          state = WAIT_TO_SLEEP;
-          watchdog_restart = watchdog_restart_default;
-        }
+       // hour, min, sec
+        default_time_to_start[0] = 0;
+        default_time_to_start[1] = 0;
+        default_time_to_start[2] = 2; // 2s
+        time_to_stop = 10;
+        
+        state = WAIT_TO_SLEEP;
+        watchdog_restart = watchdog_restart_default;
       }
     }
     
@@ -577,7 +545,7 @@ void init_i2c(){
   SSPCON1.WCOL = 0; // Write Collision Detect bit
   SSPCON1.SSPOV = 0; // Receive Overflow Indicator bit
   SSPCON1.CKP = 1; // SCK Release Control bit (1=Release clock)
-  SSPCON1.SSPM3 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled (1-> with S/P, 0 -> without)
+  SSPCON1.SSPM3 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled (1-> with S/P, 0 -> without)
   SSPCON1.SSPM2 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSPCON1.SSPM1 = 0b1; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
   SSPCON1.SSPM0 = 0b0; // I2C Slave mode, 7-bit address with Start and Stop bit interrupts enabled
@@ -617,13 +585,13 @@ void interrupt_low(){
           }
         }
 
-        if(nb_rx_octet>1){
-          Delay_us(30); // Wait P signal ?
-          if(SSPSTAT.P == 1){
-            i2c_read_data_from_buffer();
-            nb_rx_octet = 0;
-          }
-        }
+//        if(nb_rx_octet>1){
+//          Delay_us(30); // Wait P signal ?
+//          if(SSPSTAT.P == 1){
+//            i2c_read_data_from_buffer();
+//            nb_rx_octet = 0;
+//          }
+//        }
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)

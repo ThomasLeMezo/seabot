@@ -136,7 +136,7 @@ int main(int argc, char *argv[]){
   p.i2c_open();
   sleep(1); // 1s sleep (wait until i2c open)
 
-  if(p.get_version()!=0x03){
+  if(p.get_version()!=0x04){
     ROS_WARN("[Piston_driver] Wrong PIC code version");
   }
 

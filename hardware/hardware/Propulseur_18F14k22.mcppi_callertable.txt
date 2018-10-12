@@ -1,0 +1,11 @@
+main
+	__CC2DW
+	init_io
+	init_i2c
+	init_timer0
+	init_timer1
+	UART1_Init
+interrupt_low
+	i2c_read_data_from_buffer
+	i2c_write_data_to_buffer
+interrupt

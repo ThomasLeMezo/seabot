@@ -48,7 +48,7 @@ bool engine_enable(std_srvs::SetBool::Request  &req,
   return true;
 }
 
-uint8_t convert_u(const float &u){
+uint8_t convert_u(const double &u){
   uint8_t cmd = round(u*coeff_cmd_to_pwm + MOTOR_PWM_STOP);
 
   if(cmd>MAX_PWM)
@@ -68,6 +68,7 @@ int main(int argc, char *argv[]){
   const double frequency = n_private.param<double>("frequency", 10.0);
   coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 9.0);
   const double delay_stop = n_private.param<float>("delay_stop", 0.5);
+  const bool backward_engine = n_private.param<bool>("backward_engine", false);
 
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);
@@ -83,7 +84,7 @@ int main(int argc, char *argv[]){
   // Sensor initialization
   t.i2c_open();
 
-  if(t.get_version()!=0x01){
+  if(t.get_version()!=0x02){
     ROS_WARN("[Thruster] Wrong PIC code version");
   }
 
@@ -100,12 +101,24 @@ int main(int argc, char *argv[]){
       uint8_t cmd_left, cmd_right;
 
       if((ros::Time::now() - manual_time_last_cmd).toSec() < delay_stop){
-        cmd_left = convert_u(manual_linear_velocity + manual_angular_velocity);
-        cmd_right = convert_u(manual_linear_velocity - manual_angular_velocity);
+        double left = manual_linear_velocity + manual_angular_velocity;
+        double right = manual_linear_velocity - manual_angular_velocity;
+        if(backward_engine==false){
+          left = min(0., left);
+          right = min(0., right);
+        }
+        cmd_left = convert_u(left);
+        cmd_right = convert_u(right);
       }
       else if((ros::Time::now() - time_last_cmd).toSec() < delay_stop){
-        cmd_left = convert_u(linear_velocity + angular_velocity);
-        cmd_right = convert_u(linear_velocity - angular_velocity);
+        double left = linear_velocity + angular_velocity;
+        double right = linear_velocity - angular_velocity;
+        if(backward_engine==false){
+          left = min(0., left);
+          right = min(0., right);
+        }
+        cmd_left = convert_u(left);
+        cmd_right = convert_u(right);
       }
       else{
         cmd_right = MOTOR_PWM_STOP;

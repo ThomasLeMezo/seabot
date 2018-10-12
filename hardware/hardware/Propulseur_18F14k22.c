@@ -55,7 +55,7 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 */
 
-#define CODE_VERSION 0x02
+#define CODE_VERSION 0x01
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x20;
@@ -66,8 +66,6 @@ unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 
 void init_i2c();
-
-unsigned short is_init = 1;
 
 sbit MOT1 at LATC.B0; // sorties de commande moteur 1
 sbit MOT2 at LATC.B1; // sorties de commande moteur 2
@@ -118,9 +116,6 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
   switch(rxbuffer_tab[0]+nb_tx_octet){
     case 0xC0:
       SSPBUF = CODE_VERSION;
-      break;
-    case 0xC1:
-      SSPBUF = is_init;
       break;
     default:
       SSPBUF = 0x00;
@@ -188,16 +183,6 @@ void init_io(){
  * @brief main
  */
 void main(){
-  /** Edit config (Project > Edit Project)
-  *   -> Oscillator Selection : HS Oscillator 64 MHz
-  *   -> 4xPLL : Enable
-  *   -> Watchdog Timer : WDT is controlled by SWDTEN bit of the WDTCON register
-  *   -> Watchdog Time Postscale : 1:256 (32768/31000 = environ 1Hz)
-  *   -> MCLR : disabled (external reset)
-  */
-
-  asm CLRWDT;// Watchdog
-  SWDTEN_bit = 1; //armement du watchdog
 
   init_io(); // Initialisation des I/O
   init_i2c(); // Initialisation de l'I2C en esclave
@@ -225,13 +210,10 @@ void main(){
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
   LED = 1;
-  delay_ms(250);
+  delay_ms(2000);
 
-  is_init = 0;
 
   while(1){
-    asm CLRWDT;
-
     if(cmd_motor[0] != MOTOR_CMD_STOP || cmd_motor[1] != MOTOR_CMD_STOP || cmd_motor[2] != MOTOR_CMD_STOP)
       LED = 1;
     else

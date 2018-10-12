@@ -1,0 +1,16 @@
+main
+	__CC2DW
+	init_io
+	init_i2c
+	init_timer0
+	init_timer3
+	ADC_Init
+	UART1_Init
+	read_batteries_voltage
+		ADC_Get_Sample
+			Delay_22us
+	analyze_batteries_voltage
+	i2c_read_data_from_buffer
+interrupt_low
+	i2c_write_data_to_buffer
+interrupt

@@ -40,7 +40,9 @@ Hardware:
 
 //sbit LED at LATA.B0; // sortie LED
 sbit LED at RA0_bit; // sortie LED
-#define CODE_VERSION 0x02
+sbit LED2 at RA2_bit; // sortie LED
+sbit LED3 at RA3_bit; // sortie LED
+#define CODE_VERSION 0x03
 
 // I2C
 #define TSYS01_ADDR 0xEE
@@ -64,8 +66,8 @@ unsigned short reset = 0;
 unsigned short conversion = 0;
 
 // State Machine
-enum power_state {IDLE,RESET_TSYS01,CONVERSION_READ};
-unsigned short state = IDLE;
+enum power_state {IDLE,RESET_TSYS01,CONVERSION_READ, INIT};
+unsigned short state = INIT;
 
 unsigned short cpt = 0;
 
@@ -170,6 +172,8 @@ void init_io(){
   TRISA = 0xFF;
 
   TRISA0_bit = 0; // RA0 en sortie
+  TRISA2_bit = 0; // RA2 en sortie
+  TRISA3_bit = 0; // RA3 en sortie
 
   INTCON2.RBPU = 1; // PORTA and PORTB Pull-up disable bit
 }
@@ -286,67 +290,54 @@ void uart_read_sequence(){
  * @brief main
  */
 void main(){
-  // Oscillateur interne de 16Mhz
- // OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
 
-  /*// UART1_Init(9600);
-  init_io(); // Initialisation des I/O
-
-  delay_ms(1000);
-  LED = 1;
-  I2C1_Init(100000);// initialize I2C communication bus I2C NÂ°1
-  delay_ms(1000);
-  LED = 0;
-
-  reset_TSYS01_sequence();
-  delay_ms(1000);
-  LED =1;
-  prom_read_TSYS01_sequence();
-  delay_ms(1000);
-
-  LED=0;
-  init_i2c(); // Initialisation de l'I2C en esclave bus I2C NÂ°2
-  init_io(); // Initialisation des I/O
-
-  LED = 0; // sortie LED
-  RCON.IPEN = 1;  //Enable priority levels on interrupts
-  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C NÂ°2
-  INTCON.GIEH = 1; //enable all high-priority interrupts
-  INTCON.GIEL = 1; //enable all low-priority interrupts
-
-  INTCON.GIE = 1; // Global Interrupt Enable bit
-  INTCON.PEIE = 1; // Peripheral Interrupt Enable bit*/
+  /** Edit config (Project > Edit Project)
+  *   -> Oscillator Selection : Internal oscillator block 16 MHz
+  *   -> 4xPLL : Diseabled
+  *   -> Watchdog Timer : WDT is controlled by SWDTEN bit of the WDTCON register
+  *   -> Watchdog Time Postscale : 1:256 (32768/31000 = environ 1Hz)
+  *   -> MCLR : disabled (external reset)
+  */
   
   // Oscillateur interne de 16Mhz
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
+  
+  asm CLRWDT;// Watchdog
+  SWDTEN_bit = 1; //armement du watchdog
 
   init_io(); // Initialisation des I/O
-  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N°2
-  I2C1_Init(100000);// initialize I2C communication bus I2C N°1
+  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N?2
+  I2C1_Init(100000);// initialize I2C communication bus I2C N?1
 
-  LED = 0; // sortie LED
+  LED = 1; // sortie LED
+  delay_ms(250);
 
-  delay_ms(2000);
   UART1_Init(9600);
 
   RCON.IPEN = 1;  //Enable priority levels on interrupts
-  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N°2
+  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N?2
   INTCON.GIEH = 1; //enable all high-priority interrupts
   INTCON.GIEL = 1; //enable all low-priority interrupts
 
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
-  LED = 1;
   reset_TSYS01_sequence();
   prom_read_TSYS01_sequence();
-  LED = 0;
   
+  delay_ms(250);
+  LED = 0;
+
   while(1){
 
     //UART1_Write(state);
-    
+
+    asm CLRWDT; // Watchdog
+
     switch (state){
+      case INIT:
+        state = IDLE;
+        break;
       case IDLE: // Idle state
         LED = 0;
         if(reset == 1)
@@ -377,6 +368,7 @@ void main(){
         i2c_read_data_from_buffer();
         nb_rx_octet = 0;
     }
+    
   }
 }
 
