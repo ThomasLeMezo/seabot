@@ -37,6 +37,9 @@ Hardware:
 
 */
 
+// CONFIG2H
+// #pragma config WDT = OFF        // Watchdog Timer Enable bit (WDT disabled (control is placed on the SWDTEN bit))
+// #pragma config WDTPS = 256    // Watchdog Timer Postscale Select bits (1:256)
 
 //sbit LED at LATA.B0; // sortie LED
 sbit LED at RA0_bit; // sortie LED
@@ -44,23 +47,32 @@ sbit LED2 at RA2_bit; // sortie LED
 sbit LED3 at RA3_bit; // sortie LED
 #define CODE_VERSION 0x03
 
-// I2C
-#define TSYS01_ADDR 0xEE
+// I2C Master
+void init_i2c_master();
+void i2c_master_write_byte();
+void i2c_master_read_data();
+#define TSYS01_ADDR           0x77  
+#define TSYS01_RESET          0x1E
+#define TSYS01_ADC_READ       0x00
+#define TSYS01_ADC_TEMP_CONV  0x48
+#define TSYS01_PROM_READ      0XA0
+unsigned char mssp_interrupt_received = 0;
+#define SIZE_RX_BUFFER 3
+unsigned char i2c_master_rxbuffer_tab[SIZE_MASTER_RX_BUFFER];
+unsigned char i2c_master_adc_tab[3];
+
+unsigned char tsys01_prom[10];   // tableau de coefficients de calibration
+
+// I2C Slave
+void init_i2c_slave();
 #define SIZE_RX_BUFFER 8
-const unsigned short ADDRESS_I2C = 0x45; // linux I2C Adresse
+const unsigned char ADDRESS_I2C = 0x45; // linux I2C Adresse
 unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned int coefficient_tab[8];   // tableau de coefficients de calibration
 
 unsigned short tmp_rx = 0;
 unsigned short nb_tx_octet = 0;
 unsigned short nb_rx_octet = 0;
 unsigned short k = 0;
-
-void init_i2c();
-
-unsigned short octet1;
-unsigned short octet2;
-unsigned short octet3;
 
 unsigned short reset = 0;
 unsigned short conversion = 0;
@@ -68,7 +80,6 @@ unsigned short conversion = 0;
 // State Machine
 enum power_state {IDLE,RESET_TSYS01,CONVERSION_READ, INIT};
 unsigned short state = INIT;
-
 unsigned short cpt = 0;
 
 
@@ -103,43 +114,43 @@ void i2c_read_data_from_buffer(){
 void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
   switch(rxbuffer_tab[0]+nb_tx_octet){
   case 0x00:
-    SSP2BUF = octet1;
+    SSP2BUF = i2c_master_adc_tab[0];
     break;
   case 0x01:
-    SSP2BUF = octet2;
+    SSP2BUF = i2c_master_adc_tab[1];
     break;
   case 0x02:
-    SSP2BUF = octet3;
+    SSP2BUF = i2c_master_adc_tab[2];
     break;
   case 0xA2:
-    SSP2BUF = coefficient_tab[1] >> 8; //K4
+    SSP2BUF = tsys01_prom[0];
     break;
   case 0xA3:
-    SSP2BUF = coefficient_tab[1]; //K4
+    SSP2BUF = tsys01_prom[1];
     break;
   case 0xA4:
-    SSP2BUF = coefficient_tab[2] >> 8; //K3
+    SSP2BUF = tsys01_prom[2];
     break;
   case 0xA5:
-    SSP2BUF = coefficient_tab[2]; //K3
+    SSP2BUF = tsys01_prom[3];
     break;
   case 0xA6:
-    SSP2BUF = coefficient_tab[3] >> 8; //K2
+    SSP2BUF = tsys01_prom[4];
     break;
   case 0xA7:
-    SSP2BUF = coefficient_tab[3]; //K2
+    SSP2BUF = tsys01_prom[5];
     break;
   case 0xA8:
-    SSP2BUF = coefficient_tab[4] >> 8; //K1
+    SSP2BUF = tsys01_prom[6];
     break;
   case 0xA9:
-    SSP2BUF = coefficient_tab[4]; //K1
+    SSP2BUF = tsys01_prom[7];
     break;
   case 0xAA:
-    SSP2BUF = coefficient_tab[5] >> 8; //K0
+    SSP2BUF = tsys01_prom[8];
     break;
   case 0xAB:
-    SSP2BUF = coefficient_tab[5]; //K0
+    SSP2BUF = tsys01_prom[9];
     break;
   case 0xC0:
     SSP2BUF = CODE_VERSION;
@@ -155,7 +166,6 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     break;
   }
 }
-
 
 /**
  * @brief init_io
@@ -184,15 +194,10 @@ void init_io(){
  * Reset du circuit TSYS01
  */
 void reset_TSYS01_sequence(){
-  I2C1_Start();
-  I2C1_Wr(TSYS01_ADDR);
-  I2C1_Wr(0x1E);
-  I2C1_Stop();
-  
+  i2c_master_write_byte(TSYS01_RESET);
   delay_ms(10);
   reset = 0;
 }
-
 
 /**
  * @brief prom_read_TSYS01_sequence
@@ -209,35 +214,12 @@ void prom_read_TSYS01_sequence(){
    unsigned short j = 0;
 
   // Read calibration values
-  for(j = 0 ; j < 8 ; j++ ){
-         I2C1_Start();
-         I2C1_Wr(TSYS01_ADDR);
-         I2C1_Wr(0xA0+j*2);
-         I2C1_Stop();
-         
-         delay_us(100);
-
-         I2C1_Start();
-         I2C1_Wr(TSYS01_ADDR+1);
-         octet1 = I2C1_Rd(1);
-         octet2 = I2C1_Rd(0);
-         I2C1_Stop();
-
-         coefficient_tab[j] = (octet1 << 8) | octet2;
-         delay_us(100);
+  for(j = 0 ; j < 5 ; j++){
+        i2c_master_read_data(TSYS01_PROM_READ+(j+1)*2);
+        tsys01_prom[j*2] = i2c_master_rxbuffer_tab[0];
+        tsys01_prom[j*2+1] = i2c_master_rxbuffer_tab[1];
+        delay_us(100);
    }
-}
-
-
-void test_prom_read_sequence(){
-  coefficient_tab[0] = 0;
-  coefficient_tab[1] = 28446;  //0xA2 K4 valeur --> 6F1E
-  coefficient_tab[2] = 24926;  //0XA4 k3 valeur --> 615E
-  coefficient_tab[3] = 36016;  //0XA6 K2 valeur --> 8CB0
-  coefficient_tab[4] = 32791;  //0XA8 K1 valeur --> 8017
-  coefficient_tab[5] = 40781;  //0XAA K0 valeur --> 9F4D
-  coefficient_tab[6] = 0;
-  coefficient_tab[7] = 0;
 }
 
 /**
@@ -245,29 +227,18 @@ void test_prom_read_sequence(){
  * Lecture du résultat de la conversion
  */
 void read_TSYS01_sequence(){
-  I2C1_Start();
-  I2C1_Wr(TSYS01_ADDR);
-  I2C1_Wr(0x48);   // Start ADC Temperature Conversion --> 0x48
-  I2C1_Stop();
+  i2c_master_write_byte(TSYS01_ADC_TEMP_CONV);
 
   delay_ms(20);
 
-  I2C1_Start();
-  I2C1_Wr(TSYS01_ADDR);  // Read ADC Temperature Result --> 0x00
-  I2C1_Wr(0x00);
-  I2C1_Stop();
-  
-  I2C1_Start();
-  I2C1_Wr(TSYS01_ADDR+1);
-  octet1 = I2C1_Rd(1);
-  octet2 = I2C1_Rd(1);
-  octet3 = I2C1_Rd(0);
-  I2C1_Stop();
+  i2c_master_read_data(TSYS01_ADC_READ);
+  i2c_master_adc_tab[0] = i2c_master_adc_tab[0];
+  i2c_master_adc_tab[1] = i2c_master_adc_tab[1];
+  i2c_master_adc_tab[2] = i2c_master_adc_tab[2];
   
   conversion = 0;
   cpt++;
 }
-
 
 void uart_prom_sequence(){
   UART1_Write(255);
@@ -278,12 +249,72 @@ void uart_prom_sequence(){
   }
 }
 
-
 void uart_read_sequence(){
   UART1_Write(255);
   UART1_Write(octet1);
   UART1_Write(octet2);
   UART1_Write(octet3);
+}
+
+void wait_MSSP(){
+  while(mssp_interrupt_received==0);
+  mssp_interrupt_received = 0;
+}
+
+void i2c_fail(){
+   int i;
+   SSP1CON2bits.PEN = 1; //Send Stop Condition
+   wait_MSSP(); //Wait to complete
+
+   //Signal error
+   while(1){
+       LATCbits.LC2 = 1;
+       for(i=0;i<50;i++) __delay_ms(10);
+       LATCbits.LC2 = 0;
+       for(i=0;i<50;i++) __delay_ms(10);
+   }
+}
+
+void i2c_master_write_byte(char cmd){
+  SSPCON2.SEN = 1; //Send Start Condition
+  wait_MSSP(); //Wait to complete
+
+  SSP1BUF = (TSYS01_ADDR << 1); //Send Add (Write)
+  wait_MSSP();
+  if(SSP1CON2.ACKSTAT == 1) //If no ACK is received
+    i2c_fail();
+
+  SSP1BUF = cmd; //Send data to slave
+  wait_MSSP();
+  if(SSP1CON2.ACKSTAT == 1) //If no ACK is received
+    i2c_fail();
+
+  SSPCON2.PEN = 1; //Send Stop Condition
+  wait_MSSP(); //Wait to complete
+}
+
+void i2c_master_read_data(char cmd, unsigned char nb_bytes){
+  unsigned char i = 0;
+  i2c_master_write_byte(cmd);
+
+  SSPCON2.SEN = 1; //Send Start Condition
+  wait_MSSP(); //Wait to complete
+
+  Send_I2C_Byte((TSYS01_ADDR << 1) | 0b1); //Send Control Write Byte
+  wait_MSSP();
+  if(SSP1CON2.ACKSTAT == 1) //If no ACK is received
+    i2c_fail();
+
+  for(i=0; i<nb_bytes; i++){
+    SSPCON2.RCEN = 1; // Configure master to receive bytes
+    wait_MSSP(); // Wait data to be received
+    i2c_master_rxbuffer_tab[i] = SSP1BUF; // Read data
+    SSP1CON2.ACKEN = 1; // Acknowledge read
+    wait_MSSP();
+  }
+
+  SSPCON2.PEN = 1; //Send Stop Condition
+  wait_MSSP(); //Wait to complete
 }
 
 /**
@@ -303,16 +334,15 @@ void main(){
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
   
   asm CLRWDT;// Watchdog
-  SWDTEN_bit = 1; //armement du watchdog
+  RCON2bits.SWDTEN=1; //armement du watchdog (?)
 
   init_io(); // Initialisation des I/O
-  init_i2c(); // Initialisation de l'I2C en esclave bus I2C N?2
-  I2C1_Init(100000);// initialize I2C communication bus I2C N?1
+  init_i2c_slave(); // Initialisation de l'I2C en esclave bus I2C N?2
+  init_i2c_master();
+  // I2C1_Init(100000);// initialize I2C communication bus I2C N?1
 
   LED = 1; // sortie LED
   delay_ms(250);
-
-  UART1_Init(9600);
 
   RCON.IPEN = 1;  //Enable priority levels on interrupts
   IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N?2
@@ -329,8 +359,6 @@ void main(){
   LED = 0;
 
   while(1){
-
-    //UART1_Write(state);
 
     asm CLRWDT; // Watchdog
 
@@ -372,15 +400,30 @@ void main(){
   }
 }
 
+/**
+ * @brief init master I2C
+ */
+void init_i2c_master(){
+  TRISRC3_bit = 1; // RC3 en entrée
+  TRISRC4_bit = 1; // RC4 en entrée
+
+  //Configure MSSP mode for Master Mode
+  SSP1CON1bits.SSPM = 0b1000; //I2C Master Mode
+  SSP1CON1bits.SSPEN = 1; //Enable MSSP
+  SSP1STATbits.SMP = 1; //Disable slew rate
+
+  //Configure baud rate (32MHz => 0x4F, 16MHz => 0x27)
+   SSPADD = 0x27;
+}
 
 /**
  * @brief initialisation de l'I2C en mode esclave
  */
-void init_i2c(){
+void init_i2c_slave(){
 
   // **** IO I2C **** //
-  TRISB1_bit = 1; // RB4 en entrée
-  TRISB2_bit = 1; // RB6 en entrée
+  TRISB1_bit = 1; // RB1 en entrée
+  TRISB2_bit = 1; // RB2 en entrée
 
   // **** Interruptions **** //
   PIE3.SSP2IE = 1; // Synchronous Serial Port Interrupt Enable bit
@@ -482,5 +525,16 @@ void interrupt_low(){
 
     SSP2CON1.CKP = 1;
     PIR3.SSP2IF = 0; // reset SSP interrupt flag
+  }
+
+  if(PIR1.SSP1IF){
+    PIR3.SSP2IF = 0;
+    mssp_interrupt_received = 1;
+
+    if(SSP1CON1.SSPOV || SSP1CON1.WCOL){
+          SSP1CON1.SSPOV = 0;
+          SSP1CON1.WCOL = 0;
+          tmp_rx = SSP1BUF;
+      }
   }
 }
