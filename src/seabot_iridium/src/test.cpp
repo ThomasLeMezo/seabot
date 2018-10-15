@@ -139,8 +139,6 @@ void test6(){
   cout << "gnss_speed: " << l.m_gnss_speed << endl;
   cout << "gnss_heading: " << l.m_gnss_heading << endl;
 
-  cout << "seabot_state: " << l.m_seabot_state << endl;
-
   cout << "batteries[0]: " << l.m_batteries[0] << endl;
   cout << "batteries[1]: " << l.m_batteries[1] << endl;
   cout << "batteries[2]: " << l.m_batteries[2] << endl;
@@ -165,8 +163,6 @@ void test6(){
   cout << "north: " << std::fixed << d.m_north << endl;
   cout << "gnss_speed: " << d.m_gnss_speed << endl;
   cout << "gnss_heading: " << d.m_gnss_heading << endl;
-
-  cout << "seabot_state: " << d.m_seabot_state << endl;
 
   cout << "batteries[0]: " << d.m_batteries[0] << endl;
   cout << "batteries[1]: " << d.m_batteries[1] << endl;
@@ -238,7 +234,14 @@ int main(int argc, char *argv[]){
     data << "gnss_speed: " << logData.m_gnss_speed << endl;
     data << "gnss_heading: " << logData.m_gnss_heading << endl;
 
-    data << "seabot_state: " << logData.m_seabot_state << endl;
+    data << "safety_published_frequency: " << logData.m_safety_published_frequency << endl;
+    data << "safety_depth_limit: " << logData.m_safety_depth_limit << endl;
+    data << "safety_batteries_limit: " << logData.m_safety_batteries_limit << endl;
+    data << "safety_depressurization: " << logData.m_safety_depressurization << endl;
+    data << "enable_mission: " << logData.m_enable_mission << endl;
+    data << "enable_depth: " << logData.m_enable_depth << endl;
+    data << "enable_engine: " << logData.m_enable_engine << endl;
+    data << "enable_flash: " << logData.m_enable_flash << endl;
 
     data << "batteries[0]: " << logData.m_batteries[0] << endl;
     data << "batteries[1]: " << logData.m_batteries[1] << endl;
@@ -249,6 +252,8 @@ int main(int argc, char *argv[]){
     data << "internal_temperature: " << logData.m_internal_temperature << endl;
 
     data << "current_waypoint: " << logData.m_current_waypoint << endl;
+    data << "last_cmd_received: " << logData.m_last_cmd_received << endl;
+
 
     string path_dir = path_archive + imei + "/";
     boost::filesystem::path dir(path_dir);

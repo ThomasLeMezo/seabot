@@ -120,16 +120,16 @@ target_link_libraries(iridium_node
 
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 
+ add_executable(decode_log_state src/decode_log_state.cpp ${SRC})
+ add_dependencies(decode_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(decode_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
- add_executable(decode_iridium
-     src/test.cpp
-     ${SRC}
-     )
+ add_executable(generate_cmd_sleep src/generate_cmd_sleep.cpp ${SRC})
+ add_dependencies(generate_cmd_sleep ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(generate_cmd_sleep ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
- add_dependencies(decode_iridium ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_executable(generate_cmd_parameters src/generate_cmd_parameters.cpp ${SRC})
+ add_dependencies(generate_cmd_parameters ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(generate_cmd_parameters ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
- target_link_libraries(decode_iridium
-     ${catkin_LIBRARIES}
-     ${OpenMP_CXX_FLAGS}
-     )
 endif()

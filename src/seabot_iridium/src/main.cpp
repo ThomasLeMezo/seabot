@@ -75,11 +75,10 @@ void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
 }
 
 void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
-  log_state.m_seabot_state = 0;
-  log_state.m_seabot_state |= (msg->published_frequency & 0b1) << 0;
-  log_state.m_seabot_state |= (msg->depth_limit & 0b1) << 1;
-  log_state.m_seabot_state |= (msg->batteries_limit & 0b1) << 2;
-  log_state.m_seabot_state |= (msg->depressurization & 0b1) << 3;
+  log_state.m_safety_published_frequency = msg->published_frequency;
+  log_state.m_safety_depth_limit = msg->depth_limit;
+  log_state.m_safety_batteries_limit = msg->batteries_limit;
+  log_state.m_safety_depressurization = msg->depressurization;
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){

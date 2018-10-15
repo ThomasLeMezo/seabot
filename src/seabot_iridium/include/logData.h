@@ -168,12 +168,26 @@ public:
   bool deserialize_log_CMD_mission(const std::string &data);
 
   /**
+   * @brief serialize_log_CMD_parameters
+   * @param file_name
+   * @return
+   */
+  std::string serialize_log_CMD_parameters();
+
+  /**
+   * @brief deserialize_log_CMD_parameters
+   * @param file_name
+   * @return
+   */
+  bool deserialize_log_CMD_parameters(const std::string &message);
+
+  /**
    * @brief write_file
    * @param file_name
    * @param data
    * @return
    */
-  bool write_file(const std::string &file_name, const std::string &data);
+  bool write_file(const std::string &file_name, const std::string &data, const unsigned int nb_bits = NB_BITS_LOG1);
 
   /**
    * @brief read_file
@@ -199,20 +213,6 @@ private:
    */
   bool deserialize_log_CMD_waypoint(const std::string &message);
 
-  /**
-   * @brief serialize_CMD_parameters
-   * @param file_name
-   * @return
-   */
-  std::string serialize_CMD_parameters();
-
-  /**
-   * @brief deserialize_log_CMD_parameters
-   * @param file_name
-   * @return
-   */
-  bool deserialize_log_CMD_parameters(const std::string &message);
-
 public:
   double m_time_now = 0.0;
 
@@ -226,7 +226,6 @@ public:
   double m_internal_temperature = 42.0;
   double m_internal_humidity = 0.0;
 
-  unsigned int m_seabot_state = 0;
   unsigned int  m_current_waypoint = 42; // 0 to 255 max
 
   unsigned int m_sleep_time = 0;
@@ -243,6 +242,11 @@ public:
 
   unsigned int m_last_cmd_received = 0;
   unsigned int m_period_message = 30; // in 10*min
+
+  bool m_safety_published_frequency = false;
+  bool m_safety_depth_limit = false;
+  bool m_safety_batteries_limit = false;
+  bool m_safety_depressurization = false;
 
   CMD_TYPE m_cmd_type;
 };

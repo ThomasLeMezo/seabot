@@ -43,7 +43,7 @@ bool LogData::deserialize_log_CMD_sleep(const string &message){
   return true;
 }
 
-std::string LogData::serialize_CMD_parameters(){
+std::string LogData::serialize_log_CMD_parameters(){
   //  size_t nb_bits = 5*4; // must be a multiple of 4
   uint_cmd_parameters_t data;
 
@@ -175,7 +175,16 @@ std::string LogData::serialize_log_state(const long long &time){
   bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_speed, 0, 5.0);
   bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_heading, 0, 359.0);
 
-  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_seabot_state);
+  unsigned char state = 0;
+  state |= (m_safety_published_frequency & 0b1) << 0;
+  state |= (m_safety_depth_limit & 0b1) << 1;
+  state |= (m_safety_batteries_limit & 0b1) << 2;
+  state |= (m_safety_depressurization & 0b1) << 3;
+  state |= (m_enable_mission & 0b1) << 4;
+  state |= (m_enable_depth & 0b1) << 5;
+  state |= (m_enable_engine & 0b1) << 6;
+  state |= (m_enable_flash & 0b1) << 7;
+  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, state);
 
   bit_position += serialize_data<uint_log1_t>(data, 5, bit_position, m_batteries[0], 9, 12.4);
   bit_position += serialize_data<uint_log1_t>(data, 5, bit_position, m_batteries[1], 9, 12.4);
@@ -191,7 +200,7 @@ std::string LogData::serialize_log_state(const long long &time){
   return string((char*)data.backend().limbs(), NB_BITS_LOG1/8);
 }
 
-bool LogData::write_file(const string &file_name, const string &data){
+bool LogData::write_file(const string &file_name, const string &data, const unsigned int nb_bits){
   ofstream save_file;
   save_file.open(file_name);
 
@@ -200,7 +209,7 @@ bool LogData::write_file(const string &file_name, const string &data){
     return false;
   }
 
-  save_file.write(data.c_str(), NB_BITS_LOG1/8);
+  save_file.write(data.c_str(), nb_bits/8);
   save_file.close();
 
   return true;
@@ -236,7 +245,16 @@ bool LogData::deserialize_log_state(const string &data_raw){
   bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_speed, 0, 5.0);
   bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_heading, 0, 359.0);
 
-  bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_seabot_state);
+  unsigned char state = 0;
+  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, state);
+  m_safety_published_frequency = (state >> 0) & 0b1;
+  m_safety_depth_limit = (state >> 1) & 0b1;
+  m_safety_batteries_limit = (state >> 2) & 0b1;
+  m_safety_depressurization = (state >> 3) & 0b1;
+  m_enable_mission = (state >> 4) & 0b1;
+  m_enable_depth = (state >> 5) & 0b1;
+  m_enable_engine = (state >> 6) & 0b1;
+  m_enable_flash = (state >> 7) & 0b1;
 
   bit_position += deserialize_data<uint_log1_t>(data, 5, bit_position, m_batteries[0], 9, 12.4);
   bit_position += deserialize_data<uint_log1_t>(data, 5, bit_position, m_batteries[1], 9, 12.4);
