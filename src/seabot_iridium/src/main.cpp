@@ -207,6 +207,8 @@ int main(int argc, char *argv[]){
   const string mission_path = n.param<string>("mission_path", "");
   mission_file_path = mission_path + "/" + mission_file_name;
 
+  const bool debug = n_private.param<bool>("debug", false);
+
   // Publisher
   ros::Publisher iridium_session_pub = n.advertise<seabot_iridium::IridiumSession>("session", 1);
   ros::Publisher iridium_data_received_pub = n.advertise<std_msgs::String>("received_raw", 1);
@@ -228,6 +230,7 @@ int main(int argc, char *argv[]){
   ros::WallTime time_last_log_version;
 
   sbd.init();
+  sbd.set_debug(debug);
 
 //  omp_set_num_threads(2);
 #pragma omp parallel num_threads(2)

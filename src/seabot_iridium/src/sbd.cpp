@@ -367,8 +367,9 @@ int SBD::cmd_session(){
 
     for(size_t i=0; i<4*60; i++){
       std::this_thread::sleep_for(std::chrono::milliseconds(250));
-      if(is_in_session()==false)
+      if(is_in_session()==false){
         return 0;
+      }
     }
 
     return 1;

@@ -131,6 +131,13 @@ public:
    */
   bool sbd_power(const bool &enable);
 
+  /**
+   * @brief set_debug
+   * @param val
+   * @return
+   */
+  void set_debug(const bool &val);
+
 private:
 
   /**
@@ -197,6 +204,8 @@ private:
   int m_reg_status = -1;
   int m_reg_error_code = -1;
 
+  bool m_debug = false;
+
 public:
   int get_status_mo();
   int get_status_momsn();
@@ -226,6 +235,10 @@ public:
   bool is_in_session();
 
 };
+
+inline void SBD::set_debug(const bool &val){
+  m_debug = val;
+}
 
 inline void SBD::set_gnss(const double &latitude, const double &longitude){
   m_latitude = latitude;
@@ -346,6 +359,8 @@ inline int SBD::get_indicator_signal(){
 }
 
 inline int SBD::get_indicator_service(){
+  if(m_debug)
+    return 1;
   omp_set_lock(&lock_data);
   int result = m_indicator_service;
   omp_unset_lock(&lock_data);

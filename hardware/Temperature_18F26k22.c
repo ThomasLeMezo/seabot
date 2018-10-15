@@ -1,4 +1,4 @@
-/*  PIC18F14K22  mikroC PRO for PIC v6.4
+/*  PIC18F26K22  mikroC PRO for PIC v6.4
 Oscillateur interne 16MHZ (attention l'edit project ne marche pas, paramétrer 
 l'oscillateur en dur)
 
@@ -49,15 +49,15 @@ sbit LED3 at RA3_bit; // sortie LED
 
 // I2C Master
 void init_i2c_master();
-void i2c_master_write_byte();
-void i2c_master_read_data();
-#define TSYS01_ADDR           0x77  
-#define TSYS01_RESET          0x1E
-#define TSYS01_ADC_READ       0x00
-#define TSYS01_ADC_TEMP_CONV  0x48
-#define TSYS01_PROM_READ      0XA0
+void i2c_master_write_byte(unsigned char cmd);
+void i2c_master_read_data(unsigned char cmd, unsigned char nb_bytes);
+#define TSYS01_ADDR 0x77
+#define TSYS01_RESET 0x1E
+#define TSYS01_ADC_READ 0x00
+#define TSYS01_ADC_TEMP_CONV 0x48
+#define TSYS01_PROM_READ 0xA0
 unsigned char mssp_interrupt_received = 0;
-#define SIZE_RX_BUFFER 3
+#define SIZE_MASTER_RX_BUFFER 3
 unsigned char i2c_master_rxbuffer_tab[SIZE_MASTER_RX_BUFFER];
 unsigned char i2c_master_adc_tab[3];
 
@@ -97,9 +97,9 @@ void i2c_read_data_from_buffer(){
                 break;
             case 0x48:
                 conversion = 1;
-                octet1 = 0x00;
-                octet2 = 0x00;
-                octet3 = 0x00;
+                i2c_master_adc_tab[0] = 0x00;
+                i2c_master_adc_tab[1] = 0x00;
+                i2c_master_adc_tab[2] = 0x00;
                 break;
             default:
                 break;
@@ -215,7 +215,7 @@ void prom_read_TSYS01_sequence(){
 
   // Read calibration values
   for(j = 0 ; j < 5 ; j++){
-        i2c_master_read_data(TSYS01_PROM_READ+(j+1)*2);
+        i2c_master_read_data(TSYS01_PROM_READ + (j+1)*2, 2);
         tsys01_prom[j*2] = i2c_master_rxbuffer_tab[0];
         tsys01_prom[j*2+1] = i2c_master_rxbuffer_tab[1];
         delay_us(100);
@@ -231,29 +231,14 @@ void read_TSYS01_sequence(){
 
   delay_ms(20);
 
-  i2c_master_read_data(TSYS01_ADC_READ);
-  i2c_master_adc_tab[0] = i2c_master_adc_tab[0];
-  i2c_master_adc_tab[1] = i2c_master_adc_tab[1];
-  i2c_master_adc_tab[2] = i2c_master_adc_tab[2];
+  i2c_master_read_data(TSYS01_ADC_READ, 3);
+
+  i2c_master_adc_tab[0] = i2c_master_rxbuffer_tab[0];
+  i2c_master_adc_tab[1] = i2c_master_rxbuffer_tab[1];
+  i2c_master_adc_tab[2] = i2c_master_rxbuffer_tab[2];
   
   conversion = 0;
   cpt++;
-}
-
-void uart_prom_sequence(){
-  UART1_Write(255);
-  for(k=1; k<6; k++){
-  UART1_Write(coefficient_tab[k]);
-  UART1_Write(coefficient_tab[k] >> 8);
-  delay_ms(10);
-  }
-}
-
-void uart_read_sequence(){
-  UART1_Write(255);
-  UART1_Write(octet1);
-  UART1_Write(octet2);
-  UART1_Write(octet3);
 }
 
 void wait_MSSP(){
@@ -262,21 +247,23 @@ void wait_MSSP(){
 }
 
 void i2c_fail(){
-   int i;
-   SSP1CON2bits.PEN = 1; //Send Stop Condition
+//   int i;
+	LED = 1;
+   SSP1CON2.PEN = 1; //Send Stop Condition
    wait_MSSP(); //Wait to complete
 
    //Signal error
-   while(1){
+   /*while(1){
        LATCbits.LC2 = 1;
        for(i=0;i<50;i++) __delay_ms(10);
        LATCbits.LC2 = 0;
        for(i=0;i<50;i++) __delay_ms(10);
-   }
+   }*/
 }
 
-void i2c_master_write_byte(char cmd){
-  SSPCON2.SEN = 1; //Send Start Condition
+void i2c_master_write_byte(unsigned char cmd){
+  SSP1CON2.SEN = 1; //Send Start Condition
+  
   wait_MSSP(); //Wait to complete
 
   SSP1BUF = (TSYS01_ADDR << 1); //Send Add (Write)
@@ -289,32 +276,37 @@ void i2c_master_write_byte(char cmd){
   if(SSP1CON2.ACKSTAT == 1) //If no ACK is received
     i2c_fail();
 
-  SSPCON2.PEN = 1; //Send Stop Condition
+  SSP1CON2.PEN = 1; //Send Stop Condition
   wait_MSSP(); //Wait to complete
 }
 
-void i2c_master_read_data(char cmd, unsigned char nb_bytes){
+void i2c_master_read_data(unsigned char cmd, unsigned char nb_bytes){
   unsigned char i = 0;
   i2c_master_write_byte(cmd);
 
-  SSPCON2.SEN = 1; //Send Start Condition
+  SSP1CON2.SEN = 1; //Send Start Condition
   wait_MSSP(); //Wait to complete
 
-  Send_I2C_Byte((TSYS01_ADDR << 1) | 0b1); //Send Control Write Byte
+  SSP1BUF = ((TSYS01_ADDR << 1) | 0b1); //Send Control Write Byte
   wait_MSSP();
   if(SSP1CON2.ACKSTAT == 1) //If no ACK is received
     i2c_fail();
 
   for(i=0; i<nb_bytes; i++){
-    SSPCON2.RCEN = 1; // Configure master to receive bytes
+    SSP1CON2.RCEN = 1; // Configure master to receive bytes
     wait_MSSP(); // Wait data to be received
     i2c_master_rxbuffer_tab[i] = SSP1BUF; // Read data
+    delay_us(30);
     SSP1CON2.ACKEN = 1; // Acknowledge read
     wait_MSSP();
+    delay_us(30);
   }
-
-  SSPCON2.PEN = 1; //Send Stop Condition
-  wait_MSSP(); //Wait to complete
+  delay_us(10);
+  SSP1CON2.PEN = 1; //Send Stop Condition
+  //wait_MSSP(); //Wait to complete
+  delay_ms(5);
+   mssp_interrupt_received = 0;
+  //LED = 1;
 }
 
 /**
@@ -334,7 +326,7 @@ void main(){
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
   
   asm CLRWDT;// Watchdog
-  RCON2bits.SWDTEN=1; //armement du watchdog (?)
+  SWDTEN_bit=0; //armement du watchdog (?)
 
   init_io(); // Initialisation des I/O
   init_i2c_slave(); // Initialisation de l'I2C en esclave bus I2C N?2
@@ -345,9 +337,10 @@ void main(){
   delay_ms(250);
 
   RCON.IPEN = 1;  //Enable priority levels on interrupts
-  IPR3.SSP2IP = 0; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N?2
+
   INTCON.GIEH = 1; //enable all high-priority interrupts
   INTCON.GIEL = 1; //enable all low-priority interrupts
+
 
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
@@ -367,7 +360,7 @@ void main(){
         state = IDLE;
         break;
       case IDLE: // Idle state
-        LED = 0;
+        //LED = 0;
         if(reset == 1)
           state = RESET_TSYS01;
         else if(conversion == 1)
@@ -376,14 +369,14 @@ void main(){
         break;
 
       case RESET_TSYS01:
-        LED = 1;
+        //LED = 1;
         reset_TSYS01_sequence();
         prom_read_TSYS01_sequence();
         state = IDLE;
         break;
 
       case CONVERSION_READ:
-        LED = 1;
+        LED = 0;
         read_TSYS01_sequence();
         state = IDLE;
         break;
@@ -404,16 +397,23 @@ void main(){
  * @brief init master I2C
  */
 void init_i2c_master(){
-  TRISRC3_bit = 1; // RC3 en entrée
-  TRISRC4_bit = 1; // RC4 en entrée
+  TRISC.B3 = 1; // RC3 input
+  TRISC.B4 = 1; // RC4 input
 
   //Configure MSSP mode for Master Mode
-  SSP1CON1bits.SSPM = 0b1000; //I2C Master Mode
-  SSP1CON1bits.SSPEN = 1; //Enable MSSP
-  SSP1STATbits.SMP = 1; //Disable slew rate
+  SSP1CON1.SSPM3 = 0b1;
+  SSP1CON1.SSPM2 = 0b0;
+  SSP1CON1.SSPM1 = 0b0;
+  SSP1CON1.SSPM0 = 0b0;
+  SSP1CON1.SSPEN = 1; //Enable MSSP
+  SSP1STAT.SMP = 1; //Disable slew rate
 
+  PIE1.SSP1IE = 1; // Synchronous Serial Port Interrupt Enable bit
+  PIR1.SSP1IF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
+  IPR1.SSP1IP = 0;
+  
   //Configure baud rate (32MHz => 0x4F, 16MHz => 0x27)
-   SSPADD = 0x27;
+   SSP1ADD = 0x27;
 }
 
 /**
@@ -428,6 +428,7 @@ void init_i2c_slave(){
   // **** Interruptions **** //
   PIE3.SSP2IE = 1; // Synchronous Serial Port Interrupt Enable bit
   PIR3.SSP2IF = 0; // Synchronous Serial Port (SSP) Interrupt Flag, I2C Slave
+  IPR3.SSP2IP = 1; //Master Synchronous Serial Port Interrupt Priority bit (low priority = 0) bus I2C N?2
 
   PIE3.BCL2IE = 1;
   PIR3.BCL2IF = 0;
@@ -467,14 +468,28 @@ void init_i2c_slave(){
  * interruption sur TIMER3 interruptions tous les 100ms pour visu STATE0(tous les 500ms)
  * interruption sur le bus I2C
  */
-void interrupt(){
+void interrupt_low(){
+
+if(PIR1.SSP1IF){
+
+
+    mssp_interrupt_received = 1;
+
+    if(SSP1CON1.SSPOV || SSP1CON1.WCOL){
+          SSP1CON1.SSPOV = 0;
+          SSP1CON1.WCOL = 0;
+          tmp_rx = SSP1BUF;
+      }
+      
+      PIR1.SSP1IF = 0;
+  }
 
 }
 
 /**
  * @brief interrupt_low
  */
-void interrupt_low(){
+void interrupt(){
   if (PIR3.SSP2IF){  // I2C Interrupt
 
       if(SSP2CON1.SSPOV || SSP2CON1.WCOL){
@@ -527,14 +542,4 @@ void interrupt_low(){
     PIR3.SSP2IF = 0; // reset SSP interrupt flag
   }
 
-  if(PIR1.SSP1IF){
-    PIR3.SSP2IF = 0;
-    mssp_interrupt_received = 1;
-
-    if(SSP1CON1.SSPOV || SSP1CON1.WCOL){
-          SSP1CON1.SSPOV = 0;
-          SSP1CON1.WCOL = 0;
-          tmp_rx = SSP1BUF;
-      }
-  }
 }

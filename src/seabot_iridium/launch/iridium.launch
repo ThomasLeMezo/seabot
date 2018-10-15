@@ -3,6 +3,7 @@
 								<param name="duration_between_msg" value="120" />
         <param name="wait_time_surface" value="10" />
         <param name="depth_surface_limit" value="0.5" />
+								<param name="debug" value="false" />
     </node>
 </launch>
 

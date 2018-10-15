@@ -37,7 +37,7 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x03
+#define CODE_VERSION 0x04
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
@@ -192,6 +192,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
     break;
   case 0x09:
     SSPBUF = state;
+    break;
+  case 0x10:
+    SSPBUF = watchdog_restart_default;
     break;
   case 0xC0:
     SSPBUF = CODE_VERSION;
