@@ -62,6 +62,9 @@ unsigned char i2c_master_rxbuffer_tab[SIZE_MASTER_RX_BUFFER];
 unsigned char i2c_master_adc_tab[3];
 
 unsigned char tsys01_prom[10];   // tableau de coefficients de calibration
+unsigned char debug_ov = 0;
+unsigned char debug_col = 0;
+unsigned char debug_bcl = 0;
 
 // I2C Slave
 void init_i2c_slave();
@@ -161,6 +164,15 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
   case 0xC2:
     SSP2BUF = cpt;
     break;
+  case 0xD1:
+    SSP2BUF = debug_ov;
+    break;
+  case 0xD2:
+    SSP2BUF = debug_col;
+    break;
+  case 0xD3:
+    SSP2BUF = debug_bcl;
+    break;
   default:
     SSP2BUF = 0x00;
     break;
@@ -249,16 +261,10 @@ void wait_MSSP(){
 void i2c_fail(){
 //   int i;
 	LED = 1;
-   SSP1CON2.PEN = 1; //Send Stop Condition
-   wait_MSSP(); //Wait to complete
+  SSP1CON2.PEN = 1; //Send Stop Condition
+  wait_MSSP(); //Wait to complete
 
-   //Signal error
-   /*while(1){
-       LATCbits.LC2 = 1;
-       for(i=0;i<50;i++) __delay_ms(10);
-       LATCbits.LC2 = 0;
-       for(i=0;i<50;i++) __delay_ms(10);
-   }*/
+  delay_ms(2000); // Reset
 }
 
 void i2c_master_write_byte(unsigned char cmd){
@@ -476,6 +482,9 @@ if(PIR1.SSP1IF){
     mssp_interrupt_received = 1;
 
     if(SSP1CON1.SSPOV || SSP1CON1.WCOL){
+          debug_ov = 1;
+          debug_col = 1;
+          debug_bcl = 1;
           SSP1CON1.SSPOV = 0;
           SSP1CON1.WCOL = 0;
           tmp_rx = SSP1BUF;
