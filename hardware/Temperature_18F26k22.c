@@ -303,6 +303,10 @@ void i2c_master_read_data(unsigned char cmd, unsigned char nb_bytes){
     wait_MSSP(); // Wait data to be received
     i2c_master_rxbuffer_tab[i] = SSP1BUF; // Read data
     delay_us(30);
+    if(i==nb_bytes-1)
+      SSP1CON2.ACKDT = 1;
+    else
+      SSP1CON2.ACKDT = 0;
     SSP1CON2.ACKEN = 1; // Acknowledge read
     wait_MSSP();
     delay_us(30);
@@ -332,14 +336,15 @@ void main(){
   OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
   
   asm CLRWDT;// Watchdog
-  SWDTEN_bit=0; //armement du watchdog (?)
+  SWDTEN_bit=1; //armement du watchdog (?)
+  LED = 1;
 
   init_io(); // Initialisation des I/O
   init_i2c_slave(); // Initialisation de l'I2C en esclave bus I2C N?2
   init_i2c_master();
   // I2C1_Init(100000);// initialize I2C communication bus I2C N?1
 
-  LED = 1; // sortie LED
+  
   delay_ms(250);
 
   RCON.IPEN = 1;  //Enable priority levels on interrupts
@@ -355,7 +360,6 @@ void main(){
   prom_read_TSYS01_sequence();
   
   delay_ms(250);
-  LED = 0;
 
   while(1){
 
@@ -366,7 +370,7 @@ void main(){
         state = IDLE;
         break;
       case IDLE: // Idle state
-        //LED = 0;
+        LED = 0;
         if(reset == 1)
           state = RESET_TSYS01;
         else if(conversion == 1)
@@ -375,14 +379,13 @@ void main(){
         break;
 
       case RESET_TSYS01:
-        //LED = 1;
         reset_TSYS01_sequence();
         prom_read_TSYS01_sequence();
         state = IDLE;
         break;
 
       case CONVERSION_READ:
-        LED = 0;
+        LED = 1;
         read_TSYS01_sequence();
         state = IDLE;
         break;
@@ -544,6 +547,7 @@ void interrupt(){
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
+          delay_us(20);
           nb_tx_octet++;
       }
 

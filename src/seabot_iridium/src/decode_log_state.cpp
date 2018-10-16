@@ -38,8 +38,8 @@ int main(int argc, char *argv[]){
     logData.deserialize_log_state(data_raw);
 
     stringstream data;
-    data << "file_name: " << file_name << endl;
-
+    data << "file_name: " << std::fixed << file_name << endl;
+    data << "time: " << logData.m_time_now << endl;
     data << "east: " << std::fixed << logData.m_east << endl;
     data << "north: " << std::fixed << logData.m_north << endl;
     data << "gnss_speed: " << logData.m_gnss_speed << endl;

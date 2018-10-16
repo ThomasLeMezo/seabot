@@ -399,6 +399,7 @@ void interrupt_low(){
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
+          delay_us(20);
           nb_tx_octet++;
       }
 
