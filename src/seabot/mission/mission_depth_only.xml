@@ -13,8 +13,8 @@
 <paths type ="1">
 	<loop number="2" depth_increment="0.0">
    <waypoint>
-				<duration>400</duration>
-				<depth>0.0</depth>
+				<duration>180</duration>
+				<depth>1.5</depth>
 				<velocity_depth>0.04</velocity_depth>
    </waypoint>
 

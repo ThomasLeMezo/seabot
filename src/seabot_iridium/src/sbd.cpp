@@ -47,6 +47,7 @@ void SBD::read(){
 
   if(result != ""){
     //    cout << result << endl;
+    ROS_INFO("[Iridium_raw] %s", result.c_str());
     if(boost::starts_with(result, "OK")){
       m_OK = true;
       m_READY = false;
@@ -201,10 +202,13 @@ void SBD::read(){
  * Note : each line fillful this format \r\n *** \r\n
  */
 void SBD::write(const std::string &at_cmd){
+  omp_set_lock(&lock_data);
   m_OK = false;
+  omp_unset_lock(&lock_data);
+
   string cmd = at_cmd + '\r';
   m_serial.writeString(cmd);
-
+  ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
 }
 
 void SBD::disable_echo(){
@@ -247,47 +251,40 @@ int SBD::cmd_copy_MO_MT(){
 }
 
 int SBD::cmd_write_message(const std::string &data){
-  omp_set_lock(&lock_data);
-  m_READY = false;
-  omp_unset_lock(&lock_data);
+  set_ready(false);
 
   if(data.size()>340)
     return 4;
   string cmd = "AT+SBDWB=" + std::to_string(data.size());
   write(cmd);
 
+  string data_checksum(data);
+  // Compute checksum
+  uint16_t checksum = 0;
+  for(size_t i=0; i < data.size(); i++)
+    checksum += (uint8_t) data.c_str()[i];
+
+  data_checksum += (uint8_t) checksum>>8;
+  data_checksum += (uint8_t) checksum;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  write(data_checksum);
+
+  for(int i=0; i<data_checksum.size(); i++){
+    ROS_INFO("[Iridium_sbdwb] Send = %x", data_checksum.c_str()[i]);
+  }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
   bool valid = false;
-  for(size_t i=0; i<100; i++){
-    omp_set_lock(&lock_data);
-    bool test = m_READY;
-    omp_unset_lock(&lock_data);
-    if(test){
+  for(size_t i=0; i<20; i++){
+    if(is_ready()){
       valid = true;
       break;
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-
-  if(valid){
-    // Compute checksum
-    uint16_t checksum = 0;
-    for(size_t i=0; i < data.size(); i++)
-      checksum += data.c_str()[i];
-
-    string data_checksum = data;
-    data_checksum += uint8_t(checksum>>8);
-    data_checksum += uint8_t(checksum);
-    write(data_checksum);
-
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    omp_set_lock(&lock_data);
-    int result = m_ready_return;
-    omp_unset_lock(&lock_data);
-    return result;
   }
-  else
-    return -1;
+  return (valid)?0:-1;
 }
 
 std::string SBD::cmd_read_message(){
@@ -372,6 +369,7 @@ int SBD::cmd_session(){
       }
     }
 
+    ROS_INFO("[Iridium] End of session not received");
     return 1;
   }
   else{

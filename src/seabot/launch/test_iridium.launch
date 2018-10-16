@@ -5,7 +5,7 @@
 
     <include file="$(find seabot)/launch/base.launch"/>
     <include file="$(find seabot)/launch/regulation.launch"/>
-<!--    <include file="$(find seabot_safety)/launch/safety.launch"/>-->
+				<include file="$(find seabot_safety)/launch/safety.launch"/>
     <include file="$(find seabot_iridium)/launch/iridium.launch"/>
 
 				<node name="mission" pkg="seabot_mission" type="mission_node" ns="mission" output="screen" respawn="false">

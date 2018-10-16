@@ -233,6 +233,8 @@ public:
   int get_areg_event();
   int get_areg_error_code();
   bool is_in_session();
+  bool is_ready();
+  void set_ready(const bool &val);
 
 };
 
@@ -428,6 +430,19 @@ inline bool SBD::is_in_session(){
   bool result = m_in_session;
   omp_unset_lock(&lock_data);
   return result;
+}
+
+inline bool SBD::is_ready(){
+  omp_set_lock(&lock_data);
+  bool result = m_READY;
+  omp_unset_lock(&lock_data);
+  return result;
+}
+
+inline void SBD::set_ready(const bool &val){
+  omp_set_lock(&lock_data);
+  m_READY = val;
+  omp_unset_lock(&lock_data);
 }
 
 
