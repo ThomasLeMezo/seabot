@@ -50,7 +50,6 @@ void SBD::read(){
 //    ROS_INFO("[Iridium_raw] %s", result.c_str());
     if(boost::starts_with(result, "OK")){
       m_OK = true;
-      m_READY = false;
     }
     else if(boost::starts_with(result, "READY")){
       m_READY = true;
@@ -264,8 +263,8 @@ int SBD::cmd_write_message(const std::string &data){
   for(const char &c:data)
     checksum += static_cast<unsigned char>(c);
 
-  data_checksum += (uint8_t) checksum>>8;
-  data_checksum += (uint8_t) checksum;
+  data_checksum += static_cast<char>(checksum>>8);
+  data_checksum += static_cast<char>(checksum);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
   write(data_checksum);

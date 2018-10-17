@@ -26,11 +26,15 @@ private:
     void process_data_gps(struct gps_data_t* p);
     void process_data_navsat(struct gps_data_t* p);
 
+    void reset();
+
   private:
     ros::NodeHandle node;
     ros::NodeHandle privnode;
     ros::Publisher gps_fix_pub;
     gpsmm *gps = nullptr;
+
+    ros::WallTime last_seen;
 
     bool use_gps_time = true;
     bool check_fix_by_variance = true;

@@ -1,4 +1,5 @@
 #include "gpsdclient.h"
+#include "ros/ros.h"
 
 bool GPSDClient::start() {
   gps_fix_pub = node.advertise<gpsd_client::GPSFix>("fix", 1);
@@ -17,14 +18,18 @@ bool GPSDClient::start() {
     ROS_DEBUG("[GPSD_Client] GPSd opened");
     return true;
   }
+  gps->clear_fix();
+
+  last_seen = ros::WallTime::now();
 }
 
 void GPSDClient::step() {
-  if (!gps->waiting(1e6)) // us ? => 1s
+  struct gps_data_t *p;
+  sleep(1);
+  if (!gps->waiting(50000000)) // us ? => 1s
     return;
 
-  gps_data_t *p;
-  if((p = gps->read())==nullptr){
+  if((p = gps->read())==NULL){
     ROS_WARN("[GPSD_Client] Error reading gpsd");
   }
   else{
@@ -33,7 +38,23 @@ void GPSDClient::step() {
 }
 
 void GPSDClient::stop() {
+  gps->stream(WATCH_DISABLE);
   gps->~gpsmm();
+//  delete gps;
+}
+
+void GPSDClient::reset(){
+  if((ros::WallTime::now() - last_seen).toSec()>10){
+    gps->stream(WATCH_DISABLE);
+    gps->clear_fix();
+    gps->~gpsmm();
+//    delete gps;
+    sleep(3);
+    gps = new gpsmm("localhost", DEFAULT_GPSD_PORT);
+    if(gps->stream(WATCH_ENABLE | WATCH_JSON) == nullptr){
+      ROS_ERROR("[GPSD_Client] Failed to open GPSd");
+    }
+  }
 }
 
 void GPSDClient::process_data(struct gps_data_t* p) {
@@ -42,14 +63,21 @@ void GPSDClient::process_data(struct gps_data_t* p) {
     return;
   }
 
+//  if(p->fix.mode == MODE_NOT_SEEN){
+//    reset();
+//  }
+//  else
+//    last_seen = ros::WallTime::now();
+
   bool new_fix_state = (p->fix.mode>=MODE_2D)?true:false;
+  new_fix_state = true;
   if(new_fix_state ||(m_last_fix_state!=new_fix_state)){
     process_data_gps(p);
     m_last_fix_state =  new_fix_state;
   }
-//  else if(p->fix.mode==MODE_NOT_SEEN){
-//    ROS_INFO("[GPSD_Client] fix = MODE_NOT_SEEN");
-//  }
+  //  else if(p->fix.mode==MODE_NOT_SEEN){
+  //    ROS_INFO("[GPSD_Client] fix = MODE_NOT_SEEN");
+  //  }
 }
 
 void GPSDClient::process_data_gps(struct gps_data_t* p) {

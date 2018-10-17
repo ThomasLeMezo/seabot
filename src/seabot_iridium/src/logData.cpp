@@ -240,13 +240,13 @@ bool LogData::deserialize_log_state(const string &data_raw){
   int bit_position = 0;
   unsigned int time_now;
   bit_position += deserialize_data<uint_log1_t>(data, 18, bit_position, time_now);
-  bit_position += deserialize_data<uint_log1_t>(data, 21, bit_position, m_east, 0, 1300000);
-  bit_position += deserialize_data<uint_log1_t>(data, 21, bit_position, m_north, 6000000, 7200000);
+  bit_position += deserialize_data<uint_log1_t>(data, 21, bit_position, m_east, L93_EAST_MIN, L93_EAST_MAX);
+  bit_position += deserialize_data<uint_log1_t>(data, 21, bit_position, m_north, L93_NORTH_MIN, L93_NORTH_MAX);
   bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_speed, 0, 5.0);
   bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_heading, 0, 359.0);
 
-  unsigned char state = 0;
-  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, state);
+  unsigned int state = 0;
+  bit_position += deserialize_data<uint_log1_t>(data, 8, bit_position, state);
   m_safety_published_frequency = (state >> 0) & 0b1;
   m_safety_depth_limit = (state >> 1) & 0b1;
   m_safety_batteries_limit = (state >> 2) & 0b1;

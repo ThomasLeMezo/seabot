@@ -69,33 +69,33 @@ void test4(){
 #pragma omp task
       {
         sleep(1);
-        cout << "=> CSQ = " << sbd.cmd_CSQ() << endl;
+//        cout << "=> CSQ = " << sbd.cmd_CSQ() << endl;
+//        cin.get();
+//        cout << "=> imei = " << sbd.cmd_get_imei() << endl;
+//        cin.get();
+        cout << "=> write = " << sbd.cmd_write_message("AZERTYUIOPQSDFGHJ") << endl;
         cin.get();
-        cout << "=> imei = " << sbd.cmd_get_imei() << endl;
-        cin.get();
-        cout << "=> write = " << sbd.cmd_write_message("Test") << endl;
-        cin.get();
-        cout << "=> Copy Mo Mt = " << sbd.cmd_copy_MO_MT() << endl;
-        cin.get();
-        cout << "=> read = " << sbd.cmd_read_message() << endl;
-        cin.get();
-        sbd.cmd_enable_indicator_reporting();
-        sbd.cmd_enable_alert();
+//        cout << "=> Copy Mo Mt = " << sbd.cmd_copy_MO_MT() << endl;
+//        cin.get();
+//        cout << "=> read = " << sbd.cmd_read_message() << endl;
+//        cin.get();
+//        sbd.cmd_enable_indicator_reporting();
+//        sbd.cmd_enable_alert();
 
-        cin.get();
-        sbd.set_gnss(48.39475416, -4.48271749);
-        sbd.cmd_status();
-        cout << "=> status = " << sbd.get_status_mo() << " " << sbd.get_status_mt() << " " << sbd.get_waiting() << endl;
+//        cin.get();
+//        sbd.set_gnss(48.39475416, -4.48271749);
+//        sbd.cmd_status();
+//        cout << "=> status = " << sbd.get_status_mo() << " " << sbd.get_status_mt() << " " << sbd.get_waiting() << endl;
 
-        cin.get();
-        sbd.cmd_session();
+//        cin.get();
+//        sbd.cmd_session();
 
-        sleep(10);
-        cout << "MO=" << sbd.get_session_mo() << endl;
-        cout << "MOMSN=" << sbd.get_session_momsn() << endl;
-        cout << "MT=" << sbd.get_session_mt() << endl;
-        cout << "MTMSN=" << sbd.get_session_mtmsn() << endl;
-        cout << "waiting=" << sbd.get_waiting() << endl;
+//        sleep(10);
+//        cout << "MO=" << sbd.get_session_mo() << endl;
+//        cout << "MOMSN=" << sbd.get_session_momsn() << endl;
+//        cout << "MT=" << sbd.get_session_mt() << endl;
+//        cout << "MTMSN=" << sbd.get_session_mtmsn() << endl;
+//        cout << "waiting=" << sbd.get_waiting() << endl;
 
       }
     }
@@ -205,28 +205,36 @@ void test7(){
 }
 
 int main(int argc, char *argv[]){
-  string data = "hello";
-  uint16_t checksum = 0;
+  test6();
 
-//  vector<uint8_t> t = {0x4b, 0x7f, 0x88, 0x0, 0x80, 0x12, 0x00, 0xc0, 0x66, 0x05, 0xff, 0x20, 0x7c, 0x40, 0x07, 0x00, 0x00};
-  vector<uint8_t> t = {0x53, 0x7f, 0x88, 0x0, 0x80, 0x12, 0x0, 0xc0, 0x66, 0x5, 0xf, 0x21, 0x7c, 0x40, 0x7, 0x0, 0x0};
+//  string data = "AZERTYUIOPQSDFGHJ";
+//  uint16_t checksum = 0;
 
-  for(size_t i=0; i < t.size(); i++)
-    checksum += t[i];
+////  vector<uint8_t> t = {0x4b, 0x7f, 0x88, 0x0, 0x80, 0x12, 0x00, 0xc0, 0x66, 0x05, 0xff, 0x20, 0x7c, 0x40, 0x07, 0x00, 0x00};
+////  vector<uint8_t> t = {0x53, 0x7f, 0x88, 0x0, 0x80, 0x12, 0x0, 0xc0, 0x66, 0x5, 0xf, 0x21, 0x7c, 0x40, 0x7, 0x0, 0x0};
 
-//  string data_checksum = data;
-//  data_checksum += uint8_t(checksum>>8);
-//  data_checksum += uint8_t(checksum);
-
-  cout << std::hex << (int)(checksum >> 8) << endl;
-  cout << std::hex << (int)(checksum & 0xFF) << endl;
-
-//  for(int i=0; i<data_checksum.size(); i++){
-//    cout << std::hex << (int)data_checksum.c_str()[i] << endl;
+//  for(char &c:data){
+//    checksum += static_cast<uint8_t>(c);
+//    cout << c << " | " << static_cast<uint8_t>(c) << " " << checksum << endl;
 //  }
-//  cout << data_checksum << endl;
 
+////  string data_checksum = data;
+////  data_checksum += uint8_t(checksum>>8);
+////  data_checksum += uint8_t(checksum);
 
+//  cout << std::hex << (int)(checksum >> 8) << endl;
+//  cout << std::hex << (int)(checksum & 0xFF) << endl;
+
+////  for(int i=0; i<data_checksum.size(); i++){
+////    cout << std::hex << (int)data_checksum.c_str()[i] << endl;
+////  }
+////  cout << data_checksum << endl;
+
+//  data += static_cast<char>(checksum >> 8);
+//  data += static_cast<char>(checksum & 0xFF);
+//  cout << data << endl;
+
+//  test4();
 
 
   return 0;

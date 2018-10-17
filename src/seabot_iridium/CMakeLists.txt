@@ -132,8 +132,8 @@ if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
  add_dependencies(generate_cmd_parameters ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  target_link_libraries(generate_cmd_parameters ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
-	add_executable(test_checksum src/test.cpp ${SRC})
-	add_dependencies(test_checksum ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-	target_link_libraries(test_checksum ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
-
 endif()
+
+add_executable(test_checksum src/test.cpp ${SRC})
+add_dependencies(test_checksum ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_checksum ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})

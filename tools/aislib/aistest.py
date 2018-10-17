@@ -27,23 +27,25 @@ while 1:
     
     east = data_yaml['east']
     north = data_yaml['north']
+    imei = int(data_yaml['file_name'][15-9:15])
+    # print(msg_id)
 
     # current_waypoint = data_yaml['current_waypoint']
     longitude,latitude = transform(inProj,outProj,east, north)
     # print(longitude, latitude)
     aismsg = aislib.AISPositionReportMessage(
-        mmsi = 0,
+        mmsi = imei,
         status = 8,
-        sog = int(round(data_yaml['gnss_speed']*19.4384)), # vitesse en dixieme de noeuds
+        sog = min(int(round(data_yaml['gnss_speed']*19.4384)), 4095), # vitesse en dixieme de noeuds
         pa = 1, # position accuracy (1bit)
         # lat = int(round(floor(latitude)*60+(latitude-floor(latitude))*100.)), # en 1/10 000 de minutes, Ouest negatif
         # lon = int(round(floor(longitude)*60+(longitude-floor(longitude))*100.)),
         lat = int(round(latitude*60e4)),
         lon = int(round(longitude*60e4)),
-        cog = int(data_yaml['gnss_heading']*10.), # max 3600
+        cog = min(int(data_yaml['gnss_heading']*10.), 3600), # max 3600
         ts = 40, # max 511
         raim = 1,
-        comm_state = 82419   
+        comm_state = 1   
     )
     ais = aislib.AIS(aismsg)
     payload = ais.build_payload(False)

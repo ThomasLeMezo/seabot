@@ -82,7 +82,7 @@ void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
-  if(msg->status.status>msg->status.STATUS_MODE_NO_FIX)
+  if(msg->status.status > msg->status.STATUS_MODE_NO_FIX)
     valid_fix = true;
   else
     valid_fix = false;
@@ -103,7 +103,7 @@ void batteries_callback(const seabot_power_driver::Battery::ConstPtr& msg){
 void sensor_internal_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   log_state.m_internal_pressure = msg->pressure;
   log_state.m_internal_temperature = msg->temperature;
-  log_state.m_internal_temperature = msg->humidity;
+  log_state.m_internal_humidity = msg->humidity;
 }
 
 void mission_callback(const seabot_mission::Waypoint::ConstPtr &msg){

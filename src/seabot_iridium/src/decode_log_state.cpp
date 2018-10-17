@@ -61,6 +61,7 @@ int main(int argc, char *argv[]){
 
     data << "internal_pressure: " << logData.m_internal_pressure << endl;
     data << "internal_temperature: " << logData.m_internal_temperature << endl;
+    data << "internal_humidity: " << logData.m_internal_humidity << endl;
 
     data << "current_waypoint: " << logData.m_current_waypoint << endl;
     data << "last_cmd_received: " << logData.m_last_cmd_received << endl;
