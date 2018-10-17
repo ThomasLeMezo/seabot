@@ -47,7 +47,7 @@ void SBD::read(){
 
   if(result != ""){
     //    cout << result << endl;
-    ROS_INFO("[Iridium_raw] %s", result.c_str());
+//    ROS_INFO("[Iridium_raw] %s", result.c_str());
     if(boost::starts_with(result, "OK")){
       m_OK = true;
       m_READY = false;
@@ -208,7 +208,7 @@ void SBD::write(const std::string &at_cmd){
 
   string cmd = at_cmd + '\r';
   m_serial.writeString(cmd);
-  ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
+//  ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
 }
 
 void SBD::disable_echo(){
@@ -261,8 +261,8 @@ int SBD::cmd_write_message(const std::string &data){
   string data_checksum(data);
   // Compute checksum
   uint16_t checksum = 0;
-  for(size_t i=0; i < data.size(); i++)
-    checksum += (uint8_t) data.c_str()[i];
+  for(const char &c:data)
+    checksum += static_cast<unsigned char>(c);
 
   data_checksum += (uint8_t) checksum>>8;
   data_checksum += (uint8_t) checksum;
@@ -270,9 +270,9 @@ int SBD::cmd_write_message(const std::string &data){
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
   write(data_checksum);
 
-  for(int i=0; i<data_checksum.size(); i++){
-    ROS_INFO("[Iridium_sbdwb] Send = %x", data_checksum.c_str()[i]);
-  }
+//  for(int i=0; i<data_checksum.size(); i++){
+//    ROS_INFO("[Iridium_sbdwb] Send = %x", data_checksum.c_str()[i]);
+//  }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
