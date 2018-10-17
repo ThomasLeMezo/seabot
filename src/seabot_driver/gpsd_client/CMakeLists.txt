@@ -14,8 +14,17 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+# PKG_CONFIG_PATH
 find_package(PkgConfig)
-pkg_check_modules (libgps REQUIRED libgps)
+set(ENV{PKG_CONFIG_PATH}  "/usr/local/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+set(CMAKE_PREFIX_PATH "/usr/local/lib/pkgconfig:${CMAKE_SOURCE_DIR}")
+pkg_check_modules(LIBGPS REQUIRED libgps>=3.17)
+message("libgps version = " ${LIBGPS_VERSION})
+message("libgps include_dir = " ${LIBGPS_INCLUDEDIR})
+message("libgps lib_dir = " ${LIBGPS_LIBDIR})
+message("libgps libraries = " ${LIBGPS_LIBRARIES})
+
+message("PKG_CONFIG_PATH = " $ENV{PKG_CONFIG_PATH})
 
 #######################################
 ## Declare ROS messages and services ##
@@ -49,12 +58,12 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${libgps_INCLUDE_DIRS}
+    ${LIBGPS_INCLUDE_DIRS}
 )
 add_executable(${PROJECT_NAME}
     src/client.cpp
     src/gpsdclient.cpp
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${libgps_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${LIBGPS_LIBRARIES})
 
