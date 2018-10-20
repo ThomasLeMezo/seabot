@@ -1,7 +1,12 @@
 # A more complete GPS fix to supplement sensor_msgs/NavSatFix.
 Header header
 
-GPSStatus status
+# Measurement status
+int16 MODE_NOT_SEEN=0	# mode update not seen yet
+int16 STATUS_MODE_NO_FIX=1	# none
+int16 STATUS_MODE_2D=2	# good for latitude/longitude
+int16 STATUS_MODE_3D=3	# good for altitude/climb too
+int16 status
 
 # Latitude (degrees). Positive is north of equator; negative is south.
 float64 latitude
@@ -17,14 +22,6 @@ float64 track
 
 # Ground speed (meters/second)
 float64 speed
-
-# Vertical speed (meters/second)
-float64 climb
-
-# Device orientation (units in degrees)
-float64 pitch
-float64 roll
-float64 dip
 
 # GPS time
 float64 time
@@ -63,27 +60,5 @@ float64 err_track
 # Ground speed uncertainty (meters/second) [eps]
 float64 err_speed
 
-# Vertical speed uncertainty (meters/second) [epc]
-float64 err_climb
-
 # Temporal uncertainty [ept]
 float64 err_time
-
-# Orientation uncertainty (degrees)
-float64 err_pitch
-float64 err_roll
-float64 err_dip
-
-# Position covariance [m^2] defined relative to a tangential plane
-# through the reported position. The components are East, North, and
-# Up (ENU), in row-major order.
-
-float64[9] position_covariance
-
-uint8 COVARIANCE_TYPE_UNKNOWN = 0
-uint8 COVARIANCE_TYPE_APPROXIMATED = 1
-uint8 COVARIANCE_TYPE_DIAGONAL_KNOWN = 2
-uint8 COVARIANCE_TYPE_KNOWN = 3
-
-uint8 position_covariance_type
-

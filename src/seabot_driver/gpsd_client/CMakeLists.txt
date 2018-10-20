@@ -32,7 +32,6 @@ message("PKG_CONFIG_PATH = " $ENV{PKG_CONFIG_PATH})
 
 add_message_files(
   FILES
-    GPSStatus.msg
     GPSFix.msg
 )
 

@@ -4,7 +4,6 @@
 
 #include <ros/ros.h>
 #include <gpsd_client/GPSFix.h>
-#include <gpsd_client/GPSStatus.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <libgpsmm.h>
@@ -22,7 +21,6 @@ class GPSDClient {
     void stop();
 
 private:
-    void process_data(struct gps_data_t* p);
     void process_data_gps(struct gps_data_t* p);
     void process_data_navsat(struct gps_data_t* p);
 
@@ -37,10 +35,12 @@ private:
     ros::WallTime last_seen;
 
     bool use_gps_time = true;
-    bool check_fix_by_variance = true;
     std::string frame_id = "gps";
 
     bool m_last_fix_state = true;
+
+    gpsd_client::GPSFix m_fix;
+    bool m_last_was_no_fix = false;
 };
 
 #endif // GPSDCLIENT_H

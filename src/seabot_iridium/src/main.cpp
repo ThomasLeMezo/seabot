@@ -82,7 +82,7 @@ void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
-  if(msg->status.status > msg->status.STATUS_MODE_NO_FIX)
+  if(msg->status >= msg->STATUS_MODE_2D)
     valid_fix = true;
   else
     valid_fix = false;
