@@ -361,6 +361,7 @@ void main(){
       ALIM = 0;
       led_delay = 50;
       start_led_puissance = 0;
+      watchdog_restart = watchdog_restart_default;  
 
       if(ILS==0){ // Magnet detected
         ils_cpt--;

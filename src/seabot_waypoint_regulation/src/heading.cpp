@@ -7,7 +7,6 @@
 #include <seabot_thruster_driver/Velocity.h>
 #include <geometry_msgs/Vector3.h>
 #include <gpsd_client/GPSFix.h>
-#include <gpsd_client/GPSStatus.h>
 #include <seabot_fusion/DepthPose.h>
 #include <std_msgs/Float64.h>
 #include <cmath>
