@@ -6,7 +6,6 @@
 #include <seabot_fusion/GnssPose.h>
 #include <seabot_power_driver/Battery.h>
 #include <gpsd_client/GPSFix.h>
-#include <gpsd_client/GPSStatus.h>
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_fusion/InternalPose.h>
 #include <seabot_safety/SafetyLog.h>
