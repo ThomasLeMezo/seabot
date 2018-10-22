@@ -3,7 +3,6 @@
 
 #include <ros/ros.h>
 #include <gpsd_client/GPSFix.h>
-#include <gpsd_client/GPSStatus.h>
 #include <seabot_fusion/GnssPose.h>
 #include <cmath>
 
