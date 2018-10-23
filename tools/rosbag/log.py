@@ -417,7 +417,7 @@ if(len(time_euler)>0):
     pg_euler1.addLegend()
     # pg_euler1.plot(time_euler, euler_x, pen=(255,0,0), name="euler x")
     # pg_euler1.plot(time_euler, euler_y, pen=(0,255,0), name="euler y")
-    pg_euler1.plot(time_euler, euler_z, pen=(0,0,255), name="Heading")
+    pg_euler1.plot(time_euler, np.array(euler_z)*180.0/np.pi, pen=(0,0,255), name="Heading")
     dock_euler.addWidget(pg_euler1)
 
     # pg_euler_depth = pg.PlotWidget()
