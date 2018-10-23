@@ -188,7 +188,7 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber batteries_sub = n.subscribe("/fusion/battery", 1, batteries_callback);
   ros::Subscriber pose_sub = n.subscribe("/fusion/pose", 1, pose_callback);
-  ros::Subscriber gnss_sub = n.subscribe("/driver/fix_extended", 1, gnss_callback);
+  ros::Subscriber gnss_sub = n.subscribe("/driver/fix", 1, gnss_callback);
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber safety_sub = n.subscribe("/safety/safety", 1, safety_callback);
   ros::Subscriber sensor_internal_sub = n.subscribe("/fusion/sensor_internal", 1, sensor_internal_callback);

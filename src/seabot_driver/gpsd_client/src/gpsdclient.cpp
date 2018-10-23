@@ -18,27 +18,11 @@ bool GPSDClient::start() {
     return true;
   }
   gps->clear_fix();
-
-  last_seen = ros::WallTime::now();
 }
 
 void GPSDClient::stop() {
   gps->stream(WATCH_DISABLE);
   gps->~gpsmm();
-}
-
-void GPSDClient::reset(){
-  if((ros::WallTime::now() - last_seen).toSec()>10){
-    gps->stream(WATCH_DISABLE);
-    gps->clear_fix();
-    gps->~gpsmm();
-
-    sleep(3);
-    gps = new gpsmm("localhost", DEFAULT_GPSD_PORT);
-    if(gps->stream(WATCH_ENABLE | WATCH_JSON) == nullptr){
-      ROS_ERROR("[GPSD_Client] Failed to open GPSd");
-    }
-  }
 }
 
 void GPSDClient::step() {
@@ -68,6 +52,7 @@ void GPSDClient::process_data_gps(struct gps_data_t* p) {
     m_fix.longitude = p->fix.longitude;
 
     m_fix.altitude = p->fix.altitude;
+
     m_fix.track = p->fix.track;
     m_fix.speed = p->fix.speed;
 

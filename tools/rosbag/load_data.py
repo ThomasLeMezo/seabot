@@ -234,7 +234,7 @@ def load_bag(filename):
 
 		elif(topic=="/driver/fix"):
 			time_fix.append((t-startTime).to_sec())
-			fix_status.append(msg.status.status)
+			fix_status.append(msg.status)
 
 		elif(topic=="/driver/piston/velocity"):
 			time_piston_velocity.append((t-startTime).to_sec())
@@ -300,3 +300,9 @@ def load_bag(filename):
 	if(len(time_regulation_depth_set_point)>0):
 		time_regulation_depth_set_point.append((end_time-startTime).to_sec())
 		regulation_depth_set_point.append(regulation_depth_set_point[-1])
+
+
+	# Data Analysis
+	print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
+	print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
+	

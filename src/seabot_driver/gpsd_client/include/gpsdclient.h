@@ -24,15 +24,14 @@ private:
     void process_data_gps(struct gps_data_t* p);
     void process_data_navsat(struct gps_data_t* p);
 
-    void reset();
-
   private:
     ros::NodeHandle node;
     ros::NodeHandle privnode;
     ros::Publisher gps_fix_pub;
     gpsmm *gps = nullptr;
 
-    ros::WallTime last_seen;
+//    ros::WallTime m_last_valid_lat_lon;
+//    ros::WallTime m_last_valid_track_speed;
 
     bool use_gps_time = true;
     std::string frame_id = "gps";
