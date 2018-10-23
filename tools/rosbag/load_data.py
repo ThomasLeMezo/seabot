@@ -93,6 +93,15 @@ mag_x = []
 mag_y = []
 mag_z = []
 
+# /driver/imu
+time_imu = []
+acc_x = []
+acc_y = []
+acc_z = []
+gyro_x = []
+gyro_y = []
+gyro_z = []
+
 # /safety/safety
 time_safety = []
 safety_published_frequency = []
@@ -246,6 +255,15 @@ def load_bag(filename):
 			mag_y.append(msg.magnetic_field.y)
 			mag_z.append(msg.magnetic_field.z)
 
+		elif(topic=="/driver/imu"):
+			time_imu.append((t-startTime).to_sec())
+			acc_x.append(msg.linear_acceleration.x)
+			acc_y.append(msg.linear_acceleration.y)
+			acc_z.append(msg.linear_acceleration.z)
+			gyro_x.append(msg.angular_velocity.x)
+			gyro_y.append(msg.angular_velocity.y)
+			gyro_z.append(msg.angular_velocity.z)
+
 		elif(topic=="/driver/euler"):
 			time_euler.append((t-startTime).to_sec())
 			euler_x.append(msg.x)
@@ -305,4 +323,8 @@ def load_bag(filename):
 	# Data Analysis
 	print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
 	print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
+	print("acc_min = ", min(acc_x), min(acc_y), min(acc_z))
+	print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
+
+	print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
 	
