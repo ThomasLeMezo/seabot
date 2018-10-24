@@ -2,17 +2,21 @@ import aislib, time, serial, yaml, datetime
 from math import *
 from os.path import expanduser
 from pyproj import Proj, transform
+import subprocess
+import numpy as np
+
 
 outProj = Proj(init='epsg:4326') #WGS84
 inProj = Proj(init='epsg:2154') #L93
 
+last_east = 0
+last_north = 0
+traj_forcast = []
+id_time = 0
+
 # sudo socat pty,link=/dev/ttyVout,raw,echo=0 pty,link=/dev/ttyVin,raw,echo=0
 ser = serial.Serial('/dev/ttyVin', 115200, rtscts=True, dsrdtr=True)
-dt = 0.1
-t = 0.0
 while 1:
-    t+=dt
-    
     home = expanduser("~")
     with open(home + "/iridium/received/last_received.yaml", 'r') as stream:
         try:
@@ -27,6 +31,15 @@ while 1:
     current_waypoint = data_yaml['current_waypoint']
     ts = int(data_yaml['time'])
     msg_date = datetime.datetime.utcfromtimestamp(ts)
+
+    ## Trajectory
+    # if(last_east != east and last_north != north):
+    #     last_east = east
+    #     last_north = north
+    #     subprocess.call(["/home/lemezoth/workspaceQT/invariant-lib/build/build-debug/examples/cpp/seabot/seabot_live/seabot_live", str(ts), str(north), str(east)])
+    #     id_time = 0
+    #     traj_forcast = np.loadtxt("/home/lemezoth/seabot_forcast.txt")
+    #     print(traj_forcast)
 
     # print(msg_id)
 
@@ -68,5 +81,25 @@ while 1:
     ais2 = aislib.AIS(aismsg2)
     payload2 = ais2.build_payload(False)
     ser.write(payload2+'\n')
+
+    # if(traj_forcast != []):
+    #     # Find id_time
+    #     t = time.time()
+    #     if(t<traj_forcast[0][id_time]):
+    #         for i in range(id_time, len(traj_forcast[0])):
+    #             if(t>traj_forcast[0][i]):
+    #                 id_time = i
+    #                 break
+    #     # Create msg
+    #     forcast_longitude,forcast_latitude = transform(inProj,outProj,traj_forcast[1][id_time], traj_forcast[2][id_time])
+
+    #     aismsg_forcast = aislib.AISPositionReportMessage(
+    #         mmsi = 000,
+    #         lat = int(round(forcast_latitude*60e4)),
+    #         lon = int(round(forcast_longitude*60e4)),
+    #     )
+    #     ais_forcast = aislib.AIS(aismsg_forcast)
+    #     payload_forcast = ais_forcast.build_payload(False)
+    #     ser.write(payload_forcast+'\n')
 
     time.sleep(1.0)

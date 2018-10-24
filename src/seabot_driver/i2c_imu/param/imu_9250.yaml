@@ -2,7 +2,7 @@ imu_type: 7
 imu_frame: imu_link
 
 is_i2c: false
-i2c_bus: 1 
+i2c_bus: 1
 i2c_slave_address: 104
 spi_speed: 500000
 spi_select: 0
@@ -82,10 +82,26 @@ seabot2:
   ellipsoid_matrix1: [ -0.70220543,  1.39654666, -0.05169961]
   ellipsoid_matrix2: [ -0.03473653, -0.05169961,  0.93466774]
 
-		accel_min: [-14.200010046386717, -11.310208642578125, -11.506533178710937]
-		accel_max: [10.177751257324218, 16.71392178955078, 9.449913952636718]
+  accel_min: [-14.200, -11.310, -11.506]
+  accel_max: [10.177, 16.71, 9.449]
 
   gyro_bias: [0.0, 0.0, 0.0]
 
   mag_declination: -1.722
 
+seabot3:
+  compass_min: [-1.0, -1.0, -1.0]
+  compass_max: [1.0, 1.0, 1.0]
+
+  ellipsoid_offset: [ 0.0, 0.0, 0.0]
+
+  ellipsoid_matrix0: [ 1.0, 0.0, 0.0]
+  ellipsoid_matrix1: [ 0.0, 1.0, 0.0]
+  ellipsoid_matrix2: [ 0.0, 0.0, 1.0]
+  
+  accel_min: [-1.0, -1.0, -1.0]
+  accel_max: [1.0,  1.0,  1.0]
+
+  gyro_bias: [0.0, 0.0, 0.0]
+
+  mag_declination: -1.722

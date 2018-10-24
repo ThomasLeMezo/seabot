@@ -4,17 +4,17 @@
 		<start_end_time>
 		<year>2018</year>
 		<month>10</month>
-		<day>17</day>
+		<day>24</day>
 		<hour>14</hour>
-		<min>21</min>
+		<min>05</min>
 	</start_end_time>
 </offset>
 
 <paths type ="1">
 	<loop number="1" depth_increment="0.0">
    <waypoint>
-				<duration>400</duration>
-				<depth>5.0</depth>
+				<duration>600</duration>
+				<depth>10.0</depth>
 				<velocity_depth>0.04</velocity_depth>
    </waypoint>
 
