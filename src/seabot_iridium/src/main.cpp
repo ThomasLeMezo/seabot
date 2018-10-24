@@ -24,6 +24,7 @@
 
 #include <thread>
 #include <chrono>
+#include <deque>
 
 using namespace std;
 
@@ -48,6 +49,9 @@ ros::WallTime time_last_gnss;
 SBD sbd;
 LogData log_state;
 
+deque<double> speed_memory, heading_memory;
+#define MEMORY_MAX_SIZE 20
+
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   if(msg->depth < depth_surface_limit){
     if(!test_surface){
@@ -56,7 +60,7 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
     }
     else{
       if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time)
-        is_surface = true;
+          is_surface = true;
       //        ROS_DEBUG("[Iridium] Surface detected");
       //        sbd.sbd_power(true);
     }
@@ -64,6 +68,7 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   else{
     test_surface = false;
     is_surface = false;
+    speed_memory.clear();
     //    sbd.sbd_power(false);
   }
 }
@@ -85,8 +90,25 @@ void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
     valid_fix = true;
   else
     valid_fix = false;
-  log_state.m_gnss_speed = msg->speed; // Normaly in m/s (?)
-  log_state.m_gnss_heading = msg->track; // Degree from north
+
+  speed_memory.push_back(msg->speed);
+  if(speed_memory.size()>MEMORY_MAX_SIZE)
+    speed_memory.pop_front();
+  log_state.m_gnss_speed = std::accumulate(speed_memory.begin(), speed_memory.end(), 0)/speed_memory.size();
+
+  heading_memory.push_back(msg->track*M_PI/180.);
+  if(heading_memory.size()>MEMORY_MAX_SIZE)
+    heading_memory.pop_front();
+
+  double sum_sin=0.0, sum_cos=0.0;
+  for(double &h:heading_memory){
+    sum_sin += sin(h);
+    sum_cos += cos(h);
+  }
+  log_state.m_gnss_heading = atan2(sum_sin, sum_cos)*180./M_PI;
+
+//  log_state.m_gnss_speed = msg->speed; // Normaly in m/s (?)
+//  log_state.m_gnss_heading = msg->track; // Degree from north
   latitude = msg->latitude;
   longitude = msg->longitude;
   time_last_gnss = ros::WallTime::now();

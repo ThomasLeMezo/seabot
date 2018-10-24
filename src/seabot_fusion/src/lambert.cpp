@@ -9,13 +9,14 @@
 #include <proj_api.h>
 
 using namespace std;
-double latitude, longitude, altitude;
+double latitude, longitude;
 bool new_data = false;
+bool data_valid = false;
 
 void navFix_callback(const gpsd_client::GPSFix::ConstPtr& msg){
   latitude =  msg->latitude;
   longitude =  msg->longitude;
-  altitude =  msg->altitude;
+  data_valid = (msg->status>=msg->STATUS_MODE_2D);
   new_data = true;
 }
 
@@ -59,9 +60,11 @@ int main(int argc, char *argv[])
       pj_transform(pj_latlong, pj_lambert, 1, 1, &east, &north, nullptr);
       msg_pose.east = east + offset_east;
       msg_pose.north = north + offset_north;
-      new_data = false;
 
-      pose_pub.publish(msg_pose);
+      if(longitude != 0 && latitude != 0 && data_valid)
+        pose_pub.publish(msg_pose);
+
+      new_data = false;
     }
 
     loop_rate.sleep();

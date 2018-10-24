@@ -205,7 +205,7 @@ void test7(){
 }
 
 int main(int argc, char *argv[]){
-  test6();
+//  test6();
 
 //  string data = "AZERTYUIOPQSDFGHJ";
 //  uint16_t checksum = 0;
@@ -235,6 +235,14 @@ int main(int argc, char *argv[]){
 //  cout << data << endl;
 
 //  test4();
+
+  vector<double> heading_memory = {0., 180.};
+  double sum_sin=0.0, sum_cos=0.0;
+  for(double &h:heading_memory){
+    sum_sin += sin(h*M_PI/180.);
+    sum_cos += cos(h*M_PI/180.);
+  }
+  cout << "heading = " << atan2(sum_sin, sum_cos)*180./M_PI << endl;
 
 
   return 0;

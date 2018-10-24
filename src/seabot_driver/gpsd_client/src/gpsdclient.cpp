@@ -48,10 +48,8 @@ void GPSDClient::process_data_gps(struct gps_data_t* p) {
   m_fix.time = p->fix.time;
 
   if(p->fix.mode >= MODE_2D) {
-    if(!(std::isnan(p->fix.latitude) || std::isnan(p->fix.longitude))){
-      m_fix.latitude = p->fix.latitude;
-      m_fix.longitude = p->fix.longitude;
-    }
+    m_fix.latitude = p->fix.latitude;
+    m_fix.longitude = p->fix.longitude;
 
     m_fix.altitude = p->fix.altitude;
 
