@@ -46,8 +46,6 @@ private:
   // sensor msg topic output
   sensor_msgs::Imu imu_msg;
 
-  tf::TransformBroadcaster tf_broadcaster_;
-
   ros::Publisher imu_pub_;
   ros::Publisher magnetometer_pub_;
   ros::Publisher euler_pub_;
