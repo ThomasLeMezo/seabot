@@ -40,37 +40,104 @@ def int2dt(ts):
 
 app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
-area = DockArea()
-win.setCentralWidget(area)
-win.showMaximized()	
+win.showMaximized() 
 win.setWindowTitle("Seabot log - " + sys.argv[1])
 
-#################### Battery ####################
-dock_battery = Dock("Battery")
-area.addDock(dock_battery)
+tab = QtGui.QTabWidget()
+win.setCentralWidget(tab)
 
-pg_battery = pg.PlotWidget(title="Battery")
-pg_battery.addLegend()
+area = DockArea()
+area_safety = DockArea()
+area_data = DockArea()
+area_piston = DockArea()
+area_iridium = DockArea()
+area_position = DockArea()
 
-if(len(time_fusion_battery)>0):
-    pg_battery.plot(time_fusion_battery, fusion_battery1, pen=(255,0,0), name="Battery 1")
-    pg_battery.plot(time_fusion_battery, fusion_battery2, pen=(0,255,0), name="Battery 2")
-    pg_battery.plot(time_fusion_battery, fusion_battery3, pen=(0,0,255), name="Battery 3")
-    pg_battery.plot(time_fusion_battery, fusion_battery4, pen=(255,0,255), name="Battery 4")
-    pg_battery.setLabel('left', "Tension (Fusion)", units="V")
-else:
-    pg_battery.plot(time_battery, battery1, pen=(255,0,0), name="Battery 1")
-    pg_battery.plot(time_battery, battery2, pen=(0,255,0), name="Battery 2")
-    pg_battery.plot(time_battery, battery3, pen=(0,0,255), name="Battery 3")
-    pg_battery.plot(time_battery, battery4, pen=(255,0,255), name="Battery 4")
-    pg_battery.setLabel('left', "Tension (sensor)", units="V")
-dock_battery.addWidget(pg_battery)
+tab.addTab(area_safety, "Safety")
+tab.addTab(area_data, "Data")
+tab.addTab(area_piston, "Piston")
+tab.addTab(area_iridium, "Iridium")
+tab.addTab(area_position, "Position")
+
+
+#################### Safety ####################
+
+#### Battery ####
+if(len(time_battery)>0):
+    dock_battery = Dock("Battery")
+    area_safety.addDock(dock_battery)
+
+    pg_battery = pg.PlotWidget(title="Battery")
+    pg_battery.addLegend()
+
+    if(len(time_fusion_battery)>0):
+        pg_battery.plot(time_fusion_battery, fusion_battery1, pen=(255,0,0), name="Battery 1")
+        pg_battery.plot(time_fusion_battery, fusion_battery2, pen=(0,255,0), name="Battery 2")
+        pg_battery.plot(time_fusion_battery, fusion_battery3, pen=(0,0,255), name="Battery 3")
+        pg_battery.plot(time_fusion_battery, fusion_battery4, pen=(255,0,255), name="Battery 4")
+        pg_battery.setLabel('left', "Tension (Fusion)", units="V")
+    else:
+        pg_battery.plot(time_battery, battery1, pen=(255,0,0), name="Battery 1")
+        pg_battery.plot(time_battery, battery2, pen=(0,255,0), name="Battery 2")
+        pg_battery.plot(time_battery, battery3, pen=(0,0,255), name="Battery 3")
+        pg_battery.plot(time_battery, battery4, pen=(255,0,255), name="Battery 4")
+        pg_battery.setLabel('left', "Tension (sensor)", units="V")
+    dock_battery.addWidget(pg_battery)
+
+#### Safety #### 
+if(len(time_safety)>0):
+    dock_safety = Dock("Safety", 'above', dock_battery)
+    area_safety.addDock(dock_safety)
+    pg_safety = pg.PlotWidget()
+    pg_safety.addLegend()
+    pg_safety.plot(time_safety, safety_published_frequency, pen=(255,0,0), name="published_frequency")
+    pg_safety.plot(time_safety, safety_depth_limit, pen=(0,255,0), name="depth_limit")
+    pg_safety.plot(time_safety, safety_batteries_limit, pen=(0,0,255), name="batteries_limit")
+    pg_safety.plot(time_safety, safety_depressurization, pen=(255,255,0), name="depressurization")
+    dock_safety.addWidget(pg_safety)
+
+    if(len(time_safety_debug)>0):
+        pg_safety_debug_flash = pg.PlotWidget()
+        pg_safety_debug_flash.addLegend()
+        pg_safety_debug_flash.plot(time_safety_debug, safety_debug_flash, pen=(255,0,0), name="flash")
+        dock_safety.addWidget(pg_safety_debug_flash)
+        pg_safety_debug_flash.setXLink(pg_safety)
+
+#### Safety Debug ####
+
+if(len(time_safety_debug)>0):
+    dock_safety_debug = Dock("Safety Debug", 'above')
+    area_safety.addDock(dock_safety_debug)
+
+    pg_safety_debug_ratio = pg.PlotWidget()
+    pg_safety_debug_ratio.addLegend()
+    pg_safety_debug_ratio.plot(time_safety_debug, safety_debug_ratio_p_t, pen=(255,0,0), name="ratio_p_t")
+    dock_safety_debug.addWidget(pg_safety_debug_ratio)
+
+    pg_safety_debug_ratio_delta = pg.PlotWidget()
+    pg_safety_debug_ratio_delta.addLegend()
+    pg_safety_debug_ratio_delta.plot(time_safety_debug, safety_debug_ratio_delta, pen=(255,0,0), name="delta ratio_p_t")
+    dock_safety_debug.addWidget(pg_safety_debug_ratio_delta)
+
+    pg_safety_debug_volume = pg.PlotWidget()
+    pg_safety_debug_volume.addLegend()
+    pg_safety_debug_volume.plot(time_safety_debug, safety_debug_volume, pen=(255,0,0), name="volume")
+    dock_safety_debug.addWidget(pg_safety_debug_volume)
+
+    pg_safety_debug_volume_delta = pg.PlotWidget()
+    pg_safety_debug_volume_delta.addLegend()
+    pg_safety_debug_volume_delta.plot(time_safety_debug, safety_debug_volume_delta, pen=(255,0,0), name="delta volume")
+    dock_safety_debug.addWidget(pg_safety_debug_volume_delta)
+
+    pg_safety_debug_ratio_delta.setXLink(pg_safety_debug_ratio)
+    pg_safety_debug_volume.setXLink(pg_safety_debug_ratio)
+    pg_safety_debug_volume_delta.setXLink(pg_safety_debug_ratio)
 
 #################### Regulation 1 ####################
 
 if(len(time_regulation_debug)>0):
     dock_regulation1 = Dock("Regulation 1")
-    area.addDock(dock_regulation1, 'above', dock_battery)
+    area.addDock(dock_regulation1)
 
     pg_regulation_depth = pg.PlotWidget()
     pg_regulation_depth.addLegend()
@@ -96,7 +163,7 @@ if(len(time_regulation_debug)>0):
 #################### Sensor Internal ####################
 if(len(time_sensor_internal)>0):
     dock_internal_sensor = Dock("Internal Sensor")
-    area.addDock(dock_internal_sensor, 'above', dock_battery)
+    area.addDock(dock_internal_sensor)
 
     if(len(time_fusion_sensor_internal)>0):
         pg_internal_pressure = pg.PlotWidget()
@@ -136,7 +203,7 @@ if(len(time_sensor_internal)>0):
 #################### Sensor External ####################
 if(len(time_sensor_external)>0):
     dock_external_sensor = Dock("External Sensor")
-    area.addDock(dock_external_sensor, 'above', dock_battery)
+    area.addDock(dock_external_sensor)
     pg_external_pressure = pg.PlotWidget()
     pg_external_pressure.addLegend()
     pg_external_pressure.plot(time_sensor_external, sensor_external_pressure, pen=(255,0,0), name="pressure")
@@ -154,7 +221,7 @@ if(len(time_sensor_external)>0):
 #################### Depth ####################
 if(len(time_fusion_depth)>0):
     dock_depth = Dock("Depth")
-    area.addDock(dock_depth, 'above', dock_battery)
+    area.addDock(dock_depth)
     pg_fusion_depth = pg.PlotWidget()
     pg_fusion_depth.addLegend()
     pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
@@ -175,7 +242,7 @@ if(len(time_fusion_depth)>0):
 #################### Temperature ####################
 if(len(time_sensor_temperature)>0):
     dock_temperature = Dock("Temperature")
-    area.addDock(dock_temperature, 'above', dock_battery)
+    area.addDock(dock_temperature)
     pg_sensor_temperature = pg.PlotWidget()
     pg_sensor_temperature.addLegend()
     pg_sensor_temperature.plot(time_sensor_temperature, sensor_temperature, pen=(255,0,0), name="temperature")
@@ -185,7 +252,7 @@ if(len(time_sensor_temperature)>0):
 #################### Piston ####################
 if(len(time_piston_state)>0):
     dock_piston = Dock("Piston")
-    area.addDock(dock_piston, 'above', dock_battery)
+    area.addDock(dock_piston)
     pg_piston_state_position = pg.PlotWidget()
     pg_piston_state_position.addLegend()
     pg_piston_state_position.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
@@ -212,7 +279,7 @@ if(len(time_piston_state)>0):
 #################### Piston2 ####################
 if(len(time_piston_state)>0):
     dock_piston2 = Dock("Piston2")
-    area.addDock(dock_piston2, 'above', dock_battery)
+    area.addDock(dock_piston2)
     pg_piston_state_position2 = pg.PlotWidget()
     pg_piston_state_position2.addLegend()
     pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position pic")
@@ -239,7 +306,7 @@ if(len(time_piston_state)>0):
 #################### Fusion ####################
 if(len(time_fusion_depth)>0):
     dock_fusion = Dock("Fusion")
-    area.addDock(dock_fusion, 'above', dock_battery)
+    area.addDock(dock_fusion)
     pg_fusion_depth1 = pg.PlotWidget()
     pg_fusion_depth1.addLegend()
     pg_fusion_depth1.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
@@ -257,7 +324,7 @@ if(len(time_fusion_depth)>0):
 #################### GPS Status ####################
 if(len(time_fix)>0):
     dock_gps = Dock("GPS Signal")
-    area.addDock(dock_gps, 'above', dock_battery)
+    area.addDock(dock_gps)
     pg_gps = pg.PlotWidget()
     pg_gps.addLegend()
     pg_gps.plot(time_fix, fix_status, pen=(255,0,0), name="status")
@@ -275,7 +342,7 @@ if(len(time_fix)>0):
 #################### GPS Pose ####################
 if(len(fusion_pose_east)>0):
     dock_gps2 = Dock("GPS Pose")
-    area.addDock(dock_gps2, 'above', dock_battery)
+    area.addDock(dock_gps2)
     pg_gps2 = pg.PlotWidget()
     pg_gps2.addLegend()
     Y = np.array(fusion_pose_north)
@@ -292,7 +359,7 @@ if(len(fusion_pose_east)>0):
 #################### Mag ####################
 if(len(time_mag)>0):
     dock_mag = Dock("Mag")
-    area.addDock(dock_mag, 'above', dock_battery)
+    area.addDock(dock_mag)
     pg_mag1 = pg.PlotWidget()
     pg_mag1.addLegend()
     pg_mag1.plot(time_mag, mag_x, pen=(255,0,0), name="mag x")
@@ -311,7 +378,7 @@ if(len(time_mag)>0):
 #################### Euler ####################
 if(len(time_euler)>0):
     dock_euler = Dock("Euler")
-    area.addDock(dock_euler, 'above', dock_battery)
+    area.addDock(dock_euler)
     pg_euler1 = pg.PlotWidget()
     pg_euler1.addLegend()
     # pg_euler1.plot(time_euler, euler_x, pen=(255,0,0), name="euler x")
@@ -328,7 +395,7 @@ if(len(time_euler)>0):
 #################### Kalman ####################
 if(len(time_kalman)>0):
     dock_kalman = Dock("Kalman")
-    area.addDock(dock_kalman, 'above', dock_battery)
+    area.addDock(dock_kalman)
 
     pg_kalman_velocity = pg.PlotWidget()
     pg_kalman_velocity.addLegend()
@@ -360,67 +427,11 @@ if(len(time_kalman)>0):
     pg_kalman_offset.setXLink(pg_kalman_velocity)
     # pg_kalman_error_velocity.setXLink(pg_kalman_velocity)
 
-#################### Safety ####################
-if(len(time_safety)>0):
-    dock_safety = Dock("Safety")
-    area.addDock(dock_safety, 'above', dock_battery)
-    pg_safety = pg.PlotWidget()
-    pg_safety.addLegend()
-    pg_safety.plot(time_safety, safety_published_frequency, pen=(255,0,0), name="published_frequency")
-    pg_safety.plot(time_safety, safety_depth_limit, pen=(0,255,0), name="depth_limit")
-    pg_safety.plot(time_safety, safety_batteries_limit, pen=(0,0,255), name="batteries_limit")
-    pg_safety.plot(time_safety, safety_depressurization, pen=(255,255,0), name="depressurization")
-    dock_safety.addWidget(pg_safety)
-
-    if(len(time_safety_debug)>0):
-        pg_safety_debug_flash = pg.PlotWidget()
-        pg_safety_debug_flash.addLegend()
-        pg_safety_debug_flash.plot(time_safety_debug, safety_debug_flash, pen=(255,0,0), name="flash")
-        dock_safety.addWidget(pg_safety_debug_flash)
-        pg_safety_debug_flash.setXLink(pg_safety)
-
-#################### Safety Debug ####################
-# time_safety_debug = []
-# safety_debug_flash = []
-# safety_debug_ratio_p_t = []
-# safety_debug_ratio_delta = []
-# safety_debug_volume = []
-# safety_debug_volume_delta = []
-
-if(len(time_safety_debug)>0):
-    dock_safety_debug = Dock("Safety Debug")
-    area.addDock(dock_safety_debug, 'above', dock_battery)
-
-    pg_safety_debug_ratio = pg.PlotWidget()
-    pg_safety_debug_ratio.addLegend()
-    pg_safety_debug_ratio.plot(time_safety_debug, safety_debug_ratio_p_t, pen=(255,0,0), name="ratio_p_t")
-    dock_safety_debug.addWidget(pg_safety_debug_ratio)
-
-    pg_safety_debug_ratio_delta = pg.PlotWidget()
-    pg_safety_debug_ratio_delta.addLegend()
-    pg_safety_debug_ratio_delta.plot(time_safety_debug, safety_debug_ratio_delta, pen=(255,0,0), name="delta ratio_p_t")
-    dock_safety_debug.addWidget(pg_safety_debug_ratio_delta)
-
-    pg_safety_debug_volume = pg.PlotWidget()
-    pg_safety_debug_volume.addLegend()
-    pg_safety_debug_volume.plot(time_safety_debug, safety_debug_volume, pen=(255,0,0), name="volume")
-    dock_safety_debug.addWidget(pg_safety_debug_volume)
-
-    pg_safety_debug_volume_delta = pg.PlotWidget()
-    pg_safety_debug_volume_delta.addLegend()
-    pg_safety_debug_volume_delta.plot(time_safety_debug, safety_debug_volume_delta, pen=(255,0,0), name="delta volume")
-    dock_safety_debug.addWidget(pg_safety_debug_volume_delta)
-
-    pg_safety_debug_ratio_delta.setXLink(pg_safety_debug_ratio)
-    pg_safety_debug_volume.setXLink(pg_safety_debug_ratio)
-    pg_safety_debug_volume_delta.setXLink(pg_safety_debug_ratio)
-
-#################### Regulation Debug ####################
 
 #################### Temperature / Depth ####################
 if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
     dock_temp = Dock("T/depth")
-    area.addDock(dock_temp, 'above', dock_battery)
+    area.addDock(dock_temp)
     if(len(fusion_depth)>0):
         pg_temp = pg.PlotWidget()
         pg_temp.addLegend()
