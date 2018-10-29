@@ -61,15 +61,12 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
     else{
       if((ros::WallTime::now()-time_at_surface).toSec()>wait_surface_time)
           is_surface = true;
-      //        ROS_DEBUG("[Iridium] Surface detected");
-      //        sbd.sbd_power(true);
     }
   }
   else{
     test_surface = false;
     is_surface = false;
     speed_memory.clear();
-    //    sbd.sbd_power(false);
   }
 }
 

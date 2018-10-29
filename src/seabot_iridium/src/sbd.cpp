@@ -46,22 +46,31 @@ void SBD::read(){
   string result = m_serial.readStringUntil(SBD_TOKEN_SEPARATOR);
 
   if(result != ""){
-    //    cout << result << endl;
-//    ROS_INFO("[Iridium_raw] %s", result.c_str());
+
+    //    ROS_INFO("[Iridium_raw] %s", result.c_str());
     if(boost::starts_with(result, "OK")){
+      omp_set_lock(&lock_data);
       m_OK = true;
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "READY")){
+      omp_set_lock(&lock_data);
       m_READY = true;
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "ERROR")){
+      omp_set_lock(&lock_data);
       m_ERROR = true;
       m_READY = false;
       m_OK = false;
+      m_in_session = false;
+      omp_unset_lock(&lock_data);
       ROS_WARN("[Iridium] Received ERROR");
     }
     else if(boost::starts_with(result, "SBDRING")){
+      omp_set_lock(&lock_data);
       m_ring_alert = true;
+      omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "+SBDREG:")){
       vector<string> fields;
@@ -207,7 +216,7 @@ void SBD::write(const std::string &at_cmd){
 
   string cmd = at_cmd + '\r';
   m_serial.writeString(cmd);
-//  ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
+  //  ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
 }
 
 void SBD::disable_echo(){
@@ -269,9 +278,9 @@ int SBD::cmd_write_message(const std::string &data){
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
   write(data_checksum);
 
-//  for(int i=0; i<data_checksum.size(); i++){
-//    ROS_INFO("[Iridium_sbdwb] Send = %x", data_checksum.c_str()[i]);
-//  }
+  //  for(int i=0; i<data_checksum.size(); i++){
+  //    ROS_INFO("[Iridium_sbdwb] Send = %x", data_checksum.c_str()[i]);
+  //  }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -323,57 +332,55 @@ int SBD::cmd_status(){
 
 int SBD::cmd_session(){
   omp_set_lock(&lock_data);
-  bool start_mission = m_in_session;
   bool answer = m_ring_alert;
   m_SESSION_MO = -2;
   m_SESSION_MT = -2;
   omp_unset_lock(&lock_data);
 
-  if(!start_mission){
-    omp_set_lock(&lock_data);
-    m_in_session = true;
-    omp_unset_lock(&lock_data);
+  omp_set_lock(&lock_data);
+  m_in_session = true;
+  omp_unset_lock(&lock_data);
 
-    ROS_INFO("[Iridium] Start a session");
-    string cmd = "AT+SBDIX" + string(answer?"A":"");
-    if(m_valid_gnss){
-      int lat_deg = int(m_latitude);
-      double lat_min = int(abs(m_latitude - lat_deg)*60000.)/1000.;
-      int lon_deg = int(m_longitude);
-      double lon_min = int(abs(m_longitude - lon_deg)*60000.)/1000.;
-      cmd += "=";
+  ROS_INFO("[Iridium] Start a session");
+  string cmd = "AT+SBDIX" + string(answer?"A":"");
+  if(m_valid_gnss){
+    int lat_deg = int(m_latitude);
+    double lat_min = int(abs(m_latitude - lat_deg)*60000.)/1000.;
+    int lon_deg = int(m_longitude);
+    double lon_min = int(abs(m_longitude - lon_deg)*60000.)/1000.;
+    cmd += "=";
 
-      std::ostringstream lat_string, lon_string;
-      if(lat_deg<0)
-        lat_string << "-";
-      lat_string << setfill('0') << setw(2) << abs(lat_deg);
-      lat_string << std::fixed << std::setprecision(3) << lat_min;
-      cmd += lat_string.str();
+    std::ostringstream lat_string, lon_string;
+    if(lat_deg<0)
+      lat_string << "-";
+    lat_string << setfill('0') << setw(2) << abs(lat_deg);
+    lat_string << std::fixed << std::setprecision(3) << lat_min;
+    cmd += lat_string.str();
 
-      cmd += ",";
+    cmd += ",";
 
-      if(lon_deg<0)
-        lon_string << "-";
-      lon_string << setfill('0') << setw(3) << abs(lon_deg);
-      lon_string << std::fixed << std::setprecision(3) << lon_min;
-      cmd += lon_string.str();
-    }
-
-    write(cmd);
-
-    for(size_t i=0; i<4*60; i++){
-      std::this_thread::sleep_for(std::chrono::milliseconds(250));
-      if(is_in_session()==false){
-        return 0;
-      }
-    }
-
-    ROS_INFO("[Iridium] End of session not received");
-    return 1;
+    if(lon_deg<0)
+      lon_string << "-";
+    lon_string << setfill('0') << setw(3) << abs(lon_deg);
+    lon_string << std::fixed << std::setprecision(3) << lon_min;
+    cmd += lon_string.str();
   }
-  else{
-    return 1;
+
+  write(cmd);
+
+  for(size_t i=0; i<4*60; i++){
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    if(is_in_session()==false){
+      return 0;
+    }
   }
+
+  omp_set_lock(&lock_data);
+  m_in_session = false;
+  omp_unset_lock(&lock_data);
+
+  ROS_INFO("[Iridium] End of session not received");
+  return 1;
 }
 
 int SBD::cmd_enable_alert(const bool &enable){
