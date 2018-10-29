@@ -3,6 +3,7 @@
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
+
 import pyqtgraph.console
 from pyqtgraph.dockarea import *
 import datetime
@@ -34,8 +35,8 @@ def int2dt(ts):
     #     return datetime.datetime.utcfromtimestamp(ts) # workaround fromtimestamp bug (1)
     return(datetime.datetime.fromtimestamp(ts-3600.0))
 
- #####################################################
- ### PLOT
+#####################################################
+### PLOT
 
 app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
@@ -67,16 +68,6 @@ dock_battery.addWidget(pg_battery)
 
 #################### Regulation 1 ####################
 
-# time_regulation_debug = []
-# regulation_velocity_error = []
-# regulation_depth_error = []
-# regulation_vector_field_target = []
-# regulation_u = []
-# regulation_piston_set_point = []
-# regulation_piston_set_point_offset = []
-# regulation_antiwindup = []
-
-
 if(len(time_regulation_debug)>0):
     dock_regulation1 = Dock("Regulation 1")
     area.addDock(dock_regulation1, 'above', dock_battery)
@@ -99,100 +90,8 @@ if(len(time_regulation_debug)>0):
     pg_regulation_set_point.setLabel('left', "set_point")
     dock_regulation1.addWidget(pg_regulation_set_point)
 
-    # pg_regulation_velocity_error = pg.PlotWidget()
-    # pg_regulation_velocity_error.addLegend()
-    # pg_regulation_velocity_error.plot(time_regulation_debug, regulation_velocity_error, pen=(255,0,0), name="velocity error")
-    # pg_regulation_velocity_error.setLabel('left', "velocity error")
-    # dock_regulation1.addWidget(pg_regulation_velocity_error)
-
-    # pg_regulation_u = pg.PlotWidget()
-    # pg_regulation_u.addLegend()
-    # pg_regulation_u.plot(time_regulation_debug, regulation_debug_u, pen=(255,0,0), name="u")
-    # pg_regulation_u.setLabel('left', "u")
-    # dock_regulation1.addWidget(pg_regulation_u)
-
-    # pg_regulation_set_point = pg.PlotWidget()
-    # pg_regulation_set_point.addLegend()
-    # pg_regulation_set_point.plot(time_regulation_debug, regulation_debug_piston_set_point, pen=(255,0,0), name="piston set point (compensed)")
-    # if(len(regulation_debug_piston_set_point_offset)>1):
-    # 	pg_regulation_set_point.plot(time_piston_state, np.array(piston_state_position)-regulation_debug_piston_set_point_offset[0], pen=(0,0,255), name="piston state position (real, shifted zero)")
-    # pg_regulation_set_point.setLabel('left', "set point")
-    # dock_regulation1.addWidget(pg_regulation_set_point)
-
     pg_regulation_u.setXLink(pg_regulation_depth)
     pg_regulation_set_point.setXLink(pg_regulation_depth)
-    # pg_regulation_depth.setXLink(pg_regulation_velocity_error)
-    # pg_regulation_velocity_error.setXLink(pg_regulation_vector_field)
-
-#################### Regulation 2 ####################
-
-# time_regulation_debug = []
-# regulation_velocity_error = []
-# regulation_depth_error = []
-# regulation_vector_field_target = []
-# regulation_u = []
-# regulation_piston_set_point = []
-# regulation_piston_set_point_offset = []
-# pg_regulation_antiwindupdup = []
-
-
-# if(len(time_regulation_debug)>0):
-#     dock_regulation2 = Dock("Regulation 2")
-#     area.addDock(dock_regulation2, 'above', dock_battery)
-
-#     pg_regulation_depth = pg.PlotWidget()
-#     pg_regulation_depth.addLegend()
-#     pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="Depth")
-#     pg_regulation_depth.setLabel('left', "depth")
-#     dock_regulation2.addWidget(pg_regulation_depth)
-
-#     pg_regulation_u = pg.PlotWidget()
-#     pg_regulation_u.addLegend()
-#     pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
-#     pg_regulation_u.setLabel('left', "u")
-#     dock_regulation2.addWidget(pg_regulation_u)
-
-#     pg_regulation_antiwindup = pg.PlotWidget()
-#     pg_regulation_antiwindup.addLegend()
-#     pg_regulation_antiwindup.plot(time_regulation_debug, regulation_antiwindup, pen=(255,0,0), name="antiwindup")
-#     pg_regulation_antiwindup.setLabel('left', "antiwindup")
-#     dock_regulation2.addWidget(pg_regulation_antiwindup)
-
-#     pg_regulation_set_point = pg.PlotWidget()
-#     pg_regulation_set_point.addLegend()
-#     pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
-#     pg_regulation_set_point.setLabel('left', "set_point")
-#     dock_regulation2.addWidget(pg_regulation_set_point)
-
-#     pg_regulation_antiwindup.setXLink(pg_regulation_u)
-#     pg_regulation_u.setXLink(pg_regulation_depth)
-#     pg_regulation_set_point.setXLink(pg_regulation_depth)
-
-#################### Regulation 3 ####################
-# if(len(time_regulation_debug)>0):
-#     dock_regulation3 = Dock("Regulation 3")
-#     area.addDock(dock_regulation3, 'above', dock_battery)
-
-#     pg_velocity = pg.PlotWidget()
-#     pg_velocity.addLegend()
-#     pg_velocity.plot(time_fusion_depth, fusion_velocity, pen=(255,0,0), name="velocity")
-#     pg_velocity.setLabel('left', "Velocity", units="ms^-1")
-#     dock_regulation3.addWidget(pg_velocity)
-
-#     pg_regulation_velocity = pg.PlotWidget()
-#     pg_regulation_velocity.addLegend()
-#     pg_regulation_velocity.plot(time_regulation_debug, regulation_debug_velocity, pen=(255,0,0), name="velocity factor")
-#     pg_regulation_velocity.setLabel('left', "Velocity factor", units="m/s")
-#     dock_regulation3.addWidget(pg_regulation_velocity)
-
-#     pg_regulation_acceleration = pg.PlotWidget()
-#     pg_regulation_acceleration.addLegend()
-#     pg_regulation_acceleration.plot(time_regulation_debug, regulation_debug_acceleration, pen=(255,0,0), name="acceleration")
-#     pg_regulation_acceleration.setLabel('left', "Acceleration factor", units="m^2/s^2")
-#     dock_regulation3.addWidget(pg_regulation_acceleration)
-
-#     pg_regulation_velocity.setXLink(pg_velocity)
-#     pg_regulation_acceleration.setXLink(pg_velocity)
 
 #################### Sensor Internal ####################
 if(len(time_sensor_internal)>0):
@@ -479,29 +378,6 @@ if(len(time_safety)>0):
         pg_safety_debug_flash.plot(time_safety_debug, safety_debug_flash, pen=(255,0,0), name="flash")
         dock_safety.addWidget(pg_safety_debug_flash)
         pg_safety_debug_flash.setXLink(pg_safety)
-
-    # p_t_ratio = np.array(sensor_fusion_internal_pressure)/np.array(sensor_fusion_internal_temperature)
-
-    # pg_depressure = pg.PlotWidget()
-    # pg_depressure.addLegend()
-    # pg_depressure.plot(time_fusion_sensor_internal, p_t_ratio - p_t_ratio[0], pen=(255,0,0), name="p_t_ratio")
-    # dock_safety.addWidget(pg_depressure)
-
-    # # piston*tick_to_volume*(1.0-p_t_ratio/p_t_ratio_ref)
-    # f_piston = interpolate.interp1d(time_piston_state, piston_state_position, bounds_error=False)
-    # piston_interp = f_piston(time_fusion_sensor_internal)
-    # tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
-    # # volume = piston_interp*tick_to_volume*(1.0-p_t_ratio/p_t_ratio[0])
-    # p_t_ratio_ref = np.mean(p_t_ratio[0:10])
-    # volume = piston_interp*tick_to_volume*(p_t_ratio/(p_t_ratio_ref-p_t_ratio))
-
-    # pg_depressure2 = pg.PlotWidget()
-    # pg_depressure2.addLegend()
-    # pg_depressure2.plot(time_fusion_sensor_internal, volume, pen=(255,0,0), name="volume")
-    # dock_safety.addWidget(pg_depressure2)
-
-    # pg_depressure.setXLink(pg_safety)
-    # pg_depressure2.setXLink(pg_safety)
 
 #################### Safety Debug ####################
 # time_safety_debug = []

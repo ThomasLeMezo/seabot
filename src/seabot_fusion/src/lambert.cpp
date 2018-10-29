@@ -27,8 +27,6 @@ int main(int argc, char *argv[])
 
   // Parameters
   ros::NodeHandle n_private("~");
-  double offset_east = n_private.param<double>("offset_east", 0.0);
-  double offset_north = n_private.param<double>("offset_north", 0.0);
   double frequency = n_private.param<double>("frequency", 1.0);
 
   // Init proj
@@ -38,12 +36,12 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  if (!(pj_latlong = pj_init_plus("+init=epsg:4326")))    {
+  if (!(pj_latlong = pj_init_plus("+init=epsg:4326"))){
     ROS_WARN("[Lambert_node] Error LatLong \n");
     exit(1);
   }
 
-  // Publishers
+  // Topics
   ros::Subscriber navFix_sub = n.subscribe("/driver/fix", 1, navFix_callback);
   ros::Publisher pose_pub = n.advertise<seabot_fusion::GnssPose>("pose", 1);
 
@@ -55,15 +53,15 @@ int main(int argc, char *argv[])
     ros::spinOnce();
 
     if(new_data){
-      double east = longitude*M_PI/180.0; // Longitude
-      double north = latitude*M_PI/180.0; // Latitude
-      pj_transform(pj_latlong, pj_lambert, 1, 1, &east, &north, nullptr);
-      msg_pose.east = east + offset_east;
-      msg_pose.north = north + offset_north;
+      if(longitude != 0. && latitude != 0. && data_valid){
+        double east = longitude*M_PI/180.0; // Longitude
+        double north = latitude*M_PI/180.0; // Latitude
+        pj_transform(pj_latlong, pj_lambert, 1, 1, &east, &north, nullptr);
+        msg_pose.east = east;
+        msg_pose.north = north;
 
-      if(longitude != 0 && latitude != 0 && data_valid)
         pose_pub.publish(msg_pose);
-
+      }
       new_data = false;
     }
 

@@ -1,10 +1,11 @@
 import rospy
 import rosbag
-# from gmplot import gmplot
 import yaml
 import numpy as np
 
-# /driver/piston/position
+####################### Driver #######################
+
+# /driver/piston/position (set_point)
 time_piston_position = []
 piston_position = []
 
@@ -24,19 +25,21 @@ piston_state_motor_speed = []
 time_piston_velocity = []
 piston_velocity = []
 
+# /driver/piston/distance_travelled
+time_piston_distance_travelled = []
+piston_distance_travelled = []
+
+# /driver/piston/speed
+time_piston_speed = []
+piston_speed_in = []
+piston_speed_out = []
+
 # /driver/power/battery
 time_battery = []
 battery1 = []
 battery2 = []
 battery3 = []
 battery4 = []
-
-# /fusion/battery
-time_fusion_battery = []
-fusion_battery1 = []
-fusion_battery2 = []
-fusion_battery3 = []
-fusion_battery4 = []
 
 # /driver/sensor_external
 time_sensor_external = []
@@ -49,43 +52,24 @@ sensor_internal_pressure = []
 sensor_internal_temperature = []
 sensor_internal_humidity = []
 
-# /fusion/sensor_internal
-time_fusion_sensor_internal = []
-sensor_fusion_internal_pressure = []
-sensor_fusion_internal_temperature = []
-
 # /driver/thruster/engine
 time_engine = []
 engine_left = []
 engine_right = []
 
-# /fusion/depth
-time_fusion_depth = []
-fusion_depth = []
-fusion_velocity = []
+# /driver/thruster/cmd_engine
+time_cmd_engine = []
+cmd_engine_linear = []
+cmd_engine_angular = []
 
-# /regulation/debug
-time_regulation_debug = []
-regulation_velocity_error = []
-regulation_depth_error = []
-regulation_vector_field_target = []
-regulation_u = []
-regulation_piston_set_point = []
-regulation_piston_set_point_offset = []
-regulation_antiwindup = []
-
-# /regulation/depth_set_point
-time_regulation_depth_set_point = []
-regulation_depth_set_point = []
-
-# /fusion/pose
-time_fusion_pose = []
-fusion_pose_north = []
-fusion_pose_east = []
-
-# /driver/extended_fix
+# /driver/fix
 time_fix = []
 fix_status = []
+fix_latitude = []
+fix_longitude = []
+fix_altitude = []
+fix_track = []
+fix_speed = []
 
 # /driver/mag
 time_mag = []
@@ -102,6 +86,66 @@ gyro_x = []
 gyro_y = []
 gyro_z = []
 
+# /driver/euler
+time_euler = []
+euler_x = []
+euler_y = []
+euler_z = []
+
+# /driver/sensor_temperature
+time_sensor_temperature = []
+sensor_temperature = []
+
+####################### Fusion #######################
+
+# /fusion/battery
+time_fusion_battery = []
+fusion_battery1 = []
+fusion_battery2 = []
+fusion_battery3 = []
+fusion_battery4 = []
+
+# /fusion/sensor_internal
+time_fusion_sensor_internal = []
+sensor_fusion_internal_pressure = []
+sensor_fusion_internal_temperature = []
+
+# /fusion/depth
+time_fusion_depth = []
+fusion_depth = []
+fusion_velocity = []
+
+# /fusion/pose
+time_fusion_pose = []
+fusion_pose_north = []
+fusion_pose_east = []
+
+# /fusion/kalman
+time_kalman = []
+kalman_depth = []
+kalman_volume = []
+kalman_velocity = []
+kalman_offset = []
+kalman_error_velocity = []
+
+####################### Regulation #######################
+
+# /regulation/debug
+time_regulation_debug = []
+regulation_velocity_error = []
+regulation_depth_error = []
+regulation_vector_field_target = []
+regulation_u = []
+regulation_piston_set_point = []
+regulation_piston_set_point_offset = []
+regulation_antiwindup = []
+
+# /regulation/depth_set_point
+time_regulation_depth_set_point = []
+regulation_depth_set_point = []
+
+####################### Safety #######################
+
 # /safety/safety
 time_safety = []
 safety_published_frequency = []
@@ -117,23 +161,24 @@ safety_debug_ratio_delta = []
 safety_debug_volume = []
 safety_debug_volume_delta = []
 
-# /driver/euler
-time_euler = []
-euler_x = []
-euler_y = []
-euler_z = []
+####################### Iridium #######################
 
-# /fusion/kalman
-time_kalman = []
-kalman_depth = []
-kalman_volume = []
-kalman_velocity = []
-kalman_offset = []
-kalman_error_velocity = []
+# /iridium/status
+time_iridium_status = []
+iridium_status_service = []
+iridium_status_signal_strength = []
+iridium_status_antenna = []
 
-# /driver/sensor_temperature
-time_sensor_temperature = []
-sensor_temperature = []
+# /iridium/session
+time_iridium_session = []
+iridium_session_mo = []
+iridium_session_momsn = []
+iridium_session_mt = []
+iridium_session_mtmsn = []
+iridium_session_waiting = []
+
+########################################################
+####################### Function #######################
 
 def load_bag(filename):
 
@@ -143,8 +188,6 @@ def load_bag(filename):
 
 	startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
 	end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
-
-	nb_piston_position = bag.get_message_count('/driver/piston/position')
 
 	for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
 		if(topic=="/driver/piston/position"):
@@ -211,6 +254,11 @@ def load_bag(filename):
 			engine_left.append(msg.left)
 			engine_right.append(msg.right)
 
+		elif(topic=="/driver/thruster/cmd_engine"):
+			time_cmd_engine.append((t-startTime).to_sec())
+			cmd_engine_linear.append(msg.linear)
+			cmd_engine_angular.append(msg.angular)
+
 		elif(topic=="/fusion/depth"):
 			time_fusion_depth.append((t-startTime).to_sec())
 			fusion_depth.append(msg.depth)
@@ -244,10 +292,24 @@ def load_bag(filename):
 		elif(topic=="/driver/fix"):
 			time_fix.append((t-startTime).to_sec())
 			fix_status.append(msg.status)
+			fix_latitude.append(msg.latitude)
+			fix_longitude.append(msg.longitude)
+			fix_altitude.append(msg.altitude)
+			fix_track.append(msg.track)
+			fix_speed.append(msg.speed)
 
 		elif(topic=="/driver/piston/velocity"):
 			time_piston_velocity.append((t-startTime).to_sec())
 			piston_velocity.append(msg.velocity)
+
+		elif(topic=="/driver/piston/distance_travelled"):
+			time_piston_distance_travelled.append((t-startTime).to_sec())
+			piston_distance_travelled.append(msg.distance)
+
+		elif(topic=="/driver/piston/speed"):
+			time_piston_speed.append((t-startTime).to_sec())
+			piston_speed_in.append(msg.speed_in)
+			piston_speed_out.append(msg.speed_out)
 
 		elif(topic=="/driver/mag"):
 			time_mag.append((t-startTime).to_sec())
@@ -312,6 +374,20 @@ def load_bag(filename):
 			safety_debug_ratio_delta.append(msg.ratio_delta)
 			safety_debug_volume.append(msg.volume)
 			safety_debug_volume_delta.append(msg.volume_delta)
+
+		elif(topic=="/iridium/status"):
+			time_iridium_status.append((t-startTime).to_sec())
+			iridium_status_service.append(msg.service)
+			iridium_status_signal_strength.append(msg.signal_strength)
+			iridium_status_antenna.append(msg.antenna)
+
+		elif(topic=="/iridium/session"):
+			time_iridium_session.append((t-startTime).to_sec())
+			iridium_session_mo.append(msg.mo)
+			iridium_session_momsn.append(msg.momsn)
+			iridium_session_mt.append(msg.mt)
+			iridium_session_mtmsn.append(msg.mtmsn)
+			iridium_session_waiting.append(msg.waiting)
 
 	bag.close()
 

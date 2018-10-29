@@ -1,9 +1,0 @@
-int8 signal_strength
-uint8 error_code
-uint8 message_sent
-uint8 message_sent_total
-uint8 message_receive
-uint8 message_receive_total
-uint8 message_waiting
-string[] message_sent_name
-uint8[] message_sent_progress
