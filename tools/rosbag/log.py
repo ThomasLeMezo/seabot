@@ -261,11 +261,52 @@ if(len(time_mag)>0):
 
     pg_mag2.setXLink(pg_mag1)
 
+#### Imu ####
+if(len(time_imu)>0):
+    dock_imu = Dock("Imu")
+    area_data.addDock(dock_imu, 'above', dock_temp)
+    pg_acc = pg.PlotWidget()
+    pg_acc.addLegend()
+    pg_acc.plot(time_imu, acc_x, pen=(255,0,0), name="acc x")
+    pg_acc.plot(time_imu, acc_y, pen=(0,255,0), name="acc y")
+    pg_acc.plot(time_imu, acc_z, pen=(0,0,255), name="acc z")
+    dock_imu.addWidget(pg_acc)
+
+    pg_gyro = pg.PlotWidget()
+    pg_gyro.addLegend()
+    pg_gyro.plot(time_imu, gyro_x, pen=(255,0,0), name="gyro x")
+    pg_gyro.plot(time_imu, gyro_y, pen=(0,255,0), name="gyro y")
+    pg_gyro.plot(time_imu, gyro_z, pen=(0,0,255), name="gyro z")
+    dock_imu.addWidget(pg_gyro)
+
+    pg_gyro.setXLink(pg_acc)
+
 #################### Piston ####################
+
+#### Depth ####
+if(len(time_fusion_depth)>0):
+    dock_depth = Dock("Depth")
+    area_piston.addDock(dock_depth)
+    pg_fusion_depth = pg.PlotWidget()
+    pg_fusion_depth.addLegend()
+    pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
+    pg_fusion_depth.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
+    pg_fusion_depth.setLabel('left', "Depth", units="m")
+    dock_depth.addWidget(pg_fusion_depth)
+
+    pg_piston_state_position2 = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+    pg_piston_state_position2.addLegend()
+    pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
+    pg_piston_state_position2.plot(time_piston_state, piston_state_position_set_point, pen=(0,0,255), name="set point")
+    pg_piston_state_position2.setLabel('left', "Piston state position")
+    # pg_piston_state_position2.setLabel('bottom', "Time", units="s")
+    dock_depth.addWidget(pg_piston_state_position2)
+
+    pg_piston_state_position2.setXLink(pg_fusion_depth)
 
 #### Regulation debug ####
 if(len(time_regulation_debug)>0):
-    dock_regulation1 = Dock("Regulation 1")
+    dock_regulation1 = Dock("Regulation 1", 'above', dock_depth)
     area_piston.addDock(dock_regulation1)
 
     pg_regulation_depth = pg.PlotWidget()
@@ -292,7 +333,7 @@ if(len(time_regulation_debug)>0):
 #### Piston ####
 if(len(time_piston_state)>0):
     dock_piston = Dock("Piston")
-    area_piston.addDock(dock_piston, 'above', dock_regulation1)
+    area_piston.addDock(dock_piston, 'above', dock_depth)
     pg_piston_state_position = pg.PlotWidget()
     pg_piston_state_position.addLegend()
     pg_piston_state_position.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
@@ -319,7 +360,7 @@ if(len(time_piston_state)>0):
 #### Piston2 ####
 if(len(time_piston_state)>0):
     dock_piston2 = Dock("Piston2")
-    area_piston.addDock(dock_piston2, 'above', dock_regulation1)
+    area_piston.addDock(dock_piston2, 'above', dock_depth)
     pg_piston_state_position2 = pg.PlotWidget()
     pg_piston_state_position2.addLegend()
     pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position pic")
@@ -346,7 +387,7 @@ if(len(time_piston_state)>0):
 #### Distance ####
 if(len(time_piston_distance_travelled)>0):
     dock_piston_distance = Dock("Distance")
-    area_piston.addDock(dock_piston_distance, 'above', dock_regulation1)
+    area_piston.addDock(dock_piston_distance, 'above', dock_depth)
     pg_fusion_depth_distance = pg.PlotWidget()
     pg_fusion_depth_distance.addLegend()
     pg_fusion_depth_distance.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
@@ -362,31 +403,10 @@ if(len(time_piston_distance_travelled)>0):
 
     pg_piston_distance.setXLink(pg_fusion_depth_distance)
 
-#### Depth ####
-if(len(time_fusion_depth)>0):
-    dock_depth = Dock("Depth")
-    area_piston.addDock(dock_depth, 'above', dock_regulation1)
-    pg_fusion_depth = pg.PlotWidget()
-    pg_fusion_depth.addLegend()
-    pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-    pg_fusion_depth.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
-    pg_fusion_depth.setLabel('left', "Depth", units="m")
-    dock_depth.addWidget(pg_fusion_depth)
-
-    pg_piston_state_position2 = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
-    pg_piston_state_position2.addLegend()
-    pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
-    pg_piston_state_position2.plot(time_piston_state, piston_state_position_set_point, pen=(0,0,255), name="set point")
-    pg_piston_state_position2.setLabel('left', "Piston state position")
-    # pg_piston_state_position2.setLabel('bottom', "Time", units="s")
-    dock_depth.addWidget(pg_piston_state_position2)
-
-    pg_piston_state_position2.setXLink(pg_fusion_depth)
-
 #### Kalman ####
 if(len(time_kalman)>0):
     dock_kalman = Dock("Kalman")
-    area_piston.addDock(dock_kalman, 'above', dock_regulation1)
+    area_piston.addDock(dock_kalman, 'above', dock_depth)
 
     pg_kalman_velocity = pg.PlotWidget()
     pg_kalman_velocity.addLegend()

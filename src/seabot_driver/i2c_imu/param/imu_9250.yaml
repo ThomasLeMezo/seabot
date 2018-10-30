@@ -39,7 +39,7 @@ publish_magnetometer: true
 # RTIMU_XEAST_YDOWN     -> 21
 # RTIMU_XSOUTH_YDOWN    -> 22
 # RTIMU_XWEST_YDOWN     -> 23
-axis_rotation: 0
+axis_rotation: 2
 
 mpu9250:
   #Sample Rates
@@ -56,8 +56,8 @@ mpu9250:
 
 #Calibration
 seabot1:
-  compass_min: [-1.03e-4, -6.7e-5, -4.4e-5]
-  compass_max: [1.5e-5, 1.6e-5, 2.88e-5]
+  compass_min: [-1., -1., -1.]
+  compass_max: [1., 1., 1.]
 
   ellipsoid_offset: [ 0.0, 0.0, 0.0]
 
@@ -65,16 +65,16 @@ seabot1:
   ellipsoid_matrix1: [ 0.0, 1.0, 0.0]
   ellipsoid_matrix2: [ 0.0, 0.0, 1.0]
   
-  accel_min: [-1.0, -1.0, -1.0]
-  accel_max: [1.0,  1.0,  1.0]
+  accel_min: [-9.61750807,  -9.97663832, -10.20648168]
+  accel_max: [10.20169327,   9.88087025,   9.74918916]
 
-  gyro_bias: [0.0, 0.0, 0.0]
+  gyro_bias: [-0.00013038, 0.00055432,  -0.00025377]
 
   mag_declination: -1.722
 
 seabot2:
-  compass_min: [-0.0001027961989166215, -7.618012750754133e-05, -4.579068991006352e-05]
-  compass_max: [1.2291319762880448e-05, 6.097990080888849e-06, 4.071887451573275e-05]
+  compass_min: [-1., -1., -1.]
+  compass_max: [1., 1., 1.]
 
   ellipsoid_offset: [-4.60314966e-05 , -4.00365483e-05, 5.34459324e-07]
 
@@ -90,8 +90,8 @@ seabot2:
   mag_declination: -1.722
 
 seabot3:
-  compass_min: [-1.0, -1.0, -1.0]
-  compass_max: [1.0, 1.0, 1.0]
+  compass_min: [-1., -1., -1.]
+  compass_max: [1., 1., 1.]
 
   ellipsoid_offset: [ 0.0, 0.0, 0.0]
 

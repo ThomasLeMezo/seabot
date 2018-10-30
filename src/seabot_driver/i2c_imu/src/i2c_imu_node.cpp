@@ -113,8 +113,7 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
     ROS_BREAK();
   }
 
-  if (!imu_->IMUInit())
-  {
+  if (!imu_->IMUInit()){ // After loading parameters
     ROS_FATAL("I2cImu - %s - Failed to init the IMU", __FUNCTION__);
     ROS_BREAK();
   }
@@ -352,6 +351,14 @@ bool I2cImu::ImuSettings::loadSettings(){
 
 void I2cImu::spin(){
   ros::Rate r(1.0 / (imu_->IMUGetPollInterval() / 1000.0));
+
+  if(!imu_->getCompassCalibrationValid())
+    ROS_WARN("[IMU] Compass Calibration Offset not valid");
+  if(!imu_->getCompassCalibrationEllipsoidValid())
+    ROS_WARN("[IMU] Compass Calibration Ellipsoid not valid");
+  if(!imu_->getAccelCalibrationValid())
+    ROS_WARN("[IMU] Compass Calibration Acc not valid");
+
   while (ros::ok()){
     update();
     r.sleep();
