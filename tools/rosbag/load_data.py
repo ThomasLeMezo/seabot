@@ -403,4 +403,30 @@ def load_bag(filename):
 	print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
 
 	print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
+
+	if(len(time_fix)>0):
+		import gpxpy
+		import gpxpy.gpx
+
+		gpx = gpxpy.gpx.GPX()
+
+		# Create first track in our GPX:
+		gpx_track = gpxpy.gpx.GPXTrack()
+		gpx.tracks.append(gpx_track)
+
+		# Create first segment in our GPX track:
+		gpx_segment = gpxpy.gpx.GPXTrackSegment()
+		gpx_track.segments.append(gpx_segment)
+
+		# Create points:
+		
+		for i in range(len(fix_latitude)):
+			gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(fix_latitude[i], fix_longitude[i], elevation=fix_altitude[i]))
+		
+		# You can add routes and waypoints, too...
+
+		file = open(filename+".gpx","w") 
+		file.write(gpx.to_xml()) 
+		file.close() 
+
 	

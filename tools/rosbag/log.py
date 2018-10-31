@@ -13,6 +13,8 @@ from scipy import signal, interpolate
 import numpy as np
 import matplotlib.pyplot as plt
 
+from numpy import linalg as LA
+
 import sys
 from load_data import *
 
@@ -261,27 +263,56 @@ if(len(time_mag)>0):
 
     pg_mag2.setXLink(pg_mag1)
 
-#### Imu ####
+#### Imu Acc ####
 if(len(time_imu)>0):
-    dock_imu = Dock("Imu")
-    area_data.addDock(dock_imu, 'above', dock_temp)
+    dock_imu_acc = Dock("Acc")
+    area_data.addDock(dock_imu_acc, 'above', dock_temp)
     pg_acc = pg.PlotWidget()
     pg_acc.addLegend()
     pg_acc.plot(time_imu, acc_x, pen=(255,0,0), name="acc x")
     pg_acc.plot(time_imu, acc_y, pen=(0,255,0), name="acc y")
     pg_acc.plot(time_imu, acc_z, pen=(0,0,255), name="acc z")
-    dock_imu.addWidget(pg_acc)
+    dock_imu_acc.addWidget(pg_acc)
 
+    pg_acc_n = pg.PlotWidget()
+    pg_acc_n.addLegend()
+    acc_n = LA.norm(np.array([acc_x, acc_y, acc_z]), axis=0)
+    pg_acc_n.plot(time_imu, acc_n, pen=(255,0,0), name="norm")
+    dock_imu_acc.addWidget(pg_acc_n)
+
+    pg_acc_n.setXLink(pg_acc)
+
+#### Imu Gyro ####
+if(len(time_imu)>0):
+    dock_imu_gyro = Dock("Gyro")
+    area_data.addDock(dock_imu_gyro, 'above', dock_temp)
     pg_gyro = pg.PlotWidget()
     pg_gyro.addLegend()
     pg_gyro.plot(time_imu, gyro_x, pen=(255,0,0), name="gyro x")
     pg_gyro.plot(time_imu, gyro_y, pen=(0,255,0), name="gyro y")
     pg_gyro.plot(time_imu, gyro_z, pen=(0,0,255), name="gyro z")
-    dock_imu.addWidget(pg_gyro)
-
-    pg_gyro.setXLink(pg_acc)
+    dock_imu_gyro.addWidget(pg_gyro)
 
 #################### Piston ####################
+
+#### Distance ####
+if(len(time_piston_distance_travelled)>0):
+    dock_piston_distance = Dock("Distance")
+    area_piston.addDock(dock_piston_distance)
+    pg_fusion_depth_distance = pg.PlotWidget()
+    pg_fusion_depth_distance.addLegend()
+    pg_fusion_depth_distance.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
+    pg_fusion_depth_distance.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
+    pg_fusion_depth_distance.setLabel('left', "Depth", units="m")
+    dock_piston_distance.addWidget(pg_fusion_depth_distance)
+
+    pg_piston_distance = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+    pg_piston_distance.addLegend()
+    pg_piston_distance.plot(time_piston_distance_travelled, piston_distance_travelled, pen=(255,0,0), name="distance")
+    pg_piston_distance.setLabel('left', "Piston distance travelled")
+    dock_piston_distance.addWidget(pg_piston_distance)
+
+    pg_piston_distance.setXLink(pg_fusion_depth_distance)
 
 #### Depth ####
 if(len(time_fusion_depth)>0):
@@ -306,8 +337,8 @@ if(len(time_fusion_depth)>0):
 
 #### Regulation debug ####
 if(len(time_regulation_debug)>0):
-    dock_regulation1 = Dock("Regulation 1", 'above', dock_depth)
-    area_piston.addDock(dock_regulation1)
+    dock_regulation1 = Dock("Regulation 1")
+    area_piston.addDock(dock_regulation1, 'above', dock_piston_distance)
 
     pg_regulation_depth = pg.PlotWidget()
     pg_regulation_depth.addLegend()
@@ -333,7 +364,7 @@ if(len(time_regulation_debug)>0):
 #### Piston ####
 if(len(time_piston_state)>0):
     dock_piston = Dock("Piston")
-    area_piston.addDock(dock_piston, 'above', dock_depth)
+    area_piston.addDock(dock_piston, 'above', dock_piston_distance)
     pg_piston_state_position = pg.PlotWidget()
     pg_piston_state_position.addLegend()
     pg_piston_state_position.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position")
@@ -360,7 +391,7 @@ if(len(time_piston_state)>0):
 #### Piston2 ####
 if(len(time_piston_state)>0):
     dock_piston2 = Dock("Piston2")
-    area_piston.addDock(dock_piston2, 'above', dock_depth)
+    area_piston.addDock(dock_piston2, 'above', dock_piston_distance)
     pg_piston_state_position2 = pg.PlotWidget()
     pg_piston_state_position2.addLegend()
     pg_piston_state_position2.plot(time_piston_state, piston_state_position, pen=(255,0,0), name="position pic")
@@ -384,29 +415,10 @@ if(len(time_piston_state)>0):
     pg_piston_speed.setXLink(pg_piston_state_position2)
     pg_piston_velocity.setXLink(pg_piston_state_position2)
 
-#### Distance ####
-if(len(time_piston_distance_travelled)>0):
-    dock_piston_distance = Dock("Distance")
-    area_piston.addDock(dock_piston_distance, 'above', dock_depth)
-    pg_fusion_depth_distance = pg.PlotWidget()
-    pg_fusion_depth_distance.addLegend()
-    pg_fusion_depth_distance.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-    pg_fusion_depth_distance.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
-    pg_fusion_depth_distance.setLabel('left', "Depth", units="m")
-    dock_piston_distance.addWidget(pg_fusion_depth_distance)
-
-    pg_piston_distance = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
-    pg_piston_distance.addLegend()
-    pg_piston_distance.plot(time_piston_distance_travelled, piston_distance_travelled, pen=(255,0,0), name="distance")
-    pg_piston_distance.setLabel('left', "Piston distance travelled")
-    dock_piston_distance.addWidget(pg_piston_distance)
-
-    pg_piston_distance.setXLink(pg_fusion_depth_distance)
-
 #### Kalman ####
 if(len(time_kalman)>0):
     dock_kalman = Dock("Kalman")
-    area_piston.addDock(dock_kalman, 'above', dock_depth)
+    area_piston.addDock(dock_kalman, 'above', dock_piston_distance)
 
     pg_kalman_velocity = pg.PlotWidget()
     pg_kalman_velocity.addLegend()
