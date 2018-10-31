@@ -1,48 +1,71 @@
 from qgis.core import *
 import qgis.utils
+from PyQt5.QtCore import *
 
-layer_name = 'test'
-layer =  QgsVectorLayer('Point?crs=epsg:2154&index=yes', layer_name , "memory")
-
-symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
-
-svgStyle = {}
-svgStyle['fill'] = '#0000ff'
-svgStyle['name'] = determinedIcon
-svgStyle['outline'] = '#000000'
-svgStyle['outline-width'] = '6.8'
-svgStyle['size'] = '6'
-
-symbol_layer = QgsSvgMarkerSymbolLayerV2.create(svgStyle)
+layer_name = 'points'
 
 
-# define categories
-categories = []
-determinedIcon = ""
-for unique_value in unique_values:
-    # initialize the default symbol for this geometry type
-    
+## Find if layer already exist
+layer_list = QgsProject.instance().mapLayersByName(layer_name)
 
-    for svgMarker in icon:
-        if svgMarker[0] == unique_value:
-            determinedIcon = svgMarker[1]
+if(len(layer_list)==0):
+    layer =  QgsVectorLayer('Point?crs=epsg:2154&index=yes', layer_name , "memory")
+else:
+    layer = layer_list[0]
 
-    
+pr = layer.dataProvider()
 
-    # replace default symbol layer with the configured one
-    if symbol_layer is not None:
-        symbol.changeSymbolLayer(0, symbol_layer)
+field_title = QgsField('Title', QVariant.String)
+field_heading = QgsField('heading', QVariant.Double)
+field_speed = QgsField('speed', QVariant.Double)
+field_battery1 = QgsField('battery1', QVariant.Double)
 
-    # create renderer object
-    category = QgsRendererCategoryV2(unique_value, symbol, str(unique_value))
-    # entry for the list of category items
-    categories.append(category)
+fields = QgsFields()
+fields.append(field_title)
+fields.append(field_heading)
+fields.append(field_speed)
+fields.append(field_battery1)
 
-# create renderer object
-renderer = QgsCategorizedSymbolRendererV2('attribureName', categories)
+pr.addAttributes(fields)
+layer.updateFields()
 
-# assign the created renderer to the layer
-if renderer is not None:
-    layer.setRendererV2(renderer)
+# add the first point
+feature = QgsFeature()
 
+point1 = QgsPointXY(145172.5293,6833438.3495)
+feature.setGeometry(QgsGeometry.fromPointXY(point1))
+
+feature.setFields(fields)
+feature['Title'] = "Point 1"
+feature['heading'] = 90.
+feature['speed'] = 0.1
+feature['battery1'] = 12.4
+
+pr.addFeatures([feature])
+
+# Configure the marker.
+svg_marker = QgsSvgMarkerSymbolLayer("/usr/share/qgis/svg/arrows/NorthArrow_11.svg")
+svg_marker.setPreservedAspectRatio(True)
+svg_marker.setSize(5)
+# svg_marker.setAngle(0)
+svg_marker.setColor(Qt.red) # QColor(255,255,255)
+
+marker = QgsMarkerSymbol()
+marker.changeSymbolLayer(0, svg_marker)
+
+prop=QgsProperty()
+prop.setField("heading")
+marker.setDataDefinedAngle(prop) #QgsProperty () 
+
+renderer = QgsSingleSymbolRenderer(marker)
+layer.setRenderer(renderer)
+
+layer.setCustomProperty("labeling/fieldName", "Title" )
+layer.setCustomProperty("labeling/placement", QgsPalLayerSettings.OverPoint)
+layer.setCustomProperty("labeling/fontSize","8" )
+layer.setCustomProperty("labeling/enabled","true" )
 layer.triggerRepaint()
+
+# add the layer to the canvas
+layer.updateExtents()
+QgsProject.instance().addMapLayer(layer)
