@@ -114,7 +114,7 @@ class SeabotLayerLivePosition():
 
         if(len(layer_list)==0):
             ### Add New layer Last Position
-            layer =  QgsVectorLayer('Point?crs=epsg:2154&index=yes', layer_name , "memory")
+            layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', layer_name , "memory")
 
             fields = QgsFields()
             fields.append(QgsField('Title', QVariant.String))
