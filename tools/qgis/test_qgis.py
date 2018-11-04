@@ -1,9 +1,9 @@
 from qgis.core import *
 import qgis.utils
 from PyQt5.QtCore import *
+import time
 
 layer_name = 'points'
-
 
 ## Find if layer already exist
 layer_list = QgsProject.instance().mapLayersByName(layer_name)
@@ -36,7 +36,7 @@ point1 = QgsPointXY(145172.5293,6833438.3495)
 feature.setGeometry(QgsGeometry.fromPointXY(point1))
 
 feature.setFields(fields)
-feature['Title'] = "Point 1"
+feature['Title'] = "Last Position"
 feature['heading'] = 90.
 feature['speed'] = 0.1
 feature['battery1'] = 12.4
@@ -69,3 +69,26 @@ layer.triggerRepaint()
 # add the layer to the canvas
 layer.updateExtents()
 QgsProject.instance().addMapLayer(layer)
+
+
+########################
+
+layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+pr = layer.dataProvider()
+
+# build a request to filter the features based on an attribute
+# request = QgsFeatureRequest().setFilterExpression('"Title" == "Last Position"')
+# request.setSubsetOfAttributes([])
+# request.setFlags(QgsFeatureRequest.NoGeometry)
+# loop over the features and delete
+for f in layer.getFeatures():
+    point2 = QgsPointXY(146172.5293,6833338.3495)
+    f.setGeometry(QgsGeometry.fromPointXY(point2))
+    print(f.geometry())
+    f["heading"] = 30.
+    pr.addFeatures([f])
+    pr.deleteFeatures([f.id()])
+    break
+
+
+
