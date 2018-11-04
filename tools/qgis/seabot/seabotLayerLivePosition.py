@@ -172,7 +172,7 @@ class SeabotLayerLivePosition():
             renderer = QgsSingleSymbolRenderer(marker)
             layer.setRenderer(renderer)
 
-            layer.setCustomProperty("labeling/fieldName", "Title" )
+            layer.setCustomProperty("labeling/fieldName", "imei" )
             layer.setCustomProperty("labeling/placement", QgsPalLayerSettings.OverPoint)
             layer.setCustomProperty("labeling/fontSize","8" )
             layer.setCustomProperty("labeling/enabled","true" )

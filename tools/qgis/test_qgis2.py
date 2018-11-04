@@ -15,7 +15,6 @@ else:
 
 pr = layer.dataProvider()
 
-
 # add the first point
 feature = QgsFeature()
 
@@ -42,3 +41,13 @@ layer.setRenderer(renderer)
 # add the layer to the canvas
 layer.updateExtents()
 QgsProject.instance().addMapLayer(layer)
+
+for feature in layer.getFeatures():
+	geo = feature.geometry()
+	print(geo.insertVertex(point3, 0))
+	feature.setGeometry(geo)
+
+	print(feature.geometry())
+	pr.addFeatures([feature])
+	pr.deleteFeatures([feature.id()])
+	break
