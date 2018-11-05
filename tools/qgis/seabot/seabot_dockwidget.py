@@ -55,7 +55,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.setupUi(self)
 
         self.timer.timeout.connect(self.process)
-        self.timer.setInterval(1000)
+        self.timer.setInterval(5000)
         # self.timer.start()
 
         self.pushButton.clicked.connect(self.enable_timer)
