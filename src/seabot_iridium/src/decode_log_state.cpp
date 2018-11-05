@@ -39,7 +39,8 @@ int main(int argc, char *argv[]){
 
     stringstream data;
     data << "file_name: " << std::fixed << file_name << endl;
-    data << "time: " << logData.m_time_now << endl;
+    data << "imei: " << std::fixed << imei << endl;
+    data << "ts: " << logData.m_time_now << endl;
     data << "east: " << std::fixed << logData.m_east << endl;
     data << "north: " << std::fixed << logData.m_north << endl;
     data << "gnss_speed: " << logData.m_gnss_speed << endl;
@@ -54,10 +55,10 @@ int main(int argc, char *argv[]){
     data << "enable_engine: " << logData.m_enable_engine << endl;
     data << "enable_flash: " << logData.m_enable_flash << endl;
 
-    data << "batteries[0]: " << logData.m_batteries[0] << endl;
-    data << "batteries[1]: " << logData.m_batteries[1] << endl;
-    data << "batteries[2]: " << logData.m_batteries[2] << endl;
-    data << "batteries[3]: " << logData.m_batteries[3] << endl;
+    data << "batteries_0: " << logData.m_batteries[0] << endl;
+    data << "batteries_1: " << logData.m_batteries[1] << endl;
+    data << "batteries_2: " << logData.m_batteries[2] << endl;
+    data << "batteries_3: " << logData.m_batteries[3] << endl;
 
     data << "internal_pressure: " << logData.m_internal_pressure << endl;
     data << "internal_temperature: " << logData.m_internal_temperature << endl;

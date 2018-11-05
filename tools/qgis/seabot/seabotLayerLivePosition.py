@@ -2,156 +2,152 @@ from qgis.core import *
 import qgis.utils
 from PyQt5.QtCore import *
 import time
-import yaml
+import oyaml as yaml
 from os.path import expanduser
 
 class SeabotLayerLivePosition():
 
-    ts = 0.
-    east = 0.
-    north = 0.
-    gnss_speed = 0.
-    gnss_heading = 0.
-    safety_published_frequency = 0.
-    safety_depth_limit = 0.
-    safety_batteries_limit = 0.
-    safety_depressurization = 0.
-    enable_mission = 0.
-    enable_depth = 0.
-    enable_engine = 0.
-    enable_flash = 0.
-    batteries0 = 0.
-    batteries1 = 0.
-    batteries2 = 0.
-    batteries3 = 0.
-    internal_pressure = 0.
-    internal_temperature = 0.
-    internal_humidity = 0.
-    current_waypoint = 0.
-    last_cmd_received = 0.
-    imei = 0.
+    map_file = {}
+    last_time = 0.
 
     new_data = False
+    fields = QgsFields()
+
+    first_load = True
 
     def __init__(self):
+        self.fields.append(QgsField('Title', QVariant.String))
         return
 
-    def update_field(self, feature):
-        feature['Title'] = "Last Position"
-        feature['ts'] = self.ts
-        feature['gnss_speed'] = self.gnss_speed
-        feature['gnss_heading'] = self.gnss_heading
-        feature['safety_published_frequency'] = self.safety_published_frequency
-        feature['safety_depth_limit'] = self.safety_depth_limit
-        feature['safety_batteries_limit'] = self.safety_batteries_limit
-        feature['safety_depressurization'] = self.safety_depressurization
-        feature['enable_mission'] = self.enable_mission
-        feature['enable_depth'] = self.enable_depth
-        feature['enable_engine'] = self.enable_engine
-        feature['enable_flash'] = self.enable_flash
-        feature['batteries0'] = self.batteries0
-        feature['batteries1'] = self.batteries1
-        feature['batteries2'] = self.batteries2
-        feature['batteries3'] = self.batteries3
-        feature['internal_pressure'] = self.internal_pressure
-        feature['internal_temperature'] = self.internal_temperature
-        feature['internal_humidity'] = self.internal_humidity
-        feature['current_waypoint'] = self.current_waypoint
-        feature['last_cmd_received'] = self.last_cmd_received
-        feature['imei'] = self.imei
+    def add_fields_from_yaml(self):
+        for key, value in self.map_file.items():
+            self.fields.append(QgsField(key, QVariant.Double))
+
+    def get_update_map_attribute(self):
+        map = {}
+        for i in range(self.fields.size()):
+            if self.fields.at(i).name() in self.map_file:
+                map[str(i)] = self.map_file[self.fields.at(i).name()]
+        return map
+
+    def update_feature(self, feature):
+        for i in range(feature.fields().size()):
+            key = feature.fields().at(i).name()
+            if key in self.map_file:
+                feature[key] = self.map_file[key]
+            else:
+                print("Error : ", key)
 
     def load_data(self):
         ### GET DATA ### 
         home = expanduser("~")
         with open(home + "/iridium/received/last_received.yaml", 'r') as stream:
             try:
-                data_yaml = yaml.load(stream)
+                self.map_file = yaml.load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
                 return False
 
-        self.east = data_yaml['east']
-        self.north = data_yaml['north']
-
-        if(data_yaml['time'] != self.ts):
-            self.new_data = True
-        self.ts = data_yaml['time']
-        self.gnss_speed = data_yaml['gnss_speed']
-        self.gnss_heading = data_yaml['gnss_heading']
-        self.safety_published_frequency = data_yaml['safety_published_frequency']
-        self.safety_depth_limit = data_yaml['safety_depth_limit']
-        self.safety_batteries_limit = data_yaml['safety_batteries_limit']
-        self.safety_depressurization = data_yaml['safety_depressurization']
-        self.enable_mission = data_yaml['enable_mission']
-        self.enable_depth = data_yaml['enable_depth']
-        self.enable_engine = data_yaml['enable_engine']
-        self.enable_flash = data_yaml['enable_flash']
-        self.batteries0 = data_yaml['batteries[0]']
-        self.batteries1 = data_yaml['batteries[1]']
-        self.batteries2 = data_yaml['batteries[2]']
-        self.batteries3 = data_yaml['batteries[3]']
-        self.internal_pressure = data_yaml['internal_pressure']
-        self.internal_temperature = data_yaml['internal_temperature']
-        self.internal_humidity = data_yaml['internal_humidity']
-        self.current_waypoint = data_yaml['current_waypoint']
-        self.last_cmd_received = data_yaml['last_cmd_received']
-        self.imei = int(data_yaml['file_name'][15-6:15])
+            new_time = self.map_file['ts']
+            if(self.last_time != new_time):
+                self.new_data = True
+                self.last_time = new_time
 
         return True
 
-    def update_position(self):
-
+    def update(self):
         if(not self.load_data()):
             return False
         if(self.new_data == False):
             return True
+
+        status = True
+        status &= self.update_track()
+        status &= self.update_position()
+
+        self.new_data = False
+        return status
+
+    def update_track(self):
+        
+
+        ### ADD DATA TO LAYER ###
+        layer_name = 'Seabot - Track'
+
+        ## Find if layer already exist
+        layer_list = QgsProject.instance().mapLayersByName(layer_name)
+        point = QgsPoint(self.map_file['east'], self.map_file['north'])
+
+        if(len(layer_list)==0):
+            ### Add New layer Last Position
+            layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', layer_name , "memory")
+
+            pr = layer.dataProvider()
+
+            # add the first point
+            feature = QgsFeature()
+
+            feature.setGeometry(QgsGeometry.fromPolyline([point]))
+            pr.addFeatures([feature])
+
+            # Configure the marker.
+            marker_line = QgsSimpleLineSymbolLayer()
+            marker_point = QgsMarkerLineSymbolLayer()
+            marker_point.setPlacement(QgsMarkerLineSymbolLayer.Vertex)
+
+            marker = QgsLineSymbol()
+            marker.changeSymbolLayer(0, marker_line)
+            marker.appendSymbolLayer(marker_point)
+
+            renderer = QgsSingleSymbolRenderer(marker)
+            layer.setRenderer(renderer)
+            layer.updateExtents()
+            QgsProject.instance().addMapLayer(layer)
+
+        else:
+            layer = layer_list[0]
+            pr = layer.dataProvider()
+
+            for feature in layer.getFeatures():
+                geo = feature.geometry()
+                geo.insertVertex(point, 0)
+                feature.setGeometry(geo)
+
+                pr.addFeatures([feature])
+                pr.deleteFeatures([feature.id()])
+                break
+
+        return True
+
+    def update_position(self):
 
         ### ADD DATA TO LAYER ###
         layer_name = 'Seabot - Last Position'
 
         ## Find if layer already exist
         layer_list = QgsProject.instance().mapLayersByName(layer_name)
+        point = QgsPointXY(self.map_file['east'], self.map_file['north'])
 
         if(len(layer_list)==0):
             ### Add New layer Last Position
             layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', layer_name , "memory")
 
-            fields = QgsFields()
-            fields.append(QgsField('Title', QVariant.String))
-            fields.append(QgsField('ts', QVariant.Double))
-            fields.append(QgsField('gnss_speed', QVariant.Double))
-            fields.append(QgsField('gnss_heading', QVariant.Double))
-            fields.append(QgsField('safety_published_frequency', QVariant.Double))
-            fields.append(QgsField('safety_depth_limit', QVariant.Double))
-            fields.append(QgsField('safety_batteries_limit', QVariant.Double))
-            fields.append(QgsField('safety_depressurization', QVariant.Double))
-            fields.append(QgsField('enable_mission', QVariant.Double))
-            fields.append(QgsField('enable_depth', QVariant.Double))
-            fields.append(QgsField('enable_engine', QVariant.Double))
-            fields.append(QgsField('enable_flash', QVariant.Double))
-            fields.append(QgsField('batteries0', QVariant.Double))
-            fields.append(QgsField('batteries1', QVariant.Double))
-            fields.append(QgsField('batteries2', QVariant.Double))
-            fields.append(QgsField('batteries3', QVariant.Double))
-            fields.append(QgsField('internal_pressure', QVariant.Double))
-            fields.append(QgsField('internal_temperature', QVariant.Double))
-            fields.append(QgsField('internal_humidity', QVariant.Double))
-            fields.append(QgsField('current_waypoint', QVariant.Double))
-            fields.append(QgsField('last_cmd_received', QVariant.Double))
-            fields.append(QgsField('imei', QVariant.Double))
-
             pr = layer.dataProvider()
 
-            pr.addAttributes(fields)
+            if(self.first_load==True):
+                self.add_fields_from_yaml()
+                self.first_load = False
+
+            pr.addAttributes(self.fields)
             layer.updateFields()
 
             # add the first point
             feature = QgsFeature()
-            point = QgsPointXY(self.east,self.north)
             feature.setGeometry(QgsGeometry.fromPointXY(point))
 
-            feature.setFields(fields)
-            self.update_field(feature)
+            feature.setFields(self.fields)
+            feature['Title'] = "Last Position"
+            self.update_feature(feature)
 
             pr.addFeatures([feature])
 
@@ -186,13 +182,16 @@ class SeabotLayerLivePosition():
             layer = layer_list[0]
             pr = layer.dataProvider()
 
-            for feature in layer.getFeatures():
-                point = QgsPointXY(self.east,self.north)
-                feature.setGeometry(QgsGeometry.fromPointXY(point))
-                self.update_field(feature)
-                pr.addFeatures([feature])
-                pr.deleteFeatures([feature.id()])
-                break
+            # for feature in layer.getFeatures():
+            #     pr.changeFeatures(self.get_update_map_attribute(), {feature.id():QgsGeometry.fromPointXY(point)})
+            #     # pr.changeAttributeValues()
+            #     break
+            #     point = QgsPointXY(self.east,self.north)
+            #     feature.setGeometry(QgsGeometry.fromPointXY(point))
+            #     self.update_field(feature)
+            #     pr.addFeatures([feature])
+            #     pr.deleteFeatures([feature.id()])
+            #     break
 
         return True
     

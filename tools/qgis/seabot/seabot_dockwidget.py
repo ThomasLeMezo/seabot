@@ -73,7 +73,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.timer.stop()
 
     def process(self):
-        if(self.layerLivePosition.update_position()):
+        if(self.layerLivePosition.update()):
             self.label.setText("Connected - " + str(self.count))
             self.count += 1
         else:
