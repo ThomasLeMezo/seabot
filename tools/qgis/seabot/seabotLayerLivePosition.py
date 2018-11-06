@@ -299,7 +299,7 @@ class SeabotLayerLivePosition():
             pr = layer.dataProvider()
 
             for feature in layer.getFeatures():
-                pr.changeFeatures(self.get_update_map_attribute(), {feature.id():QgsGeometry.fromPointXY(point)})
+                pr.changeFeatures({feature.id():self.get_update_map_attribute()}, {feature.id():QgsGeometry.fromPointXY(point)})
                 # pr.changeAttributeValues()
                 break
                 # point = QgsPointXY(self.east,self.north)
