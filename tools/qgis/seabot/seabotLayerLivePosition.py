@@ -108,31 +108,27 @@ class SeabotLayerLivePosition():
         layer_name = 'Seabot - Forcast Track'
         layer_list = QgsProject.instance().mapLayersByName(layer_name)
 
+        feature = QgsFeature()
+        point_list = []
+        for i in range(np.shape(self.forcast_track)[0]):
+            point_list.append(QgsPoint(self.forcast_track[i][1], self.forcast_track[i][2]))
+        geo = QgsGeometry.fromPolyline(point_list)
+        
         if(len(layer_list)==0):
             layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', layer_name , "memory")
             pr = layer.dataProvider()
+            feature.setGeometry(geo)
             
-            feature = QgsFeature()
-            point_list = []
-            for i in range(np.shape(self.forcast_track)[0]):
-                point_list.append(QgsPoint(self.forcast_track[i][1], self.forcast_track[i][2]))
-
-            feature.setGeometry(QgsGeometry.fromPolyline(point_list))
             pr.addFeatures([feature])
             layer.updateExtents()
             QgsProject.instance().addMapLayer(layer)
-        # else:
-        #     layer = layer_list[0]
-        #     pr = layer.dataProvider()
+        else:
+            layer = layer_list[0]
+            pr = layer.dataProvider()
 
-        #     for feature in layer.getFeatures():
-        #         geo = feature.geometry()
-        #         geo.insertVertex(point, 0)
-        #         feature.setGeometry(geo)
-
-        #         pr.addFeatures([feature])
-        #         pr.deleteFeatures([feature.id()])
-        #         break
+            for feature in layer.getFeatures():
+                pr.changeGeometryValues({feature.id():geo})
+                break
 
         return True
 
@@ -228,10 +224,7 @@ class SeabotLayerLivePosition():
             for feature in layer.getFeatures():
                 geo = feature.geometry()
                 geo.insertVertex(point, 0)
-                feature.setGeometry(geo)
-
-                pr.addFeatures([feature])
-                pr.deleteFeatures([feature.id()])
+                pr.changeGeometryValues({feature.id():geo})
                 break
 
         return True
@@ -300,13 +293,6 @@ class SeabotLayerLivePosition():
 
             for feature in layer.getFeatures():
                 pr.changeFeatures({feature.id():self.get_update_map_attribute()}, {feature.id():QgsGeometry.fromPointXY(point)})
-                # pr.changeAttributeValues()
-                break
-                # point = QgsPointXY(self.east,self.north)
-                # feature.setGeometry(QgsGeometry.fromPointXY(point))
-                # self.update_field(feature)
-                # pr.addFeatures([feature])
-                # pr.deleteFeatures([feature.id()])
                 break
 
         return True
