@@ -26,7 +26,6 @@ feature.setGeometry(QgsGeometry.fromPolyline([point1, point2, point3]))
 pr.addFeatures([feature])
 
 # Configure the marker.
-
 marker_line = QgsSimpleLineSymbolLayer()
 marker_point = QgsMarkerLineSymbolLayer()
 marker_point.setPlacement(QgsMarkerLineSymbolLayer.Vertex)

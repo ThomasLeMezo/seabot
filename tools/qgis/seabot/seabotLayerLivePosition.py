@@ -69,8 +69,11 @@ class SeabotLayerLivePosition():
         return True
 
     def load_forcast_track(self):
+        if(not os.path.isfile(self.forcast_filename)):
+            return
+
         new_ts = os.stat(self.forcast_filename).st_mtime
-        if(new_ts != self.forcast_file_ts and os.path.isfile(self.forcast_filename)):
+        if(new_ts != self.forcast_file_ts):
             self.forcast_track = np.loadtxt(self.forcast_filename)
             new_ts = self.forcast_file_ts
             self.new_forcast_data = True
