@@ -182,7 +182,7 @@ void SBD::read(){
         m_waiting = stoi(fields[5]);
       }
       m_in_session = false;
-      ROS_INFO("[Iridium] Session result");
+      ROS_INFO("[Iridium] Session result %i", m_SESSION_MO);
       omp_unset_lock(&lock_data);
     }
     else if(boost::starts_with(result, "+AREG:")){

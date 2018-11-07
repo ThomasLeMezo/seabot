@@ -490,6 +490,22 @@ if(len(time_euler)>0):
     pg_euler1.plot(time_euler, np.array(euler_z)*180.0/np.pi, pen=(0,0,255), name="Heading")
     dock_euler.addWidget(pg_euler1)
 
+####  Speed & Heading GPS #### 
+if(len(time_fix)>0):
+    dock_gps_speed_track = Dock("GPS Speed/Track")
+    area_position.addDock(dock_gps_speed_track, 'above', dock_gps)
+    pg_gps_speed = pg.PlotWidget()
+    pg_gps_speed.addLegend()
+    pg_gps_speed.plot(time_fix, fix_speed, pen=(0,0,255), name="Speed")
+    dock_gps_speed_track.addWidget(pg_gps_speed)
+
+    pg_gps_track = pg.PlotWidget()
+    pg_gps_track.addLegend()
+    pg_gps_track.plot(time_fix, fix_track, pen=(0,0,255), name="Track")
+    dock_gps_speed_track.addWidget(pg_gps_track)
+
+    pg_gps_track.setXLink(pg_gps_speed)
+
 
 #################### Iridium ####################
 
