@@ -128,6 +128,7 @@ class SeabotLayerLivePosition():
 
             for feature in layer.getFeatures():
                 pr.changeGeometryValues({feature.id():geo})
+                layer.triggerRepaint()
                 break
 
         return True
@@ -178,6 +179,7 @@ class SeabotLayerLivePosition():
 
             for feature in layer.getFeatures():
                 pr.changeGeometryValues({feature.id():QgsGeometry.fromPointXY(point)})
+                layer.triggerRepaint()
                 break
 
         return True
@@ -225,6 +227,7 @@ class SeabotLayerLivePosition():
                 geo = feature.geometry()
                 geo.insertVertex(point, 0)
                 pr.changeGeometryValues({feature.id():geo})
+                layer.triggerRepaint()
                 break
 
         return True
@@ -293,6 +296,7 @@ class SeabotLayerLivePosition():
 
             for feature in layer.getFeatures():
                 pr.changeFeatures({feature.id():self.get_update_map_attribute()}, {feature.id():QgsGeometry.fromPointXY(point)})
+                layer.triggerRepaint()
                 break
 
         return True

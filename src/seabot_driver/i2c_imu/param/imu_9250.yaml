@@ -56,14 +56,11 @@ mpu9250:
 
 #Calibration
 seabot1:
-  compass_min: [-1., -1., -1.]
-  compass_max: [1., 1., 1.]
+  ellipsoid_offset: [ 4.09704195e-05, 2.61395660e-05, 4.95286915e-06]
 
-  ellipsoid_offset: [ 0.0, 0.0, 0.0]
-
-  ellipsoid_matrix0: [ 1.0, 0.0, 0.0]
-  ellipsoid_matrix1: [ 0.0, 1.0, 0.0]
-  ellipsoid_matrix2: [ 0.0, 0.0, 1.0]
+  ellipsoid_matrix0: [0.94007, -0.46689288, 0.00491923]
+  ellipsoid_matrix1: [-0.46689288, 1.36521837, 0.00324308]
+  ellipsoid_matrix2: [0.00491923, 0.00324308, 0.93865841]
   
   accel_min: [-9.61750807,  -9.97663832, -10.20648168]
   accel_max: [10.20169327,   9.88087025,   9.74918916]
@@ -73,9 +70,6 @@ seabot1:
   mag_declination: -1.722
 
 seabot2:
-  compass_min: [-1., -1., -1.]
-  compass_max: [1., 1., 1.]
-
   ellipsoid_offset: [-4.60314966e-05 , -4.00365483e-05, 5.34459324e-07]
 
   ellipsoid_matrix0: [ 1.12470929, -0.70220543, -0.03473653]
@@ -90,9 +84,6 @@ seabot2:
   mag_declination: -1.722
 
 seabot3:
-  compass_min: [-1., -1., -1.]
-  compass_max: [1., 1., 1.]
-
   ellipsoid_offset: [ 0.0, 0.0, 0.0]
 
   ellipsoid_matrix0: [ 1.0, 0.0, 0.0]
