@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import rospy
 import rosbag
 import yaml
@@ -33,7 +35,7 @@ if(len(sys.argv)<2):
 load_bag(sys.argv[1])
 
 data = np.array(mag)
-data2 = data_regularize(data, divs=64)
+data2 = data_regularize(data, divs=128)
 
 center, radii, evecs, v = ellipsoid_fit(data2)
 
@@ -48,11 +50,10 @@ D = np.array([[r/a, 0., 0.], [0., r/b, 0.], [0., 0., r/c]])
 TR = evecs.dot(D).dot(evecs.T)
 dataE = TR.dot(dataC2.T).T
 
-print('ellipsoid_offset: [', center[0], ', ', center[1], ', ', center[2], ']')
-print('transformation:')
-print('ellipsoid_matrix0 : [', TR[0][0], ', ', TR[0][1], ', ', TR[0][2], ']')
-print('ellipsoid_matrix1 : [', TR[1][0], ', ', TR[1][1], ', ', TR[1][2], ']')
-print('ellipsoid_matrix2 : [', TR[2][0], ', ', TR[2][1], ', ', TR[2][2], ']')
+print('ellipsoid_offset: [', center[0][0], ', ', center[1][0], ', ', center[2][0], ']')
+print('ellipsoid_matrix0: [', TR[0][0], ', ', TR[0][1], ', ', TR[0][2], ']')
+print('ellipsoid_matrix1: [', TR[1][0], ', ', TR[1][1], ', ', TR[1][2], ']')
+print('ellipsoid_matrix2: [', TR[2][0], ', ', TR[2][1], ', ', TR[2][2], ']')
 
 # np.savetxt('magcal_ellipsoid.txt', np.vstack((center.T, TR)))
 

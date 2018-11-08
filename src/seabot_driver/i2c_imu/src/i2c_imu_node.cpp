@@ -29,7 +29,7 @@
 #include <cstring>
 
 #define G_2_MPSS 9.80665
-#define uT_2_T 1000000
+#define uT_2_T 1000000.
 
 class I2cImu
 {
@@ -77,7 +77,7 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",10);
 
   if(private_nh_.param<bool>("publish_magnetometer", false))
-    magnetometer_pub_ = nh_.advertise<sensor_msgs::MagneticField>("mag", 10, false);
+    magnetometer_pub_ = nh_.advertise<geometry_msgs::Vector3>("mag", 10, false);
 
   if(private_nh_.param<bool>("publish_euler", false))
     euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
@@ -157,14 +157,11 @@ void I2cImu::update(){
 
     /// ********** Mag msg **********
     if (magnetometer_pub_ != nullptr && imuData.compassValid){
-      sensor_msgs::MagneticField msg;
+      geometry_msgs::Vector3 msg;
 
-      msg.header.frame_id=imu_frame_id_;
-      msg.header.stamp=ros::Time::now();
-
-      msg.magnetic_field.x = imuData.compass.x()/uT_2_T;
-      msg.magnetic_field.y = imuData.compass.y()/uT_2_T;
-      msg.magnetic_field.z = imuData.compass.z()/uT_2_T;
+      msg.x = imuData.compass.x(); // in uT
+      msg.y = imuData.compass.y(); // in uT
+      msg.z = imuData.compass.z(); // in uT
 
       magnetometer_pub_.publish(msg);
     }
@@ -204,13 +201,6 @@ bool I2cImu::ImuSettings::loadSettings(){
 
   settings_nh_->getParam("axis_rotation", m_axisRotation);
 
-  //MPU9150
-  settings_nh_->getParam("mpu9150/gyro_accel_sample_rate", m_MPU9150GyroAccelSampleRate);
-  settings_nh_->getParam("mpu9150/compass_sample_rate", m_MPU9150CompassSampleRate);
-  settings_nh_->getParam("mpu9150/accel_full_scale_range", m_MPU9150AccelFsr);
-  settings_nh_->getParam("mpu9150/gyro_accel_low_pass_filter", m_MPU9150GyroAccelLpf);
-  settings_nh_->getParam("mpu9150/gyro_full_scale_range", m_MPU9150GyroFsr);
-
   //MPU9250
   settings_nh_->getParam("mpu9250/gyro_accel_sample_rate", m_MPU9250GyroAccelSampleRate);
   settings_nh_->getParam("mpu9250/compass_sample_rate", m_MPU9250CompassSampleRate);
@@ -218,48 +208,6 @@ bool I2cImu::ImuSettings::loadSettings(){
   settings_nh_->getParam("mpu9250/accel_low_pass_filter", m_MPU9250AccelLpf);
   settings_nh_->getParam("mpu9250/gyro_full_scale_range", m_MPU9250GyroFsr);
   settings_nh_->getParam("mpu9250/gyro_low_pass_filter", m_MPU9250GyroLpf);
-
-  //GD20HM303D
-  settings_nh_->getParam("GD20HM303D/gyro_sample_rate", m_GD20HM303DGyroSampleRate);
-  settings_nh_->getParam("GD20HM303D/accel_sample_rate", m_GD20HM303DAccelSampleRate);
-  settings_nh_->getParam("GD20HM303D/compass_sample_rate", m_GD20HM303DCompassSampleRate);
-  settings_nh_->getParam("GD20HM303D/accel_full_scale_range", m_GD20HM303DAccelFsr);
-  settings_nh_->getParam("GD20HM303D/gyro_full_scale_range", m_GD20HM303DGyroFsr);
-  settings_nh_->getParam("GD20HM303D/compass_full_scale_range", m_GD20HM303DCompassFsr);
-  settings_nh_->getParam("GD20HM303D/accel_low_pass_filter", m_GD20HM303DAccelLpf);
-  settings_nh_->getParam("GD20HM303D/gyro_high_pass_filter", m_GD20HM303DGyroHpf);
-  settings_nh_->getParam("GD20HM303D/gyro_bandwidth", m_GD20HM303DGyroBW);
-
-  //GD20M303DLHC
-  settings_nh_->getParam("GD20M303DLHC/gyro_sample_rate",m_GD20M303DLHCGyroSampleRate);
-  settings_nh_->getParam("GD20M303DLHC/accel_sample_rate",m_GD20M303DLHCAccelSampleRate);
-  settings_nh_->getParam("GD20M303DLHC/compass_sample_rate",m_GD20M303DLHCCompassSampleRate);
-  settings_nh_->getParam("GD20M303DLHC/accel_full_scale_range",m_GD20M303DLHCAccelFsr);
-  settings_nh_->getParam("GD20M303DLHC/gyro_full_scale_range",m_GD20M303DLHCGyroFsr);
-  settings_nh_->getParam("GD20M303DLHC/compass_full_scale_range",m_GD20M303DLHCCompassFsr);
-  settings_nh_->getParam("GD20M303DLHC/gyro_high_pass_filter",m_GD20M303DLHCGyroHpf);
-  settings_nh_->getParam("GD20M303DLHC/gyro_bandwidth",m_GD20M303DLHCGyroBW);
-
-  //GD20HM303DLHC
-  settings_nh_->getParam("GD20HM303DLHC/gyro_sample_rate", m_GD20HM303DLHCGyroSampleRate);
-  settings_nh_->getParam("GD20HM303DLHC/accel_sample_rate",m_GD20HM303DLHCAccelSampleRate);
-  settings_nh_->getParam("GD20HM303DLHC/compass_sample_rate",m_GD20HM303DLHCCompassSampleRate);
-  settings_nh_->getParam("GD20HM303DLHC/accel_full_scale_range",m_GD20HM303DLHCAccelFsr);
-  settings_nh_->getParam("GD20HM303DLHC/gyro_full_scale_range",m_GD20HM303DLHCGyroFsr);
-  settings_nh_->getParam("GD20HM303DLHC/compass_full_scale_range",m_GD20HM303DLHCCompassFsr);
-  settings_nh_->getParam("GD20HM303DLHC/gyro_high_pass_filter",m_GD20HM303DLHCGyroHpf);
-  settings_nh_->getParam("GD20HM303DLHC/gyro_bandwidth",m_GD20HM303DLHCGyroBW);
-
-  //LSM9DS0
-  settings_nh_->getParam("LSM9DS0/gyro_sample_rate",m_LSM9DS0GyroSampleRate);
-  settings_nh_->getParam("LSM9DS0/accel_sample_rate",m_LSM9DS0AccelSampleRate);
-  settings_nh_->getParam("LSM9DS0/compass_sample_rate",m_LSM9DS0CompassSampleRate);
-  settings_nh_->getParam("LSM9DS0/accel_full_scale_range",m_LSM9DS0AccelFsr);
-  settings_nh_->getParam("LSM9DS0/gyro_full_scale_range",m_LSM9DS0GyroFsr);
-  settings_nh_->getParam("LSM9DS0/compass_full_scale_range",m_LSM9DS0CompassFsr);
-  settings_nh_->getParam("LSM9DS0/accel_low_pass_filter",m_LSM9DS0AccelLpf);
-  settings_nh_->getParam("LSM9DS0/gyro_high_pass_filter",m_LSM9DS0GyroHpf);
-  settings_nh_->getParam("LSM9DS0/gyro_bandwidth",m_LSM9DS0GyroBW);
 
   /// ************** SENSOR CALIBRATION ************** ///
   char name[256];

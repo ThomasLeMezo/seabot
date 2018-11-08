@@ -317,7 +317,7 @@ if(len(time_piston_distance_travelled)>0):
 #### Depth ####
 if(len(time_fusion_depth)>0):
     dock_depth = Dock("Depth")
-    area_piston.addDock(dock_depth)
+    area_piston.addDock(dock_depth, 'above', dock_piston_distance)
     pg_fusion_depth = pg.PlotWidget()
     pg_fusion_depth.addLegend()
     pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
