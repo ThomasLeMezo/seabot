@@ -129,16 +129,11 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
 }
 
 void I2cImu::update(){
-
-//  while ( && ros::ok()){
     imu_->IMURead();
     RTIMU_DATA imuData = imu_->getIMUData();
 
-    ros::Time current_time = ros::Time::now();
-
     /// ********** IMU msg **********
-
-    imu_msg.header.stamp = current_time;
+    imu_msg.header.stamp = ros::Time::now();
     imu_msg.header.frame_id = imu_frame_id_;
     imu_msg.orientation.x = imuData.fusionQPose.x();
     imu_msg.orientation.y = imuData.fusionQPose.y();
@@ -149,9 +144,9 @@ void I2cImu::update(){
     imu_msg.angular_velocity.y = imuData.gyro.y();
     imu_msg.angular_velocity.z = imuData.gyro.z();
 
-    imu_msg.linear_acceleration.x = imuData.accel.x() * G_2_MPSS;
-    imu_msg.linear_acceleration.y = imuData.accel.y() * G_2_MPSS;
-    imu_msg.linear_acceleration.z = imuData.accel.z() * G_2_MPSS;
+    imu_msg.linear_acceleration.x = imuData.accel.x();
+    imu_msg.linear_acceleration.y = imuData.accel.y();
+    imu_msg.linear_acceleration.z = imuData.accel.z();
 
     imu_pub_.publish(imu_msg);
 
@@ -169,15 +164,13 @@ void I2cImu::update(){
     /// ********** Euler msg **********
     if (euler_pub_ != nullptr){
       geometry_msgs::Vector3 msg;
+
       msg.x = imuData.fusionPose.x();
       msg.y = imuData.fusionPose.y();
       msg.z = -imuData.fusionPose.z();
+
       euler_pub_.publish(msg);
     }
-
-//    ros::spinOnce();
-//  }
-
 }
 
 bool I2cImu::ImuSettings::loadSettings(){
