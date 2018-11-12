@@ -25,6 +25,14 @@ class SeabotLayerLivePosition():
     forcast_start_time = 0.
     forcast_dt = 0.
 
+    forcast_polygon_track = np.empty(0)
+    forcast_polygon_file_ts = 0.
+    forcast_polygon_filename = expanduser("~") + "/iridium/seabot_forcast_polygon.txt"
+    new_forcast_polygon_data = False
+    forcast_polygon_start_time = 0.
+    forcast_polygon_dt = 0.
+    last_offset_polygon = 0
+
     def __init__(self):
         self.fields.append(QgsField('Title', QVariant.String))
         return
@@ -62,9 +70,8 @@ class SeabotLayerLivePosition():
                 self.new_iridium_data = True
                 self.iridium_file_ts = new_time
 
-                self.load_forcast_track()
-
         self.load_forcast_track()
+        self.load_forcast_polygon()
 
         return True
 
@@ -75,11 +82,26 @@ class SeabotLayerLivePosition():
         new_ts = os.stat(self.forcast_filename).st_mtime
         if(new_ts != self.forcast_file_ts):
             self.forcast_track = np.loadtxt(self.forcast_filename)
-            new_ts = self.forcast_file_ts
-            self.new_forcast_data = True
+            self.forcast_file_ts = new_ts
+            if(np.size(self.forcast_track)>0):
+                self.new_forcast_data = True
 
-            self.forcast_start_time = self.forcast_track[0][0]
-            self.forcast_dt = self.forcast_track[1][0] - self.forcast_track[0][0]
+                self.forcast_start_time = self.forcast_track[0][0]
+                self.forcast_dt = self.forcast_track[1][0] - self.forcast_track[0][0]
+
+    def load_forcast_polygon(self):
+        if(not os.path.isfile(self.forcast_polygon_filename)):
+            return
+
+        new_ts = os.stat(self.forcast_polygon_filename).st_mtime
+        if(new_ts != self.forcast_polygon_file_ts):
+            self.forcast_polygon_file_ts = new_ts
+            self.forcast_polygon_track = np.loadtxt(self.forcast_polygon_filename)
+            if(np.size(self.forcast_polygon_track)>0):
+                self.new_forcast_polygon_data = True
+
+                self.forcast_polygon_start_time = self.forcast_polygon_track[0][0]
+                self.forcast_polygon_dt = self.forcast_polygon_track[1][0] - self.forcast_polygon_track[0][0]
 
     def update(self):
         if(not self.load_data()):
@@ -98,6 +120,9 @@ class SeabotLayerLivePosition():
 
         if(self.forcast_start_time != 0):
             self.update_forcast_position()
+
+        if(self.forcast_polygon_start_time != 0):
+            self.update_forcast_polygon()
         
         return status
 
@@ -126,12 +151,72 @@ class SeabotLayerLivePosition():
             layer = layer_list[0]
             pr = layer.dataProvider()
 
-            for feature in layer.getFeatures():
-                pr.changeGeometryValues({feature.id():geo})
+            for f in layer.getFeatures():
+                pr.changeGeometryValues({f.id():geo})
                 layer.triggerRepaint()
                 break
 
         return True
+
+    def update_forcast_polygon(self):
+        if(np.size(self.forcast_polygon_track)==0):
+            return
+
+        ts = time.clock_gettime(time.CLOCK_REALTIME)
+        ### ADD DATA TO LAYER ###
+        layer_name = 'Seabot - Forcast Polygon'
+
+        ## Find if layer already exist
+        layer_list = QgsProject.instance().mapLayersByName(layer_name)
+
+        offset = int(min(max(round((ts - self.forcast_polygon_start_time)/self.forcast_polygon_dt), 0), np.shape(self.forcast_polygon_track)[0]-1))
+        if(self.last_offset_polygon != offset):
+            self.last_offset_polygon = offset
+
+            feature = QgsFeature()
+            point_list = []
+            
+            for i in range(int((np.shape(self.forcast_polygon_track)[1]-1)/2)):
+                point_list.append(QgsPointXY(self.forcast_polygon_track[offset][2*i+1], self.forcast_polygon_track[offset][2*i+2]))
+            geo = QgsGeometry.fromPolygonXY([point_list])
+
+            if(len(layer_list)==0):
+                ### Add New layer Last Position
+                layer =  QgsVectorLayer('Polygon?crs=epsg:2154&index=yes', layer_name , "memory")
+
+                pr = layer.dataProvider()
+                feature.setGeometry(geo)
+                
+                pr.addFeatures([feature])
+                layer.updateExtents()
+
+                # Configure the marker.
+                marker_polygon = QgsSimpleLineSymbolLayer()
+                marker_polygon.setColor(Qt.blue)
+
+                marker_point = QgsMarkerLineSymbolLayer()
+                marker_point.setPlacement(QgsMarkerLineSymbolLayer.Vertex)
+                marker_point.setColor(Qt.blue)
+
+                marker = QgsFillSymbol()
+                marker.changeSymbolLayer(0, marker_polygon)
+                marker.appendSymbolLayer(marker_point)
+                
+                renderer = QgsSingleSymbolRenderer(marker)
+                layer.setRenderer(renderer)
+                layer.updateExtents()
+                QgsProject.instance().addMapLayer(layer)
+
+            else:
+                layer = layer_list[0]
+                pr = layer.dataProvider()
+
+                for f in layer.getFeatures():
+                    pr.changeGeometryValues({f.id():geo})
+                    layer.triggerRepaint()
+                    break
+        return True
+
 
     def update_forcast_position(self):
         if(np.size(self.forcast_track)==0):
@@ -183,7 +268,6 @@ class SeabotLayerLivePosition():
                 break
 
         return True
-
 
     def update_iridium_track(self):
         ### ADD DATA TO LAYER ###
