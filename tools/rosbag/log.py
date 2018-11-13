@@ -136,32 +136,10 @@ if(len(time_safety_debug)>0):
 
 #################### Data ####################
 
-#### Temperature / Depth ####
-if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
-    dock_temp = Dock("T/depth")
-    area_data.addDock(dock_temp)
-    if(len(fusion_depth)>0):
-        pg_temp = pg.PlotWidget()
-        pg_temp.addLegend()
-        
-        f_temp = interpolate.interp1d(time_sensor_temperature, sensor_temperature, bounds_error=False)
-        f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
-
-        time_interp = np.linspace(time_fusion_depth[0], time_fusion_depth[-1], 50000)
-        temperature_interp = f_temp(time_interp)
-        depth_interp = f_depth(time_interp)
-
-        pg_temp.plot(temperature_interp, depth_interp, pen=(255,0,0), name="Temperature")
-        pg_temp.setLabel('left', "Depth")
-        pg_temp.setLabel('bottom', "Temperature")
-        
-        pg_temp.getViewBox().invertY(True)
-        dock_temp.addWidget(pg_temp)
-
 #### Sensor Internal ####
 if(len(time_sensor_internal)>0):
     dock_internal_sensor = Dock("Internal Sensor")
-    area_data.addDock(dock_internal_sensor, 'above', dock_temp)
+    area_data.addDock(dock_internal_sensor)
 
     if(len(time_fusion_sensor_internal)>0):
         pg_internal_pressure = pg.PlotWidget()
@@ -198,10 +176,32 @@ if(len(time_sensor_internal)>0):
     pg_internal_temperature.setXLink(pg_internal_pressure)
     pg_internal_humidity.setXLink(pg_internal_pressure)
 
+#### Temperature / Depth ####
+if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
+    dock_temp = Dock("T/depth")
+    area_data.addDock(dock_temp, 'above', dock_internal_sensor)
+    if(len(fusion_depth)>0):
+        pg_temp = pg.PlotWidget()
+        pg_temp.addLegend()
+        
+        f_temp = interpolate.interp1d(time_sensor_temperature, sensor_temperature, bounds_error=False)
+        f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
+
+        time_interp = np.linspace(time_fusion_depth[0], time_fusion_depth[-1], 50000)
+        temperature_interp = f_temp(time_interp)
+        depth_interp = f_depth(time_interp)
+
+        pg_temp.plot(temperature_interp, depth_interp, pen=(255,0,0), name="Temperature")
+        pg_temp.setLabel('left', "Depth")
+        pg_temp.setLabel('bottom', "Temperature")
+        
+        pg_temp.getViewBox().invertY(True)
+        dock_temp.addWidget(pg_temp)
+
 #### Sensor External ####
 if(len(time_sensor_external)>0):
     dock_external_sensor = Dock("External Sensor")
-    area_data.addDock(dock_external_sensor, 'above', dock_temp)
+    area_data.addDock(dock_external_sensor, 'above', dock_internal_sensor)
     pg_external_pressure = pg.PlotWidget()
     pg_external_pressure.addLegend()
     pg_external_pressure.plot(time_sensor_external, sensor_external_pressure, pen=(255,0,0), name="pressure")
@@ -219,7 +219,7 @@ if(len(time_sensor_external)>0):
 #### Temperature ####
 if(len(time_sensor_temperature)>0):
     dock_temperature = Dock("Temperature")
-    area_data.addDock(dock_temperature, 'above', dock_temp)
+    area_data.addDock(dock_temperature, 'above', dock_internal_sensor)
     pg_sensor_temperature = pg.PlotWidget()
     pg_sensor_temperature.addLegend()
     pg_sensor_temperature.plot(time_sensor_temperature, sensor_temperature, pen=(255,0,0), name="temperature")
@@ -229,7 +229,7 @@ if(len(time_sensor_temperature)>0):
 #### Fusion ####
 if(len(time_fusion_depth)>0):
     dock_fusion = Dock("Fusion")
-    area_data.addDock(dock_fusion, 'above', dock_temp)
+    area_data.addDock(dock_fusion, 'above', dock_internal_sensor)
     pg_fusion_depth1 = pg.PlotWidget()
     pg_fusion_depth1.addLegend()
     pg_fusion_depth1.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
@@ -247,7 +247,7 @@ if(len(time_fusion_depth)>0):
 #### Mag ####
 if(len(time_mag)>0):
     dock_mag = Dock("Mag")
-    area_data.addDock(dock_mag, 'above', dock_temp)
+    area_data.addDock(dock_mag, 'above', dock_internal_sensor)
     pg_mag1 = pg.PlotWidget()
     pg_mag1.addLegend()
     pg_mag1.plot(time_mag, mag_x, pen=(255,0,0), name="mag x")
@@ -266,7 +266,7 @@ if(len(time_mag)>0):
 #### Imu Acc ####
 if(len(time_imu)>0):
     dock_imu_acc = Dock("Acc")
-    area_data.addDock(dock_imu_acc, 'above', dock_temp)
+    area_data.addDock(dock_imu_acc, 'above', dock_internal_sensor)
     pg_acc = pg.PlotWidget()
     pg_acc.addLegend()
     pg_acc.plot(time_imu, acc_x, pen=(255,0,0), name="acc x")
@@ -285,7 +285,7 @@ if(len(time_imu)>0):
 #### Imu Gyro ####
 if(len(time_imu)>0):
     dock_imu_gyro = Dock("Gyro")
-    area_data.addDock(dock_imu_gyro, 'above', dock_temp)
+    area_data.addDock(dock_imu_gyro, 'above', dock_internal_sensor)
     pg_gyro = pg.PlotWidget()
     pg_gyro.addLegend()
     pg_gyro.plot(time_imu, gyro_x, pen=(255,0,0), name="gyro x")

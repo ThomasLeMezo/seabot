@@ -287,6 +287,7 @@ int main(int argc, char *argv[]){
               sbd.cmd_write_message(log_sentence);
               if(valid_fix && (t-time_last_gnss).toSec()<10.)
                 sbd.set_gnss(latitude, longitude);
+              time_last_log_version = t;
             }
           }
 

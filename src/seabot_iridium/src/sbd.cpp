@@ -368,7 +368,7 @@ int SBD::cmd_session(){
 
   write(cmd);
 
-  for(size_t i=0; i<4*20; i++){
+  for(size_t i=0; i<4*30; i++){
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
     if(is_in_session()==false){
       return 0;
@@ -380,6 +380,8 @@ int SBD::cmd_session(){
   omp_unset_lock(&lock_data);
 
   ROS_INFO("[Iridium] End of session not received");
+
+  exit(1);
   return 1;
 }
 

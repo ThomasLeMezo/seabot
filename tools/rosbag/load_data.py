@@ -313,9 +313,9 @@ def load_bag(filename):
 
 		elif(topic=="/driver/mag"):
 			time_mag.append((t-startTime).to_sec())
-			mag_x.append(msg.magnetic_field.x)
-			mag_y.append(msg.magnetic_field.y)
-			mag_z.append(msg.magnetic_field.z)
+			mag_x.append(msg.x)
+			mag_y.append(msg.y)
+			mag_z.append(msg.z)
 
 		elif(topic=="/driver/imu"):
 			time_imu.append((t-startTime).to_sec())
