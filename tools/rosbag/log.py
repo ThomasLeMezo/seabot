@@ -59,7 +59,7 @@ tab.addTab(area_safety, "Safety")
 tab.addTab(area_data, "Data")
 tab.addTab(area_piston, "Piston")
 tab.addTab(area_iridium, "Iridium")
-tab.addTab(area_position, "Position")
+tab.addTab(area_position, "GPS")
 
 
 #################### Safety ####################
@@ -505,6 +505,38 @@ if(len(time_fix)>0):
     dock_gps_speed_track.addWidget(pg_gps_track)
 
     pg_gps_track.setXLink(pg_gps_speed)
+
+####  Error GPS #### 
+if(len(time_fix)>0):
+    dock_gps_error = Dock("GPS Error")
+    area_position.addDock(dock_gps_error, 'above', dock_gps)
+    pg_gps_horz = pg.PlotWidget()
+    pg_gps_horz.addLegend()
+    pg_gps_horz.plot(time_fix, fix_err_horz, pen=(0,0,255), name="Horizontal Error")
+    dock_gps_error.addWidget(pg_gps_horz)
+
+    pg_gps_vert = pg.PlotWidget()
+    pg_gps_vert.addLegend()
+    pg_gps_vert.plot(time_fix, fix_err_vert, pen=(0,0,255), name="Vertical Error")
+    dock_gps_error.addWidget(pg_gps_vert)
+
+    pg_gps_vert.setXLink(pg_gps_horz)
+
+####  Dop GPS #### 
+if(len(time_fix)>0):
+    dock_gps_dop = Dock("GPS DOP")
+    area_position.addDock(dock_gps_dop, 'above', dock_gps)
+    pg_gps_hdop = pg.PlotWidget()
+    pg_gps_hdop.addLegend()
+    pg_gps_hdop.plot(time_fix, fix_hdop, pen=(0,0,255), name="hdop")
+    dock_gps_dop.addWidget(pg_gps_hdop)
+
+    pg_gps_vdop = pg.PlotWidget()
+    pg_gps_vdop.addLegend()
+    pg_gps_vdop.plot(time_fix, fix_vdop, pen=(0,0,255), name="vdop")
+    dock_gps_dop.addWidget(pg_gps_vdop)
+
+    pg_gps_vdop.setXLink(pg_gps_hdop)
 
 
 #################### Iridium ####################

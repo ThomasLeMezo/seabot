@@ -70,6 +70,17 @@ fix_longitude = []
 fix_altitude = []
 fix_track = []
 fix_speed = []
+fix_gdop = []
+fix_pdop = []
+fix_hdop = []
+fix_vdop = []
+fix_tdop = []
+fix_err = []
+fix_err_horz = []
+fix_err_vert = []
+fix_err_track = []
+fix_err_speed = []
+fix_err_time = []
 
 # /driver/mag
 time_mag = []
@@ -297,6 +308,17 @@ def load_bag(filename):
 			fix_altitude.append(msg.altitude)
 			fix_track.append(msg.track)
 			fix_speed.append(msg.speed)
+			fix_gdop.append(msg.gdop)
+			fix_pdop.append(msg.pdop)
+			fix_hdop.append(msg.hdop)
+			fix_vdop.append(msg.vdop)
+			fix_tdop.append(msg.tdop)
+			fix_err.append(msg.err)
+			fix_err_horz.append(msg.err_horz)
+			fix_err_vert.append(msg.err_vert)
+			fix_err_track.append(msg.err_track)
+			fix_err_speed.append(msg.err_speed)
+			fix_err_time.append(msg.err_time)
 
 		elif(topic=="/driver/piston/velocity"):
 			time_piston_velocity.append((t-startTime).to_sec())
@@ -421,7 +443,8 @@ def load_bag(filename):
 		# Create points:
 		
 		for i in range(len(fix_latitude)):
-			gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(fix_latitude[i], fix_longitude[i], elevation=fix_altitude[i]))
+			if(fix_status==3):
+				gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(fix_latitude[i], fix_longitude[i], elevation=fix_altitude[i]))
 		
 		# You can add routes and waypoints, too...
 
