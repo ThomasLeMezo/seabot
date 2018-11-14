@@ -82,25 +82,6 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   if(private_nh_.param<bool>("publish_euler", false))
     euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
 
-  std::vector<double> orientation_covariance, angular_velocity_covariance, linear_acceleration_covariance;
-  if (private_nh_.getParam("orientation_covariance", orientation_covariance) && orientation_covariance.size() == 9){
-    for(int i=0; i<9; i++){
-      imu_msg.orientation_covariance[i]=orientation_covariance[i];
-    }
-  }
-
-  if (private_nh_.getParam("angular_velocity_covariance", angular_velocity_covariance) && angular_velocity_covariance.size() == 9){
-    for(int i=0; i<9; i++){
-      imu_msg.angular_velocity_covariance[i]=angular_velocity_covariance[i];
-    }
-  }
-
-  if (private_nh_.getParam("linear_acceleration_covariance", linear_acceleration_covariance) && linear_acceleration_covariance.size() == 9){
-    for(int i=0; i<9; i++){
-      imu_msg.linear_acceleration_covariance[i]=linear_acceleration_covariance[i];
-    }
-  }
-
   imu_settings_.loadSettings();
 
   declination_radians_ = private_nh_.param<double>("magnetic_declination", 0.0);
