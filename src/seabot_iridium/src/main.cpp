@@ -265,7 +265,12 @@ int main(int argc, char *argv[]){
       {
         // Write Serial
         bool send_data_required = false;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        for(int i=0; i<15; i++){
+          std::this_thread::sleep_for(std::chrono::seconds(1));
+          ros::spinOnce();
+          if(valid_fix == true)
+            break;
+        }
         sbd.cmd_enable_indicator_reporting(true);
         sbd.cmd_enable_alert(true);
 
