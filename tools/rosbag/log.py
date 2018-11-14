@@ -59,7 +59,7 @@ tab.addTab(area_safety, "Safety")
 tab.addTab(area_data, "Data")
 tab.addTab(area_piston, "Piston")
 tab.addTab(area_iridium, "Iridium")
-tab.addTab(area_position, "GPS")
+tab.addTab(area_position, "Trajectory")
 
 
 #################### Safety ####################
@@ -537,6 +537,15 @@ if(len(time_fix)>0):
     dock_gps_dop.addWidget(pg_gps_vdop)
 
     pg_gps_vdop.setXLink(pg_gps_hdop)
+
+####  Dop GPS #### 
+if(len(time_fix)>0):
+    dock_gps_alt = Dock("GPS Alti")
+    area_position.addDock(dock_gps_alt, 'above', dock_gps)
+    pg_gps_alti = pg.PlotWidget()
+    pg_gps_alti.addLegend()
+    pg_gps_alti.plot(time_fix, fix_altitude, pen=(0,0,255), name="altitude")
+    dock_gps_alt.addWidget(pg_gps_alti)
 
 
 #################### Iridium ####################

@@ -26,7 +26,7 @@ def load_bag(filename):
 	for topic, msg, t in bag.read_messages(topics=['/driver/mag'], start_time=startTime, end_time=end_time):
 		if(topic=="/driver/mag"):
 			time_mag.append((t-startTime).to_sec())
-			mag.append([msg.magnetic_field.x, msg.magnetic_field.y, msg.magnetic_field.z])
+			mag.append([msg.x, msg.y, msg.z])
 	bag.close()
 
 if(len(sys.argv)<2):

@@ -2,6 +2,7 @@ import rospy
 import rosbag
 import yaml
 import numpy as np
+import datetime
 
 ####################### Driver #######################
 
@@ -426,30 +427,35 @@ def load_bag(filename):
 
 	print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
 
-	if(len(time_fix)>0):
-		import gpxpy
-		import gpxpy.gpx
+	# if(len(time_fix)>0):
+	# 	import gpxpy
+	# 	import gpxpy.gpx
 
-		gpx = gpxpy.gpx.GPX()
+	# 	gpx = gpxpy.gpx.GPX()
+	# 	last_fix_time = 0.
 
-		# Create first track in our GPX:
-		gpx_track = gpxpy.gpx.GPXTrack()
-		gpx.tracks.append(gpx_track)
+	# 	for i in range(len(fix_latitude)):
+	# 		if(abs(last_fix_time-time_fix[i])>30.):
+	# 			last_fix_time = time_fix[i]
+	# 			# Create first track in our GPX:
+	# 			gpx_track = gpxpy.gpx.GPXTrack()
+	# 			gpx.tracks.append(gpx_track)
 
-		# Create first segment in our GPX track:
-		gpx_segment = gpxpy.gpx.GPXTrackSegment()
-		gpx_track.segments.append(gpx_segment)
+	# 			# Create first segment in our GPX track:
+	# 			gpx_segment = gpxpy.gpx.GPXTrackSegment()
+	# 			gpx_track.segments.append(gpx_segment)
 
-		# Create points:
-		
-		for i in range(len(fix_latitude)):
-			if(fix_status==3):
-				gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(fix_latitude[i], fix_longitude[i], elevation=fix_altitude[i]))
-		
-		# You can add routes and waypoints, too...
+	# 		# Create points:
+	# 		if(fix_status[i]==3):
+	# 			gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
+	# 				longitude=fix_longitude[i],
+	# 				elevation=fix_altitude[i],
+	# 				time=datetime.datetime.fromtimestamp(time_fix[i]+startTime),
+	# 				horizontal_dilution=fix_hdop[i]
+	# 				))
 
-		file = open(filename+".gpx","w") 
-		file.write(gpx.to_xml()) 
-		file.close() 
+	# 	file = open(filename+".gpx","w") 
+	# 	file.write(gpx.to_xml()) 
+	# 	file.close() 
 
 	
