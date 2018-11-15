@@ -31,8 +31,17 @@
 #define G_2_MPSS 9.80665
 #define uT_2_T 1000000.
 
-class I2cImu
-{
+class ImuSettings: public RTIMUSettings{
+public:
+  ImuSettings(ros::NodeHandle* nh) : settings_nh_(nh){setDefaults();}
+  bool loadSettings(){return true;}
+  bool loadROSSettings();
+  bool saveSettings(){return true;}
+private:
+  ros::NodeHandle* settings_nh_;
+};
+
+class I2cImu{
 public:
   I2cImu();
 
@@ -58,103 +67,10 @@ private:
   //RTUIMULib stuff
   RTIMU *imu_;
 
-  class ImuSettings: public RTIMUSettings
-  {
-  public:
-    ImuSettings(ros::NodeHandle* nh) : settings_nh_(nh){setDefaults();}
-    virtual bool loadSettings();
-    virtual bool saveSettings(){return true;}
-  private:
-    ros::NodeHandle* settings_nh_;
-
-  } imu_settings_;
+  ImuSettings imu_settings_;
 };
 
-I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
-  // do all the ros parameter reading & pulbishing
-  private_nh_.param<std::string>("frame_id", imu_frame_id_, "imu_link");
-
-  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",10);
-
-  if(private_nh_.param<bool>("publish_magnetometer", false))
-    magnetometer_pub_ = nh_.advertise<geometry_msgs::Vector3>("mag", 10, false);
-
-  if(private_nh_.param<bool>("publish_euler", false))
-    euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
-
-  imu_settings_.loadSettings();
-
-  declination_radians_ = private_nh_.param<double>("magnetic_declination", 0.0);
-
-  // now set up the IMU
-
-  imu_ = RTIMU::createIMU(&imu_settings_);
-  if (imu_ == nullptr){
-    ROS_FATAL("I2cImu - %s - Failed to open the i2c device", __FUNCTION__);
-    ROS_BREAK();
-  }
-
-  if (!imu_->IMUInit()){ // After loading parameters
-    ROS_FATAL("I2cImu - %s - Failed to init the IMU", __FUNCTION__);
-    ROS_BREAK();
-  }
-
-  imu_->setSlerpPower(0.02);
-  imu_->setGyroEnable(true);
-  imu_->setAccelEnable(true);
-  imu_->setCompassEnable(true);
-
-  imu_->setCompassCalibrationMode(false);
-  imu_->setAccelCalibrationMode(false);
-
-}
-
-void I2cImu::update(){
-    imu_->IMURead();
-    RTIMU_DATA imuData = imu_->getIMUData();
-
-    /// ********** IMU msg **********
-    imu_msg.header.stamp = ros::Time::now();
-    imu_msg.header.frame_id = imu_frame_id_;
-    imu_msg.orientation.x = imuData.fusionQPose.x();
-    imu_msg.orientation.y = imuData.fusionQPose.y();
-    imu_msg.orientation.z = imuData.fusionQPose.z();
-    imu_msg.orientation.w = imuData.fusionQPose.scalar();
-
-    imu_msg.angular_velocity.x = imuData.gyro.x();
-    imu_msg.angular_velocity.y = imuData.gyro.y();
-    imu_msg.angular_velocity.z = imuData.gyro.z();
-
-    imu_msg.linear_acceleration.x = imuData.accel.x();
-    imu_msg.linear_acceleration.y = imuData.accel.y();
-    imu_msg.linear_acceleration.z = imuData.accel.z();
-
-    imu_pub_.publish(imu_msg);
-
-    /// ********** Mag msg **********
-    if (magnetometer_pub_ != nullptr && imuData.compassValid){
-      geometry_msgs::Vector3 msg;
-
-      msg.x = imuData.compass.x(); // in uT
-      msg.y = imuData.compass.y(); // in uT
-      msg.z = imuData.compass.z(); // in uT
-
-      magnetometer_pub_.publish(msg);
-    }
-
-    /// ********** Euler msg **********
-    if (euler_pub_ != nullptr){
-      geometry_msgs::Vector3 msg;
-
-      msg.x = imuData.fusionPose.x();
-      msg.y = imuData.fusionPose.y();
-      msg.z = -imuData.fusionPose.z();
-
-      euler_pub_.publish(msg);
-    }
-}
-
-bool I2cImu::ImuSettings::loadSettings(){
+bool ImuSettings::loadROSSettings(){
   ROS_DEBUG("[IMU] %s: reading IMU parameters from param server", __FUNCTION__);
 
   // General
@@ -229,15 +145,15 @@ bool I2cImu::ImuSettings::loadSettings(){
   }
 
   // Compas Biais
-  std::vector<double> gyro_biais;
-  if (settings_nh_->getParam(hostname + "/gyro_biais", gyro_biais)
+  std::vector<double> gyro_bias;
+  if (settings_nh_->getParam(hostname + "/gyro_bias", gyro_bias)
       && compass_ellipsoid_offset.size() == 3){
-    m_gyroBias = RTVector3(gyro_biais[0], gyro_biais[1], gyro_biais[2]);
+    m_gyroBias = RTVector3(gyro_bias[0], gyro_bias[1], gyro_bias[2]);
     m_gyroBiasValid = true;
-    ROS_DEBUG("[IMU] Got Calibration Gyro Biais");
+    ROS_DEBUG("[IMU] Got Calibration Gyro Bias");
   }
   else{
-    ROS_INFO("[IMU] No Calibration Gyro Biais");
+    ROS_INFO("[IMU] No Calibration Gyro Bias");
   }
 
   // Min/Max Acc
@@ -259,7 +175,93 @@ bool I2cImu::ImuSettings::loadSettings(){
   // Mag Declination
   settings_nh_->getParam(hostname + "/mag_declination",m_compassAdjDeclination);
 
+  this->saveSettings();
   return true;
+}
+
+I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
+  // do all the ros parameter reading & pulbishing
+  private_nh_.param<std::string>("frame_id", imu_frame_id_, "imu_link");
+
+  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",10);
+
+  if(private_nh_.param<bool>("publish_magnetometer", false))
+    magnetometer_pub_ = nh_.advertise<geometry_msgs::Vector3>("mag", 10, false);
+
+  if(private_nh_.param<bool>("publish_euler", false))
+    euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
+
+  imu_settings_.loadROSSettings();
+
+  declination_radians_ = private_nh_.param<double>("magnetic_declination", 0.0);
+
+  // now set up the IMU
+
+  ROS_INFO("[IMU] imu type = %i", imu_settings_.m_imuType);
+  imu_ = RTIMU::createIMU(&imu_settings_);
+  if (imu_ == nullptr){
+    ROS_FATAL("I2cImu - %s - Failed to open the i2c device", __FUNCTION__);
+    ROS_BREAK();
+  }
+
+  if (!imu_->IMUInit()){ // After loading parameters
+    ROS_FATAL("I2cImu - %s - Failed to init the IMU", __FUNCTION__);
+    ROS_BREAK();
+  }
+
+  imu_->setSlerpPower(0.02);
+  imu_->setGyroEnable(true);
+  imu_->setAccelEnable(true);
+  imu_->setCompassEnable(true);
+
+  imu_->setCompassCalibrationMode(false);
+  imu_->setAccelCalibrationMode(false);
+
+}
+
+void I2cImu::update(){
+    imu_->IMURead();
+    RTIMU_DATA imuData = imu_->getIMUData();
+
+    /// ********** IMU msg **********
+    imu_msg.header.stamp = ros::Time::now();
+    imu_msg.header.frame_id = imu_frame_id_;
+    imu_msg.orientation.x = imuData.fusionQPose.x();
+    imu_msg.orientation.y = imuData.fusionQPose.y();
+    imu_msg.orientation.z = imuData.fusionQPose.z();
+    imu_msg.orientation.w = imuData.fusionQPose.scalar();
+
+    imu_msg.angular_velocity.x = imuData.gyro.x();
+    imu_msg.angular_velocity.y = imuData.gyro.y();
+    imu_msg.angular_velocity.z = imuData.gyro.z();
+
+    imu_msg.linear_acceleration.x = imuData.accel.x();
+    imu_msg.linear_acceleration.y = imuData.accel.y();
+    imu_msg.linear_acceleration.z = imuData.accel.z();
+
+    imu_pub_.publish(imu_msg);
+
+    /// ********** Mag msg **********
+    if (magnetometer_pub_ != nullptr && imuData.compassValid){
+      geometry_msgs::Vector3 msg;
+
+      msg.x = imuData.compass.x(); // in uT
+      msg.y = imuData.compass.y(); // in uT
+      msg.z = imuData.compass.z(); // in uT
+
+      magnetometer_pub_.publish(msg);
+    }
+
+    /// ********** Euler msg **********
+    if (euler_pub_ != nullptr){
+      geometry_msgs::Vector3 msg;
+
+      msg.x = imuData.fusionPose.x();
+      msg.y = imuData.fusionPose.y();
+      msg.z = -imuData.fusionPose.z();
+
+      euler_pub_.publish(msg);
+    }
 }
 
 void I2cImu::spin(){
