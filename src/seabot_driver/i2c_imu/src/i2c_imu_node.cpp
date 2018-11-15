@@ -33,12 +33,10 @@
 
 class ImuSettings: public RTIMUSettings{
 public:
-  ImuSettings(ros::NodeHandle* nh) : settings_nh_(nh){setDefaults();}
-  bool loadSettings(){return true;}
-  bool loadROSSettings();
-  bool saveSettings(){return true;}
+  ImuSettings(ros::NodeHandle *nh):settings_nh_(nh){setDefaults();}
+  virtual bool loadSettings();
 private:
-  ros::NodeHandle* settings_nh_;
+  ros::NodeHandle *settings_nh_;
 };
 
 class I2cImu{
@@ -70,7 +68,7 @@ private:
   ImuSettings imu_settings_;
 };
 
-bool ImuSettings::loadROSSettings(){
+bool ImuSettings::loadSettings(){
   ROS_DEBUG("[IMU] %s: reading IMU parameters from param server", __FUNCTION__);
 
   // General
@@ -104,6 +102,7 @@ bool ImuSettings::loadROSSettings(){
   gethostname(name, 256);
   std::string hostname(name);
   ROS_INFO("[IMU] Hostname = %s", hostname.c_str());
+  hostname = "seabot3"; // Debug
 
   // Max/min Compass (diseable option)
   m_compassCalMin = RTVector3(-1., -1., -1.);
@@ -175,7 +174,6 @@ bool ImuSettings::loadROSSettings(){
   // Mag Declination
   settings_nh_->getParam(hostname + "/mag_declination",m_compassAdjDeclination);
 
-  this->saveSettings();
   return true;
 }
 
@@ -191,7 +189,8 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   if(private_nh_.param<bool>("publish_euler", false))
     euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
 
-  imu_settings_.loadROSSettings();
+  imu_settings_.loadSettings();
+  imu_settings_.saveSettings();
 
   declination_radians_ = private_nh_.param<double>("magnetic_declination", 0.0);
 
