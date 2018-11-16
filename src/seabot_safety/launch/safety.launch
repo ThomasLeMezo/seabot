@@ -31,6 +31,8 @@
 
         <param name="humidity_limit" value="70.0" />
 
+								<param name="time_before_seafloor_emergency" value="30.0" />
+
     </node>
 </launch>
 

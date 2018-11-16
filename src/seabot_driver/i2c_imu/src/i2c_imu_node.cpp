@@ -127,15 +127,15 @@ bool ImuSettings::loadSettings(){
       && settings_nh_->getParam(hostname + "/ellipsoid_matrix1", ellipsoid_corr1)
       && settings_nh_->getParam(hostname + "/ellipsoid_matrix2", ellipsoid_corr2)
       && ellipsoid_corr0.size() == 3 && ellipsoid_corr1.size() == 3 && ellipsoid_corr2.size() == 3){
-    m_compassCalEllipsoidCorr[0][1] = ellipsoid_corr0[0];
-    m_compassCalEllipsoidCorr[0][2] = ellipsoid_corr0[1];
-    m_compassCalEllipsoidCorr[0][3] = ellipsoid_corr0[2];
+    m_compassCalEllipsoidCorr[0][0] = ellipsoid_corr0[0];
+    m_compassCalEllipsoidCorr[0][1] = ellipsoid_corr0[1];
+    m_compassCalEllipsoidCorr[0][2] = ellipsoid_corr0[2];
+    m_compassCalEllipsoidCorr[1][0] = ellipsoid_corr1[0];
     m_compassCalEllipsoidCorr[1][1] = ellipsoid_corr1[1];
     m_compassCalEllipsoidCorr[1][2] = ellipsoid_corr1[2];
-    m_compassCalEllipsoidCorr[1][3] = ellipsoid_corr1[3];
+    m_compassCalEllipsoidCorr[2][0] = ellipsoid_corr2[0];
     m_compassCalEllipsoidCorr[2][1] = ellipsoid_corr2[1];
     m_compassCalEllipsoidCorr[2][2] = ellipsoid_corr2[2];
-    m_compassCalEllipsoidCorr[2][3] = ellipsoid_corr2[3];
     ROS_DEBUG("[IMU] Got Calibration Ellipsoid Matrix for Compass");
   }
   else{
@@ -198,6 +198,7 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
 
   ROS_INFO("[IMU] imu type = %i", imu_settings_.m_imuType);
   imu_ = RTIMU::createIMU(&imu_settings_);
+//  imu_->setDebugEnable(true);
   if (imu_ == nullptr){
     ROS_FATAL("I2cImu - %s - Failed to open the i2c device", __FUNCTION__);
     ROS_BREAK();

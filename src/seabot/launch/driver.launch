@@ -40,6 +40,9 @@
             <param name="frequency" value="15.0" />
             <param name="coeff_cmd_to_pwm" value="9" />
             <param name="delay_stop" value="0.5" />
+												<param name="backward_engine" value="false" />
+												<param name="invert_left" value="true" />
+												<param name="invert_right" value="false" />
         </node>
 
         <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>

@@ -55,6 +55,10 @@ double internal_pressure = 0.0;
 double internal_temperature = 0.0;
 double internal_humidity = 0.0;
 
+// Seafloor
+bool seafloor_detected = false;
+ros::WallTime time_seafloor_detected;
+
 ros::ServiceClient service_zero_depth;
 ros::ServiceClient service_flash_enable;
 ros::ServiceClient service_emergency;
@@ -193,6 +197,8 @@ int main(int argc, char *argv[]){
   const bool enable_safety_pressure_limit = n_private.param<bool>("safety_pressure_limit", true);
   const bool enable_safety_depressure = n_private.param<bool>("safety_depressure", true);
 
+  const double time_before_seafloor_emergency = n_private.param<double>("time_before_seafloor_emergency", 30.0);
+
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
@@ -269,11 +275,18 @@ int main(int argc, char *argv[]){
   /// **************************** Main regulation loop ****************************
   /// ******************************************************************************
 
+  seabot_safety::SafetyLog safety_msg;
+  safety_msg.depth_limit = false;
+  safety_msg.published_frequency = false;
+  safety_msg.seafloor = false;
+  safety_msg.batteries_limit = false;
+  safety_msg.depressurization = false;
+
   ROS_INFO("[Safety] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
     bool enable_emergency_depth = false;
-    seabot_safety::SafetyLog safety_msg;
+
     seabot_safety::SafetyDebug safety_debug_msg;
 
     ///*******************************************************
@@ -295,8 +308,6 @@ int main(int argc, char *argv[]){
       enable_emergency_depth = true;
       safety_msg.published_frequency = true;
     }
-    else
-      safety_msg.published_frequency = false;
 
     ///*******************************************************
     ///**************** Analyze zero depth *******************
@@ -317,14 +328,30 @@ int main(int argc, char *argv[]){
     }
 
     ///*******************************************************
+    ///**************** Seafloor detection *******************
+
+    if(piston_switch_in && abs(velocity)<max_speed_reset_zero){
+      if(!seafloor_detected){
+        seafloor_detected = true;
+        time_seafloor_detected = ros::WallTime::now();
+      }
+      else{
+        if((ros::WallTime::now()-time_seafloor_detected).toSec()>time_before_seafloor_emergency){
+          enable_emergency_depth = true;
+          safety_msg.seafloor = true;
+        }
+      }
+    }
+    else
+      seafloor_detected = false;
+
+    ///*******************************************************
     ///**************** Depth limit **************************
     if(is_pressure_limit_reached && (ros::WallTime::now()-time_pressure_limit_reached).toSec()>time_before_pressure_emergency){
       ROS_WARN("[Safety] Limit depth detected");
       enable_emergency_depth = true;
       safety_msg.depth_limit = true;
     }
-    else
-      safety_msg.depth_limit = false;
 
     ///*******************************************************
     ///**************** Batteries ****************************
@@ -334,12 +361,9 @@ int main(int argc, char *argv[]){
       // ToDo : shutdown ? => launch with iridium sleep ?
       safety_msg.batteries_limit = true;
     }
-    else
-      safety_msg.batteries_limit = false;
 
     ///*******************************************************
     ///**************** Internal sensor **********************
-    safety_msg.depressurization = false;
     int warning_number = 0;
     double p_t_ratio;
     if(internal_temperature!=0.0){

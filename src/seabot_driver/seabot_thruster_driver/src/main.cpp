@@ -59,6 +59,12 @@ uint8_t convert_u(const double &u){
   return cmd;
 }
 
+inline uint8_t invert_cmd(const uint8_t &cmd){
+  int16_t tmp = cmd - MOTOR_PWM_STOP;
+  tmp = -tmp;
+  return (uint8_t)(MOTOR_PWM_STOP + tmp);
+}
+
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "thruster_node");
   ros::NodeHandle n;
@@ -69,6 +75,9 @@ int main(int argc, char *argv[]){
   coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 9.0);
   const double delay_stop = n_private.param<float>("delay_stop", 0.5);
   const bool backward_engine = n_private.param<bool>("backward_engine", false);
+
+  const bool invert_left = n_private.param<bool>("invert_left", false);
+  const bool invert_right = n_private.param<bool>("invert_right", false);
 
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);
@@ -104,8 +113,8 @@ int main(int argc, char *argv[]){
         double left = manual_linear_velocity + manual_angular_velocity;
         double right = manual_linear_velocity - manual_angular_velocity;
         if(backward_engine==false){
-          left = min(0., left);
-          right = min(0., right);
+          left = max(0., left);
+          right = max(0., right);
         }
         cmd_left = convert_u(left);
         cmd_right = convert_u(right);
@@ -114,8 +123,8 @@ int main(int argc, char *argv[]){
         double left = linear_velocity + angular_velocity;
         double right = linear_velocity - angular_velocity;
         if(backward_engine==false){
-          left = min(0., left);
-          right = min(0., right);
+          left = max(0., left);
+          right = max(0., right);
         }
         cmd_left = convert_u(left);
         cmd_right = convert_u(right);
@@ -125,7 +134,7 @@ int main(int argc, char *argv[]){
         cmd_left = MOTOR_PWM_STOP;
       }
 
-      if(cmd_right != MOTOR_PWM_STOP && cmd_left != MOTOR_PWM_STOP){
+      if(cmd_right != MOTOR_PWM_STOP || cmd_left != MOTOR_PWM_STOP){
         send_cmd = true;
         stop_sent = false;
       }
@@ -139,6 +148,11 @@ int main(int argc, char *argv[]){
       }
 
       if(send_cmd){
+        if(invert_left)
+          cmd_left = invert_cmd(cmd_left);
+        if(invert_right)
+          cmd_right = invert_cmd(cmd_right);
+
         t.write_cmd(cmd_left, cmd_right);
 
         // Publish cmd send for loggin

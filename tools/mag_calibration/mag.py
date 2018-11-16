@@ -62,7 +62,7 @@ ax = fig.add_subplot(111, projection='3d')
 
 #hack  for equal axes
 ax.set_aspect('equal')
-MAX = 1e-4
+MAX = 50
 for direction in (-1, 1):
     for point in np.diag(direction * MAX * np.array([1, 1, 1])):
         ax.plot([point[0]], [point[1]], [point[2]], 'w')

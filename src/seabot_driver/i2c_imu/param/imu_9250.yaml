@@ -56,10 +56,15 @@ mpu9250:
 
 #Calibration
 seabot1:
-  ellipsoid_offset: [ 43.0094674495 ,  24.9017840665 ,  7.40342032043 ]
-  ellipsoid_matrix0: [ 0.934236354913 ,  -0.461094612098 ,  0.00264028335605 ]
-  ellipsoid_matrix1: [ -0.461094612098 ,  1.34710786391 ,  -0.0103892294907 ]
-  ellipsoid_matrix2: [ 0.00264028335605 ,  -0.0103892294907 ,  0.956187420653 ]
+  # ellipsoid_offset: [ 43.0094674495 ,  24.9017840665 ,  7.40342032043 ]
+  # ellipsoid_matrix0: [ 0.934236354913 ,  -0.461094612098 ,  0.00264028335605 ]
+  # ellipsoid_matrix1: [ -0.461094612098 ,  1.34710786391 ,  -0.0103892294907 ]
+  # ellipsoid_matrix2: [ 0.00264028335605 ,  -0.0103892294907 ,  0.956187420653 ]
+
+  ellipsoid_offset: [0, 0, 0]
+  ellipsoid_matrix0: [1, 0, 0]
+  ellipsoid_matrix1: [0, 1, 0]
+  ellipsoid_matrix2: [0, 0, 1]
   
   accel_min: [-9.61750807,  -9.97663832, -10.20648168]
   accel_max: [10.20169327,   9.88087025,   9.74918916]
@@ -69,10 +74,15 @@ seabot1:
   mag_declination: -1.722
 
 seabot2:
-  ellipsoid_offset: [ 40.8633121108 ,  34.0438726256 ,  -4.37166348387 ]
-  ellipsoid_matrix0: [ 0.933027617833 ,  -0.478867123658 ,  0.000475957850516 ]
-  ellipsoid_matrix1: [ -0.478867123658 ,  1.37427350708 ,  0.00670849292034 ]
-  ellipsoid_matrix2: [ 0.000475957850516 ,  0.00670849292034 ,  0.94978157484 ]
+  # ellipsoid_offset: [ 40.8633121108 ,  34.0438726256 ,  -4.37166348387 ]
+  # ellipsoid_matrix0: [ 0.933027617833 ,  -0.478867123658 ,  0.000475957850516 ]
+  # ellipsoid_matrix1: [ -0.478867123658 ,  1.37427350708 ,  0.00670849292034 ]
+  # ellipsoid_matrix2: [ 0.000475957850516 ,  0.00670849292034 ,  0.94978157484 ]
+
+  ellipsoid_offset: [0, 0, 0]
+  ellipsoid_matrix0: [1, 0, 0]
+  ellipsoid_matrix1: [0, 1, 0]
+  ellipsoid_matrix2: [0, 0, 1]
 
   accel_min: [-1.08, -0.92, -1.0]
   accel_max: [1.04,  1.01,  1.11]
@@ -82,15 +92,15 @@ seabot2:
   mag_declination: -1.722
 
 seabot3:
-  # ellipsoid_offset: [ 3.0861211206 ,  -6.97195494251 ,  39.7572497342 ]
-  # ellipsoid_matrix0: [ 0.940288131378 ,  -0.453005430552 ,  -0.0325629525404 ]
-  # ellipsoid_matrix1: [ -0.453005430552 ,  1.38573340944 ,  0.0218536816111 ]
-  # ellipsoid_matrix2: [ -0.0325629525404 ,  0.0218536816111 ,  0.912093924159 ]
+  ellipsoid_offset: [ 9.5296744553 ,  -6.85539266089 ,  40.9095773064 ]
+  ellipsoid_matrix0: [ 1.0352544603 ,  0.0264255854671 ,  -0.0303184033011 ]
+  ellipsoid_matrix1: [ 0.0264255854671 ,  1.04686539774 ,  0.0134054892963 ]
+  ellipsoid_matrix2: [ -0.0303184033011 ,  0.0134054892963 ,  0.92437823152 ]
 
-  ellipsoid_offset: [ 0 , 0,0 ]
-  ellipsoid_matrix0: [0, 0, 0 ]
-  ellipsoid_matrix1: [ 0, 1, 0 ]
-  ellipsoid_matrix2: [ 0,0,1 ]
+  # ellipsoid_offset: [0, 0, 0]
+  # ellipsoid_matrix0: [1, 0, 0]
+  # ellipsoid_matrix1: [0, 1, 0]
+  # ellipsoid_matrix2: [0, 0, 1]
   
   accel_min: [-0.896, -1.135, -1.109]
   accel_max: [1.116,   1.015,  0.975]
