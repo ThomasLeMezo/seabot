@@ -79,6 +79,12 @@ int main(int argc, char *argv[]){
   const bool invert_left = n_private.param<bool>("invert_left", false);
   const bool invert_right = n_private.param<bool>("invert_right", false);
 
+  const double max_angular_velocity = n_private.param<float>("max_angular_velocity", 1.0);
+  const double max_linear_velocity = n_private.param<float>("max_linear_velocity", 1.0);
+
+  const double max_engine_change = n_private.param<float>("max_engine_change", 1.0);
+
+
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);
   ros::Subscriber manual_velocity_sub = n.subscribe("/cmd_vel", 1, manual_velocity_callback);
@@ -101,10 +107,18 @@ int main(int argc, char *argv[]){
   manual_time_last_cmd = ros::Time::now();
   ros::Duration(delay_stop*1.1).sleep();
 
+  uint8_t cmd_left_last = MOTOR_PWM_STOP, cmd_right_last = MOTOR_PWM_STOP;
+  double dt;
+  ros::Time last_time = ros::Time::now();
+
   ROS_INFO("[Thruster] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
+
+    dt = (ros::Time::now()-last_time).toSec();
+    last_time = ros::Time::now();
+    int max_engine_change_dt = max((int)round(max_engine_change*dt), 1);
 
     if(state_enable){
       uint8_t cmd_left, cmd_right;
@@ -120,6 +134,11 @@ int main(int argc, char *argv[]){
         cmd_right = convert_u(right);
       }
       else if((ros::Time::now() - time_last_cmd).toSec() < delay_stop){
+        if(abs(linear_velocity)>max_linear_velocity)
+          linear_velocity = std::copysign(max_linear_velocity, linear_velocity);
+        if(abs(angular_velocity)>max_angular_velocity)
+          angular_velocity = std::copysign(max_angular_velocity, angular_velocity);
+
         double left = linear_velocity + angular_velocity;
         double right = linear_velocity - angular_velocity;
         if(backward_engine==false){
@@ -153,7 +172,15 @@ int main(int argc, char *argv[]){
         if(invert_right)
           cmd_right = invert_cmd(cmd_right);
 
-        t.write_cmd(cmd_left, cmd_right);
+        int cmd_change_left = cmd_left-cmd_left_last;
+        uint8_t cmd_left_tmp = cmd_left_last + copysign(min(abs(cmd_change_left), max_engine_change_dt), cmd_change_left);
+        cmd_left_last = cmd_left_tmp;
+
+        int cmd_change_right = cmd_right-cmd_right_last;
+        uint8_t cmd_right_tmp = cmd_right_last + copysign(min(abs(cmd_change_right), max_engine_change_dt), cmd_change_right);
+        cmd_right_last = cmd_right_tmp;
+
+        t.write_cmd(cmd_left_tmp, cmd_right);
 
         // Publish cmd send for loggin
         cmd_msg.left = (float)cmd_left;

@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
   // Parameters
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 10.0);
-  const double delta_valid_time = n_private.param<double>("delta_valid_time", 3.0);
+  const double delta_valid_time = n_private.param<double>("delta_valid_time", 1.0);
   const double coeff_P = n_private.param<double>("coeff_P", 1.0);
   const double hysteresis_circle_in = n_private.param<double>("hysteresis_circle_in", 10.0);
   const double hysteresis_circle_out = n_private.param<double>("hysteresis_circle_out", 30.0);

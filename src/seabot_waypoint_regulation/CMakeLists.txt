@@ -13,6 +13,10 @@ find_package(catkin REQUIRED
   message_generation
   seabot_mission
   gpsd_client
+  seabot_fusion
+  seabot_thruster_driver
+  geometry_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions

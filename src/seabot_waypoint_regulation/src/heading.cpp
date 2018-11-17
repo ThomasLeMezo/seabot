@@ -9,12 +9,14 @@
 #include <gpsd_client/GPSFix.h>
 #include <seabot_fusion/DepthPose.h>
 #include <std_msgs/Float64.h>
+#include <sensor_msgs/Imu.h>
 #include <cmath>
 
 using namespace std;
 
 double yaw_set_point = 0.0;
 double yaw_imu = 0.0;
+double angular_velocity = 0.0;
 bool is_surface = false;
 double speed = 0.0;
 double yaw_gnss = 0.0;
@@ -31,8 +33,12 @@ void set_point_callback(const std_msgs::Float64::ConstPtr& msg){
   last_received_set_point = ros::WallTime::now();
 }
 
-void imu_callback(const geometry_msgs::Vector3::ConstPtr& msg){
+void euler_callback(const geometry_msgs::Vector3::ConstPtr& msg){
   yaw_imu = msg->z; // Check unity ?
+}
+
+void imu_callback(const sensor_msgs::Imu::ConstPtr& msg){
+  angular_velocity = msg->angular_velocity.z;
 }
 
 void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
@@ -53,13 +59,15 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 10.0);
   const double delta_valid_time = n_private.param<double>("delta_valid_time", 1.0);
-  const double coeff_P = n_private.param<double>("coeff_P", 0.5);
+  const double coeff_P = n_private.param<double>("coeff_P", 1.0);
+  const double coeff_D = n_private.param<double>("coeff_D", 0.2);
   const double linear_speed = n_private.param<double>("linear_speed", 1.0);
   const double depth_limit_switch_off = n_private.param<double>("depth_limit_switch_off", 0.5);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
-  ros::Subscriber imu_sub = n.subscribe("/driver/euler", 1, imu_callback);
+  ros::Subscriber euler_sub = n.subscribe("/driver/euler", 1, euler_callback);
+  ros::Subscriber imu_sub = n.subscribe("/driver/imu", 1, imu_callback);
   ros::Subscriber heading_sub = n.subscribe("heading_set_point", 1, set_point_callback);
 
   // Publisher
@@ -82,7 +90,7 @@ int main(int argc, char *argv[]){
     if((last_received_set_point-t).toSec()<delta_valid_time
        && depth<depth_limit_switch_off){
       engine_msg.linear = linear_speed;
-      engine_msg.angular = coeff_P*yaw_error;
+      engine_msg.angular = coeff_P*yaw_error + coeff_D*angular_velocity;
     }
     else{
       engine_msg.linear = 0.0;
