@@ -14,18 +14,20 @@ class Waypoint{
 public:
   Waypoint(){}
 
-  Waypoint(const ros::WallTime &time_end_param, const double &depth_param, const double &north_param, const double &east_param, const double&velocity_depth_param){
+  Waypoint(const ros::WallTime &time_end_param, const double &depth_param, const double &north_param, const double &east_param, const double&velocity_depth_param, const bool &enable_thrusters_param=true){
     time_end = time_end_param;
     depth = depth_param;
     east = east_param;
     north = north_param;
     velocity_depth = velocity_depth_param;
+    enable_thrusters = enable_thrusters_param;
   }
 public:
   double north = 0.0;
   double east = 0.0;
   double depth = 0.0;
   double velocity_depth = 0.0;
+  bool  enable_thrusters = true;
   ros::WallTime time_end;
 };
 
@@ -55,7 +57,7 @@ public:
      * @param east
      * @param depth
      */
-  bool compute_command(double &north, double &east, double &depth, double &velocity_depth, double &ratio);
+  bool compute_command(double &north, double &east, double &depth, double &velocity_depth, bool &enable_engine, double &ratio);
 
   /**
      * @brief load_mission

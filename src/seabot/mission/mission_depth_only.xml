@@ -31,3 +31,5 @@
 		</waypoint>
 	</loop>
 </paths>
+
+<!--<enable_thrusters>False</enable_thrusters-->

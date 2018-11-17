@@ -12,9 +12,9 @@
 using namespace std;
 
 bool reload_mission = false;
-bool enable_depth = true;
-bool enable_engine = true;
-bool enable_mission = true;
+bool mission_enable_depth = true;
+bool mission_enable_engine = true;
+bool mission_enable_mission = true;
 
 bool reload_mission_callback(std_srvs::Empty::Request  &req,
                              std_srvs::Empty::Response &res){
@@ -24,9 +24,9 @@ bool reload_mission_callback(std_srvs::Empty::Request  &req,
 
 bool mission_enable_callback(seabot_mission::MissionEnable::Request  &req,
                              seabot_mission::MissionEnable::Response &res){
-  enable_depth = req.enable_depth;
-  enable_engine = req.enable_engine;
-  enable_mission = req.enable_mission;
+  mission_enable_depth = req.enable_depth;
+  mission_enable_engine = req.enable_engine;
+  mission_enable_mission = req.enable_mission;
   return true;
 }
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
 
   // Services
   ros::ServiceServer service_reload_mission = n.advertiseService("reload_mission", reload_mission_callback);
-  ros::ServiceServer service_enable_mission = n.advertiseService("enable_mission", mission_enable_callback);
+  ros::ServiceServer service_mission_enable_mission = n.advertiseService("mission_enable_mission", mission_enable_callback);
 
   // Variable
   ros::Rate loop_rate(frequency);
@@ -65,6 +65,7 @@ int main(int argc, char *argv[]){
   m.load_mission(mission_file_name); // Update mission file
 
   double north, east, depth, ratio, velocity_depth;
+  bool enable_thrusters;
 
   ROS_INFO("[Mission] Start Ok");
   while (ros::ok()){
@@ -75,14 +76,14 @@ int main(int argc, char *argv[]){
       reload_mission = false;
     }
 
-    bool is_new_waypoint = m.compute_command(north, east, depth, velocity_depth, ratio);
+    bool is_new_waypoint = m.compute_command(north, east, depth, velocity_depth, enable_thrusters, ratio);
 
-    if(!enable_engine)
+    if(!mission_enable_engine)
       waypoint_msg.depth_only = true;
     else
-      waypoint_msg.depth_only = m.is_depth_only();
+      waypoint_msg.depth_only = m.is_depth_only() || !enable_thrusters;
 
-    if(enable_depth)
+    if(mission_enable_depth)
       waypoint_msg.depth = depth;
     else
       waypoint_msg.depth = 0.0;
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]){
     waypoint_msg.east = east;
     waypoint_msg.velocity_depth = velocity_depth;
 
-    if(!enable_mission)
+    if(!mission_enable_mission)
       waypoint_msg.mission_enable = false;
     else
       waypoint_msg.mission_enable = m.is_mission_enable();

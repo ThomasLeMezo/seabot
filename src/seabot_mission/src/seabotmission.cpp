@@ -18,7 +18,7 @@ SeabotMission::SeabotMission(std::string folder_path){
   m_folder_path = folder_path;
 }
 
-bool SeabotMission::compute_command(double &north, double &east, double &depth, double &velocity_depth, double &ratio){
+bool SeabotMission::compute_command(double &north, double &east, double &depth, double &velocity_depth, bool &enable_thrusters, double &ratio){
   // Test if last waypoint
   bool is_new_waypoint = false;
   if(m_current_waypoint < m_waypoints.size()){
@@ -31,6 +31,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       north = m_waypoints[m_current_waypoint].north;
       east = m_waypoints[m_current_waypoint].east;
       velocity_depth = m_waypoints[m_current_waypoint].velocity_depth;
+      enable_thrusters = m_waypoints[m_current_waypoint].enable_thrusters;
       ratio = 0;
       m_duration_next_waypoint = m_time_start-t_now;
     }
@@ -47,6 +48,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
 
       depth = m_waypoints[m_current_waypoint].depth;
       velocity_depth = m_waypoints[m_current_waypoint].velocity_depth;
+      enable_thrusters = m_waypoints[m_current_waypoint].enable_thrusters;
 
       ros::WallTime t1;
       if(m_current_waypoint==0)
@@ -73,6 +75,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
     north = m_waypoints[m_waypoints.size()-1].north;
     east = m_waypoints[m_waypoints.size()-1].east;
     ratio = 1;
+    enable_thrusters = false;
     m_mission_enable = false;
     m_duration_next_waypoint = ros::WallDuration(0);
   }
@@ -176,6 +179,12 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
         w.velocity_depth = vel.value();
       else
         w.velocity_depth = m_velocity_depth_default;
+
+      boost::optional<bool> enable_thrusters = v.second.get_optional<bool>("enable_thrusters");
+      if(enable_thrusters.is_initialized())
+        w.enable_thrusters = enable_thrusters.value();
+      else
+        w.enable_thrusters = true;
     }
     catch(std::exception const&  ex) {
       ROS_FATAL("[Seabot_Mission] Wrong xml file %s", ex.what());
