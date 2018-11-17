@@ -1,12 +1,14 @@
 from qgis.core import *
 import qgis.utils
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import time
 import oyaml as yaml
 import os
 from os.path import expanduser
 import numpy as np
 import time
+import math
 
 class SeabotLayerLivePosition():
 
@@ -35,17 +37,23 @@ class SeabotLayerLivePosition():
 
     def __init__(self):
         self.fields.append(QgsField('Title', QVariant.String))
+        self.fields.append(QgsField('min_since_received', QVariant.Double))
         return
 
     def add_fields_from_yaml(self):
         for key, value in self.iridium_map_file.items():
-            self.fields.append(QgsField(key, QVariant.Double))
+            if(isinstance(value, str)):
+                self.fields.append(QgsField(key, QVariant.String))
+            else:
+                self.fields.append(QgsField(key, QVariant.Double))
 
     def get_update_map_attribute(self):
         map = {}
         for i in range(self.fields.size()):
             if self.fields.at(i).name() in self.iridium_map_file:
-                map[str(i)] = self.iridium_map_file[self.fields.at(i).name()]
+                map[i] = self.iridium_map_file[self.fields.at(i).name()]
+            elif self.fields.at(i).name() == 'min_since_received':
+                map[i] = round((time.clock_gettime(time.CLOCK_REALTIME) - self.iridium_map_file["ts"])/60.)
         return map
 
     def update_feature(self, feature):
@@ -111,8 +119,9 @@ class SeabotLayerLivePosition():
 
         if(self.new_iridium_data == True):
             status &= self.update_iridium_track()
-            status &= self.update_iridium_position()
             self.new_iridium_data = False
+
+        status &= self.update_iridium_position()
 
         if(self.new_forcast_data == True):
             status &= self.update_forecast_track()
@@ -343,6 +352,7 @@ class SeabotLayerLivePosition():
 
             feature.setFields(self.fields)
             feature['Title'] = "Last Position Received"
+            feature['min_since_received'] = -1
             self.update_feature(feature)
 
             pr.addFeatures([feature])
@@ -364,10 +374,28 @@ class SeabotLayerLivePosition():
             renderer = QgsSingleSymbolRenderer(marker)
             layer.setRenderer(renderer)
 
-            layer.setCustomProperty("labeling/fieldName", "Title" )
-            layer.setCustomProperty("labeling/placement", QgsPalLayerSettings.OverPoint)
-            layer.setCustomProperty("labeling/fontSize","8" )
-            layer.setCustomProperty("labeling/enabled","True" )
+            # Text
+            buffer_settings = QgsTextBufferSettings()
+            buffer_settings.setEnabled(True)
+            buffer_settings.setSize(6)
+            buffer_settings.setColor(Qt.white)
+
+            text_format = QgsTextFormat()
+            text_format.setFont(QFont("Ubuntu", 8))
+            text_format.setSize(8)
+            text_format.setBuffer(buffer_settings)
+
+            layer_settings  = QgsPalLayerSettings()
+            layer_settings.setFormat(text_format)
+            layer_settings.fieldName = "concat(to_string(min_since_received),' min')"
+            layer_settings.placement = QgsPalLayerSettings.OverPoint
+            layer_settings.predefinedPositionOrder = QgsPalLayerSettings.TopMiddle
+            layer_settings.yOffset = -8
+            layer_settings.enabled = True
+
+            layer_label = QgsVectorLayerSimpleLabeling(layer_settings)
+            layer.setLabelsEnabled(True)
+            layer.setLabeling(layer_label)
             layer.triggerRepaint()
 
             # add the layer to the canvas
@@ -380,6 +408,7 @@ class SeabotLayerLivePosition():
 
             for feature in layer.getFeatures():
                 pr.changeFeatures({feature.id():self.get_update_map_attribute()}, {feature.id():QgsGeometry.fromPointXY(point)})
+                layer.updateExtents()
                 layer.triggerRepaint()
                 break
 
