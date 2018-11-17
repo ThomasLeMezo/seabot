@@ -388,6 +388,7 @@ class SeabotLayerLivePosition():
             layer_settings  = QgsPalLayerSettings()
             layer_settings.setFormat(text_format)
             layer_settings.fieldName = "concat(to_string(min_since_received),' min')"
+            layer_settings.isExpression = True
             layer_settings.placement = QgsPalLayerSettings.OverPoint
             layer_settings.predefinedPositionOrder = QgsPalLayerSettings.TopMiddle
             layer_settings.yOffset = -8
