@@ -37,7 +37,7 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x04
+#define CODE_VERSION 0x05
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
@@ -70,6 +70,9 @@ unsigned short ils_removed = 1;
 // State Machine
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
 unsigned short state = IDLE;
+#define CPT_STATE_MACHINE_DEFAULT 5
+unsigned short cpt_state_machine = CPT_STATE_MACHINE_DEFAULT;
+unsigned short step_state_machine = 0;
 // unsigned int cpt_wait = 0;
 // #define WAIT_LOOP 10000
 
@@ -351,95 +354,94 @@ void main(){
   while(1){
     asm CLRWDT;
 
-    read_batteries_voltage();
-    analyze_batteries_voltage();
-    
-    //UART1_Write(state);
-    
-    switch (state){
-    case IDLE: // Idle state
-      ALIM = 0;
-      led_delay = 50;
-      start_led_puissance = 0;
-      watchdog_restart = watchdog_restart_default;  
+    if(step_state_machine==1){
+      step_state_machine=0;
+      read_batteries_voltage();
+      analyze_batteries_voltage();
+      
+      //UART1_Write(state);
+      
+      switch (state){
+      case IDLE: // Idle state
+        ALIM = 0;
+        led_delay = 50;
+        start_led_puissance = 0;
+        watchdog_restart = watchdog_restart_default;  
 
-      if(ILS==0){ // Magnet detected
-        ils_cpt--;
-        set_led_on = 1;
-      }
-      else{
-        ils_cpt = ILS_CPT_TIME;
-        set_led_on = 0;
-        ils_removed = 1;
-      }
+        if(ILS==0){ // Magnet detected
+          ils_cpt--;
+          set_led_on = 1;
+        }
+        else{
+          ils_cpt = ILS_CPT_TIME;
+          set_led_on = 0;
+          ils_removed = 1;
+        }
 
-      if(ils_removed == 1 && ils_cpt == 0){
-        ils_cpt = ILS_CPT_TIME;
+        if(ils_removed == 1 && ils_cpt == 0){
+          ils_cpt = ILS_CPT_TIME;
+          state = POWER_ON;
+          ils_removed = 0;
+          set_led_on = 0;
+        }
+        break;
+
+      case POWER_ON:
+        ALIM = 1;
+        if(battery_global_default == 1)
+          led_delay = 5; // 0.5 sec
+        else
+          led_delay = 20; // 2 sec
+
+        if(ILS==0){ // Magnet detected
+          ils_cpt--;
+          set_led_on = 1;
+        }
+        else{
+          ils_cpt = ILS_CPT_TIME;
+          set_led_on = 0;
+          ils_removed = 1;
+        }
+
+        if(ils_removed == 1 && ils_cpt == 0){
+          ils_cpt = ILS_CPT_TIME;
+          state = IDLE;
+          ils_removed = 0;
+          set_led_on = 0;
+        }
+
+        break;
+
+      case WAIT_TO_SLEEP:
+
+        ALIM = 1;
+        led_delay = 1;
+        if(time_to_stop==0){
+          for(k=0; k<3; k++)
+            time_to_start[k] = default_time_to_start[k];
+          state = SLEEP;
+          time_to_stop = default_time_to_stop;
+        }
+        break;
+
+      case SLEEP:
+        ALIM = 0;
+        led_delay = 200; // 20 sec
+        if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
+          state = POWER_ON;
+        }
+        break;
+
+      default:
         state = POWER_ON;
-        ils_removed = 0;
-        set_led_on = 0;
+        break;
       }
-      break;
-
-    case POWER_ON:
-      ALIM = 1;
-      if(battery_global_default == 1)
-        led_delay = 5; // 0.5 sec
-      else
-        led_delay = 20; // 2 sec
-
-      if(ILS==0){ // Magnet detected
-        ils_cpt--;
-        set_led_on = 1;
-      }
-      else{
-        ils_cpt = ILS_CPT_TIME;
-        set_led_on = 0;
-        ils_removed = 1;
-      }
-
-      if(ils_removed == 1 && ils_cpt == 0){
-        ils_cpt = ILS_CPT_TIME;
-        state = IDLE;
-        ils_removed = 0;
-        set_led_on = 0;
-      }
-
-      break;
-
-    case WAIT_TO_SLEEP:
-
-      ALIM = 1;
-      led_delay = 1;
-      if(time_to_stop==0){
-        for(k=0; k<3; k++)
-          time_to_start[k] = default_time_to_start[k];
-        state = SLEEP;
-        time_to_stop = default_time_to_stop;
-      }
-      break;
-
-    case SLEEP:
-      ALIM = 0;
-      led_delay = 200; // 20 sec
-      if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
-        state = POWER_ON;
-      }
-      break;
-
-    default:
-      state = POWER_ON;
-      break;
     }
-    delay_ms(500);
-    // for(cpt_wait=0; cpt_wait<WAIT_LOOP; cpt_wait++){
-    //   delay_us(50);
-    //   // I2C
-    //     if(nb_rx_octet>1 && SSPSTAT.P == 1){
-    //         i2c_read_data_from_buffer();
-    //         nb_rx_octet = 0;
-    //     }
-    // }
+
+    if(nb_rx_octet>1 && SSPSTAT.P == 1){
+        i2c_read_data_from_buffer();
+        nb_rx_octet = 0;
+    }
   }
 }
 
@@ -502,15 +504,14 @@ void interrupt(){
       }
     }
     
-
     TMR0H = 0x0B;
     TMR0L = 0xDC;
     TMR0IF_bit = 0;
   }
 
-  // Interruption du TIMER3 (Led Puissance)
+  // Interruption du TIMER3 (High-output LED + State Machine)
   else if (TMR3IF_bit){
-    // LED Puissance
+    // High-output LED
     if(start_led_puissance == 1){
       if (cpt_led_puissance > 0){
         LED_PUISSANCE = 0;
@@ -525,7 +526,7 @@ void interrupt(){
       LED_PUISSANCE = 0;
     }
 
-    // LED
+    // LED (ILS)
     if(set_led_on == 1) // For ILS
       LED = 1;
     else{
@@ -538,6 +539,14 @@ void interrupt(){
         cpt_led=led_delay;
       }
     }
+
+    // State Machine
+    if(cpt_state_machine==0){
+      cpt_state_machine = CPT_STATE_MACHINE_DEFAULT;
+      step_state_machine = 1;
+    }
+    else
+      cpt_state_machine--;
 
     TMR3H = 0x3C;
     TMR3L = 0xB0;
@@ -618,14 +627,6 @@ void interrupt_low(){
             else{
               tmp_rx = SSPBUF;
             }
-          }
-        }
-
-        if(nb_rx_octet>1){
-          Delay_us(30); // Wait P signal ?
-          if(SSPSTAT.P == 1){
-            i2c_read_data_from_buffer();
-            nb_rx_octet = 0;
           }
         }
       }

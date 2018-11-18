@@ -55,7 +55,7 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 */
 
-#define CODE_VERSION 0x02
+#define CODE_VERSION 0x03
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x20;
@@ -204,7 +204,6 @@ void main(){
   init_timer0(); // Initi TIMER0 toutes les 1s
   init_timer1(); // Initialisation du TIMER1 toutes les 1us
 
-  UART1_Init(115200);
   LATC = 0;
 
   TMR0IE_bit = 1; //Enable TIMER0
@@ -237,7 +236,10 @@ void main(){
     else
       LED = 0;
 
-    delay_ms(250);
+    if(nb_rx_octet>1 && SSPSTAT.P == 1){
+        i2c_read_data_from_buffer();
+        nb_rx_octet = 0;
+    }
   }
 }
 
@@ -378,14 +380,6 @@ void interrupt_low(){
             else{
               tmp_rx = SSPBUF;
             }
-          }
-        }
-
-        if(nb_rx_octet>1){
-          Delay_us(30); // Wait P signal ?
-          if(SSPSTAT.P == 1){
-            i2c_read_data_from_buffer();
-            nb_rx_octet = 0;
           }
         }
       }
