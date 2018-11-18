@@ -15,6 +15,7 @@
 #include <seabot_power_driver/Battery.h>
 #include <seabot_safety/SafetyLog.h>
 #include <seabot_safety/SafetyDebug.h>
+#include <geometry_msgs/Vector3.h>
 
 #include <cmath>
 
@@ -31,6 +32,9 @@ double piston_position = -100;
 int piston_state = 0;
 bool piston_switch_in = false;
 bool piston_switch_out = false;
+
+// Imu
+ros::WallTime time_euler;
 
 // Pressure limit
 double pressure_limit = 6.2;
@@ -103,6 +107,10 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
   }
   else
     is_pressure_limit_reached = false;
+}
+
+void euler_callback(const geometry_msgs::Vector3::ConstPtr& msg){
+  time_euler = ros::WallTime::now();
 }
 
 void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
@@ -180,6 +188,7 @@ int main(int argc, char *argv[]){
   const double d_external_sensor_ref = n_private.param<double>("time_delay_external_sensor_msg", 2.0);
   const double d_depth_ref = n_private.param<double>("time_delay_depth_msg", 2.0);
   const double d_piston_state_ref = n_private.param<double>("time_delay_piston_state_msg", 2.0);
+  const double d_euler_ref = n_private.param<double>("time_delay_euler_msg", 1.0);
 
   battery_limit = n_private.param<double>("battery_limit", 10.0);
   pressure_limit = n_private.param<double>("pressure_limit", 6.2);
@@ -205,6 +214,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber internal_sensor_sub = n.subscribe("/fusion/sensor_internal", 1, internal_sensor_callback);
   ros::Subscriber batteries_sub = n.subscribe("/fusion/battery", 1, batteries_callback);
   ros::Subscriber external_sensor_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
+  ros::Subscriber euler_sub = n.subscribe("/driver/euler", 1, euler_callback);
 
   // Publisher
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
@@ -298,13 +308,15 @@ int main(int argc, char *argv[]){
     double d_external_sensor = (t_ref-time_external_sensor).toSec();
     double d_depth = (t_ref-time_depth).toSec();
     double d_piston_state = (t_ref-time_piston_state).toSec();
+    double d_euler = (t_ref-time_euler).toSec();
 
     if(d_batteries > d_batteries_ref
        || d_internal_sensor > d_internal_sensor_ref
        || d_external_sensor > d_external_sensor_ref
        || d_depth > d_depth_ref
-       || d_piston_state > d_piston_state_ref){
-      ROS_WARN("[Safety] No data published by sensors (%f, %f, %f, %f, %f)", d_batteries, d_internal_sensor, d_external_sensor, d_depth, d_piston_state);
+       || d_piston_state > d_piston_state_ref
+       || d_euler > d_euler_ref){
+      ROS_WARN("[Safety] No data published by sensors (%f, %f, %f, %f, %f, %f)", d_batteries, d_internal_sensor, d_external_sensor, d_depth, d_piston_state, d_euler);
       enable_emergency_depth = true;
       safety_msg.published_frequency = true;
     }

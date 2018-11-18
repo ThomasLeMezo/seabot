@@ -47,6 +47,9 @@
 
         <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>
 
-								<include file="$(find i2c_imu)/launch/mpu_9250_param.launch"/>
+							<node name="i2c_imu" pkg="i2c_imu" type="i2c_imu_node" output="screen" respawn_delay="5">
+												<rosparam file="$(find i2c_imu)/param/imu_9250.yaml"/>
+							</node>
+
     </group>
 </launch>

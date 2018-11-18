@@ -22,6 +22,7 @@
         <param name="time_delay_external_sensor_msg" value="2.0" />
         <param name="time_delay_depth_msg" value="2.0" />
         <param name="time_delay_piston_state_msg" value="2.0" />
+        <param name="time_delay_euler_msg" value="1.0" />
 
         <param name="delta_volume_allowed" value="0.01" />
         <param name="delta_ref_allowed" value="10.0" />
