@@ -82,8 +82,7 @@ int main(int argc, char *argv[]){
   const double max_angular_velocity = n_private.param<float>("max_angular_velocity", 1.0);
   const double max_linear_velocity = n_private.param<float>("max_linear_velocity", 1.0);
 
-  const double max_engine_change = n_private.param<float>("max_engine_change", 1.0);
-
+  const double max_engine_change = n_private.param<float>("max_engine_change", 5.0);
 
   // Subscriber
   ros::Subscriber velocity_sub = n.subscribe("cmd_engine", 1, velocity_callback);

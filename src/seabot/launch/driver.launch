@@ -43,6 +43,7 @@
 												<param name="backward_engine" value="false" />
 												<param name="invert_left" value="true" />
 												<param name="invert_right" value="false" />
+												<param name="max_engine_change" value="5.0" />
         </node>
 
         <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>

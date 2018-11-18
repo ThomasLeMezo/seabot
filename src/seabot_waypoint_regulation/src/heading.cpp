@@ -64,6 +64,7 @@ int main(int argc, char *argv[]){
   const double coeff_D = n_private.param<double>("coeff_D", 0.2);
   const double linear_speed = n_private.param<double>("linear_speed", 1.0);
   const double depth_limit_switch_off = n_private.param<double>("depth_limit_switch_off", 0.5);
+  const double max_angular_velocity = n_private.param<double>("max_angular_velocity", 1.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -93,6 +94,10 @@ int main(int argc, char *argv[]){
        && (last_received_pose-t).toSec()<delta_valid_time){
       engine_msg.linear = linear_speed;
       engine_msg.angular = coeff_P*yaw_error + coeff_D*angular_velocity;
+
+      // Limit max angular speed
+      if(abs(engine_msg.angular)>max_angular_velocity)
+        engine_msg.angular = copysign(max_angular_velocity, engine_msg.angular);
     }
     else{
       engine_msg.linear = 0.0;
