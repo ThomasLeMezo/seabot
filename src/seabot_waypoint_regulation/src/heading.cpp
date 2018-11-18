@@ -35,6 +35,7 @@ void set_point_callback(const std_msgs::Float64::ConstPtr& msg){
 
 void euler_callback(const geometry_msgs::Vector3::ConstPtr& msg){
   yaw_imu = msg->z; // Check unity ?
+  last_received_pose = ros::WallTime::now();
 }
 
 void imu_callback(const sensor_msgs::Imu::ConstPtr& msg){
@@ -88,7 +89,8 @@ int main(int argc, char *argv[]){
     double yaw_error = 2*atan(tan((yaw_imu-yaw_set_point)/2.0));
 
     if((last_received_set_point-t).toSec()<delta_valid_time
-       && depth<depth_limit_switch_off){
+       && depth<depth_limit_switch_off
+       && (last_received_pose-t).toSec()<delta_valid_time){
       engine_msg.linear = linear_speed;
       engine_msg.angular = coeff_P*yaw_error + coeff_D*angular_velocity;
     }

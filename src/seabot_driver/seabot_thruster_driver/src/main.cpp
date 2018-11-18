@@ -107,7 +107,7 @@ int main(int argc, char *argv[]){
   manual_time_last_cmd = ros::Time::now();
   ros::Duration(delay_stop*1.1).sleep();
 
-  uint8_t cmd_left_last = MOTOR_PWM_STOP, cmd_right_last = MOTOR_PWM_STOP;
+  double cmd_left_double = MOTOR_PWM_STOP, cmd_right_double = MOTOR_PWM_STOP;
   double dt;
   ros::Time last_time = ros::Time::now();
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]){
 
     dt = (ros::Time::now()-last_time).toSec();
     last_time = ros::Time::now();
-    int max_engine_change_dt = max((int)round(max_engine_change*dt), 1);
+    double max_engine_change_dt = max(max_engine_change*dt, 1.);
 
     if(state_enable){
       uint8_t cmd_left, cmd_right;
@@ -172,15 +172,15 @@ int main(int argc, char *argv[]){
         if(invert_right)
           cmd_right = invert_cmd(cmd_right);
 
-        int cmd_change_left = cmd_left-cmd_left_last;
-        uint8_t cmd_left_tmp = cmd_left_last + copysign(min(abs(cmd_change_left), max_engine_change_dt), cmd_change_left);
-        cmd_left_last = cmd_left_tmp;
+        double delta_left = (double)cmd_left-cmd_left_double;
+        cmd_left_double += copysign(min(abs(delta_left), max_engine_change_dt), cmd_left_double);
+        cmd_left = (uint8_t)round(cmd_left_double);
 
-        int cmd_change_right = cmd_right-cmd_right_last;
-        uint8_t cmd_right_tmp = cmd_right_last + copysign(min(abs(cmd_change_right), max_engine_change_dt), cmd_change_right);
-        cmd_right_last = cmd_right_tmp;
+        double delta_right = (double)cmd_right-cmd_right_double;
+        cmd_right_double += copysign(min(abs(delta_right), max_engine_change_dt), cmd_right_double);
+        cmd_right = (uint8_t)round(cmd_right_double);
 
-        t.write_cmd(cmd_left_tmp, cmd_right);
+        t.write_cmd(cmd_left, cmd_right);
 
         // Publish cmd send for loggin
         cmd_msg.left = (float)cmd_left;
