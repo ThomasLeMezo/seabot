@@ -415,6 +415,40 @@ if(len(time_piston_state)>0):
     pg_piston_speed.setXLink(pg_piston_state_position2)
     pg_piston_velocity.setXLink(pg_piston_state_position2)
 
+#### Regulation Heading ####
+
+if(len(time_regulation_heading)>0):
+    dock_regulation_heading = Dock("Regulation Heading")
+    area_piston.addDock(dock_regulation_heading, 'above', dock_piston_distance)
+
+    pg_euler_yaw = pg.PlotWidget()
+    pg_euler_yaw.addLegend()
+    pg_euler_yaw.plot(time_euler, np.array(euler_z)*180./np.pi, pen=(255,0,0), name="Yaw")
+    pg_euler_yaw.plot(time_regulation_heading, np.array(regulation_heading_set_point)*180./np.pi, pen=(0,255,0), name="Set point")
+    dock_regulation_heading.addWidget(pg_euler_yaw)
+
+    pg_regulation_heading_error = pg.PlotWidget()
+    pg_regulation_heading_error.addLegend()
+    pg_regulation_heading_error.plot(time_regulation_heading, regulation_heading_error, pen=(255,0,0), name="error")
+    dock_regulation_heading.addWidget(pg_regulation_heading_error)
+
+    pg_regulation_heading_var = pg.PlotWidget()
+    pg_regulation_heading_var.addLegend()
+    pg_regulation_heading_var.plot(time_regulation_heading, regulation_heading_p_var, pen=(255,0,0), name="P")
+    pg_regulation_heading_var.plot(time_regulation_heading, regulation_heading_d_var, pen=(0,255,0), name="D")
+    dock_regulation_heading.addWidget(pg_regulation_heading_var)
+
+    pg_regulation_heading_command = pg.PlotWidget()
+    pg_regulation_heading_command.addLegend()
+    pg_regulation_heading_command.plot(time_regulation_heading, regulation_heading_command, pen=(255,0,0), name="command")
+    pg_regulation_heading_command.plot(time_regulation_heading, regulation_heading_command_limit, pen=(0,255,0), name="command_limit")
+    dock_regulation_heading.addWidget(pg_regulation_heading_command)
+    
+    pg_regulation_heading_var.setXLink(pg_regulation_heading_error)
+    pg_regulation_heading_command.setXLink(pg_regulation_heading_error)
+    if(len(time_euler)>0):
+        pg_euler_yaw.setXLink(pg_regulation_heading_error)
+
 #### Kalman ####
 if(len(time_kalman)>0):
     dock_kalman = Dock("Kalman")
