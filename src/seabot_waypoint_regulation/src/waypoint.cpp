@@ -98,8 +98,8 @@ int main(int argc, char *argv[]){
     t = ros::WallTime::now();
 
     // ToDo : Add repulsive field if near coastline !!
-    double yaw_set_point = atan2(north_set_point-north, east_set_point-east);
-    double yaw_error = 2*atan(tan((yaw_imu-yaw_set_point)/2.0));
+    double yaw_set_point = atan2(north_set_point-north, east_set_point-east); // 0 deg yaw at in (x,y) != mag heading
+    double yaw_error = 2*atan(tan((yaw_imu+M_PI_2-yaw_set_point)/2.0)); // In (x,y) frame
 
     double distance_error = sqrt(pow(north_set_point-north, 2)+pow(east_set_point-east, 2));
     bool enable_regulation = true;
