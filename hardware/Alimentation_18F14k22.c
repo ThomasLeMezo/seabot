@@ -37,7 +37,7 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x05
+#define CODE_VERSION 0x06
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
@@ -114,7 +114,7 @@ unsigned short watchdog_cpt_default = 59;
  * @brief i2c_read_data_from_buffer
  */
 void i2c_read_data_from_buffer(){
-  unsigned short i = 0;
+  short i = 0;
 
   for(i=0; i<(nb_rx_octet-1); i++){
     switch(rxbuffer_tab[0]+i){
@@ -133,10 +133,10 @@ void i2c_read_data_from_buffer(){
       }
       break;
     case 0x01:  // led power
-      start_led_puissance = (rxbuffer_tab[i+1]!=0x00);
+      start_led_puissance = (rxbuffer_tab[i+1]==0x01);
       break;
     case 0x02:
-      led_puissance_delay = rxbuffer_tab[i+1];
+      led_puissance_delay = max(rxbuffer_tab[i+1], 1);
       break;
     case 0x03:
       default_time_to_start[0] = rxbuffer_tab[i+1]; // hours

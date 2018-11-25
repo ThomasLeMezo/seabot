@@ -26,7 +26,7 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x04
+#define CODE_VERSION 0x05
 
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
@@ -79,7 +79,7 @@ unsigned short is_init = 1;
 
 void i2c_read_data_from_buffer(){
     unsigned short i = 0;
-    unsigned short nb_data = nb_rx_octet-1;
+    short nb_data = nb_rx_octet-1;
 
     for(i=0; i<nb_data; i++){
         switch(rxbuffer_tab[0]+i){
