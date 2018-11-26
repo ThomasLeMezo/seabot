@@ -156,6 +156,19 @@ regulation_antiwindup = []
 time_regulation_depth_set_point = []
 regulation_depth_set_point = []
 
+# /regulation/debug_heading
+time_regulation_heading = []
+regulation_heading_error = []
+regulation_heading_p_var = []
+regulation_heading_d_var = []
+regulation_heading_command = []
+regulation_heading_command_limit = []
+regulation_heading_set_point = []
+
+# /regulation/heading_set_point
+time_regulation_set_point = []
+regulation_set_point = []
+
 ####################### Safety #######################
 
 # /safety/safety
@@ -300,6 +313,19 @@ def load_bag(filename):
 				regulation_depth_set_point.append(regulation_depth_set_point[-1])
 			time_regulation_depth_set_point.append((t-startTime).to_sec())
 			regulation_depth_set_point.append(msg.depth)
+
+		elif(topic=="/regulation/debug_heading"):
+			time_regulation_heading.append((t-startTime).to_sec())
+			regulation_heading_error.append(msg.error)
+			regulation_heading_p_var.append(msg.p_var)
+			regulation_heading_d_var.append(msg.d_var)
+			regulation_heading_command.append(msg.command)
+			regulation_heading_command_limit.append(msg.command_limit)
+			regulation_heading_set_point.append(msg.set_point)
+
+		elif(topic=="/regulation/heading_set_point"):
+			time_regulation_set_point.append((t-startTime).to_sec())
+			regulation_set_point.append(msg.data)			
 
 		elif(topic=="/driver/fix"):
 			time_fix.append((t-startTime).to_sec())

@@ -11,6 +11,7 @@
 #include <std_msgs/Float64.h>
 #include <sensor_msgs/Imu.h>
 #include <cmath>
+#include <seabot_waypoint_regulation/HeadingDebug.h>
 
 using namespace std;
 
@@ -74,11 +75,13 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher engine_pub = n.advertise<seabot_thruster_driver::Velocity>("/driver/thruster/cmd_engine", 1);
+  ros::Publisher debug_pub = n.advertise<seabot_waypoint_regulation::HeadingDebug>("debug_heading", 1);
 
   seabot_thruster_driver::Velocity engine_msg;
 
   ros::Rate loop_rate(frequency);
   ros::WallTime t;
+  seabot_waypoint_regulation::HeadingDebug msg_debug;
 
   ROS_INFO("[Heading] Start Ok");
   // Main regulation loop
@@ -95,9 +98,18 @@ int main(int argc, char *argv[]){
       engine_msg.linear = linear_speed;
       engine_msg.angular = coeff_P*yaw_error + coeff_D*angular_velocity;
 
+      msg_debug.error = yaw_error;
+      msg_debug.p_var = coeff_P*yaw_error;
+      msg_debug.d_var = coeff_D*angular_velocity;
+      msg_debug.command = engine_msg.angular;
+      msg_debug.set_point = yaw_set_point;
+
       // Limit max angular speed
       if(abs(engine_msg.angular)>max_angular_velocity)
         engine_msg.angular = copysign(max_angular_velocity, engine_msg.angular);
+
+      msg_debug.command_limit = engine_msg.angular;
+      debug_pub.publish(msg_debug);
     }
     else{
       engine_msg.linear = 0.0;
