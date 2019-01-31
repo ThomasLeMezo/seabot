@@ -93,7 +93,10 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   debug_msg.y = y;
   debug_msg.dy = dy;
 
-  double u = (l1*dy+l2*y-beta*(2*e*pow(x1,2)-dx1*D)/pow(D,2)-2*B*abs(x1)*dx1)/A +alpha*x1;
+  // Check command u:
+  // And also an issue with -beta and -dx1*D sign (should be all positive)
+  //double u = (l1*dy+l2*y-beta*(2*e*pow(x1,2)-dx1*D)/pow(D,2)-2.0*B*abs(x1)*dx1)/A +alpha*x1; // old
+  double u = (l1*dy+l2*y+beta*(2*e*pow(x1,2)+dx1*D)/pow(D,2)-2.0*B*abs(x1)*dx1)/A +alpha*x1; // new
 
   return u;
 }
