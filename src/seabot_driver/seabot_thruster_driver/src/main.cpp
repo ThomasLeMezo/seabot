@@ -98,7 +98,7 @@ int main(int argc, char *argv[]){
   // Sensor initialization
   t.i2c_open();
 
-  if(t.get_version()!=0x02){
+  if(t.get_version()!=0x03){
     ROS_WARN("[Thruster] Wrong PIC code version");
   }
 
