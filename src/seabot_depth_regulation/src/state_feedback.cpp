@@ -32,6 +32,7 @@ bool emergency = true; // Wait safety clearance on startup
 
 double l1 = 0.;
 double l2 = 0.;
+double root = -1.0;
 double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
@@ -93,21 +94,16 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   debug_msg.y = y;
   debug_msg.dy = dy;
 
-  // Check command u:
-  // And also an issue with -beta and -dx1*D sign (should be all positive)
-  //double u = (l1*dy+l2*y-beta*(2*e*pow(x1,2)-dx1*D)/pow(D,2)-2.0*B*abs(x1)*dx1)/A +alpha*x1; // old
-  double u = (l1*dy+l2*y+beta*(2*e*pow(x1,2)+dx1*D)/pow(D,2)-2.0*B*abs(x1)*dx1)/A +alpha*x1; // new
-
-  return u;
+  return (l1*dy+l2*y+ beta*(dx1*D+2.*e*pow(x1,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+alpha*x1;
 }
 
 bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }
 
 int main(int argc, char *argv[]){
-  ros::init(argc, argv, "sliding_node");
+  ros::init(argc, argv, "state_feedback");
   ros::NodeHandle n;
 
-  // Parameters
+  /// ************************* Parameters *************************
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 1.0);
 
@@ -116,13 +112,7 @@ int main(int argc, char *argv[]){
   const double delta_position_lb = n_private.param<double>("delta_position_lb", 0.0);
   const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.0);
 
-  l1 = n_private.param<double>("lambda_1", 0.1);
-  l2 = n_private.param<double>("lambda_2", 0.1);
-  double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
-  double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
-
-  const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
-
+  // Physical characteristics
   const double rho = n.param<double>("/rho", 1025.0);
   const double g = n.param<double>("/g", 9.81);
   const double m = n.param<double>("/m", 8.800);
@@ -132,21 +122,23 @@ int main(int argc, char *argv[]){
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
-
-  const double dead_zone_position_exit = n.param<double>("dead_zone_position_exit", 0.1);
-  const double dead_zone_position_enter = n.param<double>("dead_zone_position_enter", 0.05);
-  const double dead_zone_velocity_enter = n.param<double>("dead_zone_velocity_enter", 0.005);
-  const double duration_to_stationary_mode = n.param<double>("duration_to_stationary_mode", 10.0);
-  const bool enable_stationary_mode = n.param<double>("enable_stationary_mode", false);
-
-  coeff_A = g*rho/m;
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
-  coeff_B = 0.5*rho*Cf/m;
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
   coeff_compressibility = compressibility_tick*tick_to_volume;
+  coeff_A = g*rho/m;
+  coeff_B = 0.5*rho*Cf/m;
 
+  // Compute regulation constant
+  double root_regulation = n_private.param<double>("root_regulation", -1.0);
+  l1 = -2.0*root;
+  l2 = pow(root_regulation, 2);
+  double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
+  double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
+
+  const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double piston_speed_max = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume;
 
+  /// ************************* ROS Communication *************************
   // Subscriber
   ros::Subscriber kalman_sub = n.subscribe("/fusion/kalman", 1, kalman_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
@@ -161,6 +153,7 @@ int main(int argc, char *argv[]){
   // Server
   ros::ServiceServer server_emergency = n.advertiseService("emergency", emergency_service);
 
+  /// ************************* Loop *************************
   // Variables
   position_msg.position = 0.0;
   t_old = ros::WallTime::now() - ros::WallDuration(1);
@@ -171,11 +164,8 @@ int main(int argc, char *argv[]){
   double piston_set_point=0.;
   bool start_sink = true;
 
-  double duration_at_correct_depth = 0;
-  double piston_position_lock = 0.0;
-
   // Main regulation loop
-  ROS_INFO("[DepthRegulation2] Start Ok");
+  ROS_INFO("[DepthRegulation_Feedback] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 
@@ -199,29 +189,27 @@ int main(int argc, char *argv[]){
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
+
+            // Compute several commands according to velocity acceptable bounds
             array<double, 2> u_tab;
-            u_tab[0] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_lb);
-            u_tab[1] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth+delta_velocity_ub);
-            u_tab[2] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_lb);
-            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth+delta_velocity_ub);
+            u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
+            u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
 
-//            u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
-//            u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
-
+            // Find best command
             sort(u_tab.begin(), u_tab.end());
-            if(u_tab[0]<0.0 && u_tab[u_tab.size()-1]>0.0)
+            if(u_tab[0]<0.0 && u_tab[u_tab.size()-1]>0.0) // Case one positive, one negative => do not move
               u = 0.0;
-            else{
+            else{ // Else choose the command that minimizes u
               sort(u_tab.begin(), u_tab.end(), sortCommandAbs);
               u=u_tab[0];
             }
-//            u = compute_u(x, depth_set_point, velocity_depth);
 
             // Mechanical limits (in = v_min, out = v_max)
             if((piston_switch_in && u<0) || (piston_switch_out && u>0))
               u = 0.0;
           }
           else{
+            // Did not received state => go up
             u=speed_volume_sink*tick_to_volume;
             ROS_INFO("[DepthRegulation] timing issue");
           }
@@ -232,28 +220,6 @@ int main(int argc, char *argv[]){
         }
 
         piston_set_point = piston_ref_eq -(x(2)+u)/tick_to_volume;
-
-        if(enable_stationary_mode
-           && abs(x(1)-depth_set_point)<dead_zone_position_enter
-           && abs(x(0))<dead_zone_velocity_enter){
-          duration_at_correct_depth += 1./frequency;
-          if(duration_at_correct_depth>duration_to_stationary_mode){
-            regulation_state = STATE_STATIONARY;
-            duration_at_correct_depth = 0.0;
-            piston_position_lock = piston_position;
-          }
-        }
-        else{
-          duration_at_correct_depth = 0.;
-        }
-
-        break;
-
-      case STATE_STATIONARY:
-//        piston_set_point = piston_ref_eq -x(3)/tick_to_volume;
-        piston_set_point = piston_position_lock;
-        if(abs(x(1)-depth_set_point)>dead_zone_position_exit)
-          regulation_state = STATE_REGULATION;
         break;
       default:
         break;

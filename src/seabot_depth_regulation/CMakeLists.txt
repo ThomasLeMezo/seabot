@@ -140,13 +140,13 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/seabot_node.cpp)
 
-add_executable(sliding_node
-    src/sliding.cpp
-)
+#add_executable(sliding_node
+#    src/sliding.cpp
+#)
 
-add_executable(sliding_node2
-    src/sliding2.cpp
-)
+#add_executable(sliding_node2
+#    src/sliding2.cpp
+#)
 
 add_executable(state_feedback_node
     src/state_feedback.cpp
@@ -162,9 +162,9 @@ add_executable(state_feedback_node
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(sliding_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(sliding_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(sliding_node2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(sliding_node2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(state_feedback_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
@@ -173,13 +173,13 @@ add_dependencies(state_feedback_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 #   ${catkin_LIBRARIES}
 # )
 
-target_link_libraries(sliding_node
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(sliding_node
+#  ${catkin_LIBRARIES}
+#)
 
-target_link_libraries(sliding_node2
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(sliding_node2
+#  ${catkin_LIBRARIES}
+#)
 
 target_link_libraries(state_feedback_node
   ${catkin_LIBRARIES}
