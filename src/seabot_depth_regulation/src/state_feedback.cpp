@@ -109,8 +109,6 @@ int main(int argc, char *argv[]){
 
   const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", 0.0);
   const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.0);
-  const double delta_position_lb = n_private.param<double>("delta_position_lb", 0.0);
-  const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.0);
 
   // Physical characteristics
   const double rho = n.param<double>("/rho", 1025.0);
@@ -224,8 +222,6 @@ int main(int argc, char *argv[]){
       default:
         break;
       }
-
-
 
       /// ********************** Write command ****************** ///
       //  Hysteresis to limit motor movement
