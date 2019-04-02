@@ -18,6 +18,8 @@ from numpy import linalg as LA
 import sys
 from load_data import *
 
+from math import *
+
 if(len(sys.argv)<2):
 	sys.exit(0)
 
@@ -370,25 +372,25 @@ if(len(time_regulation_debug)>0):
     pg_regulation_depth2.addLegend()
     pg_regulation_depth2.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
     pg_regulation_depth2.plot(time_mission, mission_depth, pen=(0,255,0), name="depth")
-    pg_regulation_depth2.setLabel('left', "Depth", units="m")
+    pg_regulation_depth2.setLabel('left', "depth")
     dock_regulation2.addWidget(pg_regulation_depth2)
 
     pg_regulation_y = pg.PlotWidget()
     pg_regulation_y.addLegend()
     pg_regulation_y.plot(time_regulation_debug, regulation_y, pen=(255,0,0), name="y")
-    pg_regulation_y.setLabel('left', "y", units="m")
+    pg_regulation_y.setLabel('left', "y")
     dock_regulation2.addWidget(pg_regulation_y)
 
     pg_regulation_dy = pg.PlotWidget()
     pg_regulation_dy.addLegend()
     pg_regulation_dy.plot(time_regulation_debug, regulation_dy, pen=(255,0,0), name="dy")
-    pg_regulation_dy.setLabel('left', "dy", units="m")
+    pg_regulation_dy.setLabel('left', "dy")
     dock_regulation2.addWidget(pg_regulation_dy)
 
     pg_regulation_u = pg.PlotWidget()
     pg_regulation_u.addLegend()
-    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
-    pg_regulation_u.setLabel('left', "u")
+    pg_regulation_u.plot(time_kalman, np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*7.158e-07, pen=(255,0,0), name="volume equilibrium")
+    pg_regulation_u.setLabel('left', "volume equilibrium")
     dock_regulation2.addWidget(pg_regulation_u)
 
     pg_regulation_u.setXLink(pg_regulation_depth2)
@@ -485,12 +487,21 @@ if(len(time_regulation_heading)>0):
 
 #### Kalman ####
 if(len(time_kalman)>0):
+    chi = 7.158e-07
+    g = 9.81
+    rho = 1025.0
+    m = 9.045
+    d_flange = 0.24
+    Cf = pi*(d_flange/2.0)**2
+    B = 0.5*rho*Cf/m
+    A = g*rho/m
+
     dock_kalman = Dock("Kalman")
     area_piston.addDock(dock_kalman, 'above', dock_piston_distance)
 
     pg_kalman_velocity = pg.PlotWidget()
     pg_kalman_velocity.addLegend()
-    pg_kalman_velocity.plot(time_kalman, kalman_velocity, pen=(255,0,0), name="velocity")
+    pg_kalman_velocity.plot(time_kalman, -B*np.abs(np.array(kalman_velocity))*np.array(kalman_velocity), pen=(255,0,0), name="-B|x1|x1")
     dock_kalman.addWidget(pg_kalman_velocity)
 
     pg_kalman_depth = pg.PlotWidget()
@@ -500,17 +511,46 @@ if(len(time_kalman)>0):
 
     pg_kalman_volume = pg.PlotWidget()
     pg_kalman_volume.addLegend()
-    pg_kalman_volume.plot(time_kalman, kalman_volume, pen=(255,0,0), name="volume")
+    pg_kalman_volume.plot(time_kalman, -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*chi), pen=(255,0,0), name="-A(x3+x4-chi*x2)")
     dock_kalman.addWidget(pg_kalman_volume)
 
-    pg_kalman_offset = pg.PlotWidget()
-    pg_kalman_offset.addLegend()
-    pg_kalman_offset.plot(time_kalman, kalman_offset, pen=(255,0,0), name="offset")
-    dock_kalman.addWidget(pg_kalman_offset)
+    pg_kalman_acc = pg.PlotWidget()
+    pg_kalman_acc.addLegend()
+    kalman_acc = -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*7.158e-07) -B*abs(np.array(kalman_velocity))*np.array(kalman_velocity)
+    pg_kalman_acc.plot(time_kalman, kalman_acc, pen=(255,0,0), name="acc")
+    dock_kalman.addWidget(pg_kalman_acc)
 
     pg_kalman_depth.setXLink(pg_kalman_velocity)
     pg_kalman_volume.setXLink(pg_kalman_velocity)
-    pg_kalman_offset.setXLink(pg_kalman_velocity)
+    pg_kalman_acc.setXLink(pg_kalman_velocity)
+
+if(len(time_kalman)>0):
+    dock_kalman_cov = Dock("Kalman Cov")
+    area_piston.addDock(dock_kalman_cov, 'above', dock_piston_distance)
+
+    pg_kalman_cov_depth = pg.PlotWidget()
+    pg_kalman_cov_depth.addLegend()
+    pg_kalman_cov_depth.plot(time_kalman,kalman_cov_depth, pen=(255,0,0), name="cov depth")
+    dock_kalman_cov.addWidget(pg_kalman_cov_depth)
+
+    pg_kalman_cov_velocity = pg.PlotWidget()
+    pg_kalman_cov_velocity.addLegend()
+    pg_kalman_cov_velocity.plot(time_kalman,kalman_cov_velocity, pen=(255,0,0), name="cov velocity")
+    dock_kalman_cov.addWidget(pg_kalman_cov_velocity)
+
+    pg_kalman_cov_volume = pg.PlotWidget()
+    pg_kalman_cov_volume.addLegend()
+    pg_kalman_cov_volume.plot(time_kalman,kalman_cov_volume, pen=(255,0,0), name="cov volume")
+    dock_kalman_cov.addWidget(pg_kalman_cov_volume)
+
+    pg_kalman_cov_offset = pg.PlotWidget()
+    pg_kalman_cov_offset.addLegend()
+    pg_kalman_cov_offset.plot(time_kalman,kalman_cov_offset, pen=(255,0,0), name="cov offset")
+    dock_kalman_cov.addWidget(pg_kalman_cov_offset)
+
+    pg_kalman_cov_velocity.setXLink(pg_kalman_cov_depth)
+    pg_kalman_cov_volume.setXLink(pg_kalman_cov_depth)
+    pg_kalman_cov_offset.setXLink(pg_kalman_cov_depth)
 
 #################### Position ####################
 

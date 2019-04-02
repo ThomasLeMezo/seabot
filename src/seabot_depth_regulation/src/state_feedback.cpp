@@ -5,8 +5,9 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug3.h>
+#include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
+#include <std_msgs/Float64.h>
 
 #include <std_srvs/SetBool.h>
 #include <seabot_fusion/Kalman.h>
@@ -41,7 +42,7 @@ double coeff_compressibility = 0.;
 enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION, STATE_STATIONARY};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
-seabot_depth_regulation::RegulationDebug3 debug_msg;
+seabot_depth_regulation::RegulationDebug debug_msg;
 
 #define NB_STATES 4
 // [Velocity; Depth; Volume; Offset]
@@ -135,7 +136,7 @@ int main(int argc, char *argv[]){
   double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
 
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
-  const double piston_speed_max = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume;
+  const double piston_max_velocity = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume; // in m3/sec
 
   /// ************************* ROS Communication *************************
   // Subscriber
@@ -145,7 +146,8 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);
-  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug3>("debug", 1);
+  ros::Publisher kalman_cmd_pub = n.advertise<std_msgs::Float64>("/fusion/kalman_cmd", 1);
+  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug>("debug", 1);
 
   seabot_piston_driver::PistonPosition position_msg;
 
@@ -159,9 +161,11 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
 
   double piston_position_old = 0.;
+  int piston_position_old_send = 0;
   double u = 0.; // in m3
   double piston_set_point=0.;
   bool start_sink = true;
+  std_msgs::Float64 kalman_cmd_msg;
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation_Feedback] Start Ok");
@@ -183,7 +187,7 @@ int main(int argc, char *argv[]){
           piston_set_point = piston_ref_eq;
         }
 
-        piston_set_point += -u/tick_to_volume;
+        piston_set_point += -(u/frequency)/tick_to_volume;
         break;
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
@@ -218,7 +222,12 @@ int main(int argc, char *argv[]){
           start_sink = true;
         }
 
-        piston_set_point = piston_ref_eq -(x(2)+u)/tick_to_volume;
+        // Limitation of u according to engine capabilities
+        if(abs(u)>piston_max_velocity){
+          u=copysign(piston_max_velocity, u);
+        }
+
+        piston_set_point = piston_ref_eq -(x(2)+u/frequency)/tick_to_volume;
         break;
       default:
         break;
@@ -226,6 +235,7 @@ int main(int argc, char *argv[]){
 
       /// ********************** Write command ****************** ///
       //  Hysteresis to limit motor movement
+      double u_motor = 0.0;
       if(abs(piston_position_old - piston_set_point)>hysteresis_piston){
         if(piston_set_point>piston_max_value)
           piston_set_point = piston_max_value;
@@ -233,6 +243,8 @@ int main(int argc, char *argv[]){
           piston_set_point = 0;
 
         position_msg.position = round(piston_set_point);
+        u_motor = ((double)(position_msg.position-piston_position_old_send))*tick_to_volume*frequency; // in m3/s
+        piston_position_old_send = position_msg.position;
         piston_position_old = piston_set_point;
       }
 
@@ -241,6 +253,9 @@ int main(int argc, char *argv[]){
       debug_msg.piston_set_point = piston_set_point;
       debug_msg.mode = regulation_state;
       debug_pub.publish(debug_msg);
+
+      kalman_cmd_msg.data = u_motor; // in m3/s
+      kalman_cmd_pub.publish(kalman_cmd_msg);
 
       is_surface = false;
     }

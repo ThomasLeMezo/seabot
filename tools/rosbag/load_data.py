@@ -138,7 +138,10 @@ kalman_depth = []
 kalman_volume = []
 kalman_velocity = []
 kalman_offset = []
-kalman_error_velocity = []
+kalman_cov_depth = []
+kalman_cov_velocity = []
+kalman_cov_volume = []
+kalman_cov_offset = []
 
 ####################### Regulation #######################
 
@@ -403,7 +406,10 @@ def load_bag(filename):
 			kalman_volume.append(msg.volume)
 			kalman_velocity.append(msg.velocity)
 			kalman_offset.append(msg.offset)
-			kalman_error_velocity.append(msg.covariance[6])
+			kalman_cov_depth.append(msg.covariance[0])
+			kalman_cov_velocity.append(msg.covariance[5])
+			kalman_cov_volume.append(msg.covariance[10])
+			kalman_cov_offset.append(msg.covariance[15])
 
 		elif(topic=="/safety/safety"):
 			time_safety.append((t-startTime).to_sec())

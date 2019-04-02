@@ -9,6 +9,7 @@
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_depth_regulation/RegulationDebug3.h>
 #include <seabot_fusion/Kalman.h>
+#include <std_msgs/Float64.h>
 
 #include <algorithm>    // std::sort
 #include <deque>
@@ -53,8 +54,8 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   zero_depth_pressure = msg->zero_depth_pressure;
 }
 
-void regulation_callback(const seabot_depth_regulation::RegulationDebug3::ConstPtr& msg){
-  piston_command_u = msg->u;
+void command_callback(const std_msgs::Float64::ConstPtr& msg){
+  piston_command_u = msg->data;
 }
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
@@ -74,8 +75,8 @@ void kalman_predict(const Matrix<double,NB_STATES, 1> &xup,
                     const double &dt,
                     Matrix<double,NB_STATES, 1> &xnew,
                     Matrix<double,NB_STATES, NB_STATES> &gamma){
-  gamma = Ak*Gup*Ak.transpose()+gamma_alpha;
-  xnew = xup + f(xup, u)*dt;
+  gamma = Ak*Gup*Ak.transpose()+gamma_alpha; // Covariation estimatation
+  xnew = xup + f(xup, u)*dt;  // New state estimation
 }
 
 void kalman_correc(const Matrix<double,NB_STATES, 1> &x0,
@@ -118,9 +119,9 @@ int main(int argc, char *argv[]){
 
   const double rho = n.param<double>("/rho", 1025.0);
   const double g = n.param<double>("/g", 9.81);
-  const double m = n.param<double>("/m", 8.800);
+  const double m = n.param<double>("/m", 9.045);
   const double diam_collerette = n.param<double>("/diam_collerette", 0.24);
-  const double compressibility_tick = n.param<double>("/compressibility_tick", 20.0);
+  const double compressibility_tick = n.param<double>("/compressibility_tick", 10.0);
   const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
@@ -136,8 +137,6 @@ int main(int argc, char *argv[]){
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
   coeff_compressibility = compressibility_tick*tick_to_volume;
 
-  const double piston_speed_max = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume;
-
   //  ROS_INFO("tick_to_volume = %.10e", tick_to_volume);
   ROS_INFO("Coeff_A %.10e", coeff_A);
   ROS_INFO("Coeff_B %.10e", coeff_B);
@@ -148,7 +147,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
   ros::Subscriber pressure_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
-  ros::Subscriber regulator_sub = n.subscribe("/regulation/debug", 1, regulation_callback);
+  ros::Subscriber command_sub = n.subscribe("/fusion/kalman_cmd", 1, command_callback);
 
   // Publisher
   ros::Publisher kalman_pub = n.advertise<seabot_fusion::Kalman>("kalman", 1);
@@ -221,9 +220,6 @@ int main(int argc, char *argv[]){
 
       measure(0) = depth;
       measure(1) = (piston_ref_eq - piston_position)*tick_to_volume;
-
-      if(abs(piston_command_u)>piston_speed_max)
-        piston_command_u = std::copysign(piston_speed_max, piston_command_u);
       command(2) = piston_command_u;
 
       kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);

@@ -1,7 +1,5 @@
-float32 acceleration
-float32 velocity
-float32 depth_error
-float32 u
+float64 u
+float64 y
+float64 dy
 float32 piston_set_point
-uint16 piston_set_point_offset
-bool antiwindup
+int8 mode
