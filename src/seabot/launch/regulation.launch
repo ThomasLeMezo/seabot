@@ -6,8 +6,8 @@
 
 								<param name="root_regulation" value="-1" />
 
-        <param name="delta_velocity_lb" value="-0.01" />
-        <param name="delta_velocity_ub" value="0.01" />
+								<param name="delta_velocity_lb" value="-0.01" />
+								<param name="delta_velocity_ub" value="0.01" />
 
         <param name="hysteresis_piston" value="0.6" />
 								<param name="limit_depth_regulation" value="0.3" />
