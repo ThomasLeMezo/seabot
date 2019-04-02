@@ -7,7 +7,7 @@
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
-#include <seabot_depth_regulation/RegulationDebug3.h>
+#include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_fusion/Kalman.h>
 #include <std_msgs/Float64.h>
 
