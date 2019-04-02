@@ -144,17 +144,11 @@ kalman_error_velocity = []
 
 # /regulation/debug
 time_regulation_debug = []
-regulation_velocity_error = []
-regulation_depth_error = []
-regulation_vector_field_target = []
 regulation_u = []
+regulation_y = []
+regulation_dy = []
 regulation_piston_set_point = []
-regulation_piston_set_point_offset = []
-regulation_antiwindup = []
-
-# /regulation/depth_set_point
-time_regulation_depth_set_point = []
-regulation_depth_set_point = []
+regulation_mode = []
 
 # /regulation/debug_heading
 time_regulation_heading = []
@@ -168,6 +162,19 @@ regulation_heading_set_point = []
 # /regulation/heading_set_point
 time_regulation_set_point = []
 regulation_set_point = []
+
+####################### Mission #######################
+
+time_mission = []
+mission_north = []
+mission_east = []
+mission_depth = []
+mission_velocity_depth = []
+mission_mission_enable = []
+mission_depth_only = []
+mission_waypoint_number = []
+mission_wall_time = []
+mission_time_to_next_waypoint = []
 
 ####################### Safety #######################
 
@@ -291,28 +298,16 @@ def load_bag(filename):
 
 		elif(topic=="/regulation/debug"):
 			time_regulation_debug.append((t-startTime).to_sec())
-			# regulation_velocity_error.append(msg.velocity_error)
-			# regulation_depth_error.append(msg.depth_error)
-			# regulation_vector_field_target.append(msg.vector_field_target)
 			regulation_u.append(msg.u)
+			regulation_y.append(msg.y)
+			regulation_dy.append(msg.dy)
 			regulation_piston_set_point.append(msg.piston_set_point)
-			# regulation_piston_set_point_offset.append(msg.piston_set_point_offset)
-			# if(msg.antiwindup):
-			# 	regulation_antiwindup.append(1)
-			# else:
-			# 	regulation_antiwindup.append(0)
+			regulation_mode.append(msg.mode)
 
 		elif(topic=="/fusion/pose"):
 			time_fusion_pose.append((t-startTime).to_sec())
 			fusion_pose_east.append(msg.east)
 			fusion_pose_north.append(msg.north)
-
-		elif(topic=="/regulation/depth_set_point"):
-			if(len(regulation_depth_set_point)>0):
-				time_regulation_depth_set_point.append((t-startTime).to_sec())
-				regulation_depth_set_point.append(regulation_depth_set_point[-1])
-			time_regulation_depth_set_point.append((t-startTime).to_sec())
-			regulation_depth_set_point.append(msg.depth)
 
 		elif(topic=="/regulation/debug_heading"):
 			time_regulation_heading.append((t-startTime).to_sec())
@@ -325,7 +320,19 @@ def load_bag(filename):
 
 		elif(topic=="/regulation/heading_set_point"):
 			time_regulation_set_point.append((t-startTime).to_sec())
-			regulation_set_point.append(msg.data)			
+			regulation_set_point.append(msg.data)
+
+		elif(topic=="/mission/set_point"):
+			time_mission.append((t-startTime).to_sec())
+			mission_north.append(msg.north)
+			mission_east.append(msg.east)
+			mission_depth.append(msg.depth)
+			mission_velocity_depth.append(msg.velocity_depth)
+			mission_mission_enable.append(msg.mission_enable)
+			mission_depth_only.append(msg.depth_only)
+			mission_waypoint_number.append(msg.waypoint_number)
+			mission_wall_time.append(msg.wall_time)
+			mission_time_to_next_waypoint.append(msg.time_to_next_waypoint)			
 
 		elif(topic=="/driver/fix"):
 			time_fix.append((t-startTime).to_sec())
@@ -445,9 +452,9 @@ def load_bag(filename):
 
 	bag.close()
 
-	if(len(time_regulation_depth_set_point)>0):
-		time_regulation_depth_set_point.append((end_time-startTime).to_sec())
-		regulation_depth_set_point.append(regulation_depth_set_point[-1])
+	# if(len(time_regulation_depth_set_point)>0):
+	# 	time_regulation_depth_set_point.append((end_time-startTime).to_sec())
+	# 	regulation_depth_set_point.append(regulation_depth_set_point[-1])
 
 
 	# Data Analysis

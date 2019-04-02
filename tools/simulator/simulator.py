@@ -25,8 +25,8 @@ piston_full_volume = 1.718e-4 # m3
 delta_volume_max = 1.718e-4/240.0 # m3/s 
 
 # Regulation
-beta = 2./pi*0.05 # Set the limit speed : 5cm/s
-root = -1	 # Set the root of feed-back regulation
+beta = 2./pi*0.03 # Set the limit speed : 5cm/s
+root = -1.	 # Set the root of feed-back regulation
 
 l1 = -2.*root
 l2 = root**2
@@ -124,9 +124,9 @@ def example_regulated_less_compressible():
 def example_regulated_more_compressible():
 	global chi
 	chi = 7.158e-07 # Compressibility (m3/m)
-	depth_target = 5.0
+	depth_target = 1.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	result = simulate_regulated(x_init, 400., 0.01, depth_target)
+	result = simulate_regulated(x_init, 400., 0.1, depth_target)
 	plot_result(result)
 
 if __name__ == "__main__":

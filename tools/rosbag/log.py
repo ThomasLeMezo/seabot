@@ -302,7 +302,7 @@ if(len(time_piston_distance_travelled)>0):
     pg_fusion_depth_distance = pg.PlotWidget()
     pg_fusion_depth_distance.addLegend()
     pg_fusion_depth_distance.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-    pg_fusion_depth_distance.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
+    pg_fusion_depth_distance.plot(time_mission, mission_depth, pen=(0,255,0), name="set point")
     pg_fusion_depth_distance.setLabel('left', "Depth", units="m")
     dock_piston_distance.addWidget(pg_fusion_depth_distance)
 
@@ -321,7 +321,7 @@ if(len(time_fusion_depth)>0):
     pg_fusion_depth = pg.PlotWidget()
     pg_fusion_depth.addLegend()
     pg_fusion_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-    pg_fusion_depth.plot(time_regulation_depth_set_point, regulation_depth_set_point, pen=(0,255,0), name="set point")
+    pg_fusion_depth.plot(time_mission, mission_depth, pen=(0,255,0), name="set point")
     pg_fusion_depth.setLabel('left', "Depth", units="m")
     dock_depth.addWidget(pg_fusion_depth)
 
@@ -360,6 +360,32 @@ if(len(time_regulation_debug)>0):
 
     pg_regulation_u.setXLink(pg_regulation_depth)
     pg_regulation_set_point.setXLink(pg_regulation_depth)
+
+#### Regulation debug 2 ####
+if(len(time_regulation_debug)>0):
+    dock_regulation2 = Dock("Regulation 2")
+    area_piston.addDock(dock_regulation2, 'above', dock_piston_distance)
+
+    pg_regulation_y = pg.PlotWidget()
+    pg_regulation_y.addLegend()
+    pg_regulation_y.plot(time_regulation_debug, regulation_y, pen=(255,0,0), name="y")
+    pg_regulation_y.setLabel('left', "Depth", units="m")
+    dock_regulation2.addWidget(pg_regulation_y)
+
+    pg_regulation_dy = pg.PlotWidget()
+    pg_regulation_dy.addLegend()
+    pg_regulation_dy.plot(time_regulation_debug, regulation_dy, pen=(255,0,0), name="dy")
+    pg_regulation_dy.setLabel('left', "Depth", units="m")
+    dock_regulation2.addWidget(pg_regulation_dy)
+
+    pg_regulation_u = pg.PlotWidget()
+    pg_regulation_u.addLegend()
+    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
+    pg_regulation_u.setLabel('left', "u")
+    dock_regulation2.addWidget(pg_regulation_u)
+
+    pg_regulation_u.setXLink(pg_regulation_y)
+    pg_regulation_dy.setXLink(pg_regulation_y)
 
 #### Piston ####
 if(len(time_piston_state)>0):
@@ -499,7 +525,7 @@ if(len(time_fix)>0):
     pg_gps.setXLink(pg_fusion_depth2)
 
 #### GPS Pose ####
-if(len(fusion_pose_east)>0):
+if(len(fusion_pose_east)>0 and len(time_fix)>0):
     dock_gps2 = Dock("GPS Pose")
     area_position.addDock(dock_gps2, 'above', dock_gps)
     pg_gps2 = pg.PlotWidget()
@@ -516,7 +542,7 @@ if(len(fusion_pose_east)>0):
     dock_gps2.addWidget(pg_gps2)
 
 ####  Heading #### 
-if(len(time_euler)>0):
+if(len(time_euler)>0 and len(time_fix)>0):
     dock_euler = Dock("Heading")
     area_position.addDock(dock_euler, 'above', dock_gps)
     pg_euler1 = pg.PlotWidget()

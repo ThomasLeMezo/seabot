@@ -120,6 +120,7 @@ int main(int argc, char *argv[]){
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
+  const double piston_max_value = n.param<double>("/piston_max_value", 2400);
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
   coeff_compressibility = compressibility_tick*tick_to_volume;
@@ -226,6 +227,11 @@ int main(int argc, char *argv[]){
       /// ********************** Write command ****************** ///
       //  Hysteresis to limit motor movement
       if(abs(piston_position_old - piston_set_point)>hysteresis_piston){
+        if(piston_set_point>piston_max_value)
+          piston_set_point = piston_max_value;
+        if(piston_set_point<0)
+          piston_set_point = 0;
+
         position_msg.position = round(piston_set_point);
         piston_position_old = piston_set_point;
       }

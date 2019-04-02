@@ -2,7 +2,7 @@
 
   <node name="kalman_node" pkg="seabot_fusion" type="kalman_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
     <param name="frequency" value="10" />
-				<param name="limit_min_depth" value="0.5" />
+				<param name="limit_min_depth" value="0.3" />
   </node>
 
 </launch>
