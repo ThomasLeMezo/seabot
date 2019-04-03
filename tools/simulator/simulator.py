@@ -123,10 +123,11 @@ def example_regulated_less_compressible():
 
 def example_regulated_more_compressible():
 	global chi
-	chi = 7.158e-07 # Compressibility (m3/m)
-	depth_target = 1.0
+	# chi = 7.158e-07 # Compressibility (m3/m)
+	chi = 0.0
+	depth_target = 50.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	result = simulate_regulated(x_init, 400., 0.1, depth_target)
+	result = simulate_regulated(x_init, 2000., 0.1, depth_target)
 	plot_result(result)
 
 if __name__ == "__main__":

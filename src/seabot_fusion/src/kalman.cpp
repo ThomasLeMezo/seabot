@@ -7,6 +7,7 @@
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
+#include <seabot_piston_driver/PistonVelocity.h>
 #include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_fusion/Kalman.h>
 #include <std_msgs/Float64.h>
@@ -23,7 +24,9 @@ using namespace Eigen;
 #define NB_STATES 4
 
 double depth = 0.0;
+double velocity_fusion = 0.0;
 double piston_position = 0.0;
+double piston_set_point = 0.0;
 double piston_command_u = 0.0;
 
 double coeff_A = 0.0;
@@ -35,28 +38,25 @@ double g_rho_bar = 0.0;
 
 ros::Time time_last_depth;
 bool depth_valid = false;
-double zero_depth_pressure = 1.024;
+//double zero_depth_pressure = 1.024;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
+  piston_set_point = msg->position_set_point;
 }
 
-void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& msg){
-//  depth = (msg->pressure - zero_depth_pressure) / (g_rho_bar);
-//  time_last_depth = msg->header.stamp;
-//  depth_valid = true;
+void piston_velocity_callback(const seabot_piston_driver::PistonVelocity::ConstPtr& msg){
+  piston_command_u = -msg->velocity*tick_to_volume;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
     depth = msg->depth;
+    velocity_fusion = msg->velocity;
     depth_valid = true;
     time_last_depth = ros::Time::now();
-  zero_depth_pressure = msg->zero_depth_pressure;
+//    zero_depth_pressure = msg->zero_depth_pressure;
 }
 
-void command_callback(const std_msgs::Float64::ConstPtr& msg){
-  piston_command_u = msg->data;
-}
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
   Matrix<double,NB_STATES, 1> y = Matrix<double,NB_STATES, 1>::Zero();
@@ -146,8 +146,7 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
-  ros::Subscriber pressure_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
-  ros::Subscriber command_sub = n.subscribe("/fusion/kalman_cmd", 1, command_callback);
+  ros::Subscriber piston_velocity_sub = n.subscribe("/driver/piston/velocity", 1, piston_velocity_callback);
 
   // Publisher
   ros::Publisher kalman_pub = n.advertise<seabot_fusion::Kalman>("kalman", 1);
@@ -197,10 +196,6 @@ int main(int argc, char *argv[]){
   ros::Time t_last, t;
   t_last = ros::Time::now();
 
-  Matrix<double,NB_STATES, 1> x = Matrix<double,NB_STATES, 1>::Zero();
-  x(1) = 0.0;
-  x(0) = 0.0;
-
   ROS_INFO("[FUSION depth] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
@@ -227,7 +222,7 @@ int main(int argc, char *argv[]){
       update = true;
     }
     else if(depth<=limit_min_depth){
-      xhat(0) = 0.0;
+      xhat(0) = velocity_fusion;
       xhat(1) = depth;
       xhat(2) = (piston_ref_eq - piston_position)*tick_to_volume;
       xhat(3) = xhat(3);

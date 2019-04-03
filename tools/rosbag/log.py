@@ -487,6 +487,34 @@ if(len(time_regulation_heading)>0):
 
 #### Kalman ####
 if(len(time_kalman)>0):
+    dock_kalman = Dock("Kalman")
+    area_piston.addDock(dock_kalman, 'above', dock_piston_distance)
+
+    pg_kalman_velocity = pg.PlotWidget()
+    pg_kalman_velocity.addLegend()
+    pg_kalman_velocity.plot(time_kalman, kalman_velocity, pen=(255,0,0), name="velocity (x1)")
+    dock_kalman.addWidget(pg_kalman_velocity)
+
+    pg_kalman_depth = pg.PlotWidget()
+    pg_kalman_depth.addLegend()
+    pg_kalman_depth.plot(time_kalman, kalman_depth, pen=(255,0,0), name="depth (x2)")
+    dock_kalman.addWidget(pg_kalman_depth)
+
+    pg_kalman_volume = pg.PlotWidget()
+    pg_kalman_volume.addLegend()
+    pg_kalman_volume.plot(time_kalman, kalman_volume, pen=(255,0,0), name="volume (x3)")
+    dock_kalman.addWidget(pg_kalman_volume)
+
+    pg_kalman_acc = pg.PlotWidget()
+    pg_kalman_acc.addLegend()
+    pg_kalman_acc.plot(time_kalman, kalman_offset, pen=(255,0,0), name="offset (x4)")
+    dock_kalman.addWidget(pg_kalman_acc)
+
+    pg_kalman_depth.setXLink(pg_kalman_velocity)
+    pg_kalman_volume.setXLink(pg_kalman_velocity)
+    pg_kalman_acc.setXLink(pg_kalman_velocity)
+
+if(len(time_kalman)>0):
     chi = 7.158e-07
     g = 9.81
     rho = 1025.0
@@ -496,33 +524,33 @@ if(len(time_kalman)>0):
     B = 0.5*rho*Cf/m
     A = g*rho/m
 
-    dock_kalman = Dock("Kalman")
+    dock_kalman = Dock("Kalman 2")
     area_piston.addDock(dock_kalman, 'above', dock_piston_distance)
 
-    pg_kalman_velocity = pg.PlotWidget()
-    pg_kalman_velocity.addLegend()
-    pg_kalman_velocity.plot(time_kalman, -B*np.abs(np.array(kalman_velocity))*np.array(kalman_velocity), pen=(255,0,0), name="-B|x1|x1")
-    dock_kalman.addWidget(pg_kalman_velocity)
+    pg_kalman_velocity2 = pg.PlotWidget()
+    pg_kalman_velocity2.addLegend()
+    pg_kalman_velocity2.plot(time_kalman, -B*np.abs(np.array(kalman_velocity))*np.array(kalman_velocity), pen=(255,0,0), name="-B|x1|x1")
+    dock_kalman.addWidget(pg_kalman_velocity2)
 
-    pg_kalman_depth = pg.PlotWidget()
-    pg_kalman_depth.addLegend()
-    pg_kalman_depth.plot(time_kalman, kalman_depth, pen=(255,0,0), name="depth")
-    dock_kalman.addWidget(pg_kalman_depth)
+    pg_kalman_depth2 = pg.PlotWidget()
+    pg_kalman_depth2.addLegend()
+    pg_kalman_depth2.plot(time_kalman, kalman_depth, pen=(255,0,0), name="depth")
+    dock_kalman.addWidget(pg_kalman_depth2)
 
-    pg_kalman_volume = pg.PlotWidget()
-    pg_kalman_volume.addLegend()
-    pg_kalman_volume.plot(time_kalman, -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*chi), pen=(255,0,0), name="-A(x3+x4-chi*x2)")
-    dock_kalman.addWidget(pg_kalman_volume)
+    pg_kalman_volume2 = pg.PlotWidget()
+    pg_kalman_volume2.addLegend()
+    pg_kalman_volume2.plot(time_kalman, -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*chi), pen=(255,0,0), name="-A(x3+x4-chi*x2)")
+    dock_kalman.addWidget(pg_kalman_volume2)
 
-    pg_kalman_acc = pg.PlotWidget()
-    pg_kalman_acc.addLegend()
+    pg_kalman_acc2 = pg.PlotWidget()
+    pg_kalman_acc2.addLegend()
     kalman_acc = -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*7.158e-07) -B*abs(np.array(kalman_velocity))*np.array(kalman_velocity)
-    pg_kalman_acc.plot(time_kalman, kalman_acc, pen=(255,0,0), name="acc")
-    dock_kalman.addWidget(pg_kalman_acc)
+    pg_kalman_acc2.plot(time_kalman, kalman_acc, pen=(255,0,0), name="acc")
+    dock_kalman.addWidget(pg_kalman_acc2)
 
-    pg_kalman_depth.setXLink(pg_kalman_velocity)
-    pg_kalman_volume.setXLink(pg_kalman_velocity)
-    pg_kalman_acc.setXLink(pg_kalman_velocity)
+    pg_kalman_depth2.setXLink(pg_kalman_velocity2)
+    pg_kalman_volume2.setXLink(pg_kalman_velocity2)
+    pg_kalman_acc2.setXLink(pg_kalman_velocity2)
 
 if(len(time_kalman)>0):
     dock_kalman_cov = Dock("Kalman Cov")
