@@ -54,12 +54,14 @@ area = DockArea()
 area_safety = DockArea()
 area_data = DockArea()
 area_piston = DockArea()
+area_regulation = DockArea()
 area_iridium = DockArea()
 area_position = DockArea()
 
 tab.addTab(area_safety, "Safety")
 tab.addTab(area_data, "Data")
 tab.addTab(area_piston, "Piston")
+tab.addTab(area_regulation, "Regulation")
 tab.addTab(area_iridium, "Iridium")
 tab.addTab(area_position, "Trajectory")
 
@@ -337,66 +339,6 @@ if(len(time_fusion_depth)>0):
 
     pg_piston_state_position2.setXLink(pg_fusion_depth)
 
-#### Regulation debug ####
-if(len(time_regulation_debug)>0):
-    dock_regulation1 = Dock("Regulation 1")
-    area_piston.addDock(dock_regulation1, 'above', dock_piston_distance)
-
-    pg_regulation_depth = pg.PlotWidget()
-    pg_regulation_depth.addLegend()
-    pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-    pg_regulation_depth.setLabel('left', "Depth", units="m")
-    dock_regulation1.addWidget(pg_regulation_depth)
-
-    pg_regulation_u = pg.PlotWidget()
-    pg_regulation_u.addLegend()
-    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
-    pg_regulation_u.setLabel('left', "u")
-    dock_regulation1.addWidget(pg_regulation_u)
-
-    pg_regulation_set_point = pg.PlotWidget()
-    pg_regulation_set_point.addLegend()
-    pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
-    pg_regulation_set_point.setLabel('left', "set_point")
-    dock_regulation1.addWidget(pg_regulation_set_point)
-
-    pg_regulation_u.setXLink(pg_regulation_depth)
-    pg_regulation_set_point.setXLink(pg_regulation_depth)
-
-#### Regulation debug 2 ####
-if(len(time_regulation_debug)>0):
-    dock_regulation2 = Dock("Regulation 2")
-    area_piston.addDock(dock_regulation2, 'above', dock_piston_distance)
-
-    pg_regulation_depth2 = pg.PlotWidget()
-    pg_regulation_depth2.addLegend()
-    pg_regulation_depth2.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
-    pg_regulation_depth2.plot(time_mission, mission_depth, pen=(0,255,0), name="depth")
-    pg_regulation_depth2.setLabel('left', "depth")
-    dock_regulation2.addWidget(pg_regulation_depth2)
-
-    pg_regulation_y = pg.PlotWidget()
-    pg_regulation_y.addLegend()
-    pg_regulation_y.plot(time_regulation_debug, regulation_y, pen=(255,0,0), name="y")
-    pg_regulation_y.setLabel('left', "y")
-    dock_regulation2.addWidget(pg_regulation_y)
-
-    pg_regulation_dy = pg.PlotWidget()
-    pg_regulation_dy.addLegend()
-    pg_regulation_dy.plot(time_regulation_debug, regulation_dy, pen=(255,0,0), name="dy")
-    pg_regulation_dy.setLabel('left', "dy")
-    dock_regulation2.addWidget(pg_regulation_dy)
-
-    pg_regulation_u = pg.PlotWidget()
-    pg_regulation_u.addLegend()
-    pg_regulation_u.plot(time_kalman, np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*7.158e-07, pen=(255,0,0), name="volume equilibrium")
-    pg_regulation_u.setLabel('left', "volume equilibrium")
-    dock_regulation2.addWidget(pg_regulation_u)
-
-    pg_regulation_u.setXLink(pg_regulation_depth2)
-    pg_regulation_dy.setXLink(pg_regulation_depth2)
-    pg_regulation_y.setXLink(pg_regulation_depth2)
-
 #### Piston ####
 if(len(time_piston_state)>0):
     dock_piston = Dock("Piston")
@@ -451,11 +393,73 @@ if(len(time_piston_state)>0):
     pg_piston_speed.setXLink(pg_piston_state_position2)
     pg_piston_velocity.setXLink(pg_piston_state_position2)
 
+#################### Regulation ####################
+
+#### Regulation debug ####
+if(len(time_regulation_debug)>0):
+    dock_regulation1 = Dock("Regulation 1")
+    area_regulation.addDock(dock_regulation1)
+
+    pg_regulation_depth = pg.PlotWidget()
+    pg_regulation_depth.addLegend()
+    pg_regulation_depth.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
+    pg_regulation_depth.setLabel('left', "Depth", units="m")
+    dock_regulation1.addWidget(pg_regulation_depth)
+
+    pg_regulation_u = pg.PlotWidget()
+    pg_regulation_u.addLegend()
+    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
+    pg_regulation_u.setLabel('left', "u")
+    dock_regulation1.addWidget(pg_regulation_u)
+
+    pg_regulation_set_point = pg.PlotWidget()
+    pg_regulation_set_point.addLegend()
+    pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point, pen=(255,0,0), name="set_point")
+    pg_regulation_set_point.setLabel('left', "set_point")
+    dock_regulation1.addWidget(pg_regulation_set_point)
+
+    pg_regulation_u.setXLink(pg_regulation_depth)
+    pg_regulation_set_point.setXLink(pg_regulation_depth)
+
+#### Regulation debug 2 ####
+if(len(time_regulation_debug)>0):
+    dock_regulation2 = Dock("Regulation 2")
+    area_regulation.addDock(dock_regulation2, 'above', dock_regulation1)
+
+    pg_regulation_depth2 = pg.PlotWidget()
+    pg_regulation_depth2.addLegend()
+    pg_regulation_depth2.plot(time_fusion_depth, fusion_depth, pen=(255,0,0), name="depth")
+    pg_regulation_depth2.plot(time_mission, mission_depth, pen=(0,255,0), name="depth")
+    pg_regulation_depth2.setLabel('left', "depth")
+    dock_regulation2.addWidget(pg_regulation_depth2)
+
+    pg_regulation_y = pg.PlotWidget()
+    pg_regulation_y.addLegend()
+    pg_regulation_y.plot(time_regulation_debug, regulation_y, pen=(255,0,0), name="y")
+    pg_regulation_y.setLabel('left', "y")
+    dock_regulation2.addWidget(pg_regulation_y)
+
+    pg_regulation_dy = pg.PlotWidget()
+    pg_regulation_dy.addLegend()
+    pg_regulation_dy.plot(time_regulation_debug, regulation_dy, pen=(255,0,0), name="dy")
+    pg_regulation_dy.setLabel('left', "dy")
+    dock_regulation2.addWidget(pg_regulation_dy)
+
+    pg_regulation_u = pg.PlotWidget()
+    pg_regulation_u.addLegend()
+    pg_regulation_u.plot(time_kalman, np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*7.158e-07, pen=(255,0,0), name="volume equilibrium")
+    pg_regulation_u.setLabel('left', "volume equilibrium")
+    dock_regulation2.addWidget(pg_regulation_u)
+
+    pg_regulation_u.setXLink(pg_regulation_depth2)
+    pg_regulation_dy.setXLink(pg_regulation_depth2)
+    pg_regulation_y.setXLink(pg_regulation_depth2)
+
 #### Regulation Heading ####
 
 if(len(time_regulation_heading)>0):
     dock_regulation_heading = Dock("Regulation Heading")
-    area_piston.addDock(dock_regulation_heading, 'above', dock_piston_distance)
+    area_regulation.addDock(dock_regulation_heading, 'above', dock_regulation1)
 
     pg_euler_yaw = pg.PlotWidget()
     pg_euler_yaw.addLegend()
@@ -488,7 +492,7 @@ if(len(time_regulation_heading)>0):
 #### Kalman ####
 if(len(time_kalman)>0):
     dock_kalman = Dock("Kalman")
-    area_piston.addDock(dock_kalman, 'above', dock_piston_distance)
+    area_regulation.addDock(dock_kalman, 'above', dock_regulation1)
 
     pg_kalman_velocity = pg.PlotWidget()
     pg_kalman_velocity.addLegend()
@@ -524,37 +528,62 @@ if(len(time_kalman)>0):
     B = 0.5*rho*Cf/m
     A = g*rho/m
 
-    dock_kalman = Dock("Kalman 2")
-    area_piston.addDock(dock_kalman, 'above', dock_piston_distance)
+    dock_kalman2 = Dock("Kalman 2")
+    area_regulation.addDock(dock_kalman2, 'above', dock_regulation1)
 
     pg_kalman_velocity2 = pg.PlotWidget()
     pg_kalman_velocity2.addLegend()
     pg_kalman_velocity2.plot(time_kalman, -B*np.abs(np.array(kalman_velocity))*np.array(kalman_velocity), pen=(255,0,0), name="-B|x1|x1")
-    dock_kalman.addWidget(pg_kalman_velocity2)
+    dock_kalman2.addWidget(pg_kalman_velocity2)
 
     pg_kalman_depth2 = pg.PlotWidget()
     pg_kalman_depth2.addLegend()
     pg_kalman_depth2.plot(time_kalman, kalman_depth, pen=(255,0,0), name="depth")
-    dock_kalman.addWidget(pg_kalman_depth2)
+    dock_kalman2.addWidget(pg_kalman_depth2)
 
     pg_kalman_volume2 = pg.PlotWidget()
     pg_kalman_volume2.addLegend()
     pg_kalman_volume2.plot(time_kalman, -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*chi), pen=(255,0,0), name="-A(x3+x4-chi*x2)")
-    dock_kalman.addWidget(pg_kalman_volume2)
+    dock_kalman2.addWidget(pg_kalman_volume2)
 
     pg_kalman_acc2 = pg.PlotWidget()
     pg_kalman_acc2.addLegend()
     kalman_acc = -A*(np.array(kalman_volume)+np.array(kalman_offset)-np.array(kalman_depth)*7.158e-07) -B*abs(np.array(kalman_velocity))*np.array(kalman_velocity)
     pg_kalman_acc2.plot(time_kalman, kalman_acc, pen=(255,0,0), name="acc")
-    dock_kalman.addWidget(pg_kalman_acc2)
+    dock_kalman2.addWidget(pg_kalman_acc2)
 
     pg_kalman_depth2.setXLink(pg_kalman_velocity2)
     pg_kalman_volume2.setXLink(pg_kalman_velocity2)
     pg_kalman_acc2.setXLink(pg_kalman_velocity2)
 
 if(len(time_kalman)>0):
+
+    dock_kalman3 = Dock("Kalman 3")
+    area_regulation.addDock(dock_kalman3, 'above', dock_regulation1)
+    tick_to_volume = (1.75e-3/48.0)*((0.05/2.0)**2)*np.pi
+
+    volume_measured = (1500-np.array(piston_state_position))*tick_to_volume
+    f_V = interpolate.interp1d(time_piston_state, volume_measured, bounds_error=False)
+    f_V_kalman = interpolate.interp1d(time_kalman, kalman_volume, bounds_error=False)
+
+    V_interp = f_V(time_kalman)
+
+    pg_volume_compare = pg.PlotWidget()
+    pg_volume_compare.addLegend()
+    pg_volume_compare.plot(time_kalman, V_interp, pen=(255,0,0), name="Volume measured")
+    pg_volume_compare.plot(time_kalman, kalman_volume, pen=(0,255,0), name="Volume kalman")
+    dock_kalman3.addWidget(pg_volume_compare)
+
+    pg_volume_diff = pg.PlotWidget()
+    pg_volume_diff.addLegend()
+    pg_volume_diff.plot(time_kalman, V_interp-kalman_volume, pen=(255,0,0), name="diff")
+    dock_kalman3.addWidget(pg_volume_diff)
+
+    pg_volume_compare.setXLink(pg_volume_diff)
+
+if(len(time_kalman)>0):
     dock_kalman_cov = Dock("Kalman Cov")
-    area_piston.addDock(dock_kalman_cov, 'above', dock_piston_distance)
+    area_regulation.addDock(dock_kalman_cov, 'above', dock_regulation1)
 
     pg_kalman_cov_depth = pg.PlotWidget()
     pg_kalman_cov_depth.addLegend()

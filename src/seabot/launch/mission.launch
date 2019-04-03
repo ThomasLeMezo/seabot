@@ -13,5 +13,7 @@
         <param name="flash_time_next_waypoint" value="3" />
     </node>
 
+    <node pkg="rosparam" type="dump" name="record_param" output="screen" args="~/.ros/mission.yaml"/>
+
 </launch>
 

@@ -20,8 +20,9 @@
 using namespace std;
 using namespace Eigen;
 
-#define NB_MESURES 2
-#define NB_STATES 4
+#define NB_MESURES 1
+#define NB_STATES 3
+#define NB_COMMAND 1
 
 double depth = 0.0;
 double velocity_fusion = 0.0;
@@ -45,31 +46,25 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_set_point = msg->position_set_point;
 }
 
-void piston_velocity_callback(const seabot_piston_driver::PistonVelocity::ConstPtr& msg){
-  piston_command_u = -msg->velocity*tick_to_volume;
-}
-
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
     depth = msg->depth;
     velocity_fusion = msg->velocity;
     depth_valid = true;
     time_last_depth = ros::Time::now();
-//    zero_depth_pressure = msg->zero_depth_pressure;
 }
 
 
-Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_STATES, 1> &u){
+Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_COMMAND, 1> &u){
   Matrix<double,NB_STATES, 1> y = Matrix<double,NB_STATES, 1>::Zero();
-  y(0) = -coeff_A*(x(2)+x(3)-coeff_compressibility*x(1))-coeff_B*copysign(x(0)*x(0), x(0));
+  y(0) = -coeff_A*(u(0)+x(2)-coeff_compressibility*x(1))-coeff_B*copysign(x(0)*x(0), x(0));
   y(1) = x(0);
-  y(2) = u(2);
-  y(3) = 0.0;
+  y(2) = 0;
   return y;
 }
 
 void kalman_predict(const Matrix<double,NB_STATES, 1> &xup,
                     const Matrix<double,NB_STATES, NB_STATES> &Gup,
-                    const Matrix<double,NB_STATES, 1> &u,
+                    const Matrix<double,NB_COMMAND, 1> &u,
                     const Matrix<double,NB_STATES, NB_STATES> &gamma_alpha,
                     const Matrix<double,NB_STATES, NB_STATES> &Ak,
                     const double &dt,
@@ -95,7 +90,7 @@ void kalman_correc(const Matrix<double,NB_STATES, 1> &x0,
 
 void kalman(Matrix<double,NB_STATES, 1> &x,
             Matrix<double,NB_STATES,NB_STATES> &gamma,
-            const Matrix<double,NB_STATES, 1> &u,
+            const Matrix<double,NB_COMMAND, 1> &u,
             const Matrix<double,NB_MESURES, 1> &y,
             const Matrix<double,NB_STATES, NB_STATES> &gamma_alpha,
             const Matrix<double,NB_MESURES,NB_MESURES> &gamma_beta,
@@ -127,6 +122,8 @@ int main(int argc, char *argv[]){
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
 
+  const double estimated_first_error_equilibrium_tick = n_private.param<double>("estimated_first_error_equilibrium_tick", 250);
+
   const double limit_min_depth = n.param<double>("limit_min_depth", 0.5);
 
   g_rho_bar = g*rho/1e5;
@@ -146,7 +143,6 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
-  ros::Subscriber piston_velocity_sub = n.subscribe("/driver/piston/velocity", 1, piston_velocity_callback);
 
   // Publisher
   ros::Publisher kalman_pub = n.advertise<seabot_fusion::Kalman>("kalman", 1);
@@ -162,35 +158,29 @@ int main(int argc, char *argv[]){
   Matrix<double, NB_STATES, 1> xhat = Matrix<double, NB_STATES, 1>::Zero();
   Matrix<double,NB_STATES,NB_STATES> gamma = Matrix<double,NB_STATES,NB_STATES>::Zero();
 
-  gamma(0,0) = pow(1.0, 2); // velocity
-  gamma(1,1) = pow(25.0, 2); // Depth
-  gamma(2,2) = pow(1e-3, 2); // Piston Volume (m3)
-  gamma(3,3) = pow(1e-3, 2); // Error offset;
+  gamma(0,0) = pow(1e-1, 2); // velocity
+  gamma(1,1) = pow(1e-2, 2); // Depth
+  gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2); // Error offset;
 
-  gamma_alpha(0,0) = pow(1e-2, 2); // velocity
-  gamma_alpha(1,1) = pow(1e-3, 2); // Depth
-  gamma_alpha(2,2) = pow(1e-5, 2); // Piston Volume (m3)
+  gamma_alpha(0,0) = pow(1e-3, 2); // velocity
+  gamma_alpha(1,1) = pow(1e-4, 2); // Depth
   gamma_alpha(3,3) = pow(1e-8, 2); // Error offset;
 
   gamma_beta(0, 0) = pow(1e-3, 2); // Depth
-  gamma_beta(1, 1) = pow(3e-10, 2); // Piston Volume
 
   Ak(0, 0) = 0.0;
   Ak(0, 1) = coeff_A*coeff_compressibility; // To Check
   Ak(0, 2) = -coeff_A;
-  Ak(0, 3) = -coeff_A;
   Ak(1, 0) = 1.;
 
   Ck(0, 1) = 1.;
-  Ck(1, 2) = 1.;
 
   xhat(0) = 0.0;
   xhat(1) = 0.0;
   xhat(2) = 0.0;
-  xhat(3) = 0.0;
 
   Matrix<double,NB_MESURES, 1> measure = Matrix<double,NB_MESURES, 1>::Zero();
-  Matrix<double,NB_STATES, 1> command = Matrix<double,NB_STATES, 1>::Zero();
+  Matrix<double,NB_COMMAND, 1> command = Matrix<double,NB_COMMAND, 1>::Zero();
 
   double dt = 1./frequency;
   ros::Time t_last, t;
@@ -214,8 +204,7 @@ int main(int argc, char *argv[]){
       Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
 
       measure(0) = depth;
-      measure(1) = (piston_ref_eq - piston_position)*tick_to_volume;
-      command(2) = piston_command_u;
+      command(0) = (piston_ref_eq - piston_position)*tick_to_volume;
 
       kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
       depth_valid = false;
@@ -224,33 +213,24 @@ int main(int argc, char *argv[]){
     else if(depth<=limit_min_depth){
       xhat(0) = velocity_fusion;
       xhat(1) = depth;
-      xhat(2) = (piston_ref_eq - piston_position)*tick_to_volume;
-      xhat(3) = xhat(3);
+      xhat(2) = xhat(2);
       update = true;
     }
 
     if(update){
       msg.velocity = xhat(0);
       msg.depth = xhat(1);
-      msg.volume = xhat(2);
       msg.offset = xhat(3);
 
       msg.covariance[0] = gamma(0,0);
       msg.covariance[1] = gamma(1,0);
       msg.covariance[2] = gamma(2,0);
-      msg.covariance[3] = gamma(3,0);
-      msg.covariance[4] = gamma(0,1);
-      msg.covariance[5] = gamma(1,1);
-      msg.covariance[6] = gamma(2,1);
-      msg.covariance[7] = gamma(3,1);
-      msg.covariance[8] = gamma(0,2);
-      msg.covariance[9] = gamma(1,2);
-      msg.covariance[10] = gamma(2,2);
-      msg.covariance[11] = gamma(3,2);
-      msg.covariance[12] = gamma(0,3);
-      msg.covariance[13] = gamma(1,3);
-      msg.covariance[14] = gamma(2,3);
-      msg.covariance[15] = gamma(3,3);
+      msg.covariance[3] = gamma(0,1);
+      msg.covariance[4] = gamma(1,1);
+      msg.covariance[5] = gamma(2,1);
+      msg.covariance[6] = gamma(0,2);
+      msg.covariance[7] = gamma(1,2);
+      msg.covariance[8] = gamma(2,2);
 
       kalman_pub.publish(msg);
     }

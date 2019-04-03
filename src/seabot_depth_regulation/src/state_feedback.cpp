@@ -57,7 +57,6 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
 void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(0) = msg->velocity;
   x(1) = msg->depth;
-  x(2) = msg->volume;
   x(3) = msg->offset;
   time_last_state = ros::Time::now();
 }
@@ -187,6 +186,8 @@ int main(int argc, char *argv[]){
       case STATE_REGULATION:
         if(x(1)>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
+
+            x(2) = (piston_ref_eq - piston_position)*tick_to_volume;
 
             // Compute several commands according to velocity acceptable bounds
             array<double, 2> u_tab;
