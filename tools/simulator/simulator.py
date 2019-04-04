@@ -40,7 +40,7 @@ l2 = root**2
 A_coeff = g*rho/m
 B_coeff = 0.5*rho*Cf/m
 
-def f(x, u):
+def f(x, u, gamma):
 	y = np.array(x)
 	y[0] = -A_coeff*(u+x[2]-chi*x[1])-B_coeff*x[0]*abs(x[0])
 	y[1] = x[0]
@@ -49,7 +49,7 @@ def f(x, u):
 
 def kalman_predict(xup,Gup,u,gamma_alpha,A, dt):
     gamma1 = A @ Gup @ A.T + gamma_alpha
-    x1 = xup + f(xup, u)*dt
+    x1 = xup + f(xup, u, gamma1)*dt
     return(x1,gamma1)
 
 def kalman_correc(x0,gamma0,y,gamma_beta,C):
@@ -101,9 +101,9 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 					  [0, (1e-2)**2, 0],
 					  [0, 0, (1e-5)**2]])
 	gamma_alpha = np.array([[(1e-3)**2, 0, 0],
-					  [0, (1e-4)**2, 0],
-					  [0, 0, (1e-1)**2]])
-	gamma_beta = np.array([(1e-3)**2])
+					  		[0, (1e-4)**2, 0],
+					  		[0, 0, (1e-8)**2]])
+	gamma_beta = np.array([(1e-3)**2]) # measure
 
 	A = np.array([[0., chi*A_coeff, -A_coeff],
 					  [1, 0, 0],
@@ -112,34 +112,37 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 
 	memory = np.append(np.append(0., x), 0.)
 	memory_kalman = np.append(0., (x_hat))
+	memory_kalman_cov = np.append(0., np.array([gamma[0][0], gamma[1][1], gamma[2][2]]))
 	for t in np.arange(dt, tmax, dt):
 		u = control(x, depth_target, dt)
 		x = euler(x, u, dt)
 		memory = np.vstack([memory, np.append(np.append(t, x),abs(u*dt)*x[1])])
 
 		# Kalman
-		cmd = x[2]+volume_offset
-		y = x[1]#+ np.random.normal(1.0, (1e-3)**2)
+		cmd = x[2]-volume_offset
+		y = x[1] #+ np.random.normal(1.0, (1e-3)**2)
 		A[0][0] = -2.*B_coeff*x_hat[0] # x_hat[0]
 		(x_hat,gamma) = kalman(x_hat,gamma,cmd,y,gamma_alpha,gamma_beta,A,C, dt)		
 		memory_kalman = np.vstack([memory_kalman, np.append(t, (x_hat))])
+		memory_kalman_cov = np.vstack([memory_kalman_cov, np.append(t, (np.array([gamma[0][0], gamma[1][1], gamma[2][2]])))])
 
 	print("volume_offset = ", volume_offset)
 	print("x_hat = ", x_hat)
 	print("x     = ", x)
-	return (memory, memory_kalman)
+	print("Cov = ", gamma)
+	return (memory, memory_kalman, memory_kalman_cov)
 
 def plot_result(result):
-	fig, (ax1, ax2, ax3, ax4) = plt.subplots(4,1, sharex=True)
+	fig, (ax1, ax2, axes[0,2], ax4) = plt.subplots(4,1, sharex=True)
 
-	ax1.set_ylabel('velocity (m/s)')
+	ax1.set_ylabel('x1 (velocity [m/s])')
 	ax1.plot(np.transpose(result)[0], np.transpose(result)[1])
 
-	ax2.set_ylabel('depth (m)')
+	ax2.set_ylabel('x2 (depth [m])')
 	ax2.plot(np.transpose(result)[0], np.transpose(result)[2])
 	ax2.invert_yaxis()
 
-	ax3.set_ylabel('volume (m3)')
+	ax3.set_ylabel('x3 (volume [m3])')
 	ax3.plot(np.transpose(result)[0], np.transpose(result)[3])
 
 	ax4.set_ylabel('energy')
@@ -147,20 +150,29 @@ def plot_result(result):
 
 	plt.show()
 
-def plot_result_kalman(result_kalman, result_euler):
-	fig, (ax1, ax2, ax3) = plt.subplots(3,1, sharex=True)
+def plot_result_kalman(result_kalman, result_euler, result_cov):
+	fig, axes = plt.subplots(3,2)
 
-	ax1.set_ylabel('velocity (m/s)')
-	ax1.plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[1])
-	ax1.plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[1])
+	axes[0,0].set_ylabel('x1 (velocity [m/s])')
+	axes[0,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[1])
+	axes[0,0].plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[1])
 
-	ax2.set_ylabel('depth (m)')
-	ax2.plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[2])
-	ax2.plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[2])
-	ax2.invert_yaxis()
+	axes[1,0].set_ylabel('x2 (depth [m])')
+	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[2])
+	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[2])
+	axes[1,0].invert_yaxis()
 
-	ax3.set_ylabel('volume offset (ticks)')
-	ax3.plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[3])
+	axes[2,0].set_ylabel('x4 (volume offset [m3])')
+	axes[2,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[3])
+
+	axes[0,1].set_ylabel('cov x1 (velocity)')
+	axes[0,1].plot(np.transpose(result_cov)[0], np.transpose(result_cov)[1])
+
+	axes[1,1].set_ylabel('cov x2 (depth)')
+	axes[1,1].plot(np.transpose(result_cov)[0], np.transpose(result_cov)[2])
+
+	axes[2,1].set_ylabel('cov x4 (offset)')
+	axes[2,1].plot(np.transpose(result_cov)[0], np.transpose(result_cov)[3])
 
 	plt.show()
 
@@ -205,9 +217,9 @@ def example_regulated_more_compressible():
 	chi = 0.0
 	depth_target = 5.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	(memory, memory_kalman) = simulate_regulated(x_init, 400., 0.1, depth_target)
+	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 400., 0.1, depth_target)
 	# plot_result(memory)
-	plot_result_kalman(memory_kalman, memory)
+	plot_result_kalman(memory_kalman, memory, memory_kalman_cov)
 
 if __name__ == "__main__":
 	# execute only if run as a script
