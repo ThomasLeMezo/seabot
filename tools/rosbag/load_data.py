@@ -403,13 +403,11 @@ def load_bag(filename):
 		elif(topic=="/fusion/kalman"):
 			time_kalman.append((t-startTime).to_sec())
 			kalman_depth.append(msg.depth)
-			kalman_volume.append(msg.volume)
 			kalman_velocity.append(msg.velocity)
 			kalman_offset.append(msg.offset)
 			kalman_cov_depth.append(msg.covariance[0])
-			kalman_cov_velocity.append(msg.covariance[5])
-			kalman_cov_volume.append(msg.covariance[10])
-			kalman_cov_offset.append(msg.covariance[15])
+			kalman_cov_velocity.append(msg.covariance[4])
+			kalman_cov_offset.append(msg.covariance[8])
 
 		elif(topic=="/safety/safety"):
 			time_safety.append((t-startTime).to_sec())

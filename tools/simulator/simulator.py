@@ -17,7 +17,6 @@ m = 9.045
 rho = 1025.0
 d_flange = 0.24
 d_piston = 0.05
-chi = 7.158e-07 # Compressibility ratio compare to water (m3/m)
 
 Cf = pi*(d_flange/2.0)**2
 
@@ -30,32 +29,41 @@ delta_volume_max = 1.718e-4/240.0 # m3/s
 tick_to_volume = (screw_thread/tick_per_turn)*((d_piston/2.0)**2)*np.pi
 
 tick_offset = 250.0
+chi = 20.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
 
 # Regulation
 beta = 2./pi*0.03 # Set the limit speed : 5cm/s
-root = -1.	 # Set the root of feed-back regulation
+root = -1.0	 # Set the root of feed-back regulation
 
 l1 = -2.*root
 l2 = root**2
 A_coeff = g*rho/m
 B_coeff = 0.5*rho*Cf/m
 
-def f(x, u, gamma):
+def f(x, u, gamma_alpha):
 	y = np.array(x)
 	y[0] = -A_coeff*(u+x[2]-chi*x[1])-B_coeff*x[0]*abs(x[0])
 	y[1] = x[0]
-	y[2] = 0.
+	y[2] = 0.0
 	return y
 
 def kalman_predict(xup,Gup,u,gamma_alpha,A, dt):
     gamma1 = A @ Gup @ A.T + gamma_alpha
-    x1 = xup + f(xup, u, gamma1)*dt
+    x1 = xup + f(xup, u, gamma_alpha)*dt
+    # print("A = ", A)
+    # print("Gup = ", Gup)
+    # print("A.T = ", A.T)
+    # print("A @ Gup = ", A @ Gup)
+    # print("A @ Gup @ A.T = ", A @ Gup @ A.T)
     return(x1,gamma1)
 
 def kalman_correc(x0,gamma0,y,gamma_beta,C):
     S = C @ gamma0 @ C.T + gamma_beta
+    #print("C @ gamma0 @ C.T = ", C @ gamma0 @ C.T)
     K = gamma0 @ C.T @ inv(S) 
+    #print("gamma0 @ C.T = ", gamma0 @ C.T)
     ytilde = y - C @ x0
+    #print("ytilde = ", ytilde)
     Gup = (eye(len(x0))-K @ C) @ gamma0
     xup = x0 + K@ytilde
     return(xup,Gup) 
@@ -69,7 +77,7 @@ def euler(x, u, dt):
 	y=np.array(x)
 	y[0] += dt*(-A_coeff*(x[2]-chi*x[1])-B_coeff*x[0]*abs(x[0]))
 	y[1] += dt*x[0]
-	y[2] += u
+	y[2] += dt*u
 	return y
 
 def control(x, depth_target, dt):
@@ -97,17 +105,19 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 	volume_offset = tick_offset*tick_to_volume
 
 	x_hat = np.array([0.0, 0.0, 0.0])
-	gamma = np.array([[(1e-1)**2, 0, 0],
-					  [0, (1e-2)**2, 0],
-					  [0, 0, (1e-5)**2]])
-	gamma_alpha = np.array([[(1e-3)**2, 0, 0],
-					  		[0, (1e-4)**2, 0],
-					  		[0, 0, (1e-8)**2]])
-	gamma_beta = np.array([(1e-3)**2]) # measure
+	gamma = np.array([[(1e-2)**2,	0.0, 		0.0],
+					  [0.0,			(1e-3)**2, 		0.0		],
+					  [0.0, 		0.0, 		(1)**2	]])
 
-	A = np.array([[0., chi*A_coeff, -A_coeff],
-					  [1, 0, 0],
-					  [0, 0, 0.]])
+	gamma_alpha = np.array([[(1e-4)**2, 0, 0],
+					  		[0, (1e-5)**2, 0],
+					  		[0, 0, (1e-7)**2]])
+
+	gamma_beta = np.array([(1e-4)**2]) # measure
+
+	A = np.array([[1., chi*A_coeff, -A_coeff],
+					  [1, 1., 0],
+					  [0, 0, 1.]])
 	C = np.array([[0, 1, 0]])
 
 	memory = np.append(np.append(0., x), 0.)
@@ -133,7 +143,7 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 	return (memory, memory_kalman, memory_kalman_cov)
 
 def plot_result(result):
-	fig, (ax1, ax2, axes[0,2], ax4) = plt.subplots(4,1, sharex=True)
+	fig, (ax1, ax2, ax3, ax4) = plt.subplots(4,1, sharex=True)
 
 	ax1.set_ylabel('x1 (velocity [m/s])')
 	ax1.plot(np.transpose(result)[0], np.transpose(result)[1])
@@ -163,7 +173,7 @@ def plot_result_kalman(result_kalman, result_euler, result_cov):
 	axes[1,0].invert_yaxis()
 
 	axes[2,0].set_ylabel('x4 (volume offset [m3])')
-	axes[2,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[3])
+	axes[2,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[3]/tick_to_volume)
 
 	axes[0,1].set_ylabel('cov x1 (velocity)')
 	axes[0,1].plot(np.transpose(result_cov)[0], np.transpose(result_cov)[1])
@@ -214,10 +224,10 @@ def example_regulated_less_compressible():
 def example_regulated_more_compressible():
 	global chi
 	# chi = 7.158e-07 # Compressibility (m3/m)
-	chi = 0.0
+	# chi = 0.0
 	depth_target = 5.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 400., 0.1, depth_target)
+	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 1000., 0.1, depth_target)
 	# plot_result(memory)
 	plot_result_kalman(memory_kalman, memory, memory_kalman_cov)
 

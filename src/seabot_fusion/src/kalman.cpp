@@ -159,14 +159,14 @@ int main(int argc, char *argv[]){
   Matrix<double,NB_STATES,NB_STATES> gamma = Matrix<double,NB_STATES,NB_STATES>::Zero();
 
   gamma(0,0) = pow(1e-1, 2); // velocity
-  gamma(1,1) = pow(1e-2, 2); // Depth
+  gamma(1,1) = pow(1e-3, 2); // Depth
   gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2); // Error offset;
 
   gamma_alpha(0,0) = pow(1e-3, 2); // velocity
-  gamma_alpha(1,1) = pow(1e-4, 2); // Depth
-  gamma_alpha(3,3) = pow(1e-8, 2); // Error offset;
+  gamma_alpha(1,1) = pow(1e-5, 2); // Depth
+  gamma_alpha(2,2) = pow(1e-7, 2); // Error offset;
 
-  gamma_beta(0, 0) = pow(1e-3, 2); // Depth
+  gamma_beta(0, 0) = pow(1e-4, 2); // Depth
 
   Ak(0, 0) = 0.0;
   Ak(0, 1) = coeff_A*coeff_compressibility; // To Check
@@ -202,7 +202,6 @@ int main(int argc, char *argv[]){
 
       Ak(0,0) = -2.*coeff_B*abs(xhat(0));
       Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
-
       measure(0) = depth;
       command(0) = (piston_ref_eq - piston_position)*tick_to_volume;
 
@@ -220,7 +219,7 @@ int main(int argc, char *argv[]){
     if(update){
       msg.velocity = xhat(0);
       msg.depth = xhat(1);
-      msg.offset = xhat(3);
+      msg.offset = xhat(2);
 
       msg.covariance[0] = gamma(0,0);
       msg.covariance[1] = gamma(1,0);
