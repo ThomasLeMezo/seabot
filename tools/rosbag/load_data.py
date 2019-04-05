@@ -187,6 +187,7 @@ safety_published_frequency = []
 safety_depth_limit = []
 safety_batteries_limit = []
 safety_depressurization = []
+safety_seafloor = []
 
 # /safety/debug
 time_safety_debug = []
@@ -428,6 +429,10 @@ def load_bag(filename):
 				safety_depressurization.append(1)
 			else:
 				safety_depressurization.append(0)
+			if(msg.seafloor):
+				safety_seafloor.append(1)
+			else:
+				safety_seafloor.append(0)
 
 		elif(topic=="/safety/debug"):
 			time_safety_debug.append((t-startTime).to_sec())
