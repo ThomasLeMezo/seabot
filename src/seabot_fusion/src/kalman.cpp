@@ -126,6 +126,10 @@ int main(int argc, char *argv[]){
 
   const double limit_min_depth = n.param<double>("limit_min_depth", 0.5);
 
+  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-4);
+  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5);
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 1e-8);
+
   g_rho_bar = g*rho/1e5;
 
   coeff_A = g*rho/m;
@@ -162,9 +166,9 @@ int main(int argc, char *argv[]){
   gamma(1,1) = pow(1e-3, 2); // Depth
   gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2); // Error offset;
 
-  gamma_alpha(0,0) = pow(1e-3, 2); // velocity
-  gamma_alpha(1,1) = pow(1e-5, 2); // Depth
-  gamma_alpha(2,2) = pow(1e-7, 2); // Error offset;
+  gamma_alpha(0,0) = pow(gamma_alpha_velocity, 2); // velocity (1e-4)
+  gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth (1e-5)
+  gamma_alpha(2,2) = pow(gamma_alpha_offset, 2); // Error offset (1e-7)
 
   gamma_beta(0, 0) = pow(1e-4, 2); // Depth
 
