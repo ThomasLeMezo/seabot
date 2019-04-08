@@ -9,6 +9,7 @@
 				<param name="gamma_alpha_velocity" value="1e-4" />
 				<param name="gamma_alpha_depth" value="1e-5" />
 				<param name="gamma_alpha_offset" value="1e-8" />
+				<param name="gamma_alpha_chi" value="1e-8" />
   </node>
 
 </launch>

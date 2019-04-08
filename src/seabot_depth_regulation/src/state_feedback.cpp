@@ -37,14 +37,13 @@ double root = -1.0;
 double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
-double coeff_compressibility = 0.;
 
 enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION, STATE_STATIONARY};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
 seabot_depth_regulation::RegulationDebug debug_msg;
 
-#define NB_STATES 4
+#define NB_STATES 5
 // [Velocity; Depth; Volume; Offset]
 Matrix<double, NB_STATES, 1> x = Matrix<double, NB_STATES, 1>::Zero();
 
@@ -58,6 +57,7 @@ void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(0) = msg->velocity;
   x(1) = msg->depth;
   x(3) = msg->offset;
+  x(4) = msg->chi;
   time_last_state = ros::Time::now();
 }
 
@@ -80,21 +80,21 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   const double x2 = x(1);
   const double x3 = x(2);
   const double x4 = x(3);
+  const double x5 = x(4);
   const double A = coeff_A;
   const double B = coeff_B;
-  const double alpha = coeff_compressibility;
   const double beta = velocity_depth/M_PI_2;
 
   double e = set_point-x2;
   double y = x1-beta*atan(e);
-  double dx1 = -A*(x3+x4-alpha*x2)-B*abs(x1)*x1;
+  double dx1 = -A*(x3+x4-x5*x2)-B*abs(x1)*x1;
   double D = 1+pow(e,2);
   double dy = dx1 + beta*x1/D;
 
   debug_msg.y = y;
   debug_msg.dy = dy;
 
-  return (l1*dy+l2*y+ beta*(dx1*D+2.*e*pow(x1,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+alpha*x1;
+  return (l1*dy+l2*y+ beta*(dx1*D+2.*e*pow(x1,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+x5*x1;
 }
 
 bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }
@@ -115,7 +115,6 @@ int main(int argc, char *argv[]){
   const double g = n.param<double>("/g", 9.81);
   const double m = n.param<double>("/m", 8.800);
   const double diam_collerette = n.param<double>("/diam_collerette", 0.24);
-  const double compressibility_tick = n.param<double>("/compressibility_tick", 20.0);
   const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
@@ -123,7 +122,6 @@ int main(int argc, char *argv[]){
   const double piston_max_value = n.param<double>("/piston_max_value", 2400);
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
-  coeff_compressibility = compressibility_tick*tick_to_volume;
   coeff_A = g*rho/m;
   coeff_B = 0.5*rho*Cf/m;
 

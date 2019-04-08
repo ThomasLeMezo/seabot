@@ -502,13 +502,19 @@ if(len(time_kalman)>0):
     pg_kalman_depth.plot(time_kalman, kalman_depth, pen=(255,0,0), name="depth (x2)")
     dock_kalman.addWidget(pg_kalman_depth)
 
-    pg_kalman_acc = pg.PlotWidget()
-    pg_kalman_acc.addLegend()
-    pg_kalman_acc.plot(time_kalman, np.array(kalman_offset)/tick_to_volume, pen=(255,0,0), name="offset (x4) [ticks]")
-    dock_kalman.addWidget(pg_kalman_acc)
+    pg_kalman_offset = pg.PlotWidget()
+    pg_kalman_offset.addLegend()
+    pg_kalman_offset.plot(time_kalman, np.array(kalman_offset)/tick_to_volume, pen=(255,0,0), name="offset (x4) [ticks]")
+    dock_kalman.addWidget(pg_kalman_offset)
+
+    pg_kalman_chi = pg.PlotWidget()
+    pg_kalman_chi.addLegend()
+    pg_kalman_chi.plot(time_kalman, np.array(kalman_chi)/tick_to_volume, pen=(255,0,0), name="chi (x5) [ticks]")
+    dock_kalman.addWidget(pg_kalman_chi)
 
     pg_kalman_depth.setXLink(pg_kalman_velocity)
-    pg_kalman_acc.setXLink(pg_kalman_velocity)
+    pg_kalman_offset.setXLink(pg_kalman_velocity)
+    pg_kalman_chi.setXLink(pg_kalman_velocity)
 
 if(len(time_kalman)>0):
     dock_kalman_cov = Dock("Kalman Cov")
@@ -529,8 +535,14 @@ if(len(time_kalman)>0):
     pg_kalman_cov_offset.plot(time_kalman,kalman_cov_offset, pen=(255,0,0), name="cov offset")
     dock_kalman_cov.addWidget(pg_kalman_cov_offset)
 
+    pg_kalman_cov_chi = pg.PlotWidget()
+    pg_kalman_cov_chi.addLegend()
+    pg_kalman_cov_chi.plot(time_kalman,kalman_cov_chi, pen=(255,0,0), name="cov chi")
+    dock_kalman_cov.addWidget(pg_kalman_cov_chi)
+
     pg_kalman_cov_velocity.setXLink(pg_kalman_cov_depth)
     pg_kalman_cov_offset.setXLink(pg_kalman_cov_depth)
+    pg_kalman_cov_chi.setXLink(pg_kalman_cov_depth)
 
 #################### Position ####################
 

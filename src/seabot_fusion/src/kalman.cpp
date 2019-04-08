@@ -21,7 +21,7 @@ using namespace std;
 using namespace Eigen;
 
 #define NB_MESURES 1
-#define NB_STATES 3
+#define NB_STATES 4
 #define NB_COMMAND 1
 
 double depth = 0.0;
@@ -33,7 +33,6 @@ double piston_command_u = 0.0;
 double coeff_A = 0.0;
 double coeff_B = 0.0;
 double tick_to_volume = 0.0;
-double coeff_compressibility = 0.0;
 
 double g_rho_bar = 0.0;
 
@@ -56,9 +55,10 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_COMMAND, 1> &u){
   Matrix<double,NB_STATES, 1> y = Matrix<double,NB_STATES, 1>::Zero();
-  y(0) = -coeff_A*(u(0)+x(2)-coeff_compressibility*x(1))-coeff_B*copysign(x(0)*x(0), x(0));
+  y(0) = -coeff_A*(u(0)+x(2)-x(3)*x(1))-coeff_B*copysign(x(0)*x(0), x(0));
   y(1) = x(0);
   y(2) = 0;
+  y(3) = 0;
   return y;
 }
 
@@ -116,7 +116,6 @@ int main(int argc, char *argv[]){
   const double g = n.param<double>("/g", 9.81);
   const double m = n.param<double>("/m", 9.045);
   const double diam_collerette = n.param<double>("/diam_collerette", 0.24);
-  const double compressibility_tick = n.param<double>("/compressibility_tick", 10.0);
   const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
@@ -129,6 +128,7 @@ int main(int argc, char *argv[]){
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-4);
   const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5);
   const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 1e-8);
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1e-8);
 
   g_rho_bar = g*rho/1e5;
 
@@ -136,13 +136,11 @@ int main(int argc, char *argv[]){
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   coeff_B = 0.5*rho*Cf/m;
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
-  coeff_compressibility = compressibility_tick*tick_to_volume;
 
   //  ROS_INFO("tick_to_volume = %.10e", tick_to_volume);
   ROS_INFO("Coeff_A %.10e", coeff_A);
   ROS_INFO("Coeff_B %.10e", coeff_B);
   ROS_INFO("tick_to_volume %.10e", tick_to_volume);
-  ROS_INFO("coeff_compressibility %.10e", coeff_compressibility);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
@@ -165,15 +163,16 @@ int main(int argc, char *argv[]){
   gamma(0,0) = pow(1e-1, 2); // velocity
   gamma(1,1) = pow(1e-3, 2); // Depth
   gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2); // Error offset;
+  gamma(3,3) = pow(tick_to_volume*estimated_first_error_equilibrium_tick,2); // Compressibility
 
   gamma_alpha(0,0) = pow(gamma_alpha_velocity, 2); // velocity (1e-4)
   gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth (1e-5)
   gamma_alpha(2,2) = pow(gamma_alpha_offset, 2); // Error offset (1e-7)
+  gamma_alpha(3,3) = pow(gamma_alpha_chi, 2); // Compressibility
 
   gamma_beta(0, 0) = pow(1e-4, 2); // Depth
 
   Ak(0, 0) = 0.0;
-  Ak(0, 1) = coeff_A*coeff_compressibility; // To Check
   Ak(0, 2) = -coeff_A;
   Ak(1, 0) = 1.;
 
@@ -182,6 +181,7 @@ int main(int argc, char *argv[]){
   xhat(0) = 0.0;
   xhat(1) = 0.0;
   xhat(2) = 0.0;
+  xhat(3) = 0.0;
 
   Matrix<double,NB_MESURES, 1> measure = Matrix<double,NB_MESURES, 1>::Zero();
   Matrix<double,NB_COMMAND, 1> command = Matrix<double,NB_COMMAND, 1>::Zero();
@@ -205,6 +205,8 @@ int main(int argc, char *argv[]){
         dt=10./frequency;
 
       Ak(0,0) = -2.*coeff_B*abs(xhat(0));
+      Ak(0,1) = xhat(3)*coeff_A;
+      Ak(0,3) = xhat(1)*coeff_A;
       Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
       measure(0) = depth;
       command(0) = (piston_ref_eq - piston_position)*tick_to_volume;
@@ -217,6 +219,7 @@ int main(int argc, char *argv[]){
       xhat(0) = velocity_fusion;
       xhat(1) = depth;
       xhat(2) = xhat(2);
+      xhat(3) = xhat(3);
       update = true;
     }
 
@@ -224,16 +227,12 @@ int main(int argc, char *argv[]){
       msg.velocity = xhat(0);
       msg.depth = xhat(1);
       msg.offset = xhat(2);
+      msg.chi = xhat(3);
 
       msg.covariance[0] = gamma(0,0);
-      msg.covariance[1] = gamma(1,0);
-      msg.covariance[2] = gamma(2,0);
-      msg.covariance[3] = gamma(0,1);
-      msg.covariance[4] = gamma(1,1);
-      msg.covariance[5] = gamma(2,1);
-      msg.covariance[6] = gamma(0,2);
-      msg.covariance[7] = gamma(1,2);
-      msg.covariance[8] = gamma(2,2);
+      msg.covariance[1] = gamma(1,1);
+      msg.covariance[2] = gamma(2,2);
+      msg.covariance[3] = gamma(3,3);
 
       kalman_pub.publish(msg);
     }
