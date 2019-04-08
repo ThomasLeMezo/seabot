@@ -10,7 +10,6 @@
     <param name="tick_per_turn" value="48" />
     <param name="piston_diameter" value="0.05" />
 
-				<param name="compressibility_tick" value="36.0" />
 				<param name="piston_speed_max_tick" value="20" />
 
 				<param name="piston_ref_eq" value="1500" />
@@ -19,6 +18,6 @@
     <include file="$(find seabot)/launch/driver.launch"/>
     <include file="$(find seabot_fusion)/launch/filter.launch"/>
     <include file="$(find seabot_fusion)/launch/lambert.launch"/>
-    <include file="$(find seabot_fusion)/launch/kalman.launch"/>
+    <include file="$(find seabot)/launch/kalman.launch"/>
 
 </launch>
