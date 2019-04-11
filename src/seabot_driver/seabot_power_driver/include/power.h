@@ -44,6 +44,12 @@ public:
   void set_flash_delay(const unsigned char &dt) const;
 
   /**
+   * @brief set_flash_enable_with_delay
+   * @param dt
+   */
+  void set_flash_enable_with_delay(const unsigned char &dt) const;
+
+  /**
    * @brief set_sleep_mode
    */
   void set_sleep_mode() const;

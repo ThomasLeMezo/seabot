@@ -34,7 +34,7 @@ tick_offset = 250.0
 chi = 30.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
 
 # Regulation
-beta = 2./pi*0.03 # Set the limit speed : 5cm/s
+beta = 2./pi*0.03 # Set the limit speed : [ex: 0.03 m/s]
 root = -1.0	 # Set the root of feed-back regulation
 
 l1 = -2.*root

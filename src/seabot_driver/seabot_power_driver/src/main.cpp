@@ -12,9 +12,6 @@
 #include "seabot_power_driver/SleepModeParam.h"
 #include "seabot_power_driver/FlashCounter.h"
 
-#define THRESHOLD_LIPO_3S_MAX 10.4
-#define THRESHOLD_LIPO_3S_FIRST 9.9
-
 using namespace std;
 
 Power p;
@@ -22,6 +19,7 @@ double flash_sec_left = 0.0;
 bool flash_is_enable = false;
 bool flash_counter_enable = false;
 bool flash_manual_enable = false;
+uint8_t flash_period = 20;
 
 bool flash_enable(std_srvs::SetBool::Request  &req,
                   std_srvs::SetBool::Response &res){
@@ -42,6 +40,7 @@ bool flash_counter(seabot_power_driver::FlashCounter::Request  &req,
 bool flash_speed(seabot_power_driver::FlashSpeed::Request  &req,
                  seabot_power_driver::FlashSpeed::Response &res){
   p.set_flash_delay(req.period);
+  flash_period = req.period;
   return true;
 }
 
@@ -104,7 +103,7 @@ int main(int argc, char *argv[]){
 
     if(flash_sec_left>0){
       if(!flash_is_enable){
-        p.set_flash_enable(true);
+        p.set_flash_enable_with_delay(flash_period);
         flash_is_enable = true;
       }
       flash_sec_left -= 1./frequency;
