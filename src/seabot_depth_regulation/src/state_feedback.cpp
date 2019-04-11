@@ -157,7 +157,7 @@ int main(int argc, char *argv[]){
   ros::Rate loop_rate(frequency);
 
   double piston_position_old = 0.;
-  double u = 0.; // in m3
+  double u = 0.; // in m3/s
   double piston_set_point=0.;
 
   // Main regulation loop
@@ -175,10 +175,10 @@ int main(int argc, char *argv[]){
         else
           regulation_state = STATE_REGULATION;
 
-        if(piston_position >= piston_set_point)
-          piston_set_point = piston_position - u/tick_to_volume;
+        if(piston_position >= piston_set_point*0.99)
+          piston_set_point = piston_set_point - u/(tick_to_volume*frequency);
         else
-          piston_set_point = piston_ref_eq;
+          piston_set_point = max(piston_ref_eq, piston_position);
         break;
 
       case STATE_REGULATION:
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]){
           u=copysign(piston_max_velocity, u);
         }
 
-        piston_set_point = piston_position - u/tick_to_volume;
+        piston_set_point = piston_position - u/(tick_to_volume*frequency);
         break;
       default:
         break;
