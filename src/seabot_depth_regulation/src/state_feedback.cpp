@@ -110,6 +110,9 @@ int main(int argc, char *argv[]){
   const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", 0.0);
   const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.0);
 
+  const double delta_position_lb = n_private.param<double>("delta_position_lb", 0.0);
+  const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.0);
+
   // Physical characteristics
   const double rho = n.param<double>("/rho", 1025.0);
   const double g = n.param<double>("/g", 9.81);
@@ -191,6 +194,8 @@ int main(int argc, char *argv[]){
             array<double, 2> u_tab;
             u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
             u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
+//            u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth);
+//            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth);
 
             // Find best command
             sort(u_tab.begin(), u_tab.end());

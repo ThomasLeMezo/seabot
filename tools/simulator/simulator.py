@@ -24,9 +24,9 @@ Cf = pi*(d_flange/2.0)**2
 screw_thread = 1.75e-3
 tick_per_turn = 48
 piston_full_volume = 1.718e-4 # m3
-delta_volume_max = 1.718e-4/240.0 # m3/s 
 
 tick_to_volume = (screw_thread/tick_per_turn)*((d_piston/2.0)**2)*np.pi
+delta_volume_max = tick_to_volume*500. # m3/s 
 
 velocity_volume_max = 30.*tick_to_volume
 
@@ -34,7 +34,7 @@ tick_offset = 250.0
 chi = 30.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
 
 # Regulation
-beta = 2./pi*0.03 # Set the limit speed : [ex: 0.03 m/s]
+beta = 2./pi*0.05 # Set the limit speed : [ex: 0.03 m/s]
 root = -1.0	 # Set the root of feed-back regulation
 
 l1 = -2.*root
@@ -143,10 +143,10 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 		x_control[2] = (x[2]-volume_offset)+x_hat[2]
 		chi_kalman = x_hat[3]
 
-		if(t>600 and t<1100):
-			depth_target = 1.
-		elif(t>1100):
-			depth_target = 4.5
+		if(t>450 and t<860):
+			depth_target = 5.
+		elif(t>860):
+			depth_target = 10.
 
 		u = control(x_control, depth_target, dt, chi)
 		u = max(min(u, velocity_volume_max), -velocity_volume_max)
@@ -168,7 +168,7 @@ def plot_result(result):
 
 	ax2.set_ylabel('x2 (depth [m])')
 	ax2.plot(np.transpose(result)[0], np.transpose(result)[2])
-	ax2.invert_yaxis()
+	# ax2.invert_yaxis()
 
 	ax3.set_ylabel('x3 (volume [m3])')
 	ax3.plot(np.transpose(result)[0], np.transpose(result)[3])
@@ -188,7 +188,7 @@ def plot_result_kalman(result_kalman, result_euler, result_cov):
 	axes[1,0].set_ylabel('x2 (depth [m])')
 	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[2])
 	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[2])
-	axes[1,0].invert_yaxis()
+	# axes[1,0].invert_yaxis()
 
 	axes[2,0].set_ylabel('x4 (volume offset [m3])')
 	axes[2,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[3]/tick_to_volume)
@@ -249,7 +249,7 @@ def example_regulated_more_compressible():
 	global chi
 	# chi = 7.158e-07 # Compressibility (m3/m)
 	# chi = 0.0
-	depth_target = 5.0
+	depth_target = 1.0
 	x_init = np.array([0.0, 0.0, 0.0])
 	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 1500., 0.1, depth_target)
 	# plot_result(memory)
