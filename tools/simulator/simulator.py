@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.linalg import inv, det, norm, eig
 from numpy import mean,pi,cos,sin,sqrt,tan,arctan,arctan2,tanh,arcsin,\
-                    exp,dot,array,log,inf, eye, zeros, ones, inf,size,\
-                    arange,reshape,concatenate,vstack,hstack,diag,median,sign,sum,meshgrid,cross,linspace,append,round
+					exp,dot,array,log,inf, eye, zeros, ones, inf,size,\
+					arange,reshape,concatenate,vstack,hstack,diag,median,sign,sum,meshgrid,cross,linspace,append,round
 
+from vibes import vibes
 # Vector state x[3]
 # x[0] : Velocity
 # x[1] : Depth
@@ -53,22 +54,22 @@ def f(x, u, gamma_alpha):
 	return y
 
 def kalman_predict(xup,Gup,u,gamma_alpha,A, dt):
-    gamma1 = A @ Gup @ A.T + gamma_alpha
-    x1 = xup + f(xup, u, gamma_alpha)*dt
-    return(x1,gamma1)
+	gamma1 = A @ Gup @ A.T + gamma_alpha
+	x1 = xup + f(xup, u, gamma_alpha)*dt
+	return(x1,gamma1)
 
 def kalman_correc(x0,gamma0,y,gamma_beta,C):
-    S = C @ gamma0 @ C.T + gamma_beta
-    K = gamma0 @ C.T @ inv(S)
-    ytilde = y - C @ x0
-    Gup = (eye(len(x0))-K @ C) @ gamma0
-    xup = x0 + K@ytilde
-    return(xup,Gup) 
-    
+	S = C @ gamma0 @ C.T + gamma_beta
+	K = gamma0 @ C.T @ inv(S)
+	ytilde = y - C @ x0
+	Gup = (eye(len(x0))-K @ C) @ gamma0
+	xup = x0 + K@ytilde
+	return(xup,Gup) 
+	
 def kalman(x0,gamma0,u,y,gamma_alpha,gamma_beta,A,C, dt):
-    xup,Gup = kalman_correc(x0,gamma0,y,gamma_beta,C)
-    x1,gamma1=kalman_predict(xup,Gup,u,gamma_alpha,A, dt)
-    return(x1,gamma1)  
+	xup,Gup = kalman_correc(x0,gamma0,y,gamma_beta,C)
+	x1,gamma1=kalman_predict(xup,Gup,u,gamma_alpha,A, dt)
+	return(x1,gamma1)  
 
 def euler(x, u, dt):
 	y=np.array(x)
@@ -88,12 +89,14 @@ def control(x, depth_target, dt, chi_kalman):
 	u_physical = max(min(u, delta_volume_max*dt), -delta_volume_max*dt) ##
 	return u_physical
 
-def simulate_passive(x_init, tmax, dt):
+def simulate_passive(x_init, tmax, dt, z_limit):
 	x = np.array(x_init)
 	memory = np.append(0., x)
 	for t in np.arange(dt, tmax, dt):
 		x = euler(x, 0.0, dt)
 		memory = np.vstack([memory, np.append(t, x)])
+		if(abs(x[1])>z_limit):
+			return memory
 	return memory
 
 def simulate_regulated(x_init, tmax, dt, depth_target):
@@ -108,9 +111,9 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 					  [0.0, 		0., 		0.0, 		(1e-6)**2]])
 
 	gamma_alpha = np.array([[(1e-4)**2, 0, 0, 0],
-					  		[0, (1e-5)**2, 0, 0],
-					  		[0, 0, (1e-7)**2, 0],
-					  		[0, 0, 	0, 		(1e-7)**2]])
+							[0, (1e-5)**2, 0, 0],
+							[0, 0, (1e-7)**2, 0],
+							[0, 0, 	0, 		(1e-7)**2]])
 
 	gamma_beta = np.array([(1e-5)**2]) # measure
 
@@ -211,30 +214,33 @@ def plot_result_kalman(result_kalman, result_euler, result_cov):
 	plt.show()
 
 def plot_velocity_position(result):
-	fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+	
+	# vibes.drawLine((np.transpose(np.transpose(result)[0:2])).tolist())
+	vibes.drawLine(result[:,[0,2]].tolist())
+	# fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
 
-	ax1.set_ylabel('velocity (m/s)')
-	ax1.plot(np.transpose(result)[0], np.transpose(result)[1])
+	# ax1.set_ylabel('velocity (m/s)')
+	# ax1.plot(np.transpose(result)[0], np.transpose(result)[1])
 
-	ax2.set_ylabel('depth (m)')
-	ax2.plot(np.transpose(result)[0], np.transpose(result)[2])
-	ax2.invert_yaxis()
+	# ax2.set_ylabel('depth (m)')
+	# ax2.plot(np.transpose(result)[0], np.transpose(result)[2])
+	# ax2.invert_yaxis()
 
-	plt.show()
+	# plt.show()
 
 def example_passive_more_compressible():
 	global chi
-	chi = 7.158e-07 # Compressibility (m3/m)
-	x_init = np.array([0.0, 0.0, piston_full_volume*0.1])
-	result = simulate_passive(x_init, 100., .1)
+	chi = 2.14e-6 # Compressibility (m3/m)
+	x_init = np.array([0.0, 0.1, piston_full_volume*0.])
+	result = simulate_passive(x_init, 1000., .1, 2)
 	plot_velocity_position(result)
 	
 
 def example_passive_less_compressible():
 	global chi
-	chi = -7.158e-07 # Compressibility (m3/m)
-	x_init = np.array([0.0, 0.0, piston_full_volume*0.1])
-	result = simulate_passive(x_init, 1000., .1)
+	chi = -2.14e-6 # Compressibility (m3/m)
+	x_init = np.array([0.0, 0.1, piston_full_volume*0.])
+	result = simulate_passive(x_init, 1000., .1, 2)
 	plot_velocity_position(result)
 
 def example_regulated_less_compressible():
@@ -257,10 +263,20 @@ def example_regulated_more_compressible():
 
 if __name__ == "__main__":
 	# execute only if run as a script
-	# example_passive_more_compressible()
-	#example_passive_less_compressible()
+	
+	
 	# example_regulated_less_compressible()
-	example_regulated_more_compressible()
+	# example_regulated_more_compressible()
+
+	vibes.beginDrawing()
+	vibes.newFigure("Float_position")
+	vibes.setFigureProperties( { "x": 100,"y": 100,"width": 1000,"height": 500} )
+	vibes.axisLimits(0, 1000, -0.2, 2)
+	vibes.drawBox(0, 1000, -0.2, 2, "white[white]")
+	example_passive_more_compressible()
+	example_passive_less_compressible()
+	vibes.saveImage("/home/lemezoth/workspaceQT/tikz-adapter/tikz/figs/svg/compressibility.svg")
+	vibes.endDrawing()
 	
 
 
