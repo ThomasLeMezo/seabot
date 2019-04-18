@@ -255,6 +255,21 @@ def example_regulated_more_compressible():
 	# plot_result(memory)
 	plot_result_kalman(memory_kalman, memory, memory_kalman_cov)
 
+def example_oscillation_command():
+	global chi
+	chi = 0.
+	x = np.array([0.0, 0.0, 0.0])
+	memory = np.append(np.append(0., x), 0.)
+	k=0
+	u=tick_to_volume/2.0
+	for t in np.arange(dt, tmax, dt):
+		if(k>(1./0.1)/5.):
+			k=0
+			u=-u
+		x = euler(x, u, dt)
+		memory = np.vstack([memory, np.append(np.append(t, x),abs(u*dt)*x[1])])
+	plot_result(memory)
+
 if __name__ == "__main__":
 	# execute only if run as a script
 	# example_passive_more_compressible()
