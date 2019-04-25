@@ -261,6 +261,26 @@ def example_regulated_more_compressible():
 	# plot_result(memory)
 	plot_result_kalman(memory_kalman, memory, memory_kalman_cov)
 
+def example_oscillation_command():
+	global chi
+	chi = -30.*tick_to_volume
+	x = np.array([0.0, 0.0, -100.*tick_to_volume/2.0])
+	dt = 0.1
+	tmax = 1000.
+	memory = np.append(np.append(0., x), 0.)
+	k=0
+	V=x[2]
+	for t in np.arange(dt, tmax, dt):
+		if(k>(1./0.1)/1.):
+			k=0
+			V=-V
+		else:
+			k+=1
+		x[2] = V
+		x = euler(x, 0., dt)
+		memory = np.vstack([memory, np.append(np.append(t, x),abs(0.*dt)*x[1])])
+	plot_result(memory)
+
 if __name__ == "__main__":
 	# execute only if run as a script
 	
@@ -268,16 +288,17 @@ if __name__ == "__main__":
 	# example_regulated_less_compressible()
 	# example_regulated_more_compressible()
 
-	vibes.beginDrawing()
-	vibes.newFigure("Float_position")
-	vibes.setFigureProperties( { "x": 100,"y": 100,"width": 1000,"height": 500} )
-	vibes.axisLimits(0, 1000, -0.2, 2)
-	vibes.drawBox(0, 1000, -0.2, 2, "white[white]")
-	example_passive_more_compressible()
-	example_passive_less_compressible()
-	vibes.saveImage("/home/lemezoth/workspaceQT/tikz-adapter/tikz/figs/svg/compressibility.svg")
-	vibes.endDrawing()
+	# vibes.beginDrawing()
+	# vibes.newFigure("Float_position")
+	# vibes.setFigureProperties( { "x": 100,"y": 100,"width": 1000,"height": 500} )
+	# vibes.axisLimits(0, 1000, -0.2, 2)
+	# vibes.drawBox(0, 1000, -0.2, 2, "white[white]")
+	# example_passive_more_compressible()
+	# example_passive_less_compressible()
+	# vibes.saveImage("/home/lemezoth/workspaceQT/tikz-adapter/tikz/figs/svg/compressibility.svg")
+	# vibes.endDrawing()
 	
+	example_oscillation_command()
 
 
 
