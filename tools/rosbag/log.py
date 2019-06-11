@@ -409,8 +409,8 @@ if(len(time_regulation_debug)>0):
     pg_regulation_velocity = pg.PlotWidget()
     pg_regulation_velocity.addLegend()
     pg_regulation_velocity.plot(time_kalman, kalman_velocity, pen=(255,0,0), name="velocity")
-    pg_regulation_velocity.plot(time_mission, mission_velocity_depth, pen=(0,255,0), name="target_velocity")
-    pg_regulation_velocity.plot(time_mission, -np.array(mission_velocity_depth), pen=(0,255,0), name="target_velocity")
+    pg_regulation_velocity.plot(time_mission, mission_velocity_depth, pen=(0,255,0), name="target_velocity_max")
+    pg_regulation_velocity.plot(time_mission, -np.array(mission_velocity_depth), pen=(0,255,0), name="target_velocity_min")
     dock_regulation.addWidget(pg_regulation_velocity)
 
     pg_regulation_velocity.setXLink(pg_depth)
