@@ -174,7 +174,8 @@ time_mission = []
 mission_north = []
 mission_east = []
 mission_depth = []
-mission_velocity_depth = []
+mission_limit_velocity = []
+mission_approach_velocity = []
 mission_mission_enable = []
 mission_depth_only = []
 mission_waypoint_number = []
@@ -333,7 +334,8 @@ def load_bag(filename):
 			mission_north.append(msg.north)
 			mission_east.append(msg.east)
 			mission_depth.append(msg.depth)
-			mission_velocity_depth.append(msg.velocity_depth)
+			mission_limit_velocity.append(msg.limit_velocity)
+			mission_approach_velocity.append(msg.approach_velocity)
 			mission_mission_enable.append(msg.mission_enable)
 			mission_depth_only.append(msg.depth_only)
 			mission_waypoint_number.append(msg.waypoint_number)
