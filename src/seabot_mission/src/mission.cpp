@@ -45,7 +45,8 @@ int main(int argc, char *argv[]){
   const string mission_path = n.param<string>("/mission_path", "");
   const int flash_counter = ceil(n_private.param<double>("flash_time_next_waypoint", 3.0));
 
-  const double velocity_depth_default = n_private.param<double>("velocity_depth_default", 0.02);
+  const double limit_velocity_default = n_private.param<double>("limit_velocity_default", 0.02);
+  const double approach_velocity_default = n_private.param<double>("approach_velocity_default", 1.0);
 
   // Service
   ROS_DEBUG("[Mission] Wait for Flasher counter service");
@@ -59,12 +60,13 @@ int main(int argc, char *argv[]){
   // Variable
   ros::Rate loop_rate(frequency);
   SeabotMission m(mission_path);
-  m.set_velocity_depth_default(velocity_depth_default);
+  m.set_limit_velocity_default(limit_velocity_default);
+  m.set_approach_velocity_default(approach_velocity_default);
 
   ROS_DEBUG("[Mission] Load mission");
   m.load_mission(mission_file_name); // Update mission file
 
-  double north, east, depth, ratio, velocity_depth;
+  double north, east, depth, ratio, limit_velocity, approach_velocity;
   bool enable_thrusters;
 
   ROS_INFO("[Mission] Start Ok");
@@ -76,7 +78,7 @@ int main(int argc, char *argv[]){
       reload_mission = false;
     }
 
-    bool is_new_waypoint = m.compute_command(north, east, depth, velocity_depth, enable_thrusters, ratio);
+    bool is_new_waypoint = m.compute_command(north, east, depth, limit_velocity, approach_velocity, enable_thrusters, ratio);
 
     if(!mission_enable_engine)
       waypoint_msg.depth_only = true;
@@ -90,7 +92,8 @@ int main(int argc, char *argv[]){
 
     waypoint_msg.north = north;
     waypoint_msg.east = east;
-    waypoint_msg.velocity_depth = velocity_depth;
+    waypoint_msg.limit_velocity = limit_velocity;
+    waypoint_msg.approach_velocity = approach_velocity;
 
     if(!mission_enable_mission)
       waypoint_msg.mission_enable = false;

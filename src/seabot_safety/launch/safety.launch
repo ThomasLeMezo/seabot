@@ -5,6 +5,8 @@
         <param name="safety_battery" value="true"/>
         <param name="safety_pressure_limit" value="true"/>
         <param name="safety_depressure" value="true"/>
+								<param name="seafloor_detection" value="true"/>
+								<param name="internal_pressure_detection" value="true"/>
 
         <param name="max_depth_reset_zero" value="1.0" />
         <param name="max_speed_reset_zero" value="0.1" />
@@ -24,7 +26,7 @@
         <param name="time_delay_piston_state_msg" value="2.0" />
         <param name="time_delay_euler_msg" value="1.0" />
 
-        <param name="delta_volume_allowed" value="0.01" />
+								<param name="delta_volume_allowed" value="1.0" />
         <param name="delta_ref_allowed" value="10.0" />
         <param name="volume_ref" value="0.006" />
         <param name="transition_tick_law" value="650.0" />
@@ -32,7 +34,7 @@
 
         <param name="humidity_limit" value="70.0" />
 
-								<param name="time_before_seafloor_emergency" value="30.0" />
+								<param name="time_before_seafloor_emergency" value="300.0" />
 
     </node>
 </launch>

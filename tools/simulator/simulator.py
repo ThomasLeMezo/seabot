@@ -14,7 +14,7 @@ from vibes import vibes
 
 # Parameters
 g = 9.81
-m = 9.045
+m = 9.045*2.0
 rho = 1025.0
 d_flange = 0.24
 d_piston = 0.05

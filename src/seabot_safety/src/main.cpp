@@ -206,6 +206,9 @@ int main(int argc, char *argv[]){
   const bool enable_safety_pressure_limit = n_private.param<bool>("safety_pressure_limit", true);
   const bool enable_safety_depressure = n_private.param<bool>("safety_depressure", true);
 
+  const bool enable_seafloor_detection = n_private.param<bool>("seafloor_detection", true);
+  const bool enable_internal_pressure_detection = n_private.param<bool>("internal_pressure_detection", true);
+
   const double time_before_seafloor_emergency = n_private.param<double>("time_before_seafloor_emergency", 30.0);
 
   // Subscriber
@@ -342,7 +345,7 @@ int main(int argc, char *argv[]){
     ///*******************************************************
     ///**************** Seafloor detection *******************
 
-    if(piston_switch_in && abs(velocity)<max_speed_reset_zero){
+    if(enable_seafloor_detection && piston_switch_in && abs(velocity)<max_speed_reset_zero){
       if(!seafloor_detected){
         seafloor_detected = true;
         time_seafloor_detected = ros::WallTime::now();
@@ -378,52 +381,54 @@ int main(int argc, char *argv[]){
     ///**************** Internal sensor **********************
     int warning_number = 0;
     double p_t_ratio;
-    if(internal_temperature!=0.0){
-      p_t_ratio = internal_pressure/internal_temperature;
-      double piston = piston_position-piston_position_ref;
+    if(enable_internal_pressure_detection){
+      if(internal_temperature!=0.0){
+        p_t_ratio = internal_pressure/internal_temperature;
+        double piston = piston_position-piston_position_ref;
 
-      /// ********* PV=nRT law ********* ///
-      // Case piston near zero
-      if(abs(piston)<transition_tick_law){
+        /// ********* PV=nRT law ********* ///
+        // Case piston near zero
+        if(abs(piston)<transition_tick_law){
 
-        double delta = p_t_ratio-p_t_ratio_ref;
-        if(abs(delta)>delta_ref_allowed){
-          safety_msg.depressurization = true;
-          warning_number = 1;
-        }
-
-        safety_debug_msg.ratio_p_t = p_t_ratio;
-        safety_debug_msg.ratio_delta = delta;
-      }
-      // General case
-      else{
-        if(p_t_ratio != p_t_ratio_ref){
-          double volume = piston*tick_to_volume*p_t_ratio/(p_t_ratio-p_t_ratio_ref);
-          double volume_delta = volume-volume_ref;
-          if(abs(volume_delta)>delta_volume_allowed){
+          double delta = p_t_ratio-p_t_ratio_ref;
+          if(abs(delta)>delta_ref_allowed){
             safety_msg.depressurization = true;
-            warning_number = 2;
+            warning_number = 1;
           }
 
-          safety_debug_msg.volume = volume;
-          safety_debug_msg.volume_delta = volume_delta;
+          safety_debug_msg.ratio_p_t = p_t_ratio;
+          safety_debug_msg.ratio_delta = delta;
         }
+        // General case
         else{
+          if(p_t_ratio != p_t_ratio_ref){
+            double volume = piston*tick_to_volume*p_t_ratio/(p_t_ratio-p_t_ratio_ref);
+            double volume_delta = volume-volume_ref;
+            if(abs(volume_delta)>delta_volume_allowed){
+              safety_msg.depressurization = true;
+              warning_number = 2;
+            }
+
+            safety_debug_msg.volume = volume;
+            safety_debug_msg.volume_delta = volume_delta;
+          }
+          else{
+            safety_msg.depressurization = true;
+            warning_number = 3;
+          }
+        }
+
+        // Limit max
+        if(internal_pressure>pressure_internal_max){
           safety_msg.depressurization = true;
-          warning_number = 3;
+          warning_number = 4;
         }
       }
-
-      // Limit max
-      if(internal_pressure>pressure_internal_max){
+      else{
+        ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
         safety_msg.depressurization = true;
-        warning_number = 4;
+        warning_number = 5;
       }
-    }
-    else{
-      ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
-      safety_msg.depressurization = true;
-      warning_number = 5;
     }
 
     if(internal_humidity>humidity_limit){

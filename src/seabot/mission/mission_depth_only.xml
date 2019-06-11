@@ -15,19 +15,22 @@
    <waypoint>
 				<duration>900</duration>
 				<depth>1.0</depth>
-				<velocity_depth>0.02</velocity_depth>
+				<limit_velocity>0.02</limit_velocity>
+				<approach_velocity>1.0</approach_velocity>
    </waypoint>
 
 		<waypoint>
 			<duration>900</duration>
 			<depth>1.75</depth>
-			<velocity_depth>0.02</velocity_depth>
+			<limit_velocity>0.02</limit_velocity>
+			<approach_velocity>1.0</approach_velocity>
 		</waypoint>
 
 <!--		<waypoint>
 			<duration>300</duration>
 			<depth>0.0</depth>
-			<velocity_depth>0.04</velocity_depth>
+			<limit_velocity>0.04</limit_velocity>
+			<approach_velocity>1.0</approach_velocity>
 		</waypoint>-->
 	</loop>
 </paths>

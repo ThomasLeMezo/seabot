@@ -25,15 +25,14 @@ bool piston_switch_out = false;
 bool is_surface = true;
 
 double depth_set_point = 0.0;
-double velocity_depth = 0.0;
+double limit_velocity = 0.0;
+double approach_velocity = 1.0;
 ros::WallTime t_old;
 ros::Time time_last_state;
 
 bool emergency = true; // Wait safety clearance on startup
 
-double l1 = 0.;
-double l2 = 0.;
-double root = -1.0;
+double s = -1.0;
 double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
@@ -66,7 +65,8 @@ void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
     depth_set_point = msg->depth;
   else
     depth_set_point = 0.0;
-  velocity_depth = msg->velocity_depth;
+  limit_velocity = msg->limit_velocity;
+  approach_velocity = msg->approach_velocity;
 }
 
 bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res){
@@ -75,7 +75,7 @@ bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Respo
   return true;
 }
 
-double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double velocity_depth){
+double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double limit_velocity, double approach_velocity=1.0){
   const double x1 = x(0);
   const double x2 = x(1);
   const double x3 = x(2);
@@ -83,18 +83,20 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   const double x5 = x(4);
   const double A = coeff_A;
   const double B = coeff_B;
-  const double beta = velocity_depth/M_PI_2;
+  const double beta = limit_velocity/M_PI_2;
+  const double alpha = approach_velocity;
+  const double gamma = beta/alpha;
 
-  double e = set_point-x2;
-  double y = x1-beta*atan(e);
+  double e = (set_point-x2)/alpha;
+  double y = x1-gamma*atan(e);
   double dx1 = -A*(x3+x4-x5*x2)-B*abs(x1)*x1;
   double D = 1+pow(e,2);
-  double dy = dx1 + beta*x1/D;
+  double dy = dx1 + gamma*x1/D;
 
   debug_msg.y = y;
   debug_msg.dy = dy;
 
-  return (l1*dy+l2*y+ beta*(dx1*D+2.*e*pow(x1,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+x5*x1;
+  return (-2.*s*dy+pow(s,2)*y+ gamma*(dx1*D+2.*e*pow(x1,2)/pow(alpha,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+x5*x1;
 }
 
 bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }
@@ -130,8 +132,6 @@ int main(int argc, char *argv[]){
 
   // Compute regulation constant
   double root_regulation = n_private.param<double>("root_regulation", -1.0);
-  l1 = -2.0*root;
-  l2 = pow(root_regulation, 2);
   double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
   double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
 
@@ -191,11 +191,11 @@ int main(int argc, char *argv[]){
             x(2) = (piston_ref_eq - piston_position)*tick_to_volume;
 
             // Compute several commands according to velocity acceptable bounds
-            array<double, 2> u_tab;
-            u_tab[0] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_lb);
-            u_tab[1] = compute_u(x, depth_set_point, velocity_depth+delta_velocity_ub);
-//            u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, velocity_depth);
-//            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, velocity_depth);
+            array<double, 4> u_tab;
+            u_tab[0] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_lb, approach_velocity);
+            u_tab[1] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_ub, approach_velocity);
+            u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, limit_velocity);
+            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, limit_velocity);
 
             // Find best command
             sort(u_tab.begin(), u_tab.end());

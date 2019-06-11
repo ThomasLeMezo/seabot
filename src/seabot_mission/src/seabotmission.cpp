@@ -18,7 +18,7 @@ SeabotMission::SeabotMission(std::string folder_path){
   m_folder_path = folder_path;
 }
 
-bool SeabotMission::compute_command(double &north, double &east, double &depth, double &velocity_depth, bool &enable_thrusters, double &ratio){
+bool SeabotMission::compute_command(double &north, double &east, double &depth, double &limit_velocity, double &approach_velocity, bool &enable_thrusters, double &ratio){
   // Test if last waypoint
   bool is_new_waypoint = false;
   if(m_current_waypoint < m_waypoints.size()){
@@ -30,7 +30,8 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       depth = 0.0;
       north = m_waypoints[m_current_waypoint].north;
       east = m_waypoints[m_current_waypoint].east;
-      velocity_depth = m_waypoints[m_current_waypoint].velocity_depth;
+      limit_velocity = m_waypoints[m_current_waypoint].limit_velocity;
+      approach_velocity = m_waypoints[m_current_waypoint].approach_velocity;
       enable_thrusters = m_waypoints[m_current_waypoint].enable_thrusters;
       ratio = 0;
       m_duration_next_waypoint = m_time_start-t_now;
@@ -47,7 +48,8 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       }
 
       depth = m_waypoints[m_current_waypoint].depth;
-      velocity_depth = m_waypoints[m_current_waypoint].velocity_depth;
+      limit_velocity = m_waypoints[m_current_waypoint].limit_velocity;
+      approach_velocity = m_waypoints[m_current_waypoint].approach_velocity;
       enable_thrusters = m_waypoints[m_current_waypoint].enable_thrusters;
 
       ros::WallTime t1;
@@ -71,7 +73,8 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
     if(m_mission_enable == true)
       ROS_INFO("[Mission] End of waypoints");
     depth = 0.0;
-    velocity_depth = 0.0;
+    limit_velocity = 0.0;
+    approach_velocity = 1.0;
     north = m_waypoints[m_waypoints.size()-1].north;
     east = m_waypoints[m_waypoints.size()-1].east;
     ratio = 1;
@@ -174,11 +177,17 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
       else
         throw(std::runtime_error("(No time or duration founded for a waypoint)"));
 
-      boost::optional<double> vel = v.second.get_optional<double>("velocity_depth");
+      boost::optional<double> vel = v.second.get_optional<double>("limit_velocity");
       if(vel.is_initialized())
-        w.velocity_depth = vel.value();
+        w.limit_velocity = vel.value();
       else
-        w.velocity_depth = m_velocity_depth_default;
+        w.limit_velocity = m_limit_velocity_default;
+
+      boost::optional<double> approach = v.second.get_optional<double>("approach_velocity");
+      if(vel.is_initialized())
+        w.approach_velocity = approach.value();
+      else
+        w.approach_velocity = m_approach_velocity_default;
 
       boost::optional<bool> enable_thrusters = v.second.get_optional<bool>("enable_thrusters");
       if(enable_thrusters.is_initialized())
@@ -193,7 +202,7 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
     last_time = w.time_end;
     m_waypoints.push_back(w);
 
-    ROS_INFO("[Seabot_Mission] Load Waypoint %zu (t_end=%li, d=%lf, E=%lf, N=%lf, s=%f)", m_waypoints.size(), (long int)w.time_end.toSec(), w.depth, w.east, w.north, w.velocity_depth);
+    ROS_INFO("[Seabot_Mission] Load Waypoint %zu (t_end=%li, d=%lf, E=%lf, N=%lf, vel=%f, app=%f)", m_waypoints.size(), (long int)w.time_end.toSec(), w.depth, w.east, w.north, w.limit_velocity, w.approach_velocity);
   }
   else if(v.first == "loop"){
     const int nb_loop = v.second.get<int>("<xmlattr>.number", 1);
