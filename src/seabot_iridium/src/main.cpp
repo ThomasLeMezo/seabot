@@ -232,10 +232,10 @@ int main(int argc, char *argv[]){
   ros::Publisher iridium_status_pub = n.advertise<seabot_iridium::IridiumStatus>("status", 1);
 
   // Services
-  ros::service::waitForService("/driver/power/sleep_mode");
-  ros::service::waitForService("/driver/power/sleep_mode_param");
-  ros::service::waitForService("/mission/reload_mission");
-  ros::service::waitForService("/mission/enable_mission");
+//  ros::service::waitForService("/driver/power/sleep_mode");
+//  ros::service::waitForService("/driver/power/sleep_mode_param");
+//  ros::service::waitForService("/mission/reload_mission");
+//  ros::service::waitForService("/mission/enable_mission");
 
   service_sleep_mode = n.serviceClient<std_srvs::Empty>("/driver/power/sleep_mode");
   service_sleep_param = n.serviceClient<seabot_power_driver::SleepModeParam>("/driver/power/sleep_mode_param");

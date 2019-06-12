@@ -19,7 +19,7 @@ rho = 1025.0
 d_flange = 0.24
 d_piston = 0.05
 
-Cf = pi*(d_flange/2.0)**2
+Cf = 1.0*pi*(d_flange/2.0)**2
 
 # Motor parameters
 screw_thread = 1.75e-3
@@ -28,14 +28,13 @@ piston_full_volume = 1.718e-4 # m3
 
 tick_to_volume = (screw_thread/tick_per_turn)*((d_piston/2.0)**2)*np.pi
 delta_volume_max = tick_to_volume*500. # m3/s 
-
 velocity_volume_max = 30.*tick_to_volume
 
-tick_offset = 250.0
+tick_offset = 0.0
 chi = 30.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
 
 # Regulation
-beta = 2./pi*0.05 # Set the limit speed : [ex: 0.03 m/s]
+beta = (2./pi)*0.0358 # Set the limit speed : [ex: 0.03 m/s]
 root = -1.0	 # Set the root of feed-back regulation
 
 l1 = -2.*root
@@ -76,6 +75,7 @@ def euler(x, u, dt):
 	y[0] += dt*(-A_coeff*(x[2]-chi*x[1])-B_coeff*x[0]*abs(x[0])+B_coeff*((vertical_velocity-x[0])*(abs(vertical_velocity-x[0]))))
 	y[1] += dt*(x[0])
 	y[2] += dt*u
+	y[2] = max(min(y[2], delta_volume_max), -delta_volume_max)
 	return y
 
 def control(x, depth_target, dt, chi_kalman):
@@ -85,8 +85,8 @@ def control(x, depth_target, dt, chi_kalman):
 	D = 1.+e**2
 	dy = dx1 + beta*x[0]/D
 
-	u = (l1*dy+l2*y+beta*(dx1*D+2.*e*x[0]**2)/D**2-2.*B_coeff*abs(x[0])*dx1)/A_coeff+chi_kalman*x[0]
-	u_physical = max(min(u, delta_volume_max*dt), -delta_volume_max*dt) ##
+	u = (l1*dy+l2*y+beta*(dx1*D+2.*e*(x[0]**2))/(D**2)-2.*B_coeff*abs(x[0])*dx1)/A_coeff+chi_kalman*x[0]
+	u_physical = max(min(u, velocity_volume_max*dt), -velocity_volume_max*dt)
 	return u_physical
 
 def simulate_passive(x_init, tmax, dt, z_limit):
@@ -105,38 +105,37 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 	volume_offset = tick_offset*tick_to_volume
 
 	x_hat = np.array([0.0, 0.0, 0.0, 0.0])
-	gamma = np.array([[(1e-6)**2,	0.0, 		0.0, 		0.0],
-					  [0.0,			(1e-7)**2, 	0.0, 		0.0],
-					  [0.0, 		0.0, 		(1e-5)**2, 	0.0	],
-					  [0.0, 		0., 		0.0, 		(1e-6)**2]])
+	gamma = np.array([[(1e-1)**2,	0.0, 		0.0, 		0.0],
+					  [0.0,			(1e-3)**2, 	0.0, 		0.0],
+					  [0.0, 		0.0, 		(tick_to_volume*250.)**2, 	0.0	],
+					  [0.0, 		0., 		0.0, 		(tick_to_volume*250.)**2]])
 
 	gamma_alpha = np.array([[(1e-4)**2, 0, 0, 0],
 							[0, (1e-5)**2, 0, 0],
-							[0, 0, (1e-7)**2, 0],
-							[0, 0, 	0, 		(1e-7)**2]])
+							[0, 0, (1e-8)**2, 0],
+							[0, 0, 	0, 		(1e-8)**2]])
 
-	gamma_beta = np.array([(1e-5)**2]) # measure
+	gamma_beta = np.array([(1e-4)**2]) # measure
 
-	A = np.array([	[1., 0., -A_coeff, 0.],
-					[1, 1., 0, 0],
-					[0, 0, 1., 0],
-					[0, 0, 0, 1.]])
+	A = np.array([	[0., 0., -A_coeff, 0.],
+					[1, 0., 0, 0],
+					[0, 0, 0., 0],
+					[0, 0, 0, 0.]])
 	C = np.array([[0, 1, 0, 0.]])
 
-	memory = np.append(np.append(0., x), 0.)
+	memory = np.append(np.append(0., x), np.array([0., 0.]))
 	memory_kalman = np.append(0., (x_hat))
 	memory_kalman_cov = np.append(0., np.array([gamma[0][0], gamma[1][1], gamma[2][2], gamma[3][3]]))
 	for t in np.arange(dt, tmax, dt):
 		
-
 		# Kalman
-		cmd = np.array(x[2]-volume_offset) + tick_to_volume * np.random.normal(0.0, (1.)**2)
+		cmd = np.array(x[2]-volume_offset) #+ tick_to_volume * np.random.normal(0.0, (1.)**2)
 		y = x[1] + np.random.normal(0.0, (1e-3)**2)
-		A[0][0] = -2.*B_coeff*x_hat[0]+1. # x_hat[0]
-		A[0][1] = x_hat[3]*A_coeff
-		A[0][3] = x_hat[1]*A_coeff
+		A[0][0] = -2.*B_coeff*abs(x_hat[0]) # x_hat[0]
+		A[0][1] = A_coeff*x_hat[3]
+		A[0][3] = A_coeff*x_hat[1]
 
-		(x_hat,gamma) = kalman(x_hat,gamma,cmd,y,gamma_alpha,gamma_beta,A,C, dt)		
+		(x_hat,gamma) = kalman(x_hat,gamma,cmd,y,gamma_alpha,gamma_beta,A*dt+np.eye(4),C, dt)		
 		memory_kalman = np.vstack([memory_kalman, np.append(t, (x_hat))])
 		memory_kalman_cov = np.vstack([memory_kalman_cov, np.append(t, (np.array([gamma[0][0], gamma[1][1], gamma[2][2], gamma[3][3]])))])
 
@@ -146,14 +145,13 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 		x_control[2] = (x[2]-volume_offset)+x_hat[2]
 		chi_kalman = x_hat[3]
 
-		if(t>450 and t<860):
-			depth_target = 5.
-		elif(t>860):
-			depth_target = 10.
+		if(t>=960. and t<1860.*2.):
+			depth_target = 1.75
+		elif(t>=1860.*2.):
+			depth_target = 1.
 
-		u = control(x_control, depth_target, dt, chi)
-		u = max(min(u, velocity_volume_max), -velocity_volume_max)
-		memory = np.vstack([memory, np.append(np.append(t, x),abs(u*dt)*x[1])])
+		u = control(x_control, depth_target, dt, chi_kalman)
+		memory = np.vstack([memory, np.append(np.append(t, x),np.array([abs(u*dt)*x[1], depth_target]))])
 
 		x = euler(x, u, dt)
 
@@ -191,6 +189,7 @@ def plot_result_kalman(result_kalman, result_euler, result_cov):
 	axes[1,0].set_ylabel('x2 (depth [m])')
 	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_kalman)[2])
 	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[2])
+	axes[1,0].plot(np.transpose(result_kalman)[0], np.transpose(result_euler)[5])
 	# axes[1,0].invert_yaxis()
 
 	axes[2,0].set_ylabel('x4 (volume offset [m3])')
@@ -248,7 +247,7 @@ def example_regulated_less_compressible():
 	chi = -7.158e-07 # Compressibility (m3/m)
 	depth_target = 5.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	result = simulate_regulated(x_init, 400., 0.01, depth_target)
+	result = simulate_regulated(x_init, 400., 0.1, depth_target)
 	plot_result(result)
 
 def example_regulated_more_compressible():
@@ -257,7 +256,7 @@ def example_regulated_more_compressible():
 	# chi = 0.0
 	depth_target = 1.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 1500., 0.1, depth_target)
+	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 1860., 1/5., depth_target)
 	# plot_result(memory)
 	plot_result_kalman(memory_kalman, memory, memory_kalman_cov)
 
@@ -286,7 +285,7 @@ if __name__ == "__main__":
 	
 	
 	# example_regulated_less_compressible()
-	# example_regulated_more_compressible()
+	example_regulated_more_compressible()
 
 	# vibes.beginDrawing()
 	# vibes.newFigure("Float_position")
@@ -298,7 +297,7 @@ if __name__ == "__main__":
 	# vibes.saveImage("/home/lemezoth/workspaceQT/tikz-adapter/tikz/figs/svg/compressibility.svg")
 	# vibes.endDrawing()
 	
-	example_oscillation_command()
+	# example_oscillation_command()
 
 
 

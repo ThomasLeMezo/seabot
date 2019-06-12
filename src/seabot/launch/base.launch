@@ -1,13 +1,12 @@
 <launch>
 
-    <node pkg="rosbag" type="record" name="record" output="screen" args="--split --size 1024 --all" respawn="true" respawn_delay="5"/>
+				<node pkg="rosbag" type="record" name="record" output="screen" args="-j --split --size 1024 --all" respawn="true" respawn_delay="5"/>
 
     <param name="rho" value="1025.0" />
     <param name="g" value="9.81" />
 
 <!--With added mass-->
 				<param name="m" value="18.09" />
-<!--				<param name="m" value="9.045" />-->
 
 				<param name="diam_collerette" value="0.24" />
     <param name="screw_thread" value="1.75e-3" />

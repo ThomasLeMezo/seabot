@@ -506,7 +506,7 @@ if(len(time_regulation_heading)>0):
         pg_euler_yaw.setXLink(pg_regulation_heading_error)
 
 #### Kalman ####
-if(len(time_kalman)>0):
+if(len(time_kalman)>0 and len(time_regulation_debug)>0):
     dock_kalman = Dock("Kalman")
     area_regulation.addDock(dock_kalman, 'below', dock_regulation)
 
@@ -534,7 +534,7 @@ if(len(time_kalman)>0):
     pg_kalman_offset.setXLink(pg_kalman_velocity)
     pg_kalman_chi.setXLink(pg_kalman_velocity)
 
-if(len(time_kalman)>0):
+if(len(time_kalman)>0 and len(time_regulation_debug)>0):
     dock_kalman_cov = Dock("Kalman Cov")
     area_regulation.addDock(dock_kalman_cov, 'below', dock_kalman)
 
@@ -677,7 +677,7 @@ if(len(time_iridium_status)>0):
 
     pg_iridium_signal = pg.PlotWidget()
     pg_iridium_signal.addLegend()
-    pg_iridium_signal.plot(time_iridium_status, iridium_status_signal_strength, pen=(255,0,0), name="signal")
+    pg_iridium_signal.plot(time_iridium_status, iridium_status_signal_strength, pen=(255,0,0), name="signal", symbol='o')
     pg_iridium_signal.setLabel('left', "signal")
     dock_iridium_status.addWidget(pg_iridium_signal)
 

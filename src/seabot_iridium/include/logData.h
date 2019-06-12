@@ -7,7 +7,7 @@
 
 using boost::multiprecision::cpp_int;
 
-#define TIME_POSIX_START 1537747200 // 24 September 2018 (18bit in minutes => max 25 March 2019)
+#define TIME_POSIX_START 1560347438 // 12 Juin 2019 => (18bit in minutes => ???)
 #define L93_EAST_MIN 0
 #define L93_EAST_MAX 1300000
 #define L93_NORTH_MIN 6000000
