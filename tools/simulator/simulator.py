@@ -30,12 +30,12 @@ tick_to_volume = (screw_thread/tick_per_turn)*((d_piston/2.0)**2)*np.pi
 delta_volume_max = tick_to_volume*500. # m3/s 
 velocity_volume_max = 30.*tick_to_volume
 
-tick_offset = 0.0
+tick_offset = 50.0
 chi = 30.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
 
 # Regulation
 beta = (2./pi)*0.0358 # Set the limit speed : [ex: 0.03 m/s]
-root = -1.0	 # Set the root of feed-back regulation
+root = -0.3	 # Set the root of feed-back regulation
 
 l1 = -2.*root
 l2 = root**2
@@ -87,6 +87,7 @@ def control(x, depth_target, dt, chi_kalman):
 
 	u = (l1*dy+l2*y+beta*(dx1*D+2.*e*(x[0]**2))/(D**2)-2.*B_coeff*abs(x[0])*dx1)/A_coeff+chi_kalman*x[0]
 	u_physical = max(min(u, velocity_volume_max*dt), -velocity_volume_max*dt)
+	u_physical = round(u_physical/tick_to_volume)*tick_to_volume
 	return u_physical
 
 def simulate_passive(x_init, tmax, dt, z_limit):
@@ -129,8 +130,8 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 	for t in np.arange(dt, tmax, dt):
 		
 		# Kalman
-		cmd = np.array(x[2]-volume_offset) #+ tick_to_volume * np.random.normal(0.0, (1.)**2)
-		y = x[1] + np.random.normal(0.0, (1e-3)**2)
+		cmd = np.array(x[2]-volume_offset) + tick_to_volume * np.random.normal(0.0, (1.)**2)
+		y = x[1] + np.random.normal(0.0, 1e-3)
 		A[0][0] = -2.*B_coeff*abs(x_hat[0]) # x_hat[0]
 		A[0][1] = A_coeff*x_hat[3]
 		A[0][3] = A_coeff*x_hat[1]
@@ -256,8 +257,8 @@ def example_regulated_more_compressible():
 	# chi = 0.0
 	depth_target = 1.0
 	x_init = np.array([0.0, 0.0, 0.0])
-	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 1860., 1/5., depth_target)
-	# plot_result(memory)
+	(memory, memory_kalman, memory_kalman_cov) = simulate_regulated(x_init, 1860., 1., depth_target)
+	plot_result(memory)
 	plot_result_kalman(memory_kalman, memory, memory_kalman_cov)
 
 def example_oscillation_command():
