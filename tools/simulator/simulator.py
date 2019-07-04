@@ -30,8 +30,8 @@ tick_to_volume = (screw_thread/tick_per_turn)*((d_piston/2.0)**2)*np.pi
 delta_volume_max = tick_to_volume*500. # m3/s 
 velocity_volume_max = 30.*tick_to_volume
 
-tick_offset = 50.0
-chi = 30.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
+tick_offset = 0. #50.0
+chi = 0. #30.0*tick_to_volume # Compressibility ratio compare to water (m3/m)
 
 # Regulation
 beta = (2./pi)*0.0358 # Set the limit speed : [ex: 0.03 m/s]
@@ -141,13 +141,21 @@ def simulate_regulated(x_init, tmax, dt, depth_target):
 		memory_kalman_cov = np.vstack([memory_kalman_cov, np.append(t, (np.array([gamma[0][0], gamma[1][1], gamma[2][2], gamma[3][3]])))])
 
 		x_control = np.array([0.0, 0.0, 0.0]) # v,z,V
-		x_control[0] = x_hat[0]
-		x_control[1] = x_hat[1]
-		x_control[2] = (x[2]-volume_offset)+x_hat[2]
-		chi_kalman = x_hat[3]
+
+		### Without Kalman
+		x_control[0] = x[0] -0.05*cos(t*(2*pi)/9)+0.001*cos(t*(2*pi)/100.)
+		x_control[1] = x[1]
+		x_control[2] = x[2]
+		chi_kalman = chi
+
+		### With Kalman
+		# x_control[0] = x_hat[0]
+		# x_control[1] = x_hat[1]
+		# x_control[2] = (x[2]-volume_offset)+x_hat[2]
+		# chi_kalman = x_hat[3]
 
 		if(t>=960. and t<1860.*2.):
-			depth_target = 1.75
+			depth_target = 0.5
 		elif(t>=1860.*2.):
 			depth_target = 1.
 
