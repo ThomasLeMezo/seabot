@@ -79,7 +79,7 @@ def euler(x, u, dt):
 	return y
 
 def control(x, depth_target, dt, chi_kalman):
-	e = depth_target-x[1]
+	e = depth_target-x[1]#+0.2*np.sign(depth_target-x[1])
 	y = x[0]-beta*atan(e)
 	dx1 = -A_coeff*(x[2]-chi_kalman*x[1])-B_coeff*abs(x[0])*x[0]
 	D = 1.+e**2
