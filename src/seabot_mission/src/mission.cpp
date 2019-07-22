@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
 
   // Services
   ros::ServiceServer service_reload_mission = n.advertiseService("reload_mission", reload_mission_callback);
-  ros::ServiceServer service_mission_enable_mission = n.advertiseService("mission_enable_mission", mission_enable_callback);
+  ros::ServiceServer service_enable_mission = n.advertiseService("enable_mission", mission_enable_callback);
 
   // Variable
   ros::Rate loop_rate(frequency);
