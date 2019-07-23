@@ -13,27 +13,27 @@
 using namespace std;
 
 double zero_depth = 0.0;
-double depth = 0;
+double depth = 0.0;
 deque<pair<double, ros::Time>> depth_memory;
 double pressure_to_depth = 10.0;
-int filter_median_size = 5;
-int filter_mean_width = 3;
+int filter_window_size = 5;
+int filter_mean_half_width = 3;
 
 deque<double> pressure_deque;
 ros::Time time_pressure;
 
-bool zero_depth_valid = false;
 bool new_data = false;
 
 bool handle_zero_depth(std_srvs::Trigger::Request  &req,
                        std_srvs::Trigger::Response &res){
   if(!pressure_deque.empty()){
+    zero_depth = 0.0;
     for(double &p:pressure_deque)
       zero_depth +=p;
     zero_depth /= pressure_deque.size();
+    ROS_DEBUG("[Fusion_Depth] Zero_depth = %f", zero_depth);
 
     res.success = true;
-    zero_depth_valid = true;
   }
   else
     res.success = false;
@@ -42,7 +42,7 @@ bool handle_zero_depth(std_srvs::Trigger::Request  &req,
 
 void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& msg){
   pressure_deque.push_front(msg->pressure);
-  if(pressure_deque.size()>filter_median_size)
+  if(pressure_deque.size()>filter_window_size)
     pressure_deque.pop_back();
   time_pressure = msg->header.stamp;
   new_data = true;
@@ -59,12 +59,14 @@ int main(int argc, char *argv[]){
   const double rho = n_private.param<double>("rho", 1020.0);
   const double g = n_private.param<double>("g", 9.81);
   const double g_rho = g*rho/1e5; // To be homogeneous to Bar
+  zero_depth = n_private.param<double>("zero_depth_pressure", 1.024);
 
-  filter_median_size = n_private.param<int>("filter_median_size", 10);
-  filter_mean_width = n_private.param<int>("filter_mean_width", 3);
+  filter_window_size = n_private.param<int>("filter_window_size", 10);
+  filter_mean_half_width = n_private.param<int>("filter_mean_half_width", 3);
 
-  const size_t filter_mean_width_velocity = (size_t) n_private.param<int>("filter_mean_width_velocity", 5);
-  const size_t velocity_delta_size = (size_t) n_private.param<int>("velocity_delta_size", 5);
+  const size_t filter_velocity_window_size = (size_t) n_private.param<int>("filter_velocity_window_size", 6);
+  const size_t velocity_dt_sample = (size_t) n_private.param<int>("velocity_dt_sample", 5);
+  const size_t filter_velocity_mean_half_width = n_private.param<int>("filter_velocity_mean_half_width", 2);
   const double velocity_limit = n_private.param<double>("velocity_limit", 0.5);
 
   // Service
@@ -81,6 +83,7 @@ int main(int argc, char *argv[]){
   time_pressure = ros::Time::now();
   double velocity = 0.0;
 
+  ROS_INFO("[FUSION depth] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
@@ -91,10 +94,10 @@ int main(int argc, char *argv[]){
       sort(pressure_deque_tmp.begin(), pressure_deque_tmp.end()); // Sort to take median
 
       // Compute the mean with value centered to the median
-      int n_mid = round(pressure_deque_tmp.size()/2.0);
+      const double n_mid = pressure_deque_tmp.size()/2.0;
       double pressure_mean = 0.0;
       int k=0;
-      for(size_t i = max(n_mid-filter_mean_width, 0); i<min(n_mid+filter_mean_width, (int)pressure_deque_tmp.size()); i++){
+      for(size_t i = max((size_t)round(n_mid-filter_mean_half_width), (size_t)0); i<min((size_t)round(n_mid+filter_mean_half_width), pressure_deque_tmp.size()); i++){
         pressure_mean += pressure_deque_tmp[i];
         k++;
       }
@@ -104,25 +107,36 @@ int main(int argc, char *argv[]){
       /// ************** Compute velocity ************** //
       // Save depth
       depth_memory.push_front(std::pair<double,ros::Time>(depth, time_pressure));
-      if(depth_memory.size()>(velocity_delta_size+filter_mean_width_velocity))
+      if(depth_memory.size()>(velocity_dt_sample+filter_velocity_window_size))
         depth_memory.pop_back();
 
-      if(depth_memory.size()==(velocity_delta_size+filter_mean_width_velocity)){
-        double tmp_velocity = 0.0;
-        for(size_t i=0; i<filter_mean_width_velocity; i++){
-          tmp_velocity += (depth_memory[i].first-depth_memory[velocity_delta_size+i].first)/(depth_memory[i].second-depth_memory[velocity_delta_size+i].second).toSec();
+      if(depth_memory.size()==(velocity_dt_sample+filter_velocity_window_size)){
+        vector<double> velocity_memory;
+        for(size_t i=0; i<filter_velocity_window_size; i++){
+          // Delta_depth / Delta_dt
+          double dt = (depth_memory[i].second-depth_memory[velocity_dt_sample+i].second).toSec();
+          if(dt!=0)
+            velocity_memory.push_back((depth_memory[i].first-depth_memory[velocity_dt_sample+i].first)/dt);
         }
-        velocity = tmp_velocity/filter_mean_width_velocity;
+        sort(velocity_memory.begin(), velocity_memory.end());
+        const double n_mid_velocity = velocity_memory.size()/2.0;
+        double velocity_mean = 0.0;
+        int k_v=0;
+        for(size_t i = max((size_t)round(n_mid_velocity-filter_velocity_mean_half_width), (size_t)0); i<min((size_t)round(n_mid_velocity+filter_velocity_mean_half_width), velocity_memory.size()); i++){
+          velocity_mean += velocity_memory[i];
+          k_v++;
+        }
+        velocity = velocity_mean / max(k, 1);;
 
         if(abs(velocity)>velocity_limit)
           velocity = std::copysign(velocity_limit, velocity);
       }
 
-      if(zero_depth_valid){
-        msg.depth = depth;
-        msg.velocity = velocity;
-        depth_pub.publish(msg);
-      }
+      msg.depth = depth;
+      msg.velocity = velocity;
+      msg.zero_depth_pressure = zero_depth;
+      depth_pub.publish(msg);
+
       new_data = false;
     }
 

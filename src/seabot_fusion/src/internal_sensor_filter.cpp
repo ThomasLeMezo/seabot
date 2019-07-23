@@ -12,6 +12,7 @@ using namespace std;
 
 deque<double> pressure_memory;
 deque<double> temperature_memory;
+deque<double> humidity_memory;
 
 int filter_median_size = 5;
 int filter_mean_width = 3;
@@ -21,13 +22,14 @@ bool new_data = false;
 void sensor_callback(const pressure_bme280_driver::Bme280Data::ConstPtr& msg){
   pressure_memory.push_front(msg->pressure);
   temperature_memory.push_front(msg->temperature);
+  humidity_memory.push_front(msg->humidity);
 
-  if(pressure_memory.size()>filter_median_size){
+  if(pressure_memory.size()>filter_median_size)
     pressure_memory.pop_back(); 
-  }
-  if(temperature_memory.size()>filter_median_size){
+  if(temperature_memory.size()>filter_median_size)
     temperature_memory.pop_back();
-  }
+  if(humidity_memory.size()>filter_median_size)
+    humidity_memory.pop_back();
   new_data = true;
 }
 
@@ -67,6 +69,7 @@ int main(int argc, char *argv[]){
   // Loop variables
   seabot_fusion::InternalPose msg;
 
+  ROS_INFO("[FUSION internal sensor] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
@@ -78,6 +81,10 @@ int main(int argc, char *argv[]){
 
       if(!temperature_memory.empty()){
         msg.temperature = compute_filter(temperature_memory);
+      }
+
+      if(!humidity_memory.empty()){
+        msg.humidity = compute_filter(humidity_memory);
       }
 
       fusion_pub.publish(msg);

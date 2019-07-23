@@ -58,6 +58,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    FlashSpeed.srv
    SleepModeParam.srv
+   FlashCounter.srv
  )
 
 ## Generate actions in the 'action' folder

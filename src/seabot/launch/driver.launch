@@ -1,4 +1,9 @@
 <launch>
+
+
+<!-- modification a faire -->
+
+
     <group ns="driver">
         <node name="power_node" pkg="seabot_power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
             <param name="frequency" value="0.2" />
@@ -7,21 +12,35 @@
         <node name="piston_node" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
             <param name="frequency" value="5.0" />
 
-            <param name="distance_fast_move" value="100" />
-            <param name="speed_fast_move" value="30" />
+            <!--param name="distance_fast_move" value="100" /-->
+            <param name="distance_fast_move" value="0" />
+            <!-- If speed_fast_move is too high, disturbances are create on I2C external pressure sensor -->
+            <param name="speed_fast_move_factor" value="2.0" />
+            <param name="speed_reset" value="25" />
 
-            <param name="speed_in_offset" value="15" />
-            <param name="speed_out_offset" value="15" />
+            <param name="speed_out_min" value="15" />
+            <param name="speed_in_min" value="15" />
 
-            <param name="adaptative_speed" value="false" />
-            <param name="speed_in_slope" value="0.0" />
-            <param name="speed_out_slope" value="0.0" />
+            <param name="speed_out_slope" value="0.5" />
+            <param name="speed_in_slope" value="0.5" />
 
             <param name="reached_switch_off" value="true" />
             <param name="error_interval" value="6" />
+
+			
+			<!-- 100 de plus que piston_max_value dans base.launch -->
+            <param name="tick_max" value="5700" />
+            <!-- param name="tick_max" value="2500" /-->
+
+
         </node>
 
-        <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
+
+        <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressureExt.py" output="screen" respawn="true" respawn_delay="5">
+
+        <!-- node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5" -->
+
+
             <param name="frequency" value="5.0" />
         </node>
 
@@ -29,13 +48,30 @@
             <param name="frequency" value="5.0" />
         </node>
 
-        <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
-            <param name="frequency" value="15.0" />
-            <param name="coeff_cmd_to_pwm" value="9" />
+        <node name="temperature_sensor_ext" pkg="temperature_tsys01_driver" type="temperature_tsys01_node" output="screen" respawn="true" respawn_delay="5">
+            <param name="frequency" value="5.0" />
         </node>
+
+
+	<!-- modifications : 12 lines below -->
+        <!-- node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5"-->
+            <!--param name="frequency" value="15.0" /-->
+            <!--param name="coeff_cmd_to_pwm" value="9" /-->
+            <!--param name="delay_stop" value="0.5" /-->
+												<!--param name="backward_engine" value="false" /-->
+												<!--param name="invert_left" value="true" /-->
+												<!--param name="invert_right" value="false" /-->
+												<!--param name="max_engine_change" value="15.0" /-->
+        <!--/node-->
 
         <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>
 
-        <include file="$(find i2c_imu)/launch/mpu_9250_param.launch"/>
+
+							<!-- modifications -->
+
+							<!-- node name="i2c_imu" pkg="i2c_imu" type="i2c_imu_node" output="screen" respawn_delay="5"-->
+												<!--rosparam file="$(find i2c_imu)/param/imu_9250.yaml"/-->
+							<!--/node-->
+
     </group>
 </launch>

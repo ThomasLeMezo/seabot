@@ -55,6 +55,7 @@ int main(int argc, char *argv[]){
   double temperature = 0;
   double velocity = 0.0;
 
+  ROS_INFO("[FUSION temperature] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
@@ -83,10 +84,15 @@ int main(int argc, char *argv[]){
 
       if(temperature_memory.size()==(velocity_delta_size+filter_mean_width_velocity)){
         double tmp_velocity = 0.0;
+        int k=0;
         for(size_t i=0; i<filter_mean_width_velocity; i++){
-          tmp_velocity += (temperature_memory[i].first-temperature_memory[velocity_delta_size+i].first)/(temperature_memory[i].second-temperature_memory[velocity_delta_size+i].second).toSec();
+          double dt = (temperature_memory[i].second-temperature_memory[velocity_delta_size+i].second).toSec();
+          if(dt!=0.0){
+            tmp_velocity += (temperature_memory[i].first-temperature_memory[velocity_delta_size+i].first)/dt;
+            k++;
+          }
         }
-        velocity = tmp_velocity/filter_mean_width_velocity;
+        velocity = tmp_velocity/max(k, 1);
 
         if(abs(velocity)>velocity_limit)
           velocity = std::copysign(velocity_limit, velocity);

@@ -7,7 +7,6 @@
 #include <seabot_thruster_driver/Velocity.h>
 #include <geometry_msgs/Vector3.h>
 #include <gpsd_client/GPSFix.h>
-#include <gpsd_client/GPSStatus.h>
 #include <seabot_fusion/DepthPose.h>
 #include <cmath>
 
@@ -67,7 +66,7 @@ int main(int argc, char *argv[]){
   // Parameters
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 10.0);
-  const double delta_valid_time = n_private.param<double>("delta_valid_time", 3.0);
+  const double delta_valid_time = n_private.param<double>("delta_valid_time", 1.0);
   const double coeff_P = n_private.param<double>("coeff_P", 1.0);
   const double hysteresis_circle_in = n_private.param<double>("hysteresis_circle_in", 10.0);
   const double hysteresis_circle_out = n_private.param<double>("hysteresis_circle_out", 30.0);
@@ -91,6 +90,7 @@ int main(int argc, char *argv[]){
 
   bool hysteresis_inside = false;
 
+  ROS_INFO("[Waypoint] Start Ok");
   // Main regulation loop
   while (ros::ok()){
     ros::spinOnce();
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]){
     t = ros::WallTime::now();
 
     // ToDo : Add repulsive field if near coastline !!
-    double yaw_set_point = atan2(north_set_point-north, east_set_point-east);
-    double yaw_error = 2*atan(tan((yaw_imu-yaw_set_point)/2.0));
+    double yaw_set_point = atan2(north_set_point-north, east_set_point-east); // 0 deg yaw at in (x,y) != mag heading
+    double yaw_error = 2*atan(tan((yaw_imu+M_PI_2-yaw_set_point)/2.0)); // In (x,y) frame
 
     double distance_error = sqrt(pow(north_set_point-north, 2)+pow(east_set_point-east, 2));
     bool enable_regulation = true;
@@ -131,8 +131,10 @@ int main(int argc, char *argv[]){
       engine_msg.angular = 0.0;
     }
     engine_pub.publish(engine_msg);
+
+    loop_rate.sleep();
   }
-  loop_rate.sleep();
+
 
   return 0;
 }

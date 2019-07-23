@@ -1,0 +1,17 @@
+<launch>
+
+    <param name="mission_file_name" value="mission_empty.xml"/>
+    <param name="mission_path" value="$(find seabot)/mission" />
+
+    <include file="$(find seabot)/launch/base.launch"/>
+    <include file="$(find seabot)/launch/regulation.launch"/>
+				<include file="$(find seabot_safety)/launch/safety.launch"/>
+    <include file="$(find seabot_iridium)/launch/iridium.launch"/>
+
+				<node name="mission" pkg="seabot_mission" type="mission_node" ns="mission" output="screen" respawn="false">
+								<param name="frequency" value="1.0" />
+								<param name="flash_time_next_waypoint" value="3" />
+				</node>
+
+</launch>
+

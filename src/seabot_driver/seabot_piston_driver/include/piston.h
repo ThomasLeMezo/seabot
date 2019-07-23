@@ -15,7 +15,6 @@
 
 #include <ros/ros.h>
 
-#define I2C_PISTON_MOVE 0xFE
 #define I2C_PISTON_SPEED_IN 0xAB
 #define I2C_PISTON_SPEED_OUT 0xAC
 #define I2C_PISTON_CMD 0x00
@@ -69,7 +68,16 @@ public:
    * @param speed_in
    * @param speed_out
    */
-  void set_piston_speed(const __u8 &speed_in, const __u8 &speed_out) const;
+  //void set_piston_speed(const __u8 &speed_in, const __u8 &speed_out) const;
+  void set_piston_speed_in(const __u8 &speed_in) const;
+  void set_piston_speed_out(const __u8 &speed_out) const;
+  
+
+  /**
+   * @brief set_piston_speed_reset
+   * @param speed
+   */
+  void set_piston_speed_reset(const __u8 &speed) const;
 
   /**
    * @brief set_piston_position
@@ -107,6 +115,11 @@ public:
   void set_piston_reset() const;
 
   /**
+   * @brief set_piston_emergency
+   */
+  void set_piston_emergency() const;
+
+  /**
    * @brief update_piston_all_data
    */
   void get_piston_all_data();
@@ -115,6 +128,11 @@ public:
    * @brief get_piston_set_point
    */
   void get_piston_set_point();
+
+  /**
+   * @brief get_version
+   */
+  uint8_t& get_version();
 
   /**
    * @brief write_cmd
@@ -127,12 +145,17 @@ public:
   float m_position = 0;
   bool m_switch_out = false;
   bool m_switch_in = false;
+  bool m_switch_halfway = false; //modifications
   uint16_t m_state = 0;
   bool m_system_on = false;
   bool m_motor_on = true;
   bool m_enable_on = true;
   uint16_t m_position_set_point = 0;
   uint16_t m_motor_speed = 0;
+
+  uint8_t m_version=0;
+
+
 
 private:
   int m_file;

@@ -13,6 +13,10 @@ find_package(catkin REQUIRED
   message_generation
   seabot_mission
   gpsd_client
+  seabot_fusion
+  seabot_thruster_driver
+  geometry_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -49,10 +53,10 @@ find_package(catkin REQUIRED
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
- # add_message_files(
- #   FILES
- #   FILE.msg
- # )
+		add_message_files(
+				FILES
+				HeadingDebug.msg
+		)
 
 # Generate services in the 'srv' folder
 #add_service_files(
@@ -67,10 +71,10 @@ find_package(catkin REQUIRED
 # )
 
 # Generate added messages and services with any dependencies listed here
-# generate_messages(
+	generate_messages(
   # DEPENDENCIES
   # std_msgs  # Or other packages containing msgs
-# )
+	)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -138,6 +142,10 @@ add_executable(waypoint_node
     src/waypoint.cpp
 )
 
+add_executable(heading_node
+    src/heading.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -148,6 +156,7 @@ add_executable(waypoint_node
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(waypoint_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(heading_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -155,6 +164,10 @@ add_dependencies(waypoint_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPO
 # )
 
 target_link_libraries(waypoint_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(heading_node
   ${catkin_LIBRARIES}
 )
 

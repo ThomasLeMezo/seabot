@@ -47,6 +47,7 @@ int main(int argc, char *argv[]){
     // Loop variables
     seabot_power_driver::Battery msg;
 
+    ROS_INFO("[FUSION batteries] Start Ok");
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         ros::spinOnce();

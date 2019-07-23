@@ -1,28 +1,18 @@
 <launch>
-    <node name="sliding_node" pkg="seabot_depth_regulation" type="sliding_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
-<!--        <param name="g" value="9.81" />
-        <param name="rho_eau" value="1020.0" />
-        <param name="C_f" value="0.1" />-->
+				<param name="velocity_depth_default" value="0.06" />
 
-        <param name="piston_diameter" value="50.0e-3" />
-        <param name="tick_per_rotation" value="48" />
-        <param name="screw_thread" value="1.75e-3" />
+    <node name="state_feedback" pkg="seabot_depth_regulation" type="state_feedback_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+								<param name="frequency" value="5.0" />
 
-        <param name="frequency" value="1.0" />
+								<param name="root_regulation" value="-1.0" />
+
+								<param name="delta_velocity_lb" value="-0.01" />
+								<param name="delta_velocity_ub" value="0.01" />
 
         <param name="hysteresis_piston" value="0.6" />
-
-        <param name="K_factor" value="0.2" />
-        <param name="K_velocity" value="600.0" />
-        <param name="K_acc" value="0.0" />
-
-        <param name="set_point_following" value="10.0" />
-
-        <param name="offset_piston" value="1317.84" />
-        <param name="cf_x2" value="2.06936" />
-        <param name="cf_x1" value="-76.6614" />
-        <param name="max_depth_compression_validity" value="17.0" />
-
+								<param name="limit_depth_regulation" value="0.3" />
+								<param name="speed_volume_sink" value="4.0" />
+<!--								<param name="speed_volume_sink" value="4.0" />-->
     </node>
 
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<offset>
+<!--		<start_time_utc>
+		<year>2018</year>
+		<month>11</month>
+		<day>13</day>
+		<hour>15</hour>
+		<min>10</min>
+	</start_time_utc>-->
+</offset>
+
+<paths type ="1">
+	<loop number="1" depth_increment="0.0">
+   <waypoint>
+				<duration>200</duration>
+				<depth>1.0</depth>
+				<velocity_depth>0.04</velocity_depth>
+   </waypoint>
+
+		<waypoint>
+			<duration>500</duration>
+			<depth>10</depth>
+			<velocity_depth>0.04</velocity_depth>
+		</waypoint>
+
+		<waypoint>
+			<duration>500</duration>
+			<depth>1</depth>
+			<velocity_depth>0.04</velocity_depth>
+		</waypoint>
+
+		<waypoint>
+			<duration>200</duration>
+			<depth>0</depth>
+			<velocity_depth>0.04</velocity_depth>
+		</waypoint>
+	</loop>
+</paths>
+
+<!--<enable_thrusters>False</enable_thrusters-->

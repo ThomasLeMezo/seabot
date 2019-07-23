@@ -1,0 +1,27 @@
+<launch>
+  <node name="simulator_node" pkg="seabot_simulator" type="simulator_node" output="screen" ns="simulator" respawn="true" respawn_delay="5">
+    <param name="frequency" value="10" />
+
+    <param name="rho" value="1025.0" />
+    <param name="g" value="9.81" />
+    <param name="m" value="8.870" />
+    <param name="diam_collerette" value="0.35" />
+    <param name="compressibility_tick" value="20.0" />
+    <param name="screw_thread" value="4.11e-3" />
+    <param name="tick_per_turn" value="48" />
+    <param name="piston_diameter" value="0.0195" />
+    <param name="piston_ref_eq" value="1700" />
+    <param name="piston_offset" value="-100" />
+  </node>
+
+</launch>
+
+
+  
+  
+  
+  
+  
+  
+  
+  

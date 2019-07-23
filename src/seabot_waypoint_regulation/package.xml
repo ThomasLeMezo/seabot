@@ -18,4 +18,8 @@
   <depend>message_runtime</depend>
   <depend>seabot_mission</depend>
   <depend>gpsd_client</depend>
+  <depend>seabot_fusion</depend>
+  <depend>seabot_thruster_driver</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
 </package>

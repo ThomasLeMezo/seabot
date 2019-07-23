@@ -1,7 +1,10 @@
 #include <iostream>
 #include <unistd.h>
-#include "bme280.h"
-#include "bme280_defs.h"
+
+extern "C"{
+  #include "bme280.h"
+  #include "bme280_defs.h"
+}
 
 #include <ros/ros.h>
 #include <sensor_msgs/Temperature.h>
@@ -51,42 +54,42 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 }
 
 void print_calib_settings(struct bme280_dev &dev){
-    ROS_INFO("[Pressure_BME280] dig_T1 = %i", dev.calib_data.dig_T1);
-    ROS_INFO("[Pressure_BME280] dig_T2 = %i", dev.calib_data.dig_T2);
-    ROS_INFO("[Pressure_BME280] dig_T3 = %i", dev.calib_data.dig_T3);
+    ROS_DEBUG("[Pressure_BME280] dig_T1 = %i", dev.calib_data.dig_T1);
+    ROS_DEBUG("[Pressure_BME280] dig_T2 = %i", dev.calib_data.dig_T2);
+    ROS_DEBUG("[Pressure_BME280] dig_T3 = %i", dev.calib_data.dig_T3);
 
-    ROS_INFO("[Pressure_BME280] dig_P1 = %i", dev.calib_data.dig_P1);
-    ROS_INFO("[Pressure_BME280] dig_P2 = %i", dev.calib_data.dig_P2);
-    ROS_INFO("[Pressure_BME280] dig_P3 = %i", dev.calib_data.dig_P3);
-    ROS_INFO("[Pressure_BME280] dig_P4 = %i", dev.calib_data.dig_P4);
-    ROS_INFO("[Pressure_BME280] dig_P5 = %i", dev.calib_data.dig_P5);
-    ROS_INFO("[Pressure_BME280] dig_P6 = %i", dev.calib_data.dig_P6);
-    ROS_INFO("[Pressure_BME280] dig_P7 = %i", dev.calib_data.dig_P7);
-    ROS_INFO("[Pressure_BME280] dig_P8 = %i", dev.calib_data.dig_P8);
-    ROS_INFO("[Pressure_BME280] dig_P9 = %i", dev.calib_data.dig_P9);
+    ROS_DEBUG("[Pressure_BME280] dig_P1 = %i", dev.calib_data.dig_P1);
+    ROS_DEBUG("[Pressure_BME280] dig_P2 = %i", dev.calib_data.dig_P2);
+    ROS_DEBUG("[Pressure_BME280] dig_P3 = %i", dev.calib_data.dig_P3);
+    ROS_DEBUG("[Pressure_BME280] dig_P4 = %i", dev.calib_data.dig_P4);
+    ROS_DEBUG("[Pressure_BME280] dig_P5 = %i", dev.calib_data.dig_P5);
+    ROS_DEBUG("[Pressure_BME280] dig_P6 = %i", dev.calib_data.dig_P6);
+    ROS_DEBUG("[Pressure_BME280] dig_P7 = %i", dev.calib_data.dig_P7);
+    ROS_DEBUG("[Pressure_BME280] dig_P8 = %i", dev.calib_data.dig_P8);
+    ROS_DEBUG("[Pressure_BME280] dig_P9 = %i", dev.calib_data.dig_P9);
 
-    ROS_INFO("[Pressure_BME280] dig_H1 = %i", dev.calib_data.dig_H1);
-    ROS_INFO("[Pressure_BME280] dig_H2 = %i", dev.calib_data.dig_H2);
-    ROS_INFO("[Pressure_BME280] dig_H3 = %i", dev.calib_data.dig_H3);
-    ROS_INFO("[Pressure_BME280] dig_H4 = %i", dev.calib_data.dig_H4);
-    ROS_INFO("[Pressure_BME280] dig_H5 = %i", dev.calib_data.dig_H5);
-    ROS_INFO("[Pressure_BME280] dig_H6 = %i", dev.calib_data.dig_H6);
+    ROS_DEBUG("[Pressure_BME280] dig_H1 = %i", dev.calib_data.dig_H1);
+    ROS_DEBUG("[Pressure_BME280] dig_H2 = %i", dev.calib_data.dig_H2);
+    ROS_DEBUG("[Pressure_BME280] dig_H3 = %i", dev.calib_data.dig_H3);
+    ROS_DEBUG("[Pressure_BME280] dig_H4 = %i", dev.calib_data.dig_H4);
+    ROS_DEBUG("[Pressure_BME280] dig_H5 = %i", dev.calib_data.dig_H5);
+    ROS_DEBUG("[Pressure_BME280] dig_H6 = %i", dev.calib_data.dig_H6);
 }
 
 void print_settings(struct bme280_dev &dev){
-    ROS_INFO("[Pressure_BME280] dev_id = %i", dev.dev_id);
-    ROS_INFO("[Pressure_BME280] chip_id = %i", dev.chip_id);
-    ROS_INFO("[Pressure_BME280] settings.filter = %i", dev.settings.filter);
-    ROS_INFO("[Pressure_BME280] settings.osr_h = %i", dev.settings.osr_h);
-    ROS_INFO("[Pressure_BME280] settings.osr_p = %i", dev.settings.osr_p);
-    ROS_INFO("[Pressure_BME280] settings.osr_t = %i", dev.settings.osr_t);
-    ROS_INFO("[Pressure_BME280] settings.standby_time = %i", dev.settings.standby_time);
+    ROS_DEBUG("[Pressure_BME280] dev_id = %i", dev.dev_id);
+    ROS_DEBUG("[Pressure_BME280] chip_id = %i", dev.chip_id);
+    ROS_DEBUG("[Pressure_BME280] settings.filter = %i", dev.settings.filter);
+    ROS_DEBUG("[Pressure_BME280] settings.osr_h = %i", dev.settings.osr_h);
+    ROS_DEBUG("[Pressure_BME280] settings.osr_p = %i", dev.settings.osr_p);
+    ROS_DEBUG("[Pressure_BME280] settings.osr_t = %i", dev.settings.osr_t);
+    ROS_DEBUG("[Pressure_BME280] settings.standby_time = %i", dev.settings.standby_time);
 }
 
 void print_sensor_mode(struct bme280_dev &dev){
     uint8_t sensor_mode;
     bme280_get_sensor_mode(&sensor_mode, &dev);
-    ROS_INFO("[Pressure_BME280] Sensor Mode = %i", sensor_mode);
+    ROS_DEBUG("[Pressure_BME280] Sensor Mode = %i", sensor_mode);
 }
 
 int main(int argc, char *argv[])
@@ -149,9 +152,9 @@ int main(int argc, char *argv[])
     ros::Duration(1.5).sleep(); // Sleep to activate Normal Mode
 
     // Loop with sensor reading
-    ROS_INFO("[Pressure_BME280] Start Reading data");
     pressure_bme280_driver::Bme280Data msg;
 
+    ROS_INFO("[Pressure_BME280] Start Ok");
     ros::Rate loop_rate(frequency);
     while (ros::ok()){
         ros::spinOnce();

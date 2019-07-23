@@ -1,6 +1,7 @@
 float32 position
 bool switch_out
 bool switch_in
+bool switch_halfway
 uint16 state
 bool motor_on
 bool enable_on

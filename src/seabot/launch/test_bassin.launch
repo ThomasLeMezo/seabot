@@ -1,0 +1,10 @@
+<launch>
+
+
+    <include file="$(find seabot)/launch/base.launch"/>
+    <!-- include file="$(find seabot_safety)/launch/safety.launch"/ -->
+    <include file="$(find seabot_iridium)/launch/iridium.launch"/>
+
+
+</launch>
+

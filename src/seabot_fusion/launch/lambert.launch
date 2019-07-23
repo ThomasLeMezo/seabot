@@ -1,7 +1,5 @@
 <launch>
   <node name="lambert_node" pkg="seabot_fusion" type="lambert_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-        <param name="frequency" value="1" />
-        <param name="offset_east" value="0.0" />
-        <param name="offset_north" value="0.0" />
+								<param name="frequency" value="5" />
   </node>
 </launch>

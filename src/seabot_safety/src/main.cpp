@@ -14,6 +14,8 @@
 #include <pressure_89bsd_driver/PressureBsdData.h>
 #include <seabot_power_driver/Battery.h>
 #include <seabot_safety/SafetyLog.h>
+#include <seabot_safety/SafetyDebug.h>
+#include <geometry_msgs/Vector3.h>
 
 #include <cmath>
 
@@ -26,10 +28,13 @@ double velocity = 0;
 
 // Piston state
 ros::WallTime time_piston_state;
-double piston_position = 0;
+double piston_position = -100;
 int piston_state = 0;
 bool piston_switch_in = false;
 bool piston_switch_out = false;
+
+// Imu
+ros::WallTime time_euler;
 
 // Pressure limit
 double pressure_limit = 6.2;
@@ -52,6 +57,11 @@ bool is_emergency_depth = false;
 ros::WallTime time_internal_sensor;
 double internal_pressure = 0.0;
 double internal_temperature = 0.0;
+double internal_humidity = 0.0;
+
+// Seafloor
+bool seafloor_detected = false;
+ros::WallTime time_seafloor_detected;
 
 ros::ServiceClient service_zero_depth;
 ros::ServiceClient service_flash_enable;
@@ -99,10 +109,15 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
     is_pressure_limit_reached = false;
 }
 
+void euler_callback(const geometry_msgs::Vector3::ConstPtr& msg){
+  time_euler = ros::WallTime::now();
+}
+
 void internal_sensor_callback(const seabot_fusion::InternalPose::ConstPtr& msg){
   time_internal_sensor = ros::WallTime::now();
   internal_pressure = msg->pressure*1e2;
   internal_temperature = msg->temperature + 273.15;
+  internal_humidity = msg->humidity;
 }
 
 /// ****************** SERVICES ****************** ///
@@ -117,6 +132,7 @@ void call_zero_depth(){
 void call_emergency_depth(const bool &val){
   if(val != is_emergency_depth){
     std_srvs::SetBool srv;
+    srv.request.data = val;
     if (!service_emergency.call(srv)){
       ROS_ERROR("[Safety] Failed to call emergency");
     }
@@ -137,11 +153,10 @@ void call_flash_enable(const bool &val){
   if(val != flash_is_enable){
     std_srvs::SetBool srv;
     srv.request.data = val;
-    if (!service_flash_enable.call(srv)){
-      ROS_ERROR("[Safety] Failed to call flash enable");
-    }
-    else
+    if (service_flash_enable.call(srv))
       flash_is_enable = val;
+    else
+      ROS_ERROR("[Safety] Failed to call flash enable");
   }
 }
 
@@ -173,40 +188,55 @@ int main(int argc, char *argv[]){
   const double d_external_sensor_ref = n_private.param<double>("time_delay_external_sensor_msg", 2.0);
   const double d_depth_ref = n_private.param<double>("time_delay_depth_msg", 2.0);
   const double d_piston_state_ref = n_private.param<double>("time_delay_piston_state_msg", 2.0);
+  const double d_euler_ref = n_private.param<double>("time_delay_euler_msg", 1.0);
 
   battery_limit = n_private.param<double>("battery_limit", 10.0);
-
   pressure_limit = n_private.param<double>("pressure_limit", 6.2);
 
-  double tick_to_volume = (1.75e-3/48.0)*(pow((0.05/2.0),2))*M_PI;
-  const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.001);
-  const double volume_ref = n_private.param<double>("volume_ref", 6.0);
+//  double tick_to_volume = (1.03e-3/48.0)*(pow((0.0195/2.0),2))*M_PI;
+  double tick_to_volume = (4.11e-3/48.0)*(pow((0.0195/2.0),2))*M_PI; //modification
+  const double delta_volume_allowed = n_private.param<double>("delta_volume_allowed", 0.002);
+  const double delta_ref_allowed = n_private.param<double>("delta_ref_allowed", 3.0);
+  const double volume_ref = n_private.param<double>("volume_ref", 0.006);
+  const double pressure_internal_max = 1e2*n_private.param<double>("pressure_internal_max", 850.0); // in Pa
+  const double transition_tick_law = n_private.param<double>("transition_tick_law", 1000.0);
+
+  const double humidity_limit = n_private.param<double>("humidity_limit", 75.0);
+
+  const bool enable_safety_battery = n_private.param<bool>("safety_battery", true);
+  const bool enable_safety_pressure_limit = n_private.param<bool>("safety_pressure_limit", true);
+  const bool enable_safety_depressure = n_private.param<bool>("safety_depressure", true);
+
+  const double time_before_seafloor_emergency = n_private.param<double>("time_before_seafloor_emergency", 30.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
-  ros::Subscriber internal_sensor_sub = n.subscribe("/driver/internal_sensor", 1, internal_sensor_callback);
-  ros::Subscriber batteries_sub = n.subscribe("/fusion/batteries", 1, batteries_callback);
+  ros::Subscriber internal_sensor_sub = n.subscribe("/fusion/sensor_internal", 1, internal_sensor_callback);
+  ros::Subscriber batteries_sub = n.subscribe("/fusion/battery", 1, batteries_callback);
+  ros::Subscriber external_sensor_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
+  ros::Subscriber euler_sub = n.subscribe("/driver/euler", 1, euler_callback);
 
   // Publisher
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
+  ros::Publisher safety_debug_pub = n.advertise<seabot_safety::SafetyDebug>("debug", 1);
 
   // Service
-  ROS_INFO("[Safety] Wait for zero depth service from fusion");
+  ROS_DEBUG("[Safety] Wait for zero depth service from fusion");
   ros::service::waitForService("/fusion/zero_depth");
   service_zero_depth = n.serviceClient<std_srvs::Trigger>("/fusion/zero_depth");
   call_zero_depth();
-  ROS_INFO("[Safety] Reset zero");
+  ROS_DEBUG("[Safety] Reset zero");
 
-  ROS_INFO("[Safety] Wait for flash service from power_driver");
-  ros::service::waitForService("/driver/power/flash_led");
-  service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash_led");
+  ROS_DEBUG("[Safety] Wait for flash service from power_driver");
+  ros::service::waitForService("/driver/power/flash");
+  service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash");
 
-  ROS_INFO("[Safety] Wait for emergency service from depth regulation");
+  ROS_DEBUG("[Safety] Wait for emergency service from depth regulation");
   ros::service::waitForService("/regulation/emergency");
   service_emergency = n.serviceClient<std_srvs::SetBool>("/regulation/emergency");
 
-  ROS_INFO("[Safety] Wait for sleep service from power_driver");
+  ROS_DEBUG("[Safety] Wait for sleep service from power_driver");
   ros::service::waitForService("/driver/power/sleep_mode");
   service_sleep = n.serviceClient<std_srvs::Empty>("/driver/power/sleep_mode");
 
@@ -220,118 +250,217 @@ int main(int argc, char *argv[]){
   double piston_position_ref = 0.0;
   unsigned int cpt = 0;
   unsigned int nb_sample = 5;
+
+  /// ******************************************************************************
+  /// **************************** Initialization **********************************
+  /// ******************************************************************************
+
+
+  // Wait data from piston //modification
+  while((ros::WallTime::now()-time_piston_state).toSec()>d_piston_state_ref){
+    // Wait piston data
+    sleep(1);
+  }
+
+
+
+  // Call piston to move at 0
+  call_emergency_depth(true);
+
+  // Set Ref Pressure & Temperature
   ros::WallDuration dt(1.0);
   while(cpt<nb_sample){
     ros::spinOnce();
     ros::WallDuration d_internal_sensor = ros::WallTime::now()-time_internal_sensor;
     ros::WallDuration d_piston_state = ros::WallTime::now()-time_piston_state;
-    if(d_internal_sensor.toSec()<1.0 && d_piston_state.toSec()<1.0 && internal_temperature!=0.0){
+    if(d_internal_sensor.toSec()<1.0 &&
+       d_piston_state.toSec()<1.0 &&
+       internal_temperature!=0.0 &&
+       piston_switch_out){
       p_t_ratio_ref += internal_pressure/internal_temperature;
       piston_position_ref += piston_position;
       cpt++;
     }
     else
-      ROS_WARN("[Safety] Not receiving internal sensor data or piston state data");
+      ROS_WARN("[Safety] Not receiving internal sensor data or piston state data yet (%f, %f)", d_internal_sensor.toSec(), d_piston_state.toSec());
     dt.sleep();
   }
-  p_t_ratio_ref /= (double)nb_sample;
-  piston_position_ref /= (double) nb_sample;
+  p_t_ratio_ref /= (double) cpt;
+  piston_position_ref /= (double) cpt;
 
-  // Main regulation loop
-  ROS_INFO("[Safety] Start safety loop");
+  // Clearance of regulation
+  call_emergency_depth(false);
+
+  /// ******************************************************************************
+  /// **************************** Main regulation loop ****************************
+  /// ******************************************************************************
+
+  seabot_safety::SafetyLog safety_msg;
+  safety_msg.depth_limit = false;
+  safety_msg.published_frequency = false;
+  safety_msg.seafloor = false;
+  safety_msg.batteries_limit = false;
+  safety_msg.depressurization = false;
+
+  ROS_INFO("[Safety] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
     bool enable_emergency_depth = false;
-    seabot_safety::SafetyLog safety_msg;
 
-    // Sensor published data
+    seabot_safety::SafetyDebug safety_debug_msg;
+
+    ///*******************************************************
+    ///**************** Sensor published data ****************
+
     ros::WallTime t_ref = ros::WallTime::now();
     double d_batteries = (t_ref-time_batteries).toSec();
     double d_internal_sensor = (t_ref-time_internal_sensor).toSec();
     double d_external_sensor = (t_ref-time_external_sensor).toSec();
     double d_depth = (t_ref-time_depth).toSec();
     double d_piston_state = (t_ref-time_piston_state).toSec();
+    double d_euler = (t_ref-time_euler).toSec();
 
-    if(d_batteries < d_batteries_ref
-       || d_internal_sensor < d_internal_sensor_ref
-       || d_external_sensor < d_external_sensor_ref
-       || d_depth < d_depth_ref
-       || d_piston_state < d_piston_state_ref){
-      ROS_WARN("[Safety] No data published by sensors");
+    if(d_batteries > d_batteries_ref
+       || d_internal_sensor > d_internal_sensor_ref
+       || d_external_sensor > d_external_sensor_ref
+       || d_depth > d_depth_ref
+       || d_piston_state > d_piston_state_ref
+       || d_euler > d_euler_ref){
+      ROS_WARN("[Safety] No data published by sensors (%f, %f, %f, %f, %f, %f)", d_batteries, d_internal_sensor, d_external_sensor, d_depth, d_piston_state, d_euler);
       enable_emergency_depth = true;
       safety_msg.published_frequency = true;
     }
-    else
-      safety_msg.published_frequency = false;
 
-    // Analyze zero depth
+    ///*******************************************************
+    ///**************** Analyze zero depth *******************
     if(piston_position == 0 && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero)
       call_zero_depth();
 
-    // Flash at surface
+    ///*******************************************************
+    ///**************** Flash at surface ********************
     if(enable_flash){
-      if(depth < limit_depth_flash_enable)
+      if(depth < limit_depth_flash_enable){
         call_flash_enable(true);
-      else
+        safety_debug_msg.flash = true;
+      }
+      else{
         call_flash_enable(false);
+        safety_debug_msg.flash = false;
+      }
     }
 
-    // Depth limit
+    ///*******************************************************
+    ///**************** Seafloor detection *******************
+
+    if(piston_switch_in && abs(velocity)<max_speed_reset_zero){
+      if(!seafloor_detected){
+        seafloor_detected = true;
+        time_seafloor_detected = ros::WallTime::now();
+      }
+      else{
+        if((ros::WallTime::now()-time_seafloor_detected).toSec()>time_before_seafloor_emergency){
+          enable_emergency_depth = true;
+          safety_msg.seafloor = true;
+        }
+      }
+    }
+    else
+      seafloor_detected = false;
+
+    ///*******************************************************
+    ///**************** Depth limit **************************
     if(is_pressure_limit_reached && (ros::WallTime::now()-time_pressure_limit_reached).toSec()>time_before_pressure_emergency){
       ROS_WARN("[Safety] Limit depth detected");
       enable_emergency_depth = true;
       safety_msg.depth_limit = true;
     }
-    else
-      safety_msg.depth_limit = false;
 
-    // Batteries
-    if(battery_limit_reached){
+    ///*******************************************************
+    ///**************** Batteries ****************************
+    if(battery_limit_reached && enable_safety_battery){
       ROS_WARN("[Safety] Batteries limit detected");
       enable_emergency_depth = true;
       // ToDo : shutdown ? => launch with iridium sleep ?
       safety_msg.batteries_limit = true;
     }
-    else
-      safety_msg.batteries_limit = false;
 
-    // Internal sensor
-    safety_msg.depressurization = false;
+    ///*******************************************************
+    ///**************** Internal sensor **********************
+    int warning_number = 0;
+    double p_t_ratio;
     if(internal_temperature!=0.0){
-      double p_t_ratio = internal_pressure/internal_temperature;
+      p_t_ratio = internal_pressure/internal_temperature;
       double piston = piston_position-piston_position_ref;
-      if(abs(piston)<620.0){
-        if(abs(p_t_ratio-p_t_ratio_ref)>1.5){
-          ROS_WARN("[Safety] Sealing issue detected");
-          enable_emergency_depth = true;
+
+      /// ********* PV=nRT law ********* ///
+      // Case piston near zero
+      if(abs(piston)<transition_tick_law){
+
+        double delta = p_t_ratio-p_t_ratio_ref;
+        if(abs(delta)>delta_ref_allowed){
           safety_msg.depressurization = true;
+          warning_number = 1;
         }
+
+        safety_debug_msg.ratio_p_t = p_t_ratio;
+        safety_debug_msg.ratio_delta = delta;
       }
+      // General case
       else{
         if(p_t_ratio != p_t_ratio_ref){
           double volume = piston*tick_to_volume*p_t_ratio/(p_t_ratio-p_t_ratio_ref);
-          if(abs(volume-volume_ref)>delta_volume_allowed){
-            ROS_WARN("[Safety] Sealing issue detected");
-            enable_emergency_depth = true;
+          double volume_delta = volume-volume_ref;
+          if(abs(volume_delta)>delta_volume_allowed){
             safety_msg.depressurization = true;
+            warning_number = 2;
           }
+
+          safety_debug_msg.volume = volume;
+          safety_debug_msg.volume_delta = volume_delta;
         }
         else{
-          ROS_WARN("[Safety] Sealing issue detected");
-          enable_emergency_depth = true;
           safety_msg.depressurization = true;
+          warning_number = 3;
         }
+      }
+
+      // Limit max
+      if(internal_pressure>pressure_internal_max){
+        safety_msg.depressurization = true;
+        warning_number = 4;
       }
     }
     else{
       ROS_WARN("[Safety] Internal sensor send wrong data or is disconnected");
-      enable_emergency_depth = true;
+      safety_msg.depressurization = true;
+      warning_number = 5;
     }
+
+    if(internal_humidity>humidity_limit){
+      safety_msg.depressurization = true;
+      warning_number = 6;
+    }
+
+    if(piston_switch_in && piston_switch_out){
+      safety_msg.depressurization = true;
+      warning_number = 7;
+    }
+
+    if(safety_msg.depressurization == true){
+      ROS_WARN("[Safety] Sealing issue detected %i (p=%f, t=%f, h=%f)", warning_number, internal_pressure, internal_temperature, internal_humidity);
+      ROS_WARN("[Safety] Ratio (%f / %f)", p_t_ratio, p_t_ratio_ref);
+    }
+
+    ///*******************************************************
+    ///**************** Summary ******************************
+    if((enable_safety_battery && safety_msg.batteries_limit) || (enable_safety_depressure && safety_msg.depressurization) || (enable_safety_pressure_limit && safety_msg.depth_limit) || safety_msg.published_frequency)
+      enable_emergency_depth = true;
 
     if(enable_emergency_depth)
       call_emergency_depth(true);
 
     safety_pub.publish(safety_msg);
+    safety_debug_pub.publish(safety_debug_msg);
     loop_rate.sleep();
   }
 

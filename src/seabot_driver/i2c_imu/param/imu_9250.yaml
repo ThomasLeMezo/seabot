@@ -1,13 +1,45 @@
 imu_type: 7
 imu_frame: imu_link
-i2c_bus: 1 
+
+is_i2c: false
+i2c_bus: 1
 i2c_slave_address: 104
+spi_speed: 500000
+spi_select: 0
+spi_bus: 0
+
 fusion_type: 1
 
-publish_euler: True
-publish_magnetometer: True
+publish_euler: true
+publish_magnetometer: true
 
-axis_rotation: 0
+# RTIMU_XNORTH_YEAST    -> 0
+# RTIMU_XEAST_YSOUTH    -> 1
+# RTIMU_XSOUTH_YWEST    -> 2
+# RTIMU_XWEST_YNORTH    -> 3
+# RTIMU_XNORTH_YWEST    -> 4
+# RTIMU_XEAST_YNORTH    -> 5
+# RTIMU_XSOUTH_YEAST    -> 6
+# RTIMU_XWEST_YSOUTH    -> 7
+
+# RTIMU_XUP_YNORTH      -> 8
+# RTIMU_XUP_YEAST       -> 9
+# RTIMU_XUP_YSOUTH      -> 10
+# RTIMU_XUP_YWEST       -> 11
+# RTIMU_XDOWN_YNORTH    -> 12
+# RTIMU_XDOWN_YEAST     -> 13
+# RTIMU_XDOWN_YSOUTH    -> 14
+# RTIMU_XDOWN_YWEST     -> 15
+
+# RTIMU_XNORTH_YUP      -> 16
+# RTIMU_XEAST_YUP       -> 17
+# RTIMU_XSOUTH_YUP      -> 18
+# RTIMU_XWEST_YUP       -> 19
+# RTIMU_XNORTH_YDOWN    -> 20
+# RTIMU_XEAST_YDOWN     -> 21
+# RTIMU_XSOUTH_YDOWN    -> 22
+# RTIMU_XWEST_YDOWN     -> 23
+axis_rotation: 2
 
 mpu9250:
   #Sample Rates
@@ -23,24 +55,56 @@ mpu9250:
   gyro_full_scale_range: 16
 
 #Calibration
-calib:
-  compass_min: [-1.0, -1.0, -1.0]
-  compass_max: [1.0, 1.0, 1.0]
+seabot1:
+  # ellipsoid_offset: [ 43.0094674495 ,  24.9017840665 ,  7.40342032043 ]
+  # ellipsoid_matrix0: [ 0.934236354913 ,  -0.461094612098 ,  0.00264028335605 ]
+  # ellipsoid_matrix1: [ -0.461094612098 ,  1.34710786391 ,  -0.0103892294907 ]
+  # ellipsoid_matrix2: [ 0.00264028335605 ,  -0.0103892294907 ,  0.956187420653 ]
 
-  ellipsoid_offset: [-1.0, -1.0, -1.0]
-
-  ellipsoid_matrix0: [1.0, 0.0, 0.0]
-  ellipsoid_matrix1: [0.0, 1.0, 0.0]
-  ellipsoid_matrix2: [0.0, 0.0, 1.0]
+  ellipsoid_offset: [0, 0, 0]
+  ellipsoid_matrix0: [1, 0, 0]
+  ellipsoid_matrix1: [0, 1, 0]
+  ellipsoid_matrix2: [0, 0, 1]
   
-  accel_min: [-1.0, -1.0, -1.0]
-  accel_max: [1.0,  1.0,  1.0]
+  accel_min: [-9.61750807,  -9.97663832, -10.20648168]
+  accel_max: [10.20169327,   9.88087025,   9.74918916]
 
-  gyro_bias: [0.0, 0.0, 0.0]
+  gyro_bias: [-0.00013038, 0.00055432,  -0.00025377]
 
   mag_declination: -1.722
 
+seabot2:
+  # ellipsoid_offset: [ 40.8633121108 ,  34.0438726256 ,  -4.37166348387 ]
+  # ellipsoid_matrix0: [ 0.933027617833 ,  -0.478867123658 ,  0.000475957850516 ]
+  # ellipsoid_matrix1: [ -0.478867123658 ,  1.37427350708 ,  0.00670849292034 ]
+  # ellipsoid_matrix2: [ 0.000475957850516 ,  0.00670849292034 ,  0.94978157484 ]
 
-             
+  ellipsoid_offset: [0, 0, 0]
+  ellipsoid_matrix0: [1, 0, 0]
+  ellipsoid_matrix1: [0, 1, 0]
+  ellipsoid_matrix2: [0, 0, 1]
+
+  accel_min: [-1.08, -0.92, -1.0]
+  accel_max: [1.04,  1.01,  1.11]
+
+  gyro_bias: [-2.36e-05, 4.64e-07, 2.22e-05]
+
+  mag_declination: -1.722
+
+seabot3:
+  ellipsoid_offset: [ 9.5296744553 ,  -6.85539266089 ,  40.9095773064 ]
+  ellipsoid_matrix0: [ 1.0352544603 ,  0.0264255854671 ,  -0.0303184033011 ]
+  ellipsoid_matrix1: [ 0.0264255854671 ,  1.04686539774 ,  0.0134054892963 ]
+  ellipsoid_matrix2: [ -0.0303184033011 ,  0.0134054892963 ,  0.92437823152 ]
+
+  # ellipsoid_offset: [0, 0, 0]
+  # ellipsoid_matrix0: [1, 0, 0]
+  # ellipsoid_matrix1: [0, 1, 0]
+  # ellipsoid_matrix2: [0, 0, 1]
   
-  
+  accel_min: [-0.896, -1.135, -1.109]
+  accel_max: [1.116,   1.015,  0.975]
+
+  gyro_bias: [-3.81e-05, 3.63e-06, 4.32e-05]
+
+  mag_declination: -1.722

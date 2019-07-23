@@ -1,9 +1,47 @@
 <launch>
 
+<!-- modification a faire -->
+
     <node pkg="rosbag" type="record" name="record" output="screen" args="--split --size 1024 --all" respawn="true" respawn_delay="5"/>
+
+    <param name="rho" value="1025.0" />
+    <param name="g" value="9.81" />
+
+
+				<param name="m" value="11.630" />
+				<!-- avec 16 piles au lieu de 32 -->
+				<!--param name="m" value="9.045" /-->
+
+
+    <param name="diam_collerette" value="0.35" /> 
+
+
+	<!-- screw_thread/tick_per_turn = 0.120/5600, on fixe tick_per_turn = 48 -->
+	<!-- donc screw_thread = 4*48*0.120/5600 = 4.11e-3 -->
+    <param name="screw_thread" value="4.11e-3" />
+    <!-- param name="screw_thread" value="1.75e-3" /-->
+    <param name="tick_per_turn" value="48" />
+
+
+    <param name="piston_diameter" value="0.0195" />
+    <!-- param name="piston_diameter" value="0.05" /-->
+
+
+				<param name="piston_speed_max_tick" value="56.25" />
+				<!-- (1/4)*Nb_pulse/s = 225/4 -->
+				<!--param name="piston_speed_max_tick" value="20" /-->
+
+
+				<param name="piston_ref_eq" value="1700" />
+
+
+				<param name="piston_max_value" value="5600" />
+				<!-- param name="piston_max_value" value="2400" /-->
+
 
     <include file="$(find seabot)/launch/driver.launch"/>
     <include file="$(find seabot_fusion)/launch/filter.launch"/>
     <include file="$(find seabot_fusion)/launch/lambert.launch"/>
+    <include file="$(find seabot)/launch/kalman.launch"/>
 
 </launch>

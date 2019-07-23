@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<offset>
+</offset>
+
+<paths type ="1">
+<waypoint>
+	<duration>150</duration>
+	<depth>0.0</depth>
+	<velocity_depth>0.04</velocity_depth>
+</waypoint>
+</paths>

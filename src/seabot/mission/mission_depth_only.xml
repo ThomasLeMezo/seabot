@@ -1,37 +1,55 @@
 <?xml version="1.0"?>
 
 <offset>
-	<time>1531261745</time>
+<!--		<start_time_utc>
+		<year>2019</year>
+		<month>04</month>
+		<day>11</day>
+		<hour>12</hour>
+		<min>40</min>
+	</start_time_utc>-->
 </offset>
 
 <paths type ="1">
-	<waypoint>
-		<time>10</time>
-		<depth>0</depth>
-	</waypoint>
+	<loop number="1" depth_increment="0.0">
+   <waypoint>
+				<duration>200</duration>
+				<depth>1.0</depth>
+				<velocity_depth>0.04</velocity_depth>
+   </waypoint>
 
-	<waypoint>
-		<time>20</time>
-		<depth>5</depth>
-	</waypoint>
+		<waypoint>
+			<duration>500</duration>
+			<depth>10.0</depth>
+			<velocity_depth>0.04</velocity_depth>
+		</waypoint>
 
-	<waypoint>
-		<time>30</time>
-		<depth>15</depth>
-	</waypoint>
+                <waypoint>
+                        <duration>300</duration>
+                        <depth>15.0</depth>
+                        <velocity_depth>0.04</velocity_depth>
+                </waypoint>
 
-	<waypoint>
-		<time>40</time>
-		<depth>5</depth>
-	</waypoint>
+                </waypoint>
+                        <duration>500</duration>
+                        <depth>1.0</depth>
+                        <velocity_depth>0.04</velocity_depth>
+                </waypoint>
 
-	<waypoint>
-		<time>50</time>
-		<depth>15</depth>
-	</waypoint>
+                <waypoint>
+                        <duration>200</duration>
+                        <depth>0.0</depth>
+                        <velocity_depth>0.04</velocity_depth>
+                </waypoint>
 
-	<waypoint>
-		<time>60</time>
-		<depth>5</depth>
-	</waypoint>
+
+
+<!--		<waypoint>
+			<duration>300</duration>
+			<depth>0.0</depth>
+			<velocity_depth>0.04</velocity_depth>
+		</waypoint>-->
+	</loop>
 </paths>
+
+<!--<enable_thrusters>False</enable_thrusters-->

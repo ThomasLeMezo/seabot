@@ -17,7 +17,8 @@
 
 // 150/(150+330)
 // 5V = 1024
-#define ADC_BATTERY_LEVEL_CONV 0.015625
+//#define ADC_BATTERY_LEVEL_CONV 0.015625
+#define ADC_BATTERY_LEVEL_CONV 0.1 //modification
 
 class Power
 {
@@ -32,16 +33,16 @@ public:
   int i2c_open();
 
   /**
-   * @brief enable_led
+   * @brief enable the flash
    * @param val
    */
-  void set_flash_led(const bool &val) const;
+  void set_flash_enable(const bool &val) const;
 
   /**
    * @brief set_flash_led_delay
    * @param dt in 0.1 s (20 = 2s)
    */
-  void set_flash_led_delay(const unsigned char &dt) const;
+  void set_flash_delay(const unsigned char &dt) const;
 
   /**
    * @brief set_sleep_mode
@@ -67,14 +68,26 @@ public:
    */
   void get_batteries();
 
+  /**
+   * @brief get_level_battery
+   * @param id
+   * @return
+   */
   const float &get_level_battery(size_t id) const;
+
+  /**
+   * @brief get_version
+   */
+  uint8_t& get_version();
 
 private:
   int m_file;
-  const int m_i2c_addr = 0x39;
+  const int m_i2c_addr = 0x38; //modifie
   const char* m_i2c_periph = "/dev/i2c-1";
 
   float m_level_battery[4] =  {0.0, 0.0, 0.0, 0.0};
+
+  uint8_t m_version=0;
 };
 
 inline const float& Power::get_level_battery(size_t id) const{
