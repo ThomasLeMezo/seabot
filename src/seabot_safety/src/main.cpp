@@ -257,6 +257,12 @@ int main(int argc, char *argv[]){
   /// **************************** Initialization **********************************
   /// ******************************************************************************
 
+  // Wait data from piston
+  while((ros::WallTime::now()-time_piston_state).toSec()>d_piston_state_ref){
+    // Wait piston data
+    sleep(1);
+  }
+
   // Call piston to move at 0
   call_emergency_depth(true);
 

@@ -473,12 +473,13 @@ def load_bag(filename):
 
 
     # Data Analysis
-    print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
-    print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
-    print("acc_min = ", min(acc_x), min(acc_y), min(acc_z))
-    print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
+    if(len(mag_x)>0):
+	    print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
+	    print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
+	    print("acc_min = ", min(acc_x), min(acc_y), min(acc_z))
+	    print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
 
-    print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
+	    print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
 
     if(len(time_fix)>0):
         import gpxpy
@@ -508,5 +509,3 @@ def load_bag(filename):
         file = open(filename+".gpx","w") 
         file.write(gpx.to_xml()) 
         file.close() 
-
-    
