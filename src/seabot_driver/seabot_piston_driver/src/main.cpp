@@ -38,6 +38,8 @@ bool velocity_issue_detected=false;
 bool is_sealing_issue = false;
 ros::Time time_sealing_issue;
 
+size_t speed_index = 0;
+
 #define NB_SPEED_STEPS 10
 
 bool piston_reset(std_srvs::Empty::Request  &req,
@@ -71,9 +73,12 @@ bool piston_emergency(std_srvs::SetBool::Request  &req,
     speed_in_last = 45;
     speed_out_last = 45;
     state_emergency = true;
+    ROS_INFO("[Piston_driver] Emergency ON");
   }
   else{
     state_emergency = false;
+    ROS_INFO("[Piston_driver] Emergency OFF");
+    p.set_piston_speed(speed_in_min, speed_out_min); // ?
   }
 
   res.success = true;
@@ -161,11 +166,11 @@ int main(int argc, char *argv[]){
     speed_table_in[i] = speed_in_slope*i*(depth_max/NB_SPEED_STEPS) + speed_in_min;
     speed_index_depth[i] = i*NB_SPEED_STEPS/depth_max;
   }
-  size_t speed_index = 0;
+
   bool new_speed = true;
 
 
-  ROS_DEBUG("[Piston_driver] Start Ok");
+  ROS_INFO("[Piston_driver] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();

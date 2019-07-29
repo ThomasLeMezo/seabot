@@ -334,8 +334,17 @@ def load_bag(filename):
             mission_north.append(msg.north)
             mission_east.append(msg.east)
             mission_depth.append(msg.depth)
-            mission_limit_velocity.append(msg.limit_velocity)
-            mission_approach_velocity.append(msg.approach_velocity)
+
+            if hasattr(msg, 'limit_velocity'):
+                mission_limit_velocity.append(msg.limit_velocity)
+            else:
+                mission_limit_velocity.append(0)
+
+            if hasattr(msg, 'approach_velocity'):
+                mission_approach_velocity.append(msg.approach_velocity)
+            else:
+                mission_approach_velocity.append(0)
+
             mission_mission_enable.append(msg.mission_enable)
             mission_depth_only.append(msg.depth_only)
             mission_waypoint_number.append(msg.waypoint_number)
@@ -474,12 +483,12 @@ def load_bag(filename):
 
     # Data Analysis
     if(len(mag_x)>0):
-	    print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
-	    print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
-	    print("acc_min = ", min(acc_x), min(acc_y), min(acc_z))
-	    print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
+        print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
+        print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
+        print("acc_min = ", min(acc_x), min(acc_y), min(acc_z))
+        print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
 
-	    print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
+        print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
 
     if(len(time_fix)>0):
         import gpxpy
