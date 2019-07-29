@@ -98,6 +98,22 @@ def text_write_reset(p, t):
     arrow = pg.ArrowItem(pos=(t, 0), angle=-45)
     p.addItem(arrow)
 
+regulation_state = {
+        0: "Surface",
+        1: "Sink",
+        2: "Regulation",
+        3: "Stationary",
+        4: "Emergency",
+        5: "Piston issue"
+    }
+
+def text_write_regulation_mode(p, t, mode):
+    text = pg.TextItem(html='<div style="text-align: left"><span style="color: #FFF;">'+regulation_state[mode]+'</span></div>', anchor=(-0.3,1.3),border='w', fill=(0, 0, 255, 100))
+    p.addItem(text)
+    text.setPos(t, mode)
+    arrow = pg.ArrowItem(pos=(t, mode), angle=-45)
+    p.addItem(arrow)
+
 #################### Safety ####################
 
 #### Battery ####
@@ -430,7 +446,14 @@ if(len(time_regulation_debug)>0):
     pg_regulation_velocity.plot(time_mission, -np.array(mission_limit_velocity), pen=(0,255,0), name="target_velocity_min")
     dock_regulation.addWidget(pg_regulation_velocity)
 
+    pg_regulation_u = pg.PlotWidget()
+    set_plot_options(pg_regulation_u)
+    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
+    pg_regulation_u.setLabel('left', "u")
+    dock_regulation.addWidget(pg_regulation_u)
+
     pg_regulation_velocity.setXLink(pg_depth)
+    pg_regulation_u.setXLink(pg_depth)
 
 #### Regulation debug ####
 if(len(time_regulation_debug)>0):
@@ -439,11 +462,15 @@ if(len(time_regulation_debug)>0):
 
     pg_depth = plot_depth(dock_command)
 
-    pg_regulation_u = pg.PlotWidget()
-    set_plot_options(pg_regulation_u)
-    pg_regulation_u.plot(time_regulation_debug, regulation_u, pen=(255,0,0), name="u")
-    pg_regulation_u.setLabel('left', "u")
-    dock_command.addWidget(pg_regulation_u)
+    pg_regulation_state = pg.PlotWidget()
+    set_plot_options(pg_regulation_state)
+    pg_regulation_state.plot(time_regulation_debug, regulation_mode, pen=(255,0,0), name="mode")
+    pg_regulation_state.setLabel('left', "mode")
+    dock_command.addWidget(pg_regulation_state)
+
+    tab = np.array(regulation_mode)
+    for i in np.where(tab[:-1] != tab[1:])[0]:
+        text_write_regulation_mode(pg_regulation_state, time_regulation_debug[i+1], tab[i+1])
 
     pg_regulation_set_point = pg.PlotWidget()
     set_plot_options(pg_regulation_set_point)
@@ -451,7 +478,7 @@ if(len(time_regulation_debug)>0):
     pg_regulation_set_point.setLabel('left', "set_point")
     dock_command.addWidget(pg_regulation_set_point)
 
-    pg_regulation_u.setXLink(pg_depth)
+    pg_regulation_state.setXLink(pg_depth)
     pg_regulation_set_point.setXLink(pg_depth)
 
 #### Regulation debug 2 ####
