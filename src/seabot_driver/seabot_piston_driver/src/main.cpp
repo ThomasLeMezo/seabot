@@ -40,6 +40,9 @@ ros::Time time_sealing_issue;
 
 size_t speed_index = 0;
 
+int speed_in_min = 15;
+int speed_out_min = 15;
+
 #define NB_SPEED_STEPS 10
 
 bool piston_reset(std_srvs::Empty::Request  &req,
@@ -100,8 +103,8 @@ int main(int argc, char *argv[]){
   const double speed_in_slope = n_private.param<double>("speed_in_slope", 0.2);
   const double speed_out_slope = n_private.param<double>("speed_out_slope", 0.2);
 
-  const int speed_in_min = n_private.param<int>("speed_in_min", 15);
-  const int speed_out_min = n_private.param<int>("speed_out_min", 15);
+  speed_in_min = n_private.param<int>("speed_in_min", 15);
+  speed_out_min = n_private.param<int>("speed_out_min", 15);
 
   const int speed_reset = n_private.param<int>("speed_reset", 30);
 

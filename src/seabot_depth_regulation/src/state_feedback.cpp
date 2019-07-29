@@ -21,8 +21,7 @@ using namespace Eigen;
 double piston_position = 0;
 bool piston_switch_in = false;
 bool piston_switch_out = false;
-
-bool is_surface = true;
+size_t piston_state = 0;
 
 double depth_set_point = 0.0;
 double limit_velocity = 0.0;
@@ -37,7 +36,7 @@ double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
 
-enum STATE_MACHINE {STATE_SURFACE, STATE_REGULATION, STATE_STATIONARY};
+enum STATE_MACHINE {STATE_SURFACE, STATE_SINK, STATE_REGULATION, STATE_STATIONARY, STATE_EMERGENCY, STATE_PISTON_ISSUE};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
 seabot_depth_regulation::RegulationDebug debug_msg;
@@ -50,6 +49,7 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
   piston_switch_in = msg->switch_in;
   piston_switch_out = msg->switch_out;
+  piston_state = msg->state;
 }
 
 void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
@@ -162,102 +162,132 @@ int main(int argc, char *argv[]){
   double piston_position_old = 0.;
   double u = 0.; // in m3/s
   double piston_set_point=0.;
+  size_t piston_set_point_msg = 0;
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation_Feedback] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
 
-    if(depth_set_point>=limit_depth_regulation && !emergency){
+    if(emergency)
+      regulation_state = STATE_EMERGENCY;
+    if(piston_state!=1)
+      regulation_state = STATE_PISTON_ISSUE;
 
-      switch(regulation_state){
-      case STATE_SURFACE:
+    switch(regulation_state){
+    case STATE_SURFACE:
+      if(depth_set_point>=limit_depth_regulation)
+        regulation_state = STATE_SINK;
+      u = 0;
+      piston_set_point = 0;
 
-        if(x(1)<limit_depth_regulation)
+      break;
+    case STATE_SINK:
+
+      if(depth_set_point<limit_depth_regulation)
+        regulation_state = STATE_SURFACE;
+      else if(x(1)<limit_depth_regulation){
+
+        if(piston_position < piston_ref_eq*0.99) // coefficient to validate reaching piston_ref_eq
+          piston_set_point = piston_ref_eq;
+        else{
           u = -speed_volume_sink*tick_to_volume;
-        else
-          regulation_state = STATE_REGULATION;
-
-        if(piston_position >= piston_set_point*0.99)
           piston_set_point = piston_set_point - u/(tick_to_volume*frequency);
-        else
-          piston_set_point = max(piston_ref_eq, piston_position);
-        break;
+        }
+      }
+      else
+        regulation_state = STATE_REGULATION;
 
-      case STATE_REGULATION:
-        if(x(1)>=limit_depth_regulation){
-          if((ros::Time::now()-time_last_state).toSec()<1.0){
+      break;
 
-            x(2) = (piston_ref_eq - piston_position)*tick_to_volume;
+    case STATE_REGULATION:
 
-            // Compute several commands according to velocity acceptable bounds
-            array<double, 4> u_tab;
-            u_tab[0] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_lb, approach_velocity);
-            u_tab[1] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_ub, approach_velocity);
-            u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, limit_velocity);
-            u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, limit_velocity);
+      if(depth_set_point<limit_depth_regulation)
+        regulation_state = STATE_SURFACE;
+      else if(x(1)>=limit_depth_regulation){
+        if((ros::Time::now()-time_last_state).toSec()<1.0){
 
-            // Find best command
-            sort(u_tab.begin(), u_tab.end());
-            if(u_tab[0]<0.0 && u_tab[u_tab.size()-1]>0.0) // Case one positive, one negative => do not move
-              u = 0.0;
-            else{ // Else choose the command that minimizes u
-              sort(u_tab.begin(), u_tab.end(), sortCommandAbs);
-              u=u_tab[0];
-            }
+          x(2) = (piston_ref_eq - piston_position)*tick_to_volume;
 
-            // Mechanical limits (in = v_min, out = v_max)
-            if((piston_switch_in && u<0) || (piston_switch_out && u>0))
-              u = 0.0;
+          // Compute several commands according to velocity acceptable bounds
+          array<double, 4> u_tab;
+          u_tab[0] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_lb, approach_velocity);
+          u_tab[1] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_ub, approach_velocity);
+          u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, limit_velocity);
+          u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, limit_velocity);
+
+          // Find best command
+          sort(u_tab.begin(), u_tab.end());
+          if(u_tab[0]<0.0 && u_tab[u_tab.size()-1]>0.0) // Case one positive, one negative => do not move
+            u = 0.0;
+          else{ // Else choose the command that minimizes u
+            sort(u_tab.begin(), u_tab.end(), sortCommandAbs);
+            u=u_tab[0];
           }
-          else{
-            // Did not received state => go up
-            u=speed_volume_sink*tick_to_volume;
-            ROS_INFO("[DepthRegulation] timing issue");
-          }
+
+          // Mechanical limits (in = v_min, out = v_max)
+          if((piston_switch_in && u<0) || (piston_switch_out && u>0))
+            u = 0.0;
         }
         else{
-          regulation_state = STATE_SURFACE;
+          // Did not received state => go up
+          u=speed_volume_sink*tick_to_volume;
+          ROS_INFO("[DepthRegulation] timing issue");
         }
+      }
+      else
+        regulation_state = STATE_SINK;
 
-        // Limitation of u according to engine capabilities
-        if(abs(u)>piston_max_velocity){
-          u=copysign(piston_max_velocity, u);
-        }
-
-        piston_set_point = piston_position - u/(tick_to_volume*frequency);
-        break;
-      default:
-        break;
+      // Limitation of u according to engine capabilities
+      if(abs(u)>piston_max_velocity){
+        u=copysign(piston_max_velocity, u);
       }
 
-      /// ********************** Write command ****************** ///
-      //  Hysteresis to limit motor movement
-      if(abs(piston_position_old - piston_set_point)>hysteresis_piston){
-        if(piston_set_point>piston_max_value)
-          piston_set_point = piston_max_value;
-        if(piston_set_point<0)
-          piston_set_point = 0;
+      piston_set_point = piston_position - u/(tick_to_volume*frequency);
+      break;
 
-        position_msg.position = round(piston_set_point);
-        piston_position_old = piston_set_point;
-      }
+    case STATE_EMERGENCY:
+      u = 0;
+      piston_set_point = 0;
 
-      // Debug msg
+      if(!emergency)
+        regulation_state = STATE_SURFACE;
+      break;
+
+    case STATE_PISTON_ISSUE:
+      u = 0;
+      if(piston_state==1)
+        regulation_state = STATE_SURFACE;
+      break;
+
+    default:
+      break;
+    }
+
+    /// ********************** Write command ****************** ///
+    //  Hysteresis to limit motor movement
+    if(abs(piston_position_old - piston_set_point)>hysteresis_piston){
+      if(piston_set_point>piston_max_value)
+        piston_set_point = piston_max_value;
+      if(piston_set_point<0)
+        piston_set_point = 0;
+
+      piston_set_point_msg = round(piston_set_point);
+      piston_position_old = piston_set_point;
+    }
+
+    // Debug msg (publish only if change)
+    if(debug_msg.u != u || debug_msg.piston_set_point != piston_set_point || debug_msg.mode != regulation_state){
       debug_msg.u = u;
       debug_msg.piston_set_point = piston_set_point;
       debug_msg.mode = regulation_state;
       debug_pub.publish(debug_msg);
+    }
 
-      is_surface = false;
+    if(position_msg.position != piston_set_point_msg){
+      position_msg.position = piston_set_point_msg;
+      position_pub.publish(position_msg);
     }
-    else{
-      // Position set point
-      regulation_state = STATE_SURFACE;
-      position_msg.position = 0;
-      is_surface = true;
-    }
-    position_pub.publish(position_msg);
 
     loop_rate.sleep();
   }
