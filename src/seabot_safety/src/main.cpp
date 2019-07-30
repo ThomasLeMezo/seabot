@@ -261,6 +261,7 @@ int main(int argc, char *argv[]){
   while((ros::WallTime::now()-time_piston_state).toSec()>d_piston_state_ref){
     // Wait piston data
     sleep(1);
+    ros::spinOnce();
   }
 
   // Call piston to move at 0
