@@ -6,6 +6,12 @@ import datetime
 
 ####################### Driver #######################
 
+# /rosout
+time_rosout = []
+rosout = []
+time_rosout_agg = []
+rosout_agg = []
+
 # /driver/piston/position (set_point)
 time_piston_position = []
 piston_position = []
@@ -257,6 +263,13 @@ def load_bag(filename):
             piston_state_enable_on.append(msg.enable_on)
             piston_state_position_set_point.append(msg.position_set_point)
             piston_state_motor_speed.append(msg.motor_speed)
+
+        elif(topic=="/rosout"):
+            time_rosout.append((t-startTime).to_sec())
+            rosout.append([msg.level,msg.name, msg.msg, msg.file, msg.function, msg.line])
+        elif(topic=="/rosout_agg"):
+            time_rosout_agg.append((t-startTime).to_sec())
+            rosout_agg.append([msg.level,msg.name, msg.msg, msg.file, msg.function, msg.line])
 
         elif(topic=="/driver/power/battery"):
             time_battery.append((t-startTime).to_sec())
@@ -518,3 +531,5 @@ def load_bag(filename):
         file = open(filename+".gpx","w") 
         file.write(gpx.to_xml()) 
         file.close() 
+
+    print(rosout_agg)
