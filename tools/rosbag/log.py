@@ -503,6 +503,7 @@ if(len(time_regulation_debug)>0):
     pg_regulation_set_point = pg.PlotWidget()
     set_plot_options(pg_regulation_set_point)
     pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point[:-1], pen=(0,0,255), name="set_point", stepMode=True)
+    pg_regulation_set_point.plot(pistonStateData.time, pistonStateData.position[:-1],pen=(255,0,0), name="position", stepMode=True)
     pg_regulation_set_point.setLabel('left', "set_point")
     dock_command.addWidget(pg_regulation_set_point)
 
@@ -559,6 +560,23 @@ if(len(time_regulation_debug)>0):
     pg_regulation_u.setXLink(pg_regulation_depth2)
     pg_regulation_dy.setXLink(pg_regulation_depth2)
     pg_regulation_y.setXLink(pg_regulation_depth2)
+
+#### Regulation Mission ####
+if(len(time_regulation_debug)>0):
+    dock_regulation_mission = Dock("Mission")
+    area_regulation.addDock(dock_regulation_mission, 'above', dock_regulation)
+
+    pg_depth = plot_depth(dock_regulation_mission)
+    pg_regulation_state = plot_regulation_state(dock_regulation_mission)
+
+    pg_regulation_mission = pg.PlotWidget()
+    set_plot_options(pg_regulation_mission)
+    pg_regulation_mission.plot(time_mission, mission_limit_velocity[:-1], pen=(255,0,0), name="limit_velocity", stepMode=True)
+    pg_regulation_mission.plot(time_mission, mission_approach_velocity[:-1], pen=(0,255,0), name="mission_approach_velocity", stepMode=True)
+    dock_regulation_mission.addWidget(pg_regulation_mission)
+
+    pg_regulation_state.setXLink(pg_depth)
+    pg_regulation_mission.setXLink(pg_depth)
 
 #### Regulation Heading ####
 

@@ -131,7 +131,7 @@ int main(int argc, char *argv[]){
   coeff_B = 0.5*rho*Cf/m;
 
   // Compute regulation constant
-  double root_regulation = n_private.param<double>("root_regulation", -1.0);
+  s = n_private.param<double>("root_regulation", -1.0);
   double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
   double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
 
@@ -166,6 +166,7 @@ int main(int argc, char *argv[]){
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation_Feedback] Start Ok");
+  ROS_INFO("[DepthRegulation_Feedback] root_regulation = %f", s);
   while (ros::ok()){
     ros::spinOnce();
 
@@ -187,11 +188,11 @@ int main(int argc, char *argv[]){
       if(depth_set_point<limit_depth_regulation)
         regulation_state = STATE_SURFACE;
       else if(x(1)<limit_depth_regulation){
+        u = -speed_volume_sink*tick_to_volume;
 
         if(piston_position < piston_ref_eq*0.99) // coefficient to validate reaching piston_ref_eq
           piston_set_point = piston_ref_eq;
         else{
-          u = -speed_volume_sink*tick_to_volume;
           piston_set_point = piston_set_point - u/(tick_to_volume*frequency);
         }
       }
@@ -213,8 +214,8 @@ int main(int argc, char *argv[]){
           array<double, 4> u_tab;
           u_tab[0] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_lb, approach_velocity);
           u_tab[1] = compute_u(x, depth_set_point, limit_velocity+delta_velocity_ub, approach_velocity);
-          u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, limit_velocity);
-          u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, limit_velocity);
+          u_tab[2] = compute_u(x, depth_set_point+delta_position_lb, limit_velocity, approach_velocity);
+          u_tab[3] = compute_u(x, depth_set_point+delta_position_ub, limit_velocity, approach_velocity);
 
           // Find best command
           sort(u_tab.begin(), u_tab.end());
@@ -232,7 +233,7 @@ int main(int argc, char *argv[]){
         else{
           // Did not received state => go up
           u=speed_volume_sink*tick_to_volume;
-          ROS_INFO("[DepthRegulation] timing issue");
+          ROS_INFO("[DepthRegulation] Timing issue");
         }
       }
       else
@@ -243,7 +244,10 @@ int main(int argc, char *argv[]){
         u=copysign(piston_max_velocity, u);
       }
 
-      piston_set_point = piston_position - u/(tick_to_volume*frequency);
+      // Check next formula in the case where piston_set_point-piston_position > piston_max_velocity/frequency
+      piston_set_point -= u/(tick_to_volume*frequency);
+      // Previous form do not allow movement under 1 tick
+      // piston_set_point = piston_position - u/(tick_to_volume*frequency);
       break;
 
     case STATE_EMERGENCY:
