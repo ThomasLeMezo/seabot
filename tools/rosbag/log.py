@@ -99,20 +99,41 @@ def text_write_reset(p, t):
     p.addItem(arrow)
 
 regulation_state = {
-        0: "Surface",
-        1: "Sink",
-        2: "Regulation",
-        3: "Stationary",
-        4: "Emergency",
-        5: "Piston issue"
-    }
+    0: "Surface",
+    1: "Sink",
+    2: "Regulation",
+    3: "Stationary",
+    4: "Emergency",
+    5: "Piston issue"
+}
 
-def text_write_regulation_mode(p, t, mode):
-    text = pg.TextItem(html='<div style="text-align: left"><span style="color: #FFF;">'+regulation_state[mode]+'</span></div>', anchor=(-0.3,1.3),border='w', fill=(0, 0, 255, 100))
+safety_warning = {
+    0: "published_frequency",
+    1: "depth_limit",
+    2: "batteries_limit",
+    3: "depressurization",
+    4: "seafloor"
+}
+
+# def text_write_plot(p, t, mode):
+#     text = pg.TextItem(html='<div style="text-align: left"><span style="color: #FFF;">'+regulation_state[mode]+'</span></div>', anchor=(-0.3,1.3),border='w', fill=(0, 0, 255, 100))
+#     p.addItem(text)
+#     text.setPos(t, mode)
+#     arrow = pg.ArrowItem(pos=(t, mode), angle=-45)
+#     p.addItem(arrow)
+
+def text_write_plot(p, t, x, msg):
+    text = pg.TextItem(html='<div style="text-align: left"><span style="color: #FFF;">'+msg+'</span></div>', anchor=(-0.3,1.3),border='w', fill=(0, 0, 255, 100))
     p.addItem(text)
-    text.setPos(t, mode)
-    arrow = pg.ArrowItem(pos=(t, mode), angle=-45)
+    text.setPos(t, x)
+    arrow = pg.ArrowItem(pos=(t, x), angle=-45)
     p.addItem(arrow)
+
+def text_write_safety_msg(p, t, msg, data):
+    tab = np.array(data)
+    for i in np.where(tab[:-1] != tab[1:])[0]:
+        if(tab[i+1]==1):
+            text_write_plot(p, t[i+1], tab[i+1], msg)
 
 #################### Safety ####################
 
@@ -178,6 +199,11 @@ if(len(time_safety)>0):
     pg_safety.plot(time_safety, safety_batteries_limit, pen=(0,0,255), name="batteries_limit")
     pg_safety.plot(time_safety, safety_depressurization, pen=(255,255,0), name="depressurization")
     pg_safety.plot(time_safety, safety_seafloor, pen=(255,255,150), name="seafloor")
+    text_write_safety_msg(pg_safety, time_safety, "published_frequency", safety_published_frequency)
+    text_write_safety_msg(pg_safety, time_safety, "depth_limit", safety_depth_limit)
+    text_write_safety_msg(pg_safety, time_safety, "batteries_limit", safety_batteries_limit)
+    text_write_safety_msg(pg_safety, time_safety, "depressurization", safety_depressurization)
+    text_write_safety_msg(pg_safety, time_safety, "seafloor", safety_seafloor)
     dock_safety.addWidget(pg_safety)
 
     if(len(time_safety_debug)>0):
@@ -416,6 +442,8 @@ if(len(time_piston_state)>0):
     pg_piston_speed = pg.PlotWidget()
     set_plot_options(pg_piston_speed)
     pg_piston_speed.plot(time_piston_state, np.array(piston_state_motor_speed).astype(int), pen=(255,0,0), name="speed")
+    pg_piston_speed.plot(time_piston_speed, np.array(piston_speed_in).astype(int), pen=(0,255,0), name="speed_max_in")
+    pg_piston_speed.plot(time_piston_speed, np.array(piston_speed_out).astype(int), pen=(0,255,0), name="speed_max_out")
     pg_piston_speed.setLabel('left', "Speed")
     dock_piston2.addWidget(pg_piston_speed)
 
@@ -470,7 +498,7 @@ if(len(time_regulation_debug)>0):
 
     tab = np.array(regulation_mode)
     for i in np.where(tab[:-1] != tab[1:])[0]:
-        text_write_regulation_mode(pg_regulation_state, time_regulation_debug[i+1], tab[i+1])
+        text_write_plot(pg_regulation_state, time_regulation_debug[i+1], tab[i+1], regulation_state[tab[i+1]])
 
     pg_regulation_set_point = pg.PlotWidget()
     set_plot_options(pg_regulation_set_point)

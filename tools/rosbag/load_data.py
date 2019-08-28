@@ -503,33 +503,33 @@ def load_bag(filename):
 
         print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
 
-    if(len(time_fix)>0):
-        import gpxpy
-        import gpxpy.gpx
+    # if(len(time_fix)>0):
+    #     import gpxpy
+    #     import gpxpy.gpx
 
-        gpx = gpxpy.gpx.GPX()
-        last_fix_time = 0.
+    #     gpx = gpxpy.gpx.GPX()
+    #     last_fix_time = 0.
 
-        gpx_track = gpxpy.gpx.GPXTrack()
-        gpx_segment = gpxpy.gpx.GPXTrackSegment()
+    #     gpx_track = gpxpy.gpx.GPXTrack()
+    #     gpx_segment = gpxpy.gpx.GPXTrackSegment()
 
-        for i in range(len(fix_latitude)):
-            if(abs(last_fix_time-time_fix[i])>30.):
-                if(fix_status[i]==3):
-                    last_fix_time = time_fix[i]
+    #     for i in range(len(fix_latitude)):
+    #         if(abs(last_fix_time-time_fix[i])>30.):
+    #             if(fix_status[i]==3):
+    #                 last_fix_time = time_fix[i]
 
-                    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
-                        longitude=fix_longitude[i],
-                        elevation=fix_altitude[i],
-                        time=datetime.datetime.fromtimestamp(time_fix[i]+startTime.to_sec()),
-                        horizontal_dilution=fix_hdop[i],
-                        vertical_dilution=fix_hdop[i]
-                        ))
-        gpx_track.segments.append(gpx_segment)
-        gpx.tracks.append(gpx_track)
+    #                 gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
+    #                     longitude=fix_longitude[i],
+    #                     elevation=fix_altitude[i],
+    #                     time=datetime.datetime.fromtimestamp(time_fix[i]+startTime.to_sec()),
+    #                     horizontal_dilution=fix_hdop[i],
+    #                     vertical_dilution=fix_hdop[i]
+    #                     ))
+    #     gpx_track.segments.append(gpx_segment)
+    #     gpx.tracks.append(gpx_track)
 
-        file = open(filename+".gpx","w") 
-        file.write(gpx.to_xml()) 
-        file.close() 
+    #     file = open(filename+".gpx","w") 
+    #     file.write(gpx.to_xml()) 
+    #     file.close() 
 
-    print(rosout_agg)
+    # print(rosout_agg)

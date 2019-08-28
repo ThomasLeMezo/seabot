@@ -217,22 +217,25 @@ int main(int argc, char *argv[]){
         if(speed_index_new != speed_index){
           speed_index = speed_index_new;
           new_speed = true;
-
-          // Log
-          speed_msg.speed_in = speed_table_in[speed_index];
-          speed_msg.speed_out = speed_table_out[speed_index];
-          speed_pub.publish(speed_msg);
         }
       }
 
       if(new_speed){
+        size_t speed_in, speed_out;
         if(fast_move){
-          p.set_piston_speed(min((size_t)floor(speed_table_in[speed_index]*speed_fast_move_factor), speed_max),
-                             min((size_t)floor(speed_table_out[speed_index]*speed_fast_move_factor), speed_max));
+          speed_in = min((size_t)floor(speed_table_in[speed_index]*speed_fast_move_factor), speed_max);
+          speed_out = min((size_t)floor(speed_table_out[speed_index]*speed_fast_move_factor), speed_max);
         }
         else{
-          p.set_piston_speed(speed_table_in[speed_index], speed_table_out[speed_index]);
+          speed_in = speed_table_in[speed_index];
+          speed_out = speed_table_out[speed_index];
         }
+        p.set_piston_speed(speed_in,speed_out);
+        speed_msg.speed_in = speed_in;
+        speed_msg.speed_out = speed_out;
+
+        // Log
+        speed_pub.publish(speed_msg);
       }
     }
 
