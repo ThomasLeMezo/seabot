@@ -17,16 +17,34 @@ time_piston_position = []
 piston_position = []
 
 # /driver/piston/state
-time_piston_state = []
-piston_state_position = []
-piston_state_position = []
-piston_state_switch_out = []
-piston_state_switch_in = []
-piston_state_state = []
-piston_state_motor_on = []
-piston_state_enable_on = []
-piston_state_position_set_point = []
-piston_state_motor_speed = []
+# piston_state_DATA = False
+class PistonStateData:
+    k = 0
+
+    def __init__(self, nb_elements=0):
+        self.nb_elements = nb_elements
+        self.time = np.empty([nb_elements])
+        self.position = np.empty([nb_elements])
+        self.switch_out = np.empty([nb_elements])
+        self.switch_in = np.empty([nb_elements])
+        self.state = np.empty([nb_elements])
+        self.motor_on = np.empty([nb_elements])
+        self.enable_on = np.empty([nb_elements])
+        self.position_set_point = np.empty([nb_elements])
+        self.motor_speed = np.empty([nb_elements])
+
+    def init(self, nb_elements):
+        self.time = np.empty([nb_elements])
+        self.position = np.empty([nb_elements])
+        self.switch_out = np.empty([nb_elements])
+        self.switch_in = np.empty([nb_elements])
+        self.state = np.empty([nb_elements])
+        self.motor_on = np.empty([nb_elements])
+        self.enable_on = np.empty([nb_elements])
+        self.position_set_point = np.empty([nb_elements])
+        self.motor_speed = np.empty([nb_elements])
+        self.nb_elements = nb_elements
+
 
 # /driver/piston/velocity
 time_piston_velocity = []
@@ -225,7 +243,7 @@ iridium_session_waiting = []
 ########################################################
 ####################### Function #######################
 
-def load_bag(filename):
+def load_bag(filename, pistonStateData):
 
     bag = rosbag.Bag(filename, 'r')
 
@@ -233,6 +251,8 @@ def load_bag(filename):
 
     startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
     end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
+
+    pistonStateData.init(bag.get_message_count('/driver/piston/state'))
 
     for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
         if(topic=="/driver/piston/position"):
@@ -243,26 +263,26 @@ def load_bag(filename):
             piston_position.append(msg.position)
 
         elif(topic=="/driver/piston/state"):
-            if(len(time_piston_state)>0):
-                time_piston_state.append((t-startTime).to_sec())
-                piston_state_position.append(msg.position)
-                piston_state_switch_out.append(piston_state_switch_out[-1])
-                piston_state_switch_in.append(piston_state_switch_in[-1])
-                piston_state_state.append(piston_state_state[-1])
-                piston_state_motor_on.append(piston_state_motor_on[-1])
-                piston_state_enable_on.append(piston_state_enable_on[-1])
-                piston_state_position_set_point.append(piston_state_position_set_point[-1])
-                piston_state_motor_speed.append(piston_state_motor_speed[-1])
+            pistonStateData.time[pistonStateData.k] = (t-startTime).to_sec()
+            pistonStateData.position[pistonStateData.k] = msg.position
+            pistonStateData.switch_out[pistonStateData.k] = msg.switch_out
+            pistonStateData.switch_in[pistonStateData.k] = msg.switch_in
+            pistonStateData.state[pistonStateData.k] = msg.state
+            pistonStateData.motor_on[pistonStateData.k] = msg.motor_on
+            pistonStateData.enable_on[pistonStateData.k] = msg.enable_on
+            pistonStateData.position_set_point[pistonStateData.k] = msg.position_set_point
+            pistonStateData.motor_speed[pistonStateData.k] = msg.motor_speed
+            pistonStateData.k += 1
 
-            time_piston_state.append((t-startTime).to_sec())
-            piston_state_position.append(msg.position)
-            piston_state_switch_out.append(msg.switch_out)
-            piston_state_switch_in.append(msg.switch_in)
-            piston_state_state.append(msg.state)
-            piston_state_motor_on.append(msg.motor_on)
-            piston_state_enable_on.append(msg.enable_on)
-            piston_state_position_set_point.append(msg.position_set_point)
-            piston_state_motor_speed.append(msg.motor_speed)
+            # time_piston_state.append((t-startTime).to_sec())
+            # piston_state_position.append(msg.position)
+            # piston_state_switch_out.append(msg.switch_out)
+            # piston_state_switch_in.append(msg.switch_in)
+            # piston_state_state.append(msg.state)
+            # piston_state_motor_on.append(msg.motor_on)
+            # piston_state_enable_on.append(msg.enable_on)
+            # piston_state_position_set_point.append(msg.position_set_point)
+            # piston_state_motor_speed.append(msg.motor_speed)
 
         elif(topic=="/rosout"):
             time_rosout.append((t-startTime).to_sec())
