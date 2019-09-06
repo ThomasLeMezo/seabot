@@ -32,6 +32,37 @@ def int2dt(ts):
     #     return datetime.datetime.utcfromtimestamp(ts) # workaround fromtimestamp bug (1)
     return(datetime.datetime.fromtimestamp(ts-3600.0))
 
+
+def save_gpx():
+    import gpxpy
+    import gpxpy.gpx
+
+    gpx = gpxpy.gpx.GPX()
+    last_fix_time = 0.
+
+    gpx_track = gpxpy.gpx.GPXTrack()
+    gpx_segment = gpxpy.gpx.GPXTrackSegment()
+
+    for i in range(len(fix_latitude)):
+        if(abs(last_fix_time-time_fix[i])>30.):
+            if(fix_status[i]==3):
+                last_fix_time = time_fix[i]
+
+                gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
+                    longitude=fix_longitude[i],
+                    elevation=fix_altitude[i],
+                    time=datetime.datetime.fromtimestamp(time_fix[i]+startTime),
+                    horizontal_dilution=fix_hdop[i],
+                    vertical_dilution=fix_hdop[i]
+                    ))
+    gpx_track.segments.append(gpx_segment)
+    gpx.tracks.append(gpx_track)
+
+    file = open(filename+".gpx","w") 
+    file.write(gpx.to_xml()) 
+    file.close()
+
+
 #####################################################
 ### Init
 
@@ -39,8 +70,8 @@ if(len(sys.argv)<2):
     sys.exit(0)
 
 pistonStateData = PistonStateData()
-
-load_bag(sys.argv[1],pistonStateData)
+filename = sys.argv[1]
+load_bag(filename,pistonStateData)
 
 print("Data has been loaded")
 
@@ -453,8 +484,8 @@ if(np.size(pistonStateData.time)>0):
     pg_piston_speed.plot(pistonStateData.time, pistonStateData.motor_speed[:-1].astype(int), pen=(255,0,0), name="speed", stepMode=True)
     
     if(len(piston_speed_in)>1):
-        pg_piston_speed.plot(time_piston_speed, np.array(piston_speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
-        pg_piston_speed.plot(time_piston_speed, np.array(piston_speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
+        pg_piston_speed.plot(time_piston_speed, 50-np.array(piston_speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
+        pg_piston_speed.plot(time_piston_speed, 50+np.array(piston_speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
     pg_piston_speed.setLabel('left', "Speed")
     dock_piston2.addWidget(pg_piston_speed)
 
@@ -701,10 +732,14 @@ if(len(fusion_pose_east)>0 and len(time_fix)>0):
     Y = Y[~np.isnan(Y)]
     X -= np.mean(X)
     Y -= np.mean(Y)
-    pg_gps2.plot(X, Y[:-1], pen=(255,0,0), name="pose (centered on mean)", symbol='o', stepMode=True)
+    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
     pg_gps2.setLabel('left', "Y", units="m")
     pg_gps2.setLabel('bottom', "X", units="m")
     dock_gps2.addWidget(pg_gps2)
+
+    saveBtn = QtGui.QPushButton('Export GPX')
+    dock_gps2.addWidget(saveBtn, row=1, col=0)
+    saveBtn.clicked.connect(save_gpx)
 
 ####  Heading #### 
 if(len(time_euler)>0 and len(time_fix)>0):
@@ -771,7 +806,6 @@ if(len(time_fix)>0):
     set_plot_options(pg_gps_alti)
     pg_gps_alti.plot(time_fix, fix_altitude[:-1], pen=(0,0,255), name="altitude", stepMode=True)
     dock_gps_alt.addWidget(pg_gps_alti)
-
 
 #################### Iridium ####################
 

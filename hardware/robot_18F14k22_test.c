@@ -479,7 +479,7 @@ void main(){
                 position_set_point = 0;
             }
             else
-                set_motor_cmd_out(motor_speed_out_reset); // [50, 100]
+                set_motor_cmd_out(motor_speed_out_reset); // [0, 50]
 
             break;
 
@@ -494,7 +494,7 @@ void main(){
             if(error > error_interval)
                 set_motor_cmd_in(motor_speed_in); // [0, 50]
             else if(error < -error_interval)
-                set_motor_cmd_out(motor_speed_out); // [50, 100]
+                set_motor_cmd_out(motor_speed_out); // [0, 50]
             else // position reached
                 set_motor_cmd_stop();
 

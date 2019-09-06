@@ -75,7 +75,9 @@ server.logout()
 
 ### Process files ###
 for d in file_list:
+    print("Decode trajectory")
     subprocess.call(["rosrun", "seabot_iridium", "decode_log_state", d[0], d[1], d[2]])
+    print("Read data")
 
     with open(expanduser("~") + "/iridium/received/last_received.yaml", 'r') as stream:
         try:
@@ -83,6 +85,6 @@ for d in file_list:
         except yaml.YAMLError as exc:
             print(exc)
             continue
-
+    print("Generate trajectory")
     subprocess.call([expanduser("~") + "/workspaceQT/invariant-lib/build/build-debug/examples/cpp/seabot/seabot_live/seabot_live", str(pose["ts"]), str(pose["east"]), str(pose["north"])])
     file.write(d[0])

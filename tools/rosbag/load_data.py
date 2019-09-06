@@ -18,12 +18,19 @@ piston_position = []
 
 # /driver/piston/state
 # piston_state_DATA = False
-class PistonStateData:
-    k = 0
 
+class SeabotData:
+    k = 0
     def __init__(self, nb_elements=0):
         self.nb_elements = nb_elements
         self.time = np.empty([nb_elements])
+    def init(self, nb_elements):
+        self.time = np.empty([nb_elements])
+        self.nb_elements = nb_elements
+
+class PistonStateData(SeabotData):
+    def __init__(self, nb_elements=0):
+        SeabotData.__init__(self, nb_elements)
         self.position = np.empty([nb_elements])
         self.switch_out = np.empty([nb_elements])
         self.switch_in = np.empty([nb_elements])
@@ -34,7 +41,7 @@ class PistonStateData:
         self.motor_speed = np.empty([nb_elements])
 
     def init(self, nb_elements):
-        self.time = np.empty([nb_elements])
+        SeabotData.init(self, nb_elements)
         self.position = np.empty([nb_elements])
         self.switch_out = np.empty([nb_elements])
         self.switch_in = np.empty([nb_elements])
@@ -43,7 +50,6 @@ class PistonStateData:
         self.enable_on = np.empty([nb_elements])
         self.position_set_point = np.empty([nb_elements])
         self.motor_speed = np.empty([nb_elements])
-        self.nb_elements = nb_elements
 
 
 # /driver/piston/velocity
@@ -239,6 +245,9 @@ iridium_session_momsn = []
 iridium_session_mt = []
 iridium_session_mtmsn = []
 iridium_session_waiting = []
+
+startTime = 0.0
+end_time = 0.0
 
 ########################################################
 ####################### Function #######################
