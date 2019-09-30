@@ -32,6 +32,37 @@ def int2dt(ts):
     #     return datetime.datetime.utcfromtimestamp(ts) # workaround fromtimestamp bug (1)
     return(datetime.datetime.fromtimestamp(ts-3600.0))
 
+
+def save_gpx():
+    import gpxpy
+    import gpxpy.gpx
+
+    gpx = gpxpy.gpx.GPX()
+    last_fix_time = 0.
+
+    gpx_track = gpxpy.gpx.GPXTrack()
+    gpx_segment = gpxpy.gpx.GPXTrackSegment()
+
+    for i in range(len(fix_latitude)):
+        if(abs(last_fix_time-fixData.time[i])>30.):
+            if(fix_status[i]==3):
+                last_fix_time = fixData.time[i]
+
+                gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
+                    longitude=fix_longitude[i],
+                    elevation=fix_altitude[i],
+                    time=datetime.datetime.fromtimestamp(fixData.time[i]+startTime),
+                    horizontal_dilution=fix_hdop[i],
+                    vertical_dilution=fix_hdop[i]
+                    ))
+    gpx_track.segments.append(gpx_segment)
+    gpx.tracks.append(gpx_track)
+
+    file = open(filename+".gpx","w") 
+    file.write(gpx.to_xml()) 
+    file.close()
+
+
 #####################################################
 ### Init
 
@@ -39,8 +70,37 @@ if(len(sys.argv)<2):
     sys.exit(0)
 
 pistonStateData = PistonStateData()
+pistonSetPointData = PistonSetPointData()
+imuData = ImuData()
+magData = MagData()
+eulerData = EulerData()
+pistonVelocityData = PistonVelocityData()
+pistonDistanceData = PistonDistanceData()
+pistonSpeedData = PistonSpeedData()
+batteryData = BatteryData()
+sensorExtData = SensorExtData()
+sensorIntData = SensorIntData()
+engineData = EngineData()
+engineCmdData = EngineCmdData()
+fixData = FixData()
+temperatureData = TemperatureData()
+batteryFusionData = BatteryFusionData()
+sensorIntFusionData = SensorIntFusionData()
+depthFusionData = DepthFusionData()
+poseFusionData = PoseFusionData()
+kalmanData = KalmanData()
+regulationData = RegulationData()
+regulationHeadingData = RegulationHeadingData()
+regulationHeadingSetPointData = RegulationHeadingSetPointData()
+missionData = MissionData()
+safetyData = SafetyData()
+safetyDebugData = SafetyDebugData()
+iridiumStatusData = IridiumStatusData()
+iridiumSessionData = IridiumSessionData()
 
-load_bag(sys.argv[1],pistonStateData)
+
+filename = sys.argv[1]
+load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData)
 
 print("Data has been loaded")
 
@@ -81,8 +141,8 @@ def set_plot_options(p):
 def plot_depth(dock):
     pg_depth = pg.PlotWidget()
     set_plot_options(pg_depth)
-    pg_depth.plot(time_fusion_depth, fusion_depth[:-1], pen=(255,0,0), name="depth", stepMode=True)
-    pg_depth.plot(time_mission, mission_depth[:-1], pen=(0,255,0), name="set point", stepMode=True)
+    pg_depth.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="depth", stepMode=True)
+    pg_depth.plot(missionData.time, missionData.depth[:-1], pen=(0,255,0), name="set point", stepMode=True)
     pg_depth.setLabel('left', "Depth", units="m")
     dock.addWidget(pg_depth)
     return pg_depth
@@ -99,13 +159,13 @@ def plot_piston_position(dock):
 def plot_regulation_state(dock):
     pg_regulation_state = pg.PlotWidget()
     set_plot_options(pg_regulation_state)
-    pg_regulation_state.plot(np.array(time_regulation_debug), np.array(regulation_mode[:-1]), pen=(255,0,0), name="mode",stepMode=True)
+    pg_regulation_state.plot(np.array(regulationData.time), np.array(regulationData.mode[:-1]), pen=(255,0,0), name="mode",stepMode=True)
     pg_regulation_state.setLabel('left', "mode")
     dock.addWidget(pg_regulation_state)
 
-    tab = np.array(regulation_mode)
+    tab = np.array(regulationData.mode)
     for i in np.where(tab[:-1] != tab[1:])[0]:
-        text_write_plot(pg_regulation_state, time_regulation_debug[i+1], tab[i+1], regulation_state[tab[i+1]])
+        text_write_plot(pg_regulation_state, regulationData.time[i+1], tab[i+1], regulation_state[tab[i+1]])
     return pg_regulation_state
 
 def text_write_reset(p, t):
@@ -155,50 +215,50 @@ def text_write_safety_msg(p, t, msg, data):
 #################### Safety ####################
 
 #### Battery ####
-if(len(time_battery)>0):
+if(len(batteryData.time)>0):
     dock_battery = Dock("Battery")
     area_safety.addDock(dock_battery)
 
     pg_battery = pg.PlotWidget(title="Battery")
     set_plot_options(pg_battery)
 
-    if(len(time_fusion_battery)>0):
-        pg_battery.plot(time_fusion_battery, fusion_battery1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
-        pg_battery.plot(time_fusion_battery, fusion_battery2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
-        pg_battery.plot(time_fusion_battery, fusion_battery3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
-        pg_battery.plot(time_fusion_battery, fusion_battery4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
+    if(len(batteryFusionData.time)>0):
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
         pg_battery.setLabel('left', "Tension (Fusion)", units="V")
     else:
-        pg_battery.plot(time_battery, battery1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
-        pg_battery.plot(time_battery, battery2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
-        pg_battery.plot(time_battery, battery3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
-        pg_battery.plot(time_battery, battery4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
         pg_battery.setLabel('left', "Tension (sensor)", units="V")
     dock_battery.addWidget(pg_battery)
 
 #### Safety Debug ####
-if(len(time_safety_debug)>0):
+if(len(safetyDebugData.time)>0):
     dock_safety_debug = Dock("Safety Debug")
     area_safety.addDock(dock_safety_debug, 'above', dock_battery)
 
     pg_safety_debug_ratio = pg.PlotWidget()
     set_plot_options(pg_safety_debug_ratio)
-    pg_safety_debug_ratio.plot(time_safety_debug, safety_debug_ratio_p_t[:-1], pen=(255,0,0), name="ratio_p_t", stepMode=True)
+    pg_safety_debug_ratio.plot(safetyDebugData.time, safetyDebugData.ratio_p_t[:-1], pen=(255,0,0), name="ratio_p_t", stepMode=True)
     dock_safety_debug.addWidget(pg_safety_debug_ratio)
 
     pg_safety_debug_ratio_delta = pg.PlotWidget()
     set_plot_options(pg_safety_debug_ratio_delta)
-    pg_safety_debug_ratio_delta.plot(time_safety_debug, safety_debug_ratio_delta[:-1], pen=(255,0,0), name="delta ratio_p_t", stepMode=True)
+    pg_safety_debug_ratio_delta.plot(safetyDebugData.time, safetyDebugData.ratio_delta[:-1], pen=(255,0,0), name="delta ratio_p_t", stepMode=True)
     dock_safety_debug.addWidget(pg_safety_debug_ratio_delta)
 
     pg_safety_debug_volume = pg.PlotWidget()
     set_plot_options(pg_safety_debug_volume)
-    pg_safety_debug_volume.plot(time_safety_debug, safety_debug_volume[:-1], pen=(255,0,0), name="volume", stepMode=True)
+    pg_safety_debug_volume.plot(safetyDebugData.time, safetyDebugData.volume[:-1], pen=(255,0,0), name="volume", stepMode=True)
     dock_safety_debug.addWidget(pg_safety_debug_volume)
 
     pg_safety_debug_volume_delta = pg.PlotWidget()
     set_plot_options(pg_safety_debug_volume_delta)
-    pg_safety_debug_volume_delta.plot(time_safety_debug, safety_debug_volume_delta[:-1], pen=(255,0,0), name="delta volume", stepMode=True)
+    pg_safety_debug_volume_delta.plot(safetyDebugData.time, safetyDebugData.volume_delta[:-1], pen=(255,0,0), name="delta volume", stepMode=True)
     dock_safety_debug.addWidget(pg_safety_debug_volume_delta)
 
     pg_safety_debug_ratio_delta.setXLink(pg_safety_debug_ratio)
@@ -206,66 +266,66 @@ if(len(time_safety_debug)>0):
     pg_safety_debug_volume_delta.setXLink(pg_safety_debug_ratio)
 
 #### Safety #### 
-if(len(time_safety)>0):
+if(len(safetyData.time)>0):
     dock_safety = Dock("Safety")
     area_safety.addDock(dock_safety, 'above', dock_battery)
     pg_safety = pg.PlotWidget()
     set_plot_options(pg_safety)
-    pg_safety.plot(time_safety, safety_published_frequency[:-1], pen=(255,0,0), name="published_frequency", stepMode=True)
-    pg_safety.plot(time_safety, safety_depth_limit[:-1], pen=(0,255,0), name="depth_limit", stepMode=True)
-    pg_safety.plot(time_safety, safety_batteries_limit[:-1], pen=(0,0,255), name="batteries_limit", stepMode=True)
-    pg_safety.plot(time_safety, safety_depressurization[:-1], pen=(255,255,0), name="depressurization", stepMode=True)
-    pg_safety.plot(time_safety, safety_seafloor[:-1], pen=(255,255,150), name="seafloor", stepMode=True)
-    text_write_safety_msg(pg_safety, time_safety, "published_frequency", safety_published_frequency)
-    text_write_safety_msg(pg_safety, time_safety, "depth_limit", safety_depth_limit)
-    text_write_safety_msg(pg_safety, time_safety, "batteries_limit", safety_batteries_limit)
-    text_write_safety_msg(pg_safety, time_safety, "depressurization", safety_depressurization)
-    text_write_safety_msg(pg_safety, time_safety, "seafloor", safety_seafloor)
+    pg_safety.plot(safetyData.time, safetyData.published_frequency[:-1], pen=(255,0,0), name="published_frequency", stepMode=True)
+    pg_safety.plot(safetyData.time, safetyData.depth_limit[:-1], pen=(0,255,0), name="depth_limit", stepMode=True)
+    pg_safety.plot(safetyData.time, safetyData.batteries_limit[:-1], pen=(0,0,255), name="batteries_limit", stepMode=True)
+    pg_safety.plot(safetyData.time, safetyData.depressurization[:-1], pen=(255,255,0), name="depressurization", stepMode=True)
+    pg_safety.plot(safetyData.time, safetyData.seafloor[:-1], pen=(255,255,150), name="seafloor", stepMode=True)
+    text_write_safety_msg(pg_safety, safetyData.time, "published_frequency", safetyData.published_frequency)
+    text_write_safety_msg(pg_safety, safetyData.time, "depth_limit", safetyData.depth_limit)
+    text_write_safety_msg(pg_safety, safetyData.time, "batteries_limit", safetyData.batteries_limit)
+    text_write_safety_msg(pg_safety, safetyData.time, "depressurization", safetyData.depressurization)
+    text_write_safety_msg(pg_safety, safetyData.time, "seafloor", safetyData.seafloor)
     dock_safety.addWidget(pg_safety)
 
-    if(len(time_safety_debug)>0):
+    if(len(safetyDebugData.time)>0):
         pg_safety_debug_flash = pg.PlotWidget()
         set_plot_options(pg_safety_debug_flash)
-        pg_safety_debug_flash.plot(time_safety_debug, safety_debug_flash[:-1], pen=(255,0,0), name="flash", stepMode=True)
+        pg_safety_debug_flash.plot(safetyDebugData.time, safetyDebugData.flash[:-1], pen=(255,0,0), name="flash", stepMode=True)
         dock_safety.addWidget(pg_safety_debug_flash)
         pg_safety_debug_flash.setXLink(pg_safety)
 
 #################### Data ####################
 
 #### Sensor Internal ####
-if(len(time_sensor_internal)>0):
+if(len(sensorIntData.time)>0):
     dock_internal_sensor = Dock("Internal Sensor")
     area_data.addDock(dock_internal_sensor)
 
-    if(len(time_fusion_sensor_internal)>0):
+    if(len(sensorIntFusionData.time)>0):
         pg_internal_pressure = pg.PlotWidget()
         set_plot_options(pg_internal_pressure)
-        pg_internal_pressure.plot(time_fusion_sensor_internal, sensor_fusion_internal_pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
+        pg_internal_pressure.plot(sensorIntFusionData.time, sensorIntFusionData.pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
         pg_internal_pressure.setLabel('left', "Pressure [fusion]", "mBar")
         dock_internal_sensor.addWidget(pg_internal_pressure)
     else:
         pg_internal_pressure = pg.PlotWidget()
         set_plot_options(pg_internal_pressure)
-        pg_internal_pressure.plot(time_sensor_internal, sensor_internal_pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
+        pg_internal_pressure.plot(sensorIntData.time, sensorIntFusionData.pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
         pg_internal_pressure.setLabel('left', "Pressure [sensor]", "mBar")
         dock_internal_sensor.addWidget(pg_internal_pressure)
 
-    if(len(time_fusion_sensor_internal)>0):
+    if(len(sensorIntFusionData.time)>0):
         pg_internal_temperature = pg.PlotWidget()
         set_plot_options(pg_internal_temperature)
-        pg_internal_temperature.plot(time_fusion_sensor_internal, sensor_fusion_internal_temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
+        pg_internal_temperature.plot(sensorIntFusionData.time, sensorIntFusionData.temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
         pg_internal_temperature.setLabel('left', "Temperature [fusion]", "mBar")
         dock_internal_sensor.addWidget(pg_internal_temperature)
     else:
         pg_internal_temperature = pg.PlotWidget()
         set_plot_options(pg_internal_temperature)
-        pg_internal_temperature.plot(time_sensor_internal, sensor_internal_temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
+        pg_internal_temperature.plot(sensorIntData.time, sensorIntFusionData.temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
         pg_internal_temperature.setLabel('left', "Temperature [sensor]", "mBar")
         dock_internal_sensor.addWidget(pg_internal_temperature)
 
     pg_internal_humidity = pg.PlotWidget()
     set_plot_options(pg_internal_humidity)
-    pg_internal_humidity.plot(time_sensor_internal, sensor_internal_humidity[:-1], pen=(255,0,0), name="humidity", stepMode=True)
+    pg_internal_humidity.plot(sensorIntFusionData.time, sensorIntFusionData.humidity[:-1], pen=(255,0,0), name="humidity", stepMode=True)
     pg_internal_humidity.setLabel('left', "Humidity")
     dock_internal_sensor.addWidget(pg_internal_humidity)
 
@@ -273,17 +333,17 @@ if(len(time_sensor_internal)>0):
     pg_internal_humidity.setXLink(pg_internal_pressure)
 
 #### Temperature / Depth ####
-if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
+if(len(temperatureData.time)>0 and len(depthFusionData.time)>0):
     dock_temp = Dock("T/depth")
     area_data.addDock(dock_temp, 'above', dock_internal_sensor)
-    if(len(fusion_depth)>0):
+    if(len(depthFusionData.depth)>0):
         pg_temp = pg.PlotWidget()
         set_plot_options(pg_temp)
         
-        f_temp = interpolate.interp1d(time_sensor_temperature, sensor_temperature, bounds_error=False)
-        f_depth = interpolate.interp1d(time_fusion_depth, fusion_depth, bounds_error=False)
+        f_temp = interpolate.interp1d(temperatureData.time, temperatureData.temperature, bounds_error=False)
+        f_depth = interpolate.interp1d(depthFusionData.time, depthFusionData.depth, bounds_error=False)
 
-        time_interp = np.linspace(time_fusion_depth[0], time_fusion_depth[-1], 50000)
+        time_interp = np.linspace(depthFusionData.time[0], depthFusionData.time[-1], 50000)
         temperature_interp = f_temp(time_interp)
         depth_interp = f_depth(time_interp)
 
@@ -295,100 +355,100 @@ if(len(time_sensor_temperature)>0 and len(time_fusion_depth)>0):
         dock_temp.addWidget(pg_temp)
 
 #### Sensor External ####
-if(len(time_sensor_external)>0):
+if(len(sensorExtData.time)>0):
     dock_external_sensor = Dock("External Sensor")
     area_data.addDock(dock_external_sensor, 'above', dock_internal_sensor)
     pg_external_pressure = pg.PlotWidget()
     set_plot_options(pg_external_pressure)
-    pg_external_pressure.plot(time_sensor_external, sensor_external_pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
+    pg_external_pressure.plot(sensorExtData.time, sensorExtData.pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
     pg_external_pressure.setLabel('left', "Pressure", units="bar")
     dock_external_sensor.addWidget(pg_external_pressure)
 
     pg_external_temperature = pg.PlotWidget()
     set_plot_options(pg_external_temperature)
-    pg_external_temperature.plot(time_sensor_external, sensor_external_temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
+    pg_external_temperature.plot(sensorExtData.time, sensorExtData.temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
     pg_external_temperature.setLabel('left', "Temperature", units="C")
     dock_external_sensor.addWidget(pg_external_temperature)
 
     pg_external_temperature.setXLink(pg_external_pressure)
 
 #### Temperature ####
-if(len(time_sensor_temperature)>0):
+if(len(temperatureData.time)>0):
     dock_temperature = Dock("Temperature")
     area_data.addDock(dock_temperature, 'above', dock_internal_sensor)
     pg_sensor_temperature = pg.PlotWidget()
     set_plot_options(pg_sensor_temperature)
-    pg_sensor_temperature.plot(time_sensor_temperature, sensor_temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
+    pg_sensor_temperature.plot(temperatureData.time, temperatureData.temperature[:-1], pen=(255,0,0), name="temperature", stepMode=True)
     pg_sensor_temperature.setLabel('left', "Temperature", units="C")
     dock_temperature.addWidget(pg_sensor_temperature)
 
 #### Fusion ####
-if(len(time_fusion_depth)>0):
+if(len(depthFusionData.time)>0):
     dock_fusion = Dock("Fusion")
     area_data.addDock(dock_fusion, 'above', dock_internal_sensor)
     pg_depth = plot_depth(dock_fusion)
 
     pg_fusion_velocity = pg.PlotWidget()
     set_plot_options(pg_fusion_velocity)
-    pg_fusion_velocity.plot(time_fusion_depth, fusion_velocity[:-1], pen=(255,0,0), name="velocity", stepMode=True)
+    pg_fusion_velocity.plot(depthFusionData.time, depthFusionData.velocity[:-1], pen=(255,0,0), name="velocity", stepMode=True)
     pg_fusion_velocity.setLabel('left', "Velocity", units="m/s")
     dock_fusion.addWidget(pg_fusion_velocity)
 
     pg_fusion_velocity.setXLink(pg_depth)
 
 #### Mag ####
-if(len(time_mag)>0):
+if(len(magData.time)>0):
     dock_mag = Dock("Mag")
     area_data.addDock(dock_mag, 'above', dock_internal_sensor)
     pg_mag1 = pg.PlotWidget()
     set_plot_options(pg_mag1)
-    pg_mag1.plot(time_mag, mag_x[:-1], pen=(255,0,0), name="mag x", stepMode=True)
-    pg_mag1.plot(time_mag, mag_y[:-1], pen=(0,255,0), name="mag y", stepMode=True)
-    pg_mag1.plot(time_mag, mag_z[:-1], pen=(0,0,255), name="mag z", stepMode=True)
+    pg_mag1.plot(magData.time, magData.x[:-1], pen=(255,0,0), name="mag x", stepMode=True)
+    pg_mag1.plot(magData.time, magData.y[:-1], pen=(0,255,0), name="mag y", stepMode=True)
+    pg_mag1.plot(magData.time, magData.z[:-1], pen=(0,0,255), name="mag z", stepMode=True)
     dock_mag.addWidget(pg_mag1)
 
     pg_mag2 = pg.PlotWidget()
     set_plot_options(pg_mag2)
-    mag_N = np.sqrt(np.power(np.array(mag_x), 2)+np.power(np.array(mag_y), 2)+np.power(np.array(mag_z), 2))
-    pg_mag2.plot(time_mag, mag_N[:-1], pen=(255,0,0), name="mag N", stepMode=True)
+    magData.N = np.sqrt(np.power(np.array(magData.x), 2)+np.power(np.array(magData.y), 2)+np.power(np.array(magData.z), 2))
+    pg_mag2.plot(magData.time, magData.N[:-1], pen=(255,0,0), name="mag N", stepMode=True)
     dock_mag.addWidget(pg_mag2)
 
     pg_mag2.setXLink(pg_mag1)
 
 #### Imu Acc ####
-if(len(time_imu)>0):
+if(len(imuData.time)>0):
     dock_imu_acc = Dock("Acc")
     area_data.addDock(dock_imu_acc, 'above', dock_internal_sensor)
     pg_acc = pg.PlotWidget()
     set_plot_options(pg_acc)
-    pg_acc.plot(time_imu, acc_x[:-1], pen=(255,0,0), name="acc x", stepMode=True)
-    pg_acc.plot(time_imu, acc_y[:-1], pen=(0,255,0), name="acc y", stepMode=True)
-    pg_acc.plot(time_imu, acc_z[:-1], pen=(0,0,255), name="acc z", stepMode=True)
+    pg_acc.plot(imuData.time, imuData.acc_x[:-1], pen=(255,0,0), name="acc x", stepMode=True)
+    pg_acc.plot(imuData.time, imuData.acc_y[:-1], pen=(0,255,0), name="acc y", stepMode=True)
+    pg_acc.plot(imuData.time, imuData.acc_z[:-1], pen=(0,0,255), name="acc z", stepMode=True)
     dock_imu_acc.addWidget(pg_acc)
 
     pg_acc_n = pg.PlotWidget()
     set_plot_options(pg_acc_n)
-    acc_n = LA.norm(np.array([acc_x, acc_y, acc_z]), axis=0)
-    pg_acc_n.plot(time_imu, acc_n[:-1], pen=(255,0,0), name="norm", stepMode=True)
+    acc_n = LA.norm(np.array([imuData.acc_x, imuData.acc_y, imuData.acc_z]), axis=0)
+    pg_acc_n.plot(imuData.time, acc_n[:-1], pen=(255,0,0), name="norm", stepMode=True)
     dock_imu_acc.addWidget(pg_acc_n)
 
     pg_acc_n.setXLink(pg_acc)
 
 #### Imu Gyro ####
-if(len(time_imu)>0):
+if(len(imuData.time)>0):
     dock_imu_gyro = Dock("Gyro")
     area_data.addDock(dock_imu_gyro, 'above', dock_internal_sensor)
     pg_gyro = pg.PlotWidget()
     set_plot_options(pg_gyro)
-    pg_gyro.plot(time_imu, gyro_x[:-1], pen=(255,0,0), name="gyro x", stepMode=True)
-    pg_gyro.plot(time_imu, gyro_y[:-1], pen=(0,255,0), name="gyro y", stepMode=True)
-    pg_gyro.plot(time_imu, gyro_z[:-1], pen=(0,0,255), name="gyro z", stepMode=True)
+    pg_gyro.plot(imuData.time, imuData.gyro_x[:-1], pen=(255,0,0), name="gyro x", stepMode=True)
+    pg_gyro.plot(imuData.time, imuData.gyro_y[:-1], pen=(0,255,0), name="gyro y", stepMode=True)
+    pg_gyro.plot(imuData.time, imuData.gyro_z[:-1], pen=(0,0,255), name="gyro z", stepMode=True)
     dock_imu_gyro.addWidget(pg_gyro)
 
 #################### Piston ####################
 
 #### Distance ####
-if(len(time_piston_distance_travelled)>0):
+if(len(pistonDistanceData.time)>0):
     dock_piston_distance = Dock("Distance")
     area_piston.addDock(dock_piston_distance)
 
@@ -396,14 +456,14 @@ if(len(time_piston_distance_travelled)>0):
 
     pg_piston_distance = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
     set_plot_options(pg_piston_distance)
-    pg_piston_distance.plot(time_piston_distance_travelled, piston_distance_travelled[:-1], pen=(0,0,255), name="distance", stepMode=True)
+    pg_piston_distance.plot(pistonDistanceData.time, pistonDistanceData.distance[:-1], pen=(0,0,255), name="distance", stepMode=True)
     pg_piston_distance.setLabel('left', "Piston distance travelled")
     dock_piston_distance.addWidget(pg_piston_distance)
 
     pg_piston_distance.setXLink(pg_depth)
 
 #### Depth ####
-if(len(time_fusion_depth)>0):
+if(len(depthFusionData.time)>0):
     dock_depth = Dock("Position")
     area_piston.addDock(dock_depth, 'above', dock_piston_distance)
     pg_depth = plot_depth(dock_depth)
@@ -444,7 +504,7 @@ if(np.size(pistonStateData.time)>0):
     dock_piston2 = Dock("Velocity")
     area_piston.addDock(dock_piston2, 'above', dock_piston_distance)
     pg_piston2 = plot_piston_position(dock_piston)
-    pg_piston2.plot(time_piston_position, piston_position[:-1], pen=(0,255,0), name="set point pi", stepMode=True)
+    pg_piston2.plot(pistonSetPointData.time, pistonSetPointData.position[:-1], pen=(0,255,0), name="set point pi", stepMode=True)
     pg_piston2.setLabel('left', "Piston state position and set point")
     dock_piston2.addWidget(pg_piston2)
 
@@ -452,15 +512,15 @@ if(np.size(pistonStateData.time)>0):
     set_plot_options(pg_piston_speed)
     pg_piston_speed.plot(pistonStateData.time, pistonStateData.motor_speed[:-1].astype(int), pen=(255,0,0), name="speed", stepMode=True)
     
-    if(len(piston_speed_in)>1):
-        pg_piston_speed.plot(time_piston_speed, np.array(piston_speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
-        pg_piston_speed.plot(time_piston_speed, np.array(piston_speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
+    if(len(pistonSpeedData.speed_in)>1):
+        pg_piston_speed.plot(pistonSpeedData.time, 50-np.array(pistonSpeedData.speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
+        pg_piston_speed.plot(pistonSpeedData.time, 50+np.array(pistonSpeedData.speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
     pg_piston_speed.setLabel('left', "Speed")
     dock_piston2.addWidget(pg_piston_speed)
 
     pg_piston_velocity = pg.PlotWidget()
     set_plot_options(pg_piston_velocity)
-    pg_piston_velocity.plot(time_piston_velocity, piston_velocity[:-1], pen=(0,0,255), name="velocity", stepMode=True)
+    pg_piston_velocity.plot(pistonVelocityData.time, pistonVelocityData.velocity[:-1], pen=(0,0,255), name="velocity", stepMode=True)
     pg_piston_velocity.setLabel('left', "Velocity")
     dock_piston2.addWidget(pg_piston_velocity)
 
@@ -470,7 +530,7 @@ if(np.size(pistonStateData.time)>0):
 #################### Regulation ####################
 
 #### Regulation ####
-if(len(time_regulation_debug)>0):
+if(len(regulationData.time)>0):
     dock_regulation = Dock("Regulation1")
     area_regulation.addDock(dock_regulation)
 
@@ -478,14 +538,14 @@ if(len(time_regulation_debug)>0):
 
     pg_regulation_velocity = pg.PlotWidget()
     set_plot_options(pg_regulation_velocity)
-    pg_regulation_velocity.plot(time_kalman, kalman_velocity[:-1], pen=(255,0,0), name="velocity", stepMode=True)
-    pg_regulation_velocity.plot(time_mission, mission_limit_velocity[:-1], pen=(0,255,0), name="target_velocity_max", stepMode=True)
-    pg_regulation_velocity.plot(time_mission, -np.array(mission_limit_velocity[:-1]), pen=(0,255,0), name="target_velocity_min", stepMode=True)
+    pg_regulation_velocity.plot(kalmanData.time, kalmanData.velocity[:-1], pen=(255,0,0), name="velocity", stepMode=True)
+    pg_regulation_velocity.plot(missionData.time, missionData.limit_velocity[:-1], pen=(0,255,0), name="target_velocity_max", stepMode=True)
+    pg_regulation_velocity.plot(missionData.time, -np.array(missionData.limit_velocity[:-1]), pen=(0,255,0), name="target_velocity_min", stepMode=True)
     dock_regulation.addWidget(pg_regulation_velocity)
 
     pg_regulation_u = pg.PlotWidget()
     set_plot_options(pg_regulation_u)
-    pg_regulation_u.plot(time_regulation_debug, regulation_u[:-1], pen=(255,0,0), name="u", stepMode=True)
+    pg_regulation_u.plot(regulationData.time, regulationData.u[:-1], pen=(255,0,0), name="u", stepMode=True)
     pg_regulation_u.setLabel('left', "u")
     dock_regulation.addWidget(pg_regulation_u)
 
@@ -493,7 +553,7 @@ if(len(time_regulation_debug)>0):
     pg_regulation_u.setXLink(pg_depth)
 
 #### Regulation debug ####
-if(len(time_regulation_debug)>0):
+if(len(regulationData.time)>0):
     dock_command = Dock("Command")
     area_regulation.addDock(dock_command, 'above', dock_regulation)
 
@@ -502,7 +562,7 @@ if(len(time_regulation_debug)>0):
 
     pg_regulation_set_point = pg.PlotWidget()
     set_plot_options(pg_regulation_set_point)
-    pg_regulation_set_point.plot(time_regulation_debug, regulation_piston_set_point[:-1], pen=(0,0,255), name="set_point", stepMode=True)
+    pg_regulation_set_point.plot(regulationData.time, regulationData.set_point[:-1], pen=(0,0,255), name="set_point", stepMode=True)
     pg_regulation_set_point.plot(pistonStateData.time, pistonStateData.position[:-1],pen=(255,0,0), name="position", stepMode=True)
     pg_regulation_set_point.setLabel('left', "set_point")
     dock_command.addWidget(pg_regulation_set_point)
@@ -511,7 +571,7 @@ if(len(time_regulation_debug)>0):
     pg_regulation_set_point.setXLink(pg_depth)
 
 #### Regulation2 ####
-if(len(time_regulation_debug)>0):
+if(len(regulationData.time)>0):
     dock_regulation2 = Dock("Regulation2")
     area_regulation.addDock(dock_regulation2, 'above', dock_regulation)
 
@@ -520,7 +580,7 @@ if(len(time_regulation_debug)>0):
 
     pg_regulation_u = pg.PlotWidget()
     set_plot_options(pg_regulation_u)
-    pg_regulation_u.plot(time_regulation_debug, regulation_u[:-1], pen=(255,0,0), name="u", stepMode=True)
+    pg_regulation_u.plot(regulationData.time, regulationData.u[:-1], pen=(255,0,0), name="u", stepMode=True)
     pg_regulation_u.setLabel('left', "u")
     dock_regulation2.addWidget(pg_regulation_u)
 
@@ -528,32 +588,32 @@ if(len(time_regulation_debug)>0):
     pg_regulation_u.setXLink(pg_depth)
 
 #### Regulation debug 2 ####
-if(len(time_regulation_debug)>0):
+if(len(regulationData.time)>0):
     dock_regulation2 = Dock("Regulation (Detailed)")
     area_regulation.addDock(dock_regulation2, 'below', dock_regulation)
 
     pg_regulation_depth2 = pg.PlotWidget()
     set_plot_options(pg_regulation_depth2)
-    pg_regulation_depth2.plot(time_fusion_depth, fusion_depth[:-1], pen=(255,0,0), name="depth", stepMode=True)
-    pg_regulation_depth2.plot(time_mission, mission_depth[:-1], pen=(0,255,0), name="depth", stepMode=True)
+    pg_regulation_depth2.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="depth", stepMode=True)
+    pg_regulation_depth2.plot(missionData.time, missionData.depth[:-1], pen=(0,255,0), name="depth", stepMode=True)
     pg_regulation_depth2.setLabel('left', "depth")
     dock_regulation2.addWidget(pg_regulation_depth2)
 
     pg_regulation_y = pg.PlotWidget()
     set_plot_options(pg_regulation_y)
-    pg_regulation_y.plot(time_regulation_debug, regulation_y[:-1], pen=(255,0,0), name="y", stepMode=True)
+    pg_regulation_y.plot(regulationData.time, regulationData.y[:-1], pen=(255,0,0), name="y", stepMode=True)
     pg_regulation_y.setLabel('left', "y")
     dock_regulation2.addWidget(pg_regulation_y)
 
     pg_regulation_dy = pg.PlotWidget()
     set_plot_options(pg_regulation_dy)
-    pg_regulation_dy.plot(time_regulation_debug, regulation_dy[:-1], pen=(255,0,0), name="dy", stepMode=True)
+    pg_regulation_dy.plot(regulationData.time, regulationData.dy[:-1], pen=(255,0,0), name="dy", stepMode=True)
     pg_regulation_dy.setLabel('left', "dy")
     dock_regulation2.addWidget(pg_regulation_dy)
 
     pg_regulation_u = pg.PlotWidget()
     set_plot_options(pg_regulation_u)
-    pg_regulation_u.plot(time_kalman, np.array(kalman_offset[:-1])-np.array(kalman_depth[:-1])*7.158e-07, pen=(255,0,0), name="volume equilibrium", stepMode=True)
+    pg_regulation_u.plot(kalmanData.time, np.array(kalmanData.offset[:-1])-np.array(kalmanData.depth[:-1])*7.158e-07, pen=(255,0,0), name="volume equilibrium", stepMode=True)
     pg_regulation_u.setLabel('left', "volume equilibrium")
     dock_regulation2.addWidget(pg_regulation_u)
 
@@ -562,7 +622,7 @@ if(len(time_regulation_debug)>0):
     pg_regulation_y.setXLink(pg_regulation_depth2)
 
 #### Regulation Mission ####
-if(len(time_regulation_debug)>0):
+if(len(regulationData.time)>0):
     dock_regulation_mission = Dock("Mission")
     area_regulation.addDock(dock_regulation_mission, 'above', dock_regulation)
 
@@ -571,8 +631,8 @@ if(len(time_regulation_debug)>0):
 
     pg_regulation_mission = pg.PlotWidget()
     set_plot_options(pg_regulation_mission)
-    pg_regulation_mission.plot(time_mission, mission_limit_velocity[:-1], pen=(255,0,0), name="limit_velocity", stepMode=True)
-    pg_regulation_mission.plot(time_mission, mission_approach_velocity[:-1], pen=(0,255,0), name="mission_approach_velocity", stepMode=True)
+    pg_regulation_mission.plot(missionData.time, missionData.limit_velocity[:-1], pen=(255,0,0), name="limit_velocity", stepMode=True)
+    pg_regulation_mission.plot(missionData.time, missionData.approach_velocity[:-1], pen=(0,255,0), name="mission_approach_velocity", stepMode=True)
     dock_regulation_mission.addWidget(pg_regulation_mission)
 
     pg_regulation_state.setXLink(pg_depth)
@@ -580,92 +640,92 @@ if(len(time_regulation_debug)>0):
 
 #### Regulation Heading ####
 
-if(len(time_regulation_heading)>0):
+if(len(regulationHeadingData.time)>0):
     dock_regulation_heading = Dock("Regulation Heading")
     area_regulation.addDock(dock_regulation_heading, 'below', dock_regulation)
 
     pg_euler_yaw = pg.PlotWidget()
     set_plot_options(pg_euler_yaw)
-    pg_euler_yaw.plot(time_euler, np.array(euler_z[:-1])*180./np.pi, pen=(255,0,0), name="Yaw", stepMode=True)
-    pg_euler_yaw.plot(time_regulation_heading, np.array(regulation_heading_set_point[:-1])*180./np.pi, pen=(0,255,0), name="Set point", stepMode=True)
+    pg_euler_yaw.plot(eulerData.time, np.array(eulerData.z[:-1])*180./np.pi, pen=(255,0,0), name="Yaw", stepMode=True)
+    pg_euler_yaw.plot(regulationHeadingData.time, np.array(regulationHeadingData.set_point[:-1])*180./np.pi, pen=(0,255,0), name="Set point", stepMode=True)
     dock_regulation_heading.addWidget(pg_euler_yaw)
 
     pg_regulation_heading_error = pg.PlotWidget()
     set_plot_options(pg_regulation_heading_error)
-    pg_regulation_heading_error.plot(time_regulation_heading, regulation_heading_error[:-1], pen=(255,0,0), name="error", stepMode=True)
+    pg_regulation_heading_error.plot(regulationHeadingData.time, regulationHeadingData.error[:-1], pen=(255,0,0), name="error", stepMode=True)
     dock_regulation_heading.addWidget(pg_regulation_heading_error)
 
     pg_regulation_heading_var = pg.PlotWidget()
     set_plot_options(pg_regulation_heading_var)
-    pg_regulation_heading_var.plot(time_regulation_heading, regulation_heading_p_var[:-1], pen=(255,0,0), name="P", stepMode=True)
-    pg_regulation_heading_var.plot(time_regulation_heading, regulation_heading_d_var[:-1], pen=(0,255,0), name="D", stepMode=True)
+    pg_regulation_heading_var.plot(regulationHeadingData.time, regulationHeadingData.p_var[:-1], pen=(255,0,0), name="P", stepMode=True)
+    pg_regulation_heading_var.plot(regulationHeadingData.time, regulationHeadingData.d_var[:-1], pen=(0,255,0), name="D", stepMode=True)
     dock_regulation_heading.addWidget(pg_regulation_heading_var)
 
     pg_regulation_heading_command = pg.PlotWidget()
     set_plot_options(pg_regulation_heading_command)
-    pg_regulation_heading_command.plot(time_regulation_heading, regulation_heading_command[:-1], pen=(255,0,0), name="command", stepMode=True)
-    pg_regulation_heading_command.plot(time_regulation_heading, regulation_heading_command_limit[:-1], pen=(0,255,0), name="command_limit", stepMode=True)
+    pg_regulation_heading_command.plot(regulationHeadingData.time, regulationHeadingData.command[:-1], pen=(255,0,0), name="command", stepMode=True)
+    pg_regulation_heading_command.plot(regulationHeadingData.time, regulationHeadingData.command_limit[:-1], pen=(0,255,0), name="command_limit", stepMode=True)
     dock_regulation_heading.addWidget(pg_regulation_heading_command)
     
     pg_regulation_heading_var.setXLink(pg_regulation_heading_error)
     pg_regulation_heading_command.setXLink(pg_regulation_heading_error)
-    if(len(time_euler)>0):
+    if(len(eulerData.time)>0):
         pg_euler_yaw.setXLink(pg_regulation_heading_error)
 
 #### Kalman ####
-if(len(time_kalman)>0 and len(time_regulation_debug)>0):
+if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     dock_kalman = Dock("Kalman")
     area_regulation.addDock(dock_kalman, 'below', dock_regulation)
 
     pg_kalman_velocity = pg.PlotWidget()
     set_plot_options(pg_kalman_velocity)
-    pg_kalman_velocity.plot(time_kalman, kalman_velocity[:-1], pen=(255,0,0), name="velocity (x1)", stepMode=True)
+    pg_kalman_velocity.plot(kalmanData.time, kalmanData.velocity[:-1], pen=(255,0,0), name="velocity (x1)", stepMode=True)
     dock_kalman.addWidget(pg_kalman_velocity)
 
     pg_kalman_depth = pg.PlotWidget()
     set_plot_options(pg_kalman_depth)
-    pg_kalman_depth.plot(time_kalman, kalman_depth[:-1], pen=(255,0,0), name="depth (x2)", stepMode=True)
+    pg_kalman_depth.plot(kalmanData.time, kalmanData.depth[:-1], pen=(255,0,0), name="depth (x2)", stepMode=True)
     dock_kalman.addWidget(pg_kalman_depth)
 
     pg_kalman_offset = pg.PlotWidget()
     set_plot_options(pg_kalman_offset)
-    pg_kalman_offset.plot(time_kalman, np.array(kalman_offset[:-1])/tick_to_volume, pen=(255,0,0), name="offset (x4) [ticks]", stepMode=True)
+    pg_kalman_offset.plot(kalmanData.time, np.array(kalmanData.offset[:-1])/tick_to_volume, pen=(255,0,0), name="offset (x4) [ticks]", stepMode=True)
     dock_kalman.addWidget(pg_kalman_offset)
 
     pg_kalman_chi = pg.PlotWidget()
     set_plot_options(pg_kalman_chi)
-    pg_kalman_chi.plot(time_kalman, np.array(kalman_chi[:-1])/tick_to_volume, pen=(255,0,0), name="chi (x5) [ticks]", stepMode=True)
+    pg_kalman_chi.plot(kalmanData.time, np.array(kalmanData.chi[:-1])/tick_to_volume, pen=(255,0,0), name="chi (x5) [ticks]", stepMode=True)
     dock_kalman.addWidget(pg_kalman_chi)
 
     pg_kalman_depth.setXLink(pg_kalman_velocity)
     pg_kalman_offset.setXLink(pg_kalman_velocity)
     pg_kalman_chi.setXLink(pg_kalman_velocity)
 
-if(len(time_kalman)>0 and len(time_regulation_debug)>0):
+if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     dock_kalman_cov = Dock("Kalman Cov")
     area_regulation.addDock(dock_kalman_cov, 'below', dock_kalman)
 
     pg_kalman_cov_depth = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_depth)
-    pg_kalman_cov_depth.plot(time_kalman,kalman_cov_depth[:-1], pen=(255,0,0), name="cov depth", stepMode=True)
+    pg_kalman_cov_depth.plot(kalmanData.time,kalmanData.cov_depth[:-1], pen=(255,0,0), name="cov depth", stepMode=True)
     # pg_kalman_cov_depth.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_depth)
 
     pg_kalman_cov_velocity = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_velocity)
-    pg_kalman_cov_velocity.plot(time_kalman,kalman_cov_velocity[:-1], pen=(255,0,0), name="cov velocity", stepMode=True)
+    pg_kalman_cov_velocity.plot(kalmanData.time,kalmanData.cov_velocity[:-1], pen=(255,0,0), name="cov velocity", stepMode=True)
     # pg_kalman_cov_velocity.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_velocity)
 
     pg_kalman_cov_offset = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_offset)
-    pg_kalman_cov_offset.plot(time_kalman,kalman_cov_offset[:-1], pen=(255,0,0), name="cov offset", stepMode=True)
+    pg_kalman_cov_offset.plot(kalmanData.time,kalmanData.cov_offset[:-1], pen=(255,0,0), name="cov offset", stepMode=True)
     # pg_kalman_cov_offset.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_offset)
 
     pg_kalman_cov_chi = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_chi)
-    pg_kalman_cov_chi.plot(time_kalman,kalman_cov_chi[:-1], pen=(255,0,0), name="cov chi", stepMode=True)
+    pg_kalman_cov_chi.plot(kalmanData.time,kalmanData.cov_chi[:-1], pen=(255,0,0), name="cov chi", stepMode=True)
     # pg_kalman_cov_chi.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_chi)
 
@@ -676,12 +736,12 @@ if(len(time_kalman)>0 and len(time_regulation_debug)>0):
 #################### Position ####################
 
 #### GPS Status ####
-if(len(time_fix)>0):
+if(len(fixData.time)>0):
     dock_gps = Dock("GPS Signal")
     area_position.addDock(dock_gps)
     pg_gps = pg.PlotWidget()
     set_plot_options(pg_gps)
-    pg_gps.plot(time_fix, fix_status[:-1], pen=(255,0,0), name="status", stepMode=True)
+    pg_gps.plot(fixData.time, fixData.status[:-1], pen=(255,0,0), name="status", stepMode=True)
     pg_gps.setLabel('left', "Fix status")
     dock_gps.addWidget(pg_gps)
 
@@ -690,105 +750,108 @@ if(len(time_fix)>0):
     pg_gps.setXLink(pg_depth)
 
 #### GPS Pose ####
-if(len(fusion_pose_east)>0 and len(time_fix)>0):
+if(len(poseFusionData.east)>0 and len(fixData.time)>0):
     dock_gps2 = Dock("GPS Pose")
     area_position.addDock(dock_gps2, 'above', dock_gps)
     pg_gps2 = pg.PlotWidget()
     set_plot_options(pg_gps2)
-    Y = np.array(fusion_pose_north)
-    X = np.array(fusion_pose_east)
+    Y = np.array(poseFusionData.north)
+    X = np.array(poseFusionData.east)
     X = X[~np.isnan(X)]
     Y = Y[~np.isnan(Y)]
     X -= np.mean(X)
     Y -= np.mean(Y)
-    pg_gps2.plot(X, Y[:-1], pen=(255,0,0), name="pose (centered on mean)", symbol='o', stepMode=True)
+    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
     pg_gps2.setLabel('left', "Y", units="m")
     pg_gps2.setLabel('bottom', "X", units="m")
     dock_gps2.addWidget(pg_gps2)
 
+    saveBtn = QtGui.QPushButton('Export GPX')
+    dock_gps2.addWidget(saveBtn, row=1, col=0)
+    saveBtn.clicked.connect(save_gpx)
+
 ####  Heading #### 
-if(len(time_euler)>0 and len(time_fix)>0):
+if(len(eulerData.time)>0 and len(fixData.time)>0):
     dock_euler = Dock("Heading")
     area_position.addDock(dock_euler, 'above', dock_gps)
     pg_euler1 = pg.PlotWidget()
     set_plot_options(pg_euler1)
-    pg_euler1.plot(time_euler, np.array(euler_z[:-1])*180.0/np.pi, pen=(0,0,255), name="Heading", stepMode=True)
+    pg_euler1.plot(eulerData.time, np.array(eulerData.z[:-1])*180.0/np.pi, pen=(0,0,255), name="Heading", stepMode=True)
     dock_euler.addWidget(pg_euler1)
 
 ####  Speed & Heading GPS #### 
-if(len(time_fix)>0):
+if(len(fixData.time)>0):
     dock_gps_speed_track = Dock("GPS Speed/Track")
     area_position.addDock(dock_gps_speed_track, 'above', dock_gps)
     pg_gps_speed = pg.PlotWidget()
     set_plot_options(pg_gps_speed)
-    pg_gps_speed.plot(time_fix, fix_speed[:-1], pen=(0,0,255), name="Speed", stepMode=True)
+    pg_gps_speed.plot(fixData.time, fixData.speed[:-1], pen=(0,0,255), name="Speed", stepMode=True)
     dock_gps_speed_track.addWidget(pg_gps_speed)
 
     pg_gps_track = pg.PlotWidget()
     set_plot_options(pg_gps_track)
-    pg_gps_track.plot(time_fix, fix_track[:-1], pen=(0,0,255), name="Track", stepMode=True)
+    pg_gps_track.plot(fixData.time, fixData.track[:-1], pen=(0,0,255), name="Track", stepMode=True)
     dock_gps_speed_track.addWidget(pg_gps_track)
 
     pg_gps_track.setXLink(pg_gps_speed)
 
 ####  Error GPS #### 
-if(len(time_fix)>0):
+if(len(fixData.time)>0):
     dock_gps_error = Dock("GPS Error")
     area_position.addDock(dock_gps_error, 'above', dock_gps)
     pg_gps_horz = pg.PlotWidget()
     set_plot_options(pg_gps_horz)
-    pg_gps_horz.plot(time_fix, fix_err_horz[:-1], pen=(0,0,255), name="Horizontal Error", stepMode=True)
+    pg_gps_horz.plot(fixData.time, fixData.err_horz[:-1], pen=(0,0,255), name="Horizontal Error", stepMode=True)
     dock_gps_error.addWidget(pg_gps_horz)
 
     pg_gps_vert = pg.PlotWidget()
     set_plot_options(pg_gps_vert)
-    pg_gps_vert.plot(time_fix, fix_err_vert[:-1], pen=(0,0,255), name="Vertical Error", stepMode=True)
+    pg_gps_vert.plot(fixData.time, fixData.err_vert[:-1], pen=(0,0,255), name="Vertical Error", stepMode=True)
     dock_gps_error.addWidget(pg_gps_vert)
 
     pg_gps_vert.setXLink(pg_gps_horz)
 
 ####  Dop GPS #### 
-if(len(time_fix)>0):
+if(len(fixData.time)>0):
     dock_gps_dop = Dock("GPS DOP")
     area_position.addDock(dock_gps_dop, 'above', dock_gps)
     pg_gps_hdop = pg.PlotWidget()
     set_plot_options(pg_gps_hdop)
-    pg_gps_hdop.plot(time_fix, fix_hdop[:-1], pen=(0,0,255), name="hdop", stepMode=True)
+    pg_gps_hdop.plot(fixData.time, fixData.hdop[:-1], pen=(0,0,255), name="hdop", stepMode=True)
     dock_gps_dop.addWidget(pg_gps_hdop)
 
     pg_gps_vdop = pg.PlotWidget()
     set_plot_options(pg_gps_vdop)
-    pg_gps_vdop.plot(time_fix, fix_vdop[:-1], pen=(0,0,255), name="vdop", stepMode=True)
+    pg_gps_vdop.plot(fixData.time, fixData.vdop[:-1], pen=(0,0,255), name="vdop", stepMode=True)
     dock_gps_dop.addWidget(pg_gps_vdop)
 
     pg_gps_vdop.setXLink(pg_gps_hdop)
 
 ####  Dop GPS #### 
-if(len(time_fix)>0):
+if(len(fixData.time)>0):
     dock_gps_alt = Dock("GPS Alti")
     area_position.addDock(dock_gps_alt, 'above', dock_gps)
     pg_gps_alti = pg.PlotWidget()
     set_plot_options(pg_gps_alti)
-    pg_gps_alti.plot(time_fix, fix_altitude[:-1], pen=(0,0,255), name="altitude", stepMode=True)
+    pg_gps_alti.plot(fixData.time, fixData.altitude[:-1], pen=(0,0,255), name="altitude", stepMode=True)
     dock_gps_alt.addWidget(pg_gps_alti)
-
 
 #################### Iridium ####################
 
-if(len(time_iridium_status)>0):
+if(len(iridiumStatusData.time)>0):
     dock_iridium_status = Dock("Iridium status")
     area_iridium.addDock(dock_iridium_status)
 
     pg_iridium_status = pg.PlotWidget()
     set_plot_options(pg_iridium_status)
-    pg_iridium_status.plot(time_iridium_status, iridium_status_service[:-1], pen=(255,0,0), name="status", stepMode=True)
+    pg_iridium_status.plot(iridiumStatusData.time, iridiumStatusData.service[:-1], pen=(255,0,0), name="status", stepMode=True)
     pg_iridium_status.setLabel('left', "status")
-    # pg_iridium_status.plot(time_iridium_status, iridium_status_antenna[:-1], pen=(0,255,0), name="antenna", stepMode=True)
+    # pg_iridium_status.plot(iridiumStatusData.time, iridiumStatusData.antenna[:-1], pen=(0,255,0), name="antenna", stepMode=True)
     dock_iridium_status.addWidget(pg_iridium_status)
 
     pg_iridium_signal = pg.PlotWidget()
     set_plot_options(pg_iridium_signal)
-    pg_iridium_signal.plot(time_iridium_status, iridium_status_signal_strength, pen=(255,0,0), name="signal", symbol='o')
+    pg_iridium_signal.plot(iridiumStatusData.time, iridiumStatusData.signal_strength, pen=(255,0,0), name="signal", symbol='o')
     pg_iridium_signal.setLabel('left', "signal")
     dock_iridium_status.addWidget(pg_iridium_signal)
 
@@ -797,14 +860,14 @@ if(len(time_iridium_status)>0):
     pg_iridium_status.setXLink(pg_depth)
     pg_iridium_signal.setXLink(pg_depth)
 
-if(len(time_iridium_session)>0):
+if(len(iridiumSessionData.time)>0):
     dock_iridium_session = Dock("Iridium session")
     area_iridium.addDock(dock_iridium_session, 'above', dock_iridium_status)
 
     pg_iridium_session_result = pg.PlotWidget()
     set_plot_options(pg_iridium_session_result)
-    pg_iridium_session_result.plot(time_iridium_session, iridium_session_mo, pen=(255,0,0), name="mo", symbol='o')
-    pg_iridium_session_result.plot(time_iridium_session, iridium_session_mt, pen=(0,255,0), name="mt", symbol='o')
+    pg_iridium_session_result.plot(iridiumSessionData.time, iridiumSessionData.mo, pen=(255,0,0), name="mo", symbol='o')
+    pg_iridium_session_result.plot(iridiumSessionData.time, iridiumSessionData.mt, pen=(0,255,0), name="mt", symbol='o')
     pg_iridium_session_result.setLabel('left', "mo")
     dock_iridium_session.addWidget(pg_iridium_session_result)
 

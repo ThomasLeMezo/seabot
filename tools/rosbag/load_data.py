@@ -12,238 +12,265 @@ rosout = []
 time_rosout_agg = []
 rosout_agg = []
 
-# /driver/piston/position (set_point)
-time_piston_position = []
-piston_position = []
+class SeabotData:
+    def __init__(self, topic_name="", bag=None):
+        if bag==None:
+            self.nb_elements = 0
+        else:
+            self.nb_elements = bag.get_message_count(topic_name)
+        self.time = np.empty([self.nb_elements])
+        self.k=0
+        self.topic_name=topic_name
+    def add_time(self, t, startTime):
+        self.time[self.k] = (t-startTime).to_sec()
+        self.k=self.k+1
 
-# /driver/piston/state
-# piston_state_DATA = False
-class PistonStateData:
-    k = 0
+class PistonStateData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/piston/state", bag)
+        self.position = np.empty([self.nb_elements])
+        self.switch_out = np.empty([self.nb_elements])
+        self.switch_in = np.empty([self.nb_elements])
+        self.state = np.empty([self.nb_elements])
+        self.motor_on = np.empty([self.nb_elements])
+        self.enable_on = np.empty([self.nb_elements])
+        self.position_set_point = np.empty([self.nb_elements])
+        self.motor_speed = np.empty([self.nb_elements])
 
-    def __init__(self, nb_elements=0):
-        self.nb_elements = nb_elements
-        self.time = np.empty([nb_elements])
-        self.position = np.empty([nb_elements])
-        self.switch_out = np.empty([nb_elements])
-        self.switch_in = np.empty([nb_elements])
-        self.state = np.empty([nb_elements])
-        self.motor_on = np.empty([nb_elements])
-        self.enable_on = np.empty([nb_elements])
-        self.position_set_point = np.empty([nb_elements])
-        self.motor_speed = np.empty([nb_elements])
+class PistonSetPointData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/piston/position", bag)
+        self.position = np.empty([self.nb_elements])
 
-    def init(self, nb_elements):
-        self.time = np.empty([nb_elements])
-        self.position = np.empty([nb_elements])
-        self.switch_out = np.empty([nb_elements])
-        self.switch_in = np.empty([nb_elements])
-        self.state = np.empty([nb_elements])
-        self.motor_on = np.empty([nb_elements])
-        self.enable_on = np.empty([nb_elements])
-        self.position_set_point = np.empty([nb_elements])
-        self.motor_speed = np.empty([nb_elements])
-        self.nb_elements = nb_elements
+class ImuData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/imu", bag)
+        self.acc_x = np.empty([self.nb_elements])
+        self.acc_y = np.empty([self.nb_elements])
+        self.acc_z = np.empty([self.nb_elements])
+        self.gyro_x = np.empty([self.nb_elements])
+        self.gyro_y = np.empty([self.nb_elements])
+        self.gyro_z = np.empty([self.nb_elements])
 
+class MagData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/mag", bag)
+        self.x = np.empty([self.nb_elements])
+        self.y = np.empty([self.nb_elements])
+        self.z = np.empty([self.nb_elements])
 
-# /driver/piston/velocity
-time_piston_velocity = []
-piston_velocity = []
+class EulerData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/euler", bag)
+        self.x = np.empty([self.nb_elements])
+        self.y = np.empty([self.nb_elements])
+        self.z = np.empty([self.nb_elements])
 
-# /driver/piston/distance_travelled
-time_piston_distance_travelled = []
-piston_distance_travelled = []
+class PistonVelocityData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/piston/velocity", bag)
+        self.velocity = np.empty([self.nb_elements])
 
-# /driver/piston/speed
-time_piston_speed = []
-piston_speed_in = []
-piston_speed_out = []
+class PistonDistanceData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/piston/distance_travelled", bag)
+        self.distance = np.empty([self.nb_elements])
 
-# /driver/power/battery
-time_battery = []
-battery1 = []
-battery2 = []
-battery3 = []
-battery4 = []
+class PistonSpeedData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/piston/speed", bag)
+        self.speed_in = np.empty([self.nb_elements])
+        self.speed_out = np.empty([self.nb_elements])
 
-# /driver/sensor_external
-time_sensor_external = []
-sensor_external_pressure = []
-sensor_external_temperature = []
+class BatteryData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/power/battery", bag)
+        self.b1 = np.empty([self.nb_elements])
+        self.b2 = np.empty([self.nb_elements])
+        self.b3 = np.empty([self.nb_elements])
+        self.b4 = np.empty([self.nb_elements])
 
-# /driver/sensor_internal
-time_sensor_internal = []
-sensor_internal_pressure = []
-sensor_internal_temperature = []
-sensor_internal_humidity = []
+class SensorExtData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/sensor_external", bag)
+        self.pressure = np.empty([self.nb_elements])
+        self.temperature = np.empty([self.nb_elements])
 
-# /driver/thruster/engine
-time_engine = []
-engine_left = []
-engine_right = []
+class SensorIntData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/sensor_internal", bag)
+        self.pressure = np.empty([self.nb_elements])
+        self.temperature = np.empty([self.nb_elements])
+        self.humidity = np.empty([self.nb_elements])
 
-# /driver/thruster/cmd_engine
-time_cmd_engine = []
-cmd_engine_linear = []
-cmd_engine_angular = []
+class EngineData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/thruster/engine", bag)
+        self.left = np.empty([self.nb_elements])
+        self.right = np.empty([self.nb_elements])
 
-# /driver/fix
-time_fix = []
-fix_status = []
-fix_latitude = []
-fix_longitude = []
-fix_altitude = []
-fix_track = []
-fix_speed = []
-fix_gdop = []
-fix_pdop = []
-fix_hdop = []
-fix_vdop = []
-fix_tdop = []
-fix_err = []
-fix_err_horz = []
-fix_err_vert = []
-fix_err_track = []
-fix_err_speed = []
-fix_err_time = []
+class EngineCmdData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/thruster/cmd_engine", bag)
+        self.linear = np.empty([self.nb_elements])
+        self.angular = np.empty([self.nb_elements])
 
-# /driver/mag
-time_mag = []
-mag_x = []
-mag_y = []
-mag_z = []
+class FixData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/fix", bag)
+        self.status = np.empty([self.nb_elements])
+        self.latitude = np.empty([self.nb_elements])
+        self.longitude = np.empty([self.nb_elements])
+        self.altitude = np.empty([self.nb_elements])
+        self.track = np.empty([self.nb_elements])
+        self.speed = np.empty([self.nb_elements])
+        self.gdop = np.empty([self.nb_elements])
+        self.pdop = np.empty([self.nb_elements])
+        self.hdop = np.empty([self.nb_elements])
+        self.vdop = np.empty([self.nb_elements])
+        self.tdop = np.empty([self.nb_elements])
+        self.err = np.empty([self.nb_elements])
+        self.err_horz = np.empty([self.nb_elements])
+        self.err_vert = np.empty([self.nb_elements])
+        self.err_track = np.empty([self.nb_elements])
+        self.err_speed = np.empty([self.nb_elements])
+        self.err_time = np.empty([self.nb_elements])
 
-# /driver/imu
-time_imu = []
-acc_x = []
-acc_y = []
-acc_z = []
-gyro_x = []
-gyro_y = []
-gyro_z = []
-
-# /driver/euler
-time_euler = []
-euler_x = []
-euler_y = []
-euler_z = []
-
-# /driver/sensor_temperature
-time_sensor_temperature = []
-sensor_temperature = []
+class TemperatureData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/sensor_temperature", bag)
+        self.temperature = np.empty([self.nb_elements])
 
 ####################### Fusion #######################
 
-# /fusion/battery
-time_fusion_battery = []
-fusion_battery1 = []
-fusion_battery2 = []
-fusion_battery3 = []
-fusion_battery4 = []
+class BatteryFusionData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/fusion/battery", bag)
+        self.b1 = np.empty([self.nb_elements])
+        self.b2 = np.empty([self.nb_elements])
+        self.b3 = np.empty([self.nb_elements])
+        self.b4 = np.empty([self.nb_elements])
 
-# /fusion/sensor_internal
-time_fusion_sensor_internal = []
-sensor_fusion_internal_pressure = []
-sensor_fusion_internal_temperature = []
+class SensorIntFusionData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/fusion/sensor_internal", bag)
+        self.pressure = np.empty([self.nb_elements])
+        self.temperature = np.empty([self.nb_elements])
+        self.humidity = np.empty([self.nb_elements])
 
-# /fusion/depth
-time_fusion_depth = []
-fusion_depth = []
-fusion_velocity = []
+class DepthFusionData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/fusion/depth", bag)
+        self.depth = np.empty([self.nb_elements])
+        self.velocity = np.empty([self.nb_elements])
 
-# /fusion/pose
-time_fusion_pose = []
-fusion_pose_north = []
-fusion_pose_east = []
+class PoseFusionData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/fusion/pose", bag)
+        self.north = np.empty([self.nb_elements])
+        self.east = np.empty([self.nb_elements])
 
-# /fusion/kalman
-time_kalman = []
-kalman_depth = []
-kalman_volume = []
-kalman_velocity = []
-kalman_offset = []
-kalman_chi = []
-kalman_cov_depth = []
-kalman_cov_velocity = []
-kalman_cov_volume = []
-kalman_cov_offset = []
-kalman_cov_chi = []
+class KalmanData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/fusion/kalman", bag)
+        self.depth = np.empty([self.nb_elements])
+        self.volume = np.empty([self.nb_elements])
+        self.velocity = np.empty([self.nb_elements])
+        self.offset = np.empty([self.nb_elements])
+        self.chi = np.empty([self.nb_elements])
+        self.cov_depth = np.empty([self.nb_elements])
+        self.cov_velocity = np.empty([self.nb_elements])
+        self.cov_volume = np.empty([self.nb_elements])
+        self.cov_offset = np.empty([self.nb_elements])
+        self.cov_chi = np.empty([self.nb_elements])
 
 ####################### Regulation #######################
 
-# /regulation/debug
-time_regulation_debug = []
-regulation_u = []
-regulation_y = []
-regulation_dy = []
-regulation_piston_set_point = []
-regulation_mode = []
+class RegulationData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/regulation/debug", bag)
+        self.u = np.empty([self.nb_elements])
+        self.y = np.empty([self.nb_elements])
+        self.dy = np.empty([self.nb_elements])
+        self.set_point = np.empty([self.nb_elements])
+        self.mode = np.empty([self.nb_elements])
 
-# /regulation/debug_heading
-time_regulation_heading = []
-regulation_heading_error = []
-regulation_heading_p_var = []
-regulation_heading_d_var = []
-regulation_heading_command = []
-regulation_heading_command_limit = []
-regulation_heading_set_point = []
+class RegulationHeadingData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/regulation/debug_heading", bag)
+        self.heading_error = np.empty([self.nb_elements])
+        self.heading_p_var = np.empty([self.nb_elements])
+        self.heading_d_var = np.empty([self.nb_elements])
+        self.heading_command = np.empty([self.nb_elements])
+        self.heading_command_limit = np.empty([self.nb_elements])
+        self.heading_set_point = np.empty([self.nb_elements])
 
-# /regulation/heading_set_point
-time_regulation_set_point = []
-regulation_set_point = []
+class RegulationHeadingSetPointData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/regulation/heading_set_point", bag)
+        self.set_point = np.empty([self.nb_elements])
 
 ####################### Mission #######################
 
-time_mission = []
-mission_north = []
-mission_east = []
-mission_depth = []
-mission_limit_velocity = []
-mission_approach_velocity = []
-mission_mission_enable = []
-mission_depth_only = []
-mission_waypoint_number = []
-mission_wall_time = []
-mission_time_to_next_waypoint = []
+class MissionData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/mission/set_point", bag)
+        self.north = np.empty([self.nb_elements])
+        self.east = np.empty([self.nb_elements])
+        self.depth = np.empty([self.nb_elements])
+        self.limit_velocity = np.empty([self.nb_elements])
+        self.approach_velocity = np.empty([self.nb_elements])
+        self.mission_enable = np.empty([self.nb_elements])
+        self.depth_only = np.empty([self.nb_elements])
+        self.waypoint_number = np.empty([self.nb_elements])
+        self.wall_time = np.empty([self.nb_elements])
+        self.time_to_next_waypoint = np.empty([self.nb_elements])
 
 ####################### Safety #######################
 
-# /safety/safety
-time_safety = []
-safety_published_frequency = []
-safety_depth_limit = []
-safety_batteries_limit = []
-safety_depressurization = []
-safety_seafloor = []
+class SafetyData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/safety/safety", bag)
+        self.published_frequency = np.empty([self.nb_elements])
+        self.depth_limit = np.empty([self.nb_elements])
+        self.batteries_limit = np.empty([self.nb_elements])
+        self.depressurization = np.empty([self.nb_elements])
+        self.seafloor = np.empty([self.nb_elements])
 
-# /safety/debug
-time_safety_debug = []
-safety_debug_flash = []
-safety_debug_ratio_p_t = []
-safety_debug_ratio_delta = []
-safety_debug_volume = []
-safety_debug_volume_delta = []
+class SafetyDebugData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/safety/debug", bag)
+        self.flash = np.empty([self.nb_elements])
+        self.ratio_p_t = np.empty([self.nb_elements])
+        self.ratio_delta = np.empty([self.nb_elements])
+        self.volume = np.empty([self.nb_elements])
+        self.volume_delta = np.empty([self.nb_elements])
 
 ####################### Iridium #######################
 
-# /iridium/status
-time_iridium_status = []
-iridium_status_service = []
-iridium_status_signal_strength = []
-iridium_status_antenna = []
+class IridiumStatusData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/iridium/status", bag)
+        self.service = np.empty([self.nb_elements])
+        self.signal_strength = np.empty([self.nb_elements])
+        self.antenna = np.empty([self.nb_elements])
 
-# /iridium/session
-time_iridium_session = []
-iridium_session_mo = []
-iridium_session_momsn = []
-iridium_session_mt = []
-iridium_session_mtmsn = []
-iridium_session_waiting = []
+class IridiumSessionData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/iridium/session", bag)
+        self.mo = np.empty([self.nb_elements])
+        self.momsn = np.empty([self.nb_elements])
+        self.mt = np.empty([self.nb_elements])
+        self.mtmsn = np.empty([self.nb_elements])
+        self.waiting = np.empty([self.nb_elements])
+
+startTime = 0.0
+end_time = 0.0
 
 ########################################################
 ####################### Function #######################
 
-def load_bag(filename, pistonStateData):
+def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData):
 
     bag = rosbag.Bag(filename, 'r')
 
@@ -252,18 +279,41 @@ def load_bag(filename, pistonStateData):
     startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
     end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
 
-    pistonStateData.init(bag.get_message_count('/driver/piston/state'))
+    pistonStateData.__init__(bag)
+    pistonSetPointData.__init__(bag)
+    imuData.__init__(bag)
+    magData.__init__(bag)
+    eulerData.__init__(bag)
+    pistonVelocityData.__init__(bag)
+    pistonDistanceData.__init__(bag)
+    pistonSpeedData.__init__(bag)
+    batteryData.__init__(bag)
+    sensorExtData.__init__(bag)
+    sensorIntData.__init__(bag)
+    engineData.__init__(bag)
+    engineCmdData.__init__(bag)
+    fixData.__init__(bag)
+    temperatureData.__init__(bag)
+    batteryFusionData.__init__(bag)
+    sensorIntFusionData.__init__(bag)
+    depthFusionData.__init__(bag)
+    poseFusionData.__init__(bag)
+    kalmanData.__init__(bag)
+    regulationData.__init__(bag)
+    regulationHeadingData.__init__(bag)
+    regulationHeadingSetPointData.__init__(bag)
+    missionData.__init__(bag)
+    safetyData.__init__(bag)
+    safetyDebugData.__init__(bag)
+    iridiumStatusData.__init__(bag)
+    iridiumSessionData.__init__(bag)
 
     for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
-        if(topic=="/driver/piston/position"):
-            if(len(time_piston_position)>0):
-                time_piston_position.append((t-startTime).to_sec())
-                piston_position.append(piston_position[-1]) 
-            time_piston_position.append((t-startTime).to_sec())
-            piston_position.append(msg.position)
+        if(topic==pistonSetPointData.topic_name):
+            pistonSetPointData.position[pistonSetPointData.k] = msg.position
+            pistonSetPointData.add_time(t,startTime)
 
-        elif(topic=="/driver/piston/state"):
-            pistonStateData.time[pistonStateData.k] = (t-startTime).to_sec()
+        elif(topic==pistonStateData.topic_name):
             pistonStateData.position[pistonStateData.k] = msg.position
             pistonStateData.switch_out[pistonStateData.k] = msg.switch_out
             pistonStateData.switch_in[pistonStateData.k] = msg.switch_in
@@ -272,17 +322,7 @@ def load_bag(filename, pistonStateData):
             pistonStateData.enable_on[pistonStateData.k] = msg.enable_on
             pistonStateData.position_set_point[pistonStateData.k] = msg.position_set_point
             pistonStateData.motor_speed[pistonStateData.k] = msg.motor_speed
-            pistonStateData.k += 1
-
-            # time_piston_state.append((t-startTime).to_sec())
-            # piston_state_position.append(msg.position)
-            # piston_state_switch_out.append(msg.switch_out)
-            # piston_state_switch_in.append(msg.switch_in)
-            # piston_state_state.append(msg.state)
-            # piston_state_motor_on.append(msg.motor_on)
-            # piston_state_enable_on.append(msg.enable_on)
-            # piston_state_position_set_point.append(msg.position_set_point)
-            # piston_state_motor_speed.append(msg.motor_speed)
+            pistonStateData.add_time(t,startTime)
 
         elif(topic=="/rosout"):
             time_rosout.append((t-startTime).to_sec())
@@ -291,221 +331,218 @@ def load_bag(filename, pistonStateData):
             time_rosout_agg.append((t-startTime).to_sec())
             rosout_agg.append([msg.level,msg.name, msg.msg, msg.file, msg.function, msg.line])
 
-        elif(topic=="/driver/power/battery"):
-            time_battery.append((t-startTime).to_sec())
-            battery1.append(msg.battery1)
-            battery2.append(msg.battery2)
-            battery3.append(msg.battery3)
-            battery4.append(msg.battery4)
+        elif(topic==batteryData.topic_name):
+            batteryData.b1[batteryData.k] = msg.battery1
+            batteryData.b2[batteryData.k] = msg.battery2
+            batteryData.b3[batteryData.k] = msg.battery3
+            batteryData.b4[batteryData.k] = msg.battery4
+            batteryData.add_time(t,startTime)
 
-        elif(topic=="/fusion/battery"):
-            time_fusion_battery.append((t-startTime).to_sec())
-            fusion_battery1.append(msg.battery1)
-            fusion_battery2.append(msg.battery2)
-            fusion_battery3.append(msg.battery3)
-            fusion_battery4.append(msg.battery4)
+        elif(topic==batteryFusionData.topic_name):
+            batteryFusionData.b1[batteryFusionData.k] = msg.battery1
+            batteryFusionData.b2[batteryFusionData.k] = msg.battery2
+            batteryFusionData.b3[batteryFusionData.k] = msg.battery3
+            batteryFusionData.b4[batteryFusionData.k] = msg.battery4
+            batteryFusionData.add_time(t,startTime)
 
-        elif(topic=="/driver/sensor_external"):
-            time_sensor_external.append((t-startTime).to_sec())
-            sensor_external_pressure.append(msg.pressure)
-            sensor_external_temperature.append(msg.temperature)
+        elif(topic==sensorExtData.topic_name):
+            sensorExtData.pressure[sensorExtData.k] = msg.pressure
+            sensorExtData.temperature[sensorExtData.k] = msg.temperature
+            sensorExtData.add_time(t,startTime)
 
-        elif(topic=="/driver/sensor_internal"):
-            time_sensor_internal.append((t-startTime).to_sec())
-            sensor_internal_pressure.append(msg.pressure)
-            sensor_internal_temperature.append(msg.temperature)
-            sensor_internal_humidity.append(msg.humidity)
+        elif(topic==sensorIntData.topic_name):
+            sensorIntData.pressure[sensorIntData.k] = msg.pressure
+            sensorIntData.temperature[sensorIntData.k] = msg.temperature
+            sensorIntData.humidity[sensorIntData.k] = msg.humidity
+            sensorIntData.add_time(t,startTime)
 
-        elif(topic=="/fusion/sensor_internal"):
-            time_fusion_sensor_internal.append((t-startTime).to_sec())
-            sensor_fusion_internal_pressure.append(msg.pressure)
-            sensor_fusion_internal_temperature.append(msg.temperature)
+        elif(topic==sensorIntFusionData.topic_name):
+            sensorIntFusionData.pressure[sensorIntFusionData.k] = msg.pressure
+            sensorIntFusionData.temperature[sensorIntFusionData.k] = msg.temperature
+            sensorIntFusionData.humidity[sensorIntFusionData.k] = msg.humidity
+            sensorIntFusionData.add_time(t,startTime)
 
-        elif(topic=="/driver/thruster/engine"):
-            time_engine.append((t-startTime).to_sec())
-            engine_left.append(msg.left)
-            engine_right.append(msg.right)
+        elif(topic==engineData.topic_name):
+            engineData.left[engineData.k] = msg.left
+            engineData.right[engineData.k] = msg.right
+            engineData.add_time(t,startTime)
 
-        elif(topic=="/driver/thruster/cmd_engine"):
-            time_cmd_engine.append((t-startTime).to_sec())
-            cmd_engine_linear.append(msg.linear)
-            cmd_engine_angular.append(msg.angular)
+        elif(topic==engineCmdData.topic_name):
+            engineCmdData.linear[engineCmdData.k] = msg.linear
+            engineCmdData.angular[engineCmdData.k] = msg.angular
+            engineCmdData.add_time(t,startTime)
 
-        elif(topic=="/fusion/depth"):
-            time_fusion_depth.append((t-startTime).to_sec())
-            fusion_depth.append(msg.depth)
-            fusion_velocity.append(msg.velocity)
+        elif(topic==depthFusionData.topic_name):
+            depthFusionData.depth[depthFusionData.k] = msg.depth
+            depthFusionData.velocity[depthFusionData.k] = msg.velocity
+            depthFusionData.add_time(t,startTime)
 
-        elif(topic=="/regulation/debug"):
-            time_regulation_debug.append((t-startTime).to_sec())
-            regulation_u.append(msg.u)
-            regulation_y.append(msg.y)
-            regulation_dy.append(msg.dy)
-            regulation_piston_set_point.append(msg.piston_set_point)
-            regulation_mode.append(msg.mode)
+        elif(topic==regulationData.topic_name):
+            regulationData.u[regulationData.k] = msg.u
+            regulationData.y[regulationData.k] = msg.y
+            regulationData.dy[regulationData.k] = msg.dy
+            regulationData.set_point[regulationData.k] = msg.piston_set_point
+            regulationData.mode[regulationData.k] = msg.mode
+            regulationData.add_time(t,startTime)
 
-        elif(topic=="/fusion/pose"):
-            time_fusion_pose.append((t-startTime).to_sec())
-            fusion_pose_east.append(msg.east)
-            fusion_pose_north.append(msg.north)
+        elif(topic==poseFusionData.topic_name):
+            poseFusionData.east[poseFusionData.k] = msg.east
+            poseFusionData.north[poseFusionData.k] = msg.north
+            poseFusionData.add_time(t,startTime)
 
-        elif(topic=="/regulation/debug_heading"):
-            time_regulation_heading.append((t-startTime).to_sec())
-            regulation_heading_error.append(msg.error)
-            regulation_heading_p_var.append(msg.p_var)
-            regulation_heading_d_var.append(msg.d_var)
-            regulation_heading_command.append(msg.command)
-            regulation_heading_command_limit.append(msg.command_limit)
-            regulation_heading_set_point.append(msg.set_point)
+        elif(topic==regulationHeadingData.topic_name):
+            regulationHeadingData.error[regulationHeadingData.k] = msg.error
+            regulationHeadingData.p_var[regulationHeadingData.k] = msg.p_var
+            regulationHeadingData.d_var[regulationHeadingData.k] = msg.d_var
+            regulationHeadingData.command[regulationHeadingData.k] = msg.command
+            regulationHeadingData.command_limit[regulationHeadingData.k] = msg.command_limit
+            regulationHeadingData.set_point[regulationHeadingData.k] = msg.set_point
+            regulationHeadingData.add_time(t,startTime)
 
-        elif(topic=="/regulation/heading_set_point"):
-            time_regulation_set_point.append((t-startTime).to_sec())
-            regulation_set_point.append(msg.data)
+        elif(topic==regulationHeadingSetPointData.topic_name):
+            regulationHeadingSetPointData.set_point[regulationHeadingSetPointData.k] = msg.data
+            regulationHeadingSetPointData.add_time(t,startTime)
 
-        elif(topic=="/mission/set_point"):
-            time_mission.append((t-startTime).to_sec())
-            mission_north.append(msg.north)
-            mission_east.append(msg.east)
-            mission_depth.append(msg.depth)
-
+        elif(topic==missionData.topic_name):
+            missionData.north[missionData.k] = msg.north
+            missionData.east[missionData.k] = msg.east
+            missionData.depth[missionData.k] = msg.depth
             if hasattr(msg, 'limit_velocity'):
-                mission_limit_velocity.append(msg.limit_velocity)
+                missionData.limit_velocity[missionData.k] = msg.limit_velocity
             else:
-                mission_limit_velocity.append(0)
-
+                missionData.limit_velocity[missionData.k] = 0
             if hasattr(msg, 'approach_velocity'):
-                mission_approach_velocity.append(msg.approach_velocity)
+                missionData.approach_velocity[missionData.k] = msg.approach_velocity
             else:
-                mission_approach_velocity.append(0)
+                missionData.approach_velocity[missionData.k] = 0
+            missionData.mission_enable[missionData.k] = msg.mission_enable
+            missionData.depth_only[missionData.k] = msg.depth_only
+            missionData.waypoint_number[missionData.k] = msg.waypoint_number
+            missionData.wall_time[missionData.k] = msg.wall_time
+            missionData.time_to_next_waypoint[missionData.k] = msg.time_to_next_waypoint
+            missionData.add_time(t,startTime)
 
-            mission_mission_enable.append(msg.mission_enable)
-            mission_depth_only.append(msg.depth_only)
-            mission_waypoint_number.append(msg.waypoint_number)
-            mission_wall_time.append(msg.wall_time)
-            mission_time_to_next_waypoint.append(msg.time_to_next_waypoint)         
+        elif(topic==fixData.topic_name):
+            fixData.status[fixData.k] = msg.status
+            fixData.latitude[fixData.k] = msg.latitude
+            fixData.longitude[fixData.k] = msg.longitude
+            fixData.altitude[fixData.k] = msg.altitude
+            fixData.track[fixData.k] = msg.track
+            fixData.speed[fixData.k] = msg.speed
+            fixData.gdop[fixData.k] = msg.gdop
+            fixData.pdop[fixData.k] = msg.pdop
+            fixData.hdop[fixData.k] = msg.hdop
+            fixData.vdop[fixData.k] = msg.vdop
+            fixData.tdop[fixData.k] = msg.tdop
+            fixData.err[fixData.k] = msg.err
+            fixData.err_horz[fixData.k] = msg.err_horz
+            fixData.err_vert[fixData.k] = msg.err_vert
+            fixData.err_track[fixData.k] = msg.err_track
+            fixData.err_speed[fixData.k] = msg.err_speed
+            fixData.err_time[fixData.k] = msg.err_time
+            fixData.add_time(t,startTime)
 
-        elif(topic=="/driver/fix"):
-            time_fix.append((t-startTime).to_sec())
-            fix_status.append(msg.status)
-            fix_latitude.append(msg.latitude)
-            fix_longitude.append(msg.longitude)
-            fix_altitude.append(msg.altitude)
-            fix_track.append(msg.track)
-            fix_speed.append(msg.speed)
-            fix_gdop.append(msg.gdop)
-            fix_pdop.append(msg.pdop)
-            fix_hdop.append(msg.hdop)
-            fix_vdop.append(msg.vdop)
-            fix_tdop.append(msg.tdop)
-            fix_err.append(msg.err)
-            fix_err_horz.append(msg.err_horz)
-            fix_err_vert.append(msg.err_vert)
-            fix_err_track.append(msg.err_track)
-            fix_err_speed.append(msg.err_speed)
-            fix_err_time.append(msg.err_time)
+        elif(topic==pistonVelocityData.topic_name):
+            pistonVelocityData.velocity[pistonVelocityData.k] = msg.velocity
+            pistonVelocityData.add_time(t,startTime)
 
-        elif(topic=="/driver/piston/velocity"):
-            time_piston_velocity.append((t-startTime).to_sec())
-            piston_velocity.append(msg.velocity)
+        elif(topic==pistonDistanceData.topic_name):
+            pistonDistanceData.distance[pistonDistanceData.k] = msg.distance
+            pistonDistanceData.add_time(t,startTime)
 
-        elif(topic=="/driver/piston/distance_travelled"):
-            time_piston_distance_travelled.append((t-startTime).to_sec())
-            piston_distance_travelled.append(msg.distance)
+        elif(topic==pistonStateData.topic_name):
+            pistonStateData.speed_in[pistonStateData.k] = msg.speed_in
+            pistonStateData.speed_out[pistonStateData.k] = msg.speed_out
+            pistonStateData.add_time(t,startTime)
 
-        elif(topic=="/driver/piston/speed"):
-            time_piston_speed.append((t-startTime).to_sec())
-            piston_speed_in.append(msg.speed_in)
-            piston_speed_out.append(msg.speed_out)
-
-        elif(topic=="/driver/mag"):
-            time_mag.append((t-startTime).to_sec())
+        elif(topic==magData.topic_name):
             if(type(msg).__name__ == "_sensor_msgs__MagneticField"):
-                mag_x.append(msg.magnetic_field.x)
-                mag_y.append(msg.magnetic_field.y)
-                mag_z.append(msg.magnetic_field.z)              
+                magData.x[magData.k] = msg.magnetic_field.x
+                magData.y[magData.k] = msg.magnetic_field.y
+                magData.z[magData.k] = msg.magnetic_field.z          
             else:
-                mag_x.append(msg.x)
-                mag_y.append(msg.y)
-                mag_z.append(msg.z)
+                magData.x[magData.k] = msg.x
+                magData.y[magData.k] = msg.y
+                magData.z[magData.k] = msg.z
+            magData.add_time(t,startTime)
 
-        elif(topic=="/driver/imu"):
-            time_imu.append((t-startTime).to_sec())
-            acc_x.append(msg.linear_acceleration.x)
-            acc_y.append(msg.linear_acceleration.y)
-            acc_z.append(msg.linear_acceleration.z)
-            gyro_x.append(msg.angular_velocity.x)
-            gyro_y.append(msg.angular_velocity.y)
-            gyro_z.append(msg.angular_velocity.z)
+        elif(topic==imuData.topic_name):
+            imuData.acc_x[imuData.k] = msg.linear_acceleration.x
+            imuData.acc_y[imuData.k] = msg.linear_acceleration.y
+            imuData.acc_z[imuData.k] = msg.linear_acceleration.z
+            imuData.gyro_x[imuData.k] = msg.angular_velocity.x
+            imuData.gyro_y[imuData.k] = msg.angular_velocity.y
+            imuData.gyro_z[imuData.k] = msg.angular_velocity.z
+            imuData.add_time(t, startTime)
 
-        elif(topic=="/driver/euler"):
-            time_euler.append((t-startTime).to_sec())
-            euler_x.append(msg.x)
-            euler_y.append(msg.y)
-            euler_z.append(msg.z)
+        elif(topic==eulerData.topic_name):
+            eulerData.x[eulerData.k] = msg.x
+            eulerData.y[eulerData.k] = msg.y
+            eulerData.z[eulerData.k] = msg.z
+            eulerData.add_time(t, startTime)
 
-        elif(topic=="/driver/sensor_temperature"):
-            time_sensor_temperature.append((t-startTime).to_sec())
-            sensor_temperature.append(msg.temperature)
+        elif(topic==temperatureData.topic_name):
+            temperatureData.temperature[temperatureData.k] = msg.temperature
+            temperatureData.add_time(t, startTime)
 
-        elif(topic=="/fusion/kalman"):
-            time_kalman.append((t-startTime).to_sec())
-            kalman_depth.append(msg.depth)
-            kalman_velocity.append(msg.velocity)
-            kalman_offset.append(msg.offset)
-            kalman_chi.append(msg.chi)
-            kalman_cov_depth.append(msg.covariance[0])
-            kalman_cov_velocity.append(msg.covariance[1])
-            kalman_cov_offset.append(msg.covariance[2])
-            kalman_cov_chi.append(msg.covariance[3])
+        elif(topic==kalmanData.topic_name):
+            kalmanData.depth[kalmanData.k] = msg.depth
+            kalmanData.velocity[kalmanData.k] = msg.velocity
+            kalmanData.offset[kalmanData.k] = msg.offset
+            kalmanData.chi[kalmanData.k] = msg.chi
+            kalmanData.cov_depth[kalmanData.k] = msg.covariance[0]
+            kalmanData.cov_velocity[kalmanData.k] = msg.covariance[1]
+            kalmanData.cov_offset[kalmanData.k] = msg.covariance[2]
+            kalmanData.cov_chi[kalmanData.k] = msg.covariance[3]
+            kalmanData.add_time(t, startTime)
 
-        elif(topic=="/safety/safety"):
-            time_safety.append((t-startTime).to_sec())
+        elif(topic==safetyData.topic_name):
             if(msg.published_frequency):
-                safety_published_frequency.append(1)
+                safetyData.published_frequency[safetyData.k] = 1
             else:
-                safety_published_frequency.append(0)
-            
+                safetyData.published_frequency[safetyData.k] = 0
             if(msg.depth_limit):
-                safety_depth_limit.append(1)
+                safetyData.depth_limit[safetyData.k] = 1
             else:
-                safety_depth_limit.append(0)
+                safetyData.depth_limit[safetyData.k] = 0
             if(msg.batteries_limit):
-                safety_batteries_limit.append(1)
+                safetyData.batteries_limit[safetyData.k] = 1
             else:
-                safety_batteries_limit.append(0)
+                safetyData.batteries_limit[safetyData.k] = 0
             if(msg.depressurization):
-                safety_depressurization.append(1)
+                safetyData.depressurization[safetyData.k] = 1
             else:
-                safety_depressurization.append(0)
+                safetyData.depressurization[safetyData.k] = 0
             if(msg.seafloor):
-                safety_seafloor.append(1)
+                safetyData.seafloor[safetyData.k] = 1
             else:
-                safety_seafloor.append(0)
+                safetyData.seafloor[safetyData.k] = 0
+            safetyData.add_time(t, startTime)
 
-        elif(topic=="/safety/debug"):
-            time_safety_debug.append((t-startTime).to_sec())
+        elif(topic==safetyDebugData.topic_name):
             if(msg.flash):
-                safety_debug_flash.append(1)
+                safetyDebugData.flash[safetyDebugData.k] = 1
             else:
-                safety_debug_flash.append(0)
-            safety_debug_ratio_p_t.append(msg.ratio_p_t)
-            safety_debug_ratio_delta.append(msg.ratio_delta)
-            safety_debug_volume.append(msg.volume)
-            safety_debug_volume_delta.append(msg.volume_delta)
+                safetyDebugData.flash[safetyDebugData.k] = 0
+            safetyDebugData.ratio_p_t[safetyDebugData.k] = msg.ratio_p_t
+            safetyDebugData.ratio_delta[safetyDebugData.k] = msg.ratio_delta
+            safetyDebugData.volume[safetyDebugData.k] = msg.volume
+            safetyDebugData.volume_delta[safetyDebugData.k] = msg.volume_delta
+            safetyDebugData.add_time(t, startTime)
 
-        elif(topic=="/iridium/status"):
-            time_iridium_status.append((t-startTime).to_sec())
-            iridium_status_service.append(msg.service)
-            iridium_status_signal_strength.append(msg.signal_strength)
-            iridium_status_antenna.append(msg.antenna)
+        elif(topic==iridiumStatusData.topic_name):
+            iridiumStatusData.service[iridiumStatusData.k] = msg.service
+            iridiumStatusData.signal_strength[iridiumStatusData.k] = msg.signal_strength
+            iridiumStatusData.antenna[iridiumStatusData.k] = msg.antenna
+            iridiumStatusData.add_time(t, startTime)
 
-        elif(topic=="/iridium/session"):
-            time_iridium_session.append((t-startTime).to_sec())
-            iridium_session_mo.append(msg.mo)
-            iridium_session_momsn.append(msg.momsn)
-            iridium_session_mt.append(msg.mt)
-            iridium_session_mtmsn.append(msg.mtmsn)
-            iridium_session_waiting.append(msg.waiting)
+        elif(topic==iridiumSessionData.topic_name):
+            iridiumSessionData.mo[iridiumSessionData.k] = msg.mo
+            iridiumSessionData.momsn[iridiumSessionData.k] = msg.momsn
+            iridiumSessionData.mt[iridiumSessionData.k] = msg.mt
+            iridiumSessionData.mtmsn[iridiumSessionData.k] = msg.mtmsn
+            iridiumSessionData.waiting[iridiumSessionData.k] = msg.waiting
+            iridiumSessionData.add_time(t, startTime)
 
     bag.close()
 
@@ -515,13 +552,13 @@ def load_bag(filename, pistonStateData):
 
 
     # Data Analysis
-    if(len(mag_x)>0):
-        print("compass_min = ", min(mag_x), min(mag_y), min(mag_z))
-        print("compass_max = ", max(mag_x), max(mag_y), max(mag_z))
-        print("acc_min = ", min(acc_x), min(acc_y), min(acc_z))
-        print("acc_max = ", max(acc_x), max(acc_y), max(acc_z))
+    if(len(magData.x)>0):
+        print("compass_min = ", min(magData.x), min(magData.y), min(magData.z))
+        print("compass_max = ", max(magData.x), max(magData.y), max(magData.z))
+        print("acc_min = ", min(imuData.acc_x), min(imuData.acc_y), min(imuData.acc_z))
+        print("acc_max = ", max(imuData.acc_x), max(imuData.acc_y), max(imuData.acc_z))
 
-        print("gyro_mean = ", max(gyro_x), max(gyro_y), max(gyro_z))
+        print("gyro_mean = ", max(imuData.gyro_x), max(imuData.gyro_y), max(imuData.gyro_z))
 
     # if(len(time_fix)>0):
     #     import gpxpy
