@@ -43,8 +43,6 @@ size_t speed_index = 0;
 int speed_in_min = 15;
 int speed_out_min = 15;
 
-#define NB_SPEED_STEPS 10
-
 bool piston_reset(std_srvs::Empty::Request  &req,
                   std_srvs::Empty::Response &res){
   p.set_piston_reset();
@@ -103,6 +101,11 @@ int main(int argc, char *argv[]){
   const double speed_in_slope = n_private.param<double>("speed_in_slope", 0.2);
   const double speed_out_slope = n_private.param<double>("speed_out_slope", 0.2);
 
+  const double speed_depth_layer = n_private.param<double>("speed_depth_layer", 5.0);
+  const double depth_max = n_private.param<double>("depth_max", 50.0);
+  const size_t speed_max = (size_t) n_private.param<int>("speed_max", 50);
+  const size_t speed_step_increase = (size_t) n_private.param<int>("speed_step_increase", 5);
+
   speed_in_min = n_private.param<int>("speed_in_min", 15);
   speed_out_min = n_private.param<int>("speed_out_min", 15);
 
@@ -159,15 +162,13 @@ int main(int argc, char *argv[]){
   p.set_piston_speed(speed_in_min, speed_out_min);
   p.set_piston_speed_reset(speed_reset);
 
-  const double depth_max = 50.0;
-  const size_t speed_max = 50;
-  const double index_depth_size = NB_SPEED_STEPS/depth_max;
-  std::array<uint8_t, NB_SPEED_STEPS> speed_table_out, speed_table_in;
-  std::array<double, NB_SPEED_STEPS> speed_index_depth;
-  for(size_t i=0; i<NB_SPEED_STEPS; i++){
-    speed_table_out[i] = speed_out_slope*i*(depth_max/NB_SPEED_STEPS) + speed_out_min;
-    speed_table_in[i] = speed_in_slope*i*(depth_max/NB_SPEED_STEPS) + speed_in_min;
-    speed_index_depth[i] = i*NB_SPEED_STEPS/depth_max;
+  double layer_number = 0; // number of the layer where the float is (depth / speed_layer)
+  double layer_number_last = 0;
+  std::vector<uint8_t> speed_table_out, speed_table_in;
+
+  for(size_t i=0; i<ceil(depth_max/speed_depth_layer); i++){
+    speed_table_out.push_back(speed_out_slope*i*speed_depth_layer + speed_out_min);
+    speed_table_in.push_back(speed_in_slope*i*speed_depth_layer + speed_in_min);
   }
 
   bool new_speed = true;
@@ -212,23 +213,21 @@ int main(int argc, char *argv[]){
       }
 
       // Compute new speed index (20% hysteresis) from depth
-      if(abs(depth - speed_index_depth[speed_index])>index_depth_size*1.2){
-        size_t speed_index_new = min((int)floor(NB_SPEED_STEPS*depth/depth_max), NB_SPEED_STEPS-1);
-        if(speed_index_new != speed_index){
-          speed_index = speed_index_new;
-          new_speed = true;
-        }
+      layer_number = depth/speed_depth_layer;
+      if(abs(layer_number_last-layer_number)>1.2 && !fast_move){
+        layer_number_last = min((size_t)ceil(abs(layer_number)), (size_t)(speed_table_in.size()-1));
+        new_speed = true;
       }
 
       if(new_speed){
         size_t speed_in, speed_out;
         if(fast_move){
-          speed_in = min((size_t)floor(speed_table_in[speed_index]*speed_fast_move_factor), speed_max);
-          speed_out = min((size_t)floor(speed_table_out[speed_index]*speed_fast_move_factor), speed_max);
+          speed_in = min((size_t)floor(speed_table_in[layer_number_last]*speed_fast_move_factor), speed_max);
+          speed_out = min((size_t)floor(speed_table_out[layer_number_last]*speed_fast_move_factor), speed_max);
         }
         else{
-          speed_in = speed_table_in[speed_index];
-          speed_out = speed_table_out[speed_index];
+          speed_in = speed_table_in[layer_number_last];
+          speed_out = speed_table_out[layer_number_last];
         }
         p.set_piston_speed(speed_in,speed_out);
         speed_msg.speed_in = speed_in;
@@ -280,17 +279,17 @@ int main(int argc, char *argv[]){
       }
       else{
         if((ros::WallTime::now()-time_velocity_issue_detected).toSec()>3.0){
-          for(size_t i=speed_index; i<NB_SPEED_STEPS; i++){
-            if(p.m_position_set_point-p.m_position>0.0){
-              speed_table_in[i] = min(speed_max, speed_table_in[i]+(size_t)5);
+          for(size_t i=layer_number_last; i<speed_table_in.size(); i++){
+            if(p.m_position_set_point > p.m_position){ // Sens of movement
+              speed_table_in[i] = min(speed_max, speed_table_in[i]+speed_step_increase);
             }
             else{
-              speed_table_out[i] = min(speed_max, speed_table_out[i]+(size_t)5);
+              speed_table_out[i] = min(speed_max, speed_table_out[i]+speed_step_increase);
             }
           }
           velocity_issue_detected = false;
           new_speed = true;
-          ROS_WARN("[Piston_driver] Velocity Issue detected - speed was increased");
+          ROS_WARN("[Piston_driver] Velocity Issue detected - speed was increased of %zu for layer %f", speed_step_increase, layer_number_last);
         }
       }
     }

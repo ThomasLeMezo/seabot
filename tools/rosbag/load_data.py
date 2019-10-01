@@ -267,6 +267,9 @@ class IridiumSessionData(SeabotData):
 startTime = 0.0
 end_time = 0.0
 
+startTime = 0.0
+end_time = 0.0
+
 ########################################################
 ####################### Function #######################
 

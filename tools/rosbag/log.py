@@ -44,14 +44,24 @@ def save_gpx():
     gpx_segment = gpxpy.gpx.GPXTrackSegment()
 
     for i in range(len(fix_latitude)):
+<<<<<<< HEAD
         if(abs(last_fix_time-fixData.time[i])>30.):
             if(fix_status[i]==3):
                 last_fix_time = fixData.time[i]
+=======
+        if(abs(last_fix_time-time_fix[i])>30.):
+            if(fix_status[i]==3):
+                last_fix_time = time_fix[i]
+>>>>>>> d44c74b6056c9bee7bfd5de2c720daa58608db4f
 
                 gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
                     longitude=fix_longitude[i],
                     elevation=fix_altitude[i],
+<<<<<<< HEAD
                     time=datetime.datetime.fromtimestamp(fixData.time[i]+startTime),
+=======
+                    time=datetime.datetime.fromtimestamp(time_fix[i]+startTime),
+>>>>>>> d44c74b6056c9bee7bfd5de2c720daa58608db4f
                     horizontal_dilution=fix_hdop[i],
                     vertical_dilution=fix_hdop[i]
                     ))
@@ -70,6 +80,7 @@ if(len(sys.argv)<2):
     sys.exit(0)
 
 pistonStateData = PistonStateData()
+<<<<<<< HEAD
 pistonSetPointData = PistonSetPointData()
 imuData = ImuData()
 magData = MagData()
@@ -101,6 +112,10 @@ iridiumSessionData = IridiumSessionData()
 
 filename = sys.argv[1]
 load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData)
+=======
+filename = sys.argv[1]
+load_bag(filename,pistonStateData)
+>>>>>>> d44c74b6056c9bee7bfd5de2c720daa58608db4f
 
 print("Data has been loaded")
 
@@ -512,9 +527,15 @@ if(np.size(pistonStateData.time)>0):
     set_plot_options(pg_piston_speed)
     pg_piston_speed.plot(pistonStateData.time, pistonStateData.motor_speed[:-1].astype(int), pen=(255,0,0), name="speed", stepMode=True)
     
+<<<<<<< HEAD
     if(len(pistonSpeedData.speed_in)>1):
         pg_piston_speed.plot(pistonSpeedData.time, 50-np.array(pistonSpeedData.speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
         pg_piston_speed.plot(pistonSpeedData.time, 50+np.array(pistonSpeedData.speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
+=======
+    if(len(piston_speed_in)>1):
+        pg_piston_speed.plot(time_piston_speed, 50-np.array(piston_speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
+        pg_piston_speed.plot(time_piston_speed, 50+np.array(piston_speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
+>>>>>>> d44c74b6056c9bee7bfd5de2c720daa58608db4f
     pg_piston_speed.setLabel('left', "Speed")
     dock_piston2.addWidget(pg_piston_speed)
 

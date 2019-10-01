@@ -5,13 +5,20 @@
 		<year>2019</year>
 		<month>06</month>
 		<day>14</day>
-		<hour>09</hour>
-		<min>00</min>
+		<hour>13</hour>
+		<min>10</min>
 	</start_time_utc>
 </offset>
 
 <paths type ="1">
 	<loop number="2" depth_increment="0.0">
+
+<!--<waypoint>
+		<duration>300</duration>
+		<depth>1.0</depth>
+		<limit_velocity>0.02</limit_velocity>
+		<approach_velocity>1.0</approach_velocity>
+	</waypoint>-->
 
 		<waypoint>
 			<duration>600</duration>
