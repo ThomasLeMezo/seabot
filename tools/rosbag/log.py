@@ -851,7 +851,7 @@ if(len(iridiumStatusData.time)>0):
 
     pg_iridium_signal = pg.PlotWidget()
     set_plot_options(pg_iridium_signal)
-    pg_iridium_signal.plot(iridiumStatusData.time, iridiumStatusData.signal_strength, pen=(255,0,0), name="signal", symbol='o')
+    pg_iridium_signal.plot(iridiumStatusData.time, iridiumStatusData.signal_strength[:-1], pen=(255,0,0), name="signal", stepMode=True)
     pg_iridium_signal.setLabel('left', "signal")
     dock_iridium_status.addWidget(pg_iridium_signal)
 
