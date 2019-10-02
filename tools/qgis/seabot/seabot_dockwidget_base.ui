@@ -34,6 +34,16 @@
        <bool>true</bool>
       </property>
      </widget>
+     </item>
+     <item row="2" column="0">
+     <widget class="QPushButton" name="pushButtonBoat">
+      <property name="text">
+       <string>Boat Position</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

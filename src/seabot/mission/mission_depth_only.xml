@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<offset>
+<!--<offset>
 		<start_time_utc>
 		<year>2019</year>
 		<month>06</month>
@@ -8,7 +8,7 @@
 		<hour>13</hour>
 		<min>10</min>
 	</start_time_utc>
-</offset>
+</offset>-->
 
 <paths type ="1">
 	<loop number="2" depth_increment="0.0">
@@ -21,21 +21,21 @@
 	</waypoint>-->
 
 		<waypoint>
-			<duration>600</duration>
-			<depth>10.0</depth>
+			<duration>300</duration>
+			<depth>1.0</depth>
 			<limit_velocity>0.05</limit_velocity>
 			<approach_velocity>1.0</approach_velocity>
 		</waypoint>
 
 		<waypoint>
-			<duration>600</duration>
-			<depth>2.0</depth>
+			<duration>300</duration>
+			<depth>1.5</depth>
 			<limit_velocity>0.05</limit_velocity>
 			<approach_velocity>1.0</approach_velocity>
 		</waypoint>
 
 	<waypoint>
-		<duration>600</duration>
+		<duration>300</duration>
 		<depth>0.0</depth>
 		<limit_velocity>0.05</limit_velocity>
 		<approach_velocity>1.0</approach_velocity>
