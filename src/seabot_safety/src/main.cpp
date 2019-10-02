@@ -211,6 +211,8 @@ int main(int argc, char *argv[]){
 
   const double time_before_seafloor_emergency = n_private.param<double>("time_before_seafloor_emergency", 30.0);
 
+  const double piston_max_value = n.param<double>("piston_max_value", 2400);
+
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
@@ -301,6 +303,7 @@ int main(int argc, char *argv[]){
   safety_msg.seafloor = false;
   safety_msg.batteries_limit = false;
   safety_msg.depressurization = false;
+  safety_msg.piston = false;
 
   ROS_INFO("[Safety] Start Ok");
   while (ros::ok()){
@@ -335,6 +338,13 @@ int main(int argc, char *argv[]){
     ///**************** Analyze zero depth *******************
     if(piston_position == 0 && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero)
       call_zero_depth();
+
+    ///*******************************************************
+    ///**************** Piston issue *************************
+    if(piston_switch_in && piston_position < piston_max_value/2.){
+      safety_msg.piston = true;
+      enable_emergency_depth = true;
+    }
 
     ///*******************************************************
     ///**************** Flash at surface ********************
@@ -455,7 +465,10 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Summary ******************************
-    if((enable_safety_battery && safety_msg.batteries_limit) || (enable_safety_depressure && safety_msg.depressurization) || (enable_safety_pressure_limit && safety_msg.depth_limit) || safety_msg.published_frequency)
+    if((enable_safety_battery && safety_msg.batteries_limit) ||
+       (enable_safety_depressure && safety_msg.depressurization) ||
+       (enable_safety_pressure_limit && safety_msg.depth_limit) ||
+       safety_msg.published_frequency)
       enable_emergency_depth = true;
 
     if(enable_emergency_depth)

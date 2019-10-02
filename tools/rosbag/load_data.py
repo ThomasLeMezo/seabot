@@ -236,6 +236,7 @@ class SafetyData(SeabotData):
         self.batteries_limit = np.empty([self.nb_elements])
         self.depressurization = np.empty([self.nb_elements])
         self.seafloor = np.empty([self.nb_elements])
+        self.piston = np.empty([self.nb_elements])
 
 class SafetyDebugData(SeabotData):
     def __init__(self, bag=None):
@@ -520,6 +521,11 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
                 safetyData.seafloor[safetyData.k] = 1
             else:
                 safetyData.seafloor[safetyData.k] = 0
+            if hasattr(msg, 'piston'):
+                if(msg.piston):
+                    safetyData.piston[safetyData.k] = 1
+                else:
+                    safetyData.piston[safetyData.k] = 0
             safetyData.add_time(t, startTime)
 
         elif(topic==safetyDebugData.topic_name):
