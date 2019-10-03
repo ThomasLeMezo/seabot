@@ -75,6 +75,12 @@ void pose_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
   log_state.m_north = msg->north;
 }
 
+void pose_mean_callback(const seabot_fusion::GnssPose::ConstPtr& msg){
+  log_state.m_mean_east = msg->east;
+  log_state.m_mean_north = msg->north;
+  log_state.m_mean_heading = msg->heading;
+}
+
 void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
   log_state.m_safety_published_frequency = msg->published_frequency;
   log_state.m_safety_depth_limit = msg->depth_limit;
@@ -207,6 +213,7 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber batteries_sub = n.subscribe("/fusion/battery", 1, batteries_callback);
   ros::Subscriber pose_sub = n.subscribe("/fusion/pose", 1, pose_callback);
+  ros::Subscriber pose_mean_sub = n.subscribe("/fusion/pose_mean", 1, pose_mean_callback);
   ros::Subscriber gnss_sub = n.subscribe("/driver/fix", 1, gnss_callback);
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber safety_sub = n.subscribe("/safety/safety", 1, safety_callback);

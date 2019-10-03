@@ -222,6 +222,10 @@ public:
   double m_gnss_heading = 242.0;
   double m_batteries[4] = {10.0, 10.0, 10.0, 10.0};
 
+  double m_mean_east = 42.0;
+  double m_mean_north = 6000042.0;
+  double m_mean_heading = 242.0;
+
   double m_internal_pressure = 742.0;
   double m_internal_temperature = 42.0;
   double m_internal_humidity = 0.0;

@@ -170,10 +170,13 @@ std::string LogData::serialize_log_state(const long long &time){
 
   unsigned int time_now = max(0.,round((time-TIME_POSIX_START)/60.));
   bit_position += serialize_data<uint_log1_t>(data, 18, bit_position, time_now, 0, (1<<18 -1));
-  bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_east, L93_EAST_MIN, L93_EAST_MAX);
-  bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_north, L93_NORTH_MIN, L93_NORTH_MAX);
+//  bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_east, L93_EAST_MIN, L93_EAST_MAX);
+  bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_mean_east, L93_EAST_MIN, L93_EAST_MAX);
+//  bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_north, L93_NORTH_MIN, L93_NORTH_MAX);
+  bit_position += serialize_data<uint_log1_t>(data, 21, bit_position, m_mean_north, L93_NORTH_MIN, L93_NORTH_MAX);
   bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_speed, 0, 5.0);
-  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_heading, 0, 359.0);
+//  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_gnss_heading, 0, 359.0);
+  bit_position += serialize_data<uint_log1_t>(data, 8, bit_position, m_mean_heading, 0, 359.0);
 
   unsigned char state = 0;
   state |= (m_safety_published_frequency & 0b1) << 0;
