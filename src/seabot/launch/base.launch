@@ -15,7 +15,7 @@
 
 				<param name="piston_speed_max_tick" value="20" />
 
-				<param name="piston_ref_eq" value="1700" />
+				<param name="piston_ref_eq" value="800" />
 				<param name="piston_max_value" value="2400" />
 
     <include file="$(find seabot)/launch/driver.launch"/>
