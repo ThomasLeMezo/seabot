@@ -36,8 +36,8 @@ void Power::set_sleep_mode_countdown(const unsigned char &hours, const unsigned 
     ROS_WARN("[Power_driver] I2C Bus Failure - Set Sleep mode countdown");
 }
 
-void Power::set_flash_delay(const unsigned char &dt) const{
-  if(i2c_smbus_write_byte_data(m_file, 0x02, dt)<0)
+void Power::set_nb_flash(const unsigned char &nb) const{
+  if(i2c_smbus_write_byte_data(m_file, 0x02, nb)<0)
     ROS_WARN("[Power_driver] I2C Bus Failure - Set Flash Led Delay");
 }
 
@@ -46,11 +46,11 @@ void Power::set_flash_enable(const bool &val) const{
     ROS_WARN("[Power_driver] I2C Bus Failure - Set Flash Led");
 }
 
-void Power::set_flash_enable_with_delay(const unsigned char &dt) const{
-    __u16 val = (0x01 | (dt<<8));
-    if(i2c_smbus_write_word_data(m_file, 0x01, val))
-      ROS_WARN("[Power_driver] I2C Bus Failure - Set Flash and Period Led");
-}
+//void Power::set_flash_enable_with_delay(const unsigned char &dt) const{
+//    __u16 val = (0x01 | (dt<<8));
+//    if(i2c_smbus_write_word_data(m_file, 0x01, val))
+//      ROS_WARN("[Power_driver] I2C Bus Failure - Set Flash and Period Led");
+//}
 
 void Power::set_sleep_mode() const{
   if(i2c_smbus_write_byte_data(m_file, 0x00, 0x02)<0)

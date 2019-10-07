@@ -16,6 +16,7 @@
 #include <seabot_safety/SafetyLog.h>
 #include <seabot_safety/SafetyDebug.h>
 #include <geometry_msgs/Vector3.h>
+#include <seabot_power_driver/FlashSpeed.h>
 
 #include <cmath>
 
@@ -65,6 +66,7 @@ ros::WallTime time_seafloor_detected;
 
 ros::ServiceClient service_zero_depth;
 ros::ServiceClient service_flash_enable;
+ros::ServiceClient service_flash_number;
 ros::ServiceClient service_emergency;
 ros::ServiceClient service_sleep;
 
@@ -160,6 +162,12 @@ void call_flash_enable(const bool &val){
   }
 }
 
+void call_emergency_flash(){
+  seabot_power_driver::FlashSpeed srv;
+  srv.request.number = 2;
+  service_flash_number.call(srv);
+}
+
 bool reset_limit_depth(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res){
   call_emergency_depth(false);
   res.success = true;
@@ -235,6 +243,7 @@ int main(int argc, char *argv[]){
   ROS_DEBUG("[Safety] Wait for flash service from power_driver");
   ros::service::waitForService("/driver/power/flash");
   service_flash_enable = n.serviceClient<std_srvs::SetBool>("/driver/power/flash");
+  service_flash_number = n.serviceClient<seabot_power_driver::FlashSpeed>("/driver/power/flash_number");
 
   ROS_DEBUG("[Safety] Wait for emergency service from depth regulation");
   ros::service::waitForService("/regulation/emergency");
@@ -471,8 +480,10 @@ int main(int argc, char *argv[]){
        safety_msg.published_frequency)
       enable_emergency_depth = true;
 
-    if(enable_emergency_depth)
+    if(enable_emergency_depth){
       call_emergency_depth(true);
+      call_emergency_flash();
+    }
 
     safety_pub.publish(safety_msg);
     safety_debug_pub.publish(safety_debug_msg);

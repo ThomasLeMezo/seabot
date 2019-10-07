@@ -29,4 +29,7 @@ echo "out" > /sys/class/gpio/gpio5/direction
 echo "1" > /sys/class/gpio/gpio5/value
 
 #roslaunch ~/inobo.launch > ~/log_roslaunch &
+
+#echo "Y" > /sys/module/i2c_bcm2708/parameters/combined
+
 exit 0

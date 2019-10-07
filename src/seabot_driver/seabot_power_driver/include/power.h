@@ -38,16 +38,16 @@ public:
   void set_flash_enable(const bool &val) const;
 
   /**
-   * @brief set_flash_led_delay
-   * @param dt in 0.1 s (20 = 2s)
+   * @brief set_nb_flash
+   * @param nb of flash
    */
-  void set_flash_delay(const unsigned char &dt) const;
+  void set_nb_flash(const unsigned char &nb) const;
 
-  /**
-   * @brief set_flash_enable_with_delay
-   * @param dt
-   */
-  void set_flash_enable_with_delay(const unsigned char &dt) const;
+//  /**
+//   * @brief set_flash_enable_with_delay
+//   * @param dt
+//   */
+//  void set_flash_enable_with_delay(const unsigned char &dt) const;
 
   /**
    * @brief set_sleep_mode

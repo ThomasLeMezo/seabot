@@ -37,19 +37,19 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x06
+#define CODE_VERSION 0x07
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
 #define SIZE_RX_BUFFER 8
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+volatile unsigned short tmp_rx = 0;
+volatile unsigned short nb_tx_octet = 0;
+volatile unsigned short nb_rx_octet = 0;
 
 void init_i2c();
 
-unsigned short is_init = 1;
+volatile unsigned short is_init = 1;
 
 sbit BAT1 at PORTC.B0; // entrée de controle de tension BAT1
 sbit BAT2 at PORTC.B1; // entrée de controle de tension BAT2
@@ -69,7 +69,7 @@ unsigned short ils_removed = 1;
 
 // State Machine
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
-unsigned short state = IDLE;
+volatile unsigned short state = IDLE;
 #define CPT_STATE_MACHINE_DEFAULT 5
 unsigned short cpt_state_machine = CPT_STATE_MACHINE_DEFAULT;
 unsigned short step_state_machine = 0;
@@ -78,12 +78,15 @@ unsigned short step_state_machine = 0;
 
 // Batteries
 #define WARNING_LOW_VOLTAGE 665 // 0.015625 (quantum) / 10.4 (min tension)
-unsigned int battery_voltage[4];
+volatile unsigned int battery_voltage[4];
 unsigned short battery_global_default = 0;
 
 // Flasher LED
-unsigned short start_led_puissance = 0;
-unsigned short led_puissance_delay = 20; // 100ms * val (default = 2s)
+volatile unsigned short start_led_puissance = 0;
+#define LED_PUISSANCE_DELAY_LONG 20 // 100ms * val (default = 2s)
+#define LED_PUISSANCE_DELAY_COURT 5
+volatile unsigned short led_puissance_nb_flash = 1;
+volatile unsigned short led_puissance_state = 1;
 unsigned short cpt_led_puissance = 20;
 
 // Led
@@ -106,7 +109,7 @@ unsigned short k = 0;
 
 // Watchdog
 unsigned short watchdog_restart = 60; // in min
-unsigned short watchdog_restart_default = 60;
+volatile unsigned short watchdog_restart_default = 60;
 unsigned short watchdog_cpt_sec = 59;
 unsigned short watchdog_cpt_default = 59;
 
@@ -136,7 +139,7 @@ void i2c_read_data_from_buffer(){
       start_led_puissance = (rxbuffer_tab[i+1]==0x01);
       break;
     case 0x02:
-      led_puissance_delay = max(rxbuffer_tab[i+1], 1);
+      led_puissance_nb_flash = max(rxbuffer_tab[i+1], 1);
       break;
     case 0x03:
       default_time_to_start[0] = rxbuffer_tab[i+1]; // hours
@@ -519,7 +522,14 @@ void interrupt(){
       }
       else{
         LED_PUISSANCE = 1;
-        cpt_led_puissance=led_puissance_delay;
+        if(led_puissance_state > 0){
+          cpt_led_puissance=LED_PUISSANCE_DELAY_COURT;
+          led_puissance_state--;
+        }
+        else{
+          cpt_led_puissance=LED_PUISSANCE_DELAY_LONG;
+          led_puissance_state = led_puissance_nb_flash;
+        }
       }
     }
     else{

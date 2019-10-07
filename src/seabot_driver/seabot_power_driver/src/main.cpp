@@ -19,7 +19,7 @@ double flash_sec_left = 0.0;
 bool flash_is_enable = false;
 bool flash_counter_enable = false;
 bool flash_manual_enable = false;
-uint8_t flash_period = 20;
+uint8_t flash_nb = 1;
 
 bool flash_enable(std_srvs::SetBool::Request  &req,
                   std_srvs::SetBool::Response &res){
@@ -37,10 +37,12 @@ bool flash_counter(seabot_power_driver::FlashCounter::Request  &req,
   return true;
 }
 
-bool flash_speed(seabot_power_driver::FlashSpeed::Request  &req,
+bool flash_number(seabot_power_driver::FlashSpeed::Request  &req,
                  seabot_power_driver::FlashSpeed::Response &res){
-  p.set_flash_delay(req.period);
-  flash_period = req.period;
+  if(flash_nb != req.number){
+    p.set_nb_flash(req.number);
+    flash_nb = req.number;
+  }
   return true;
 }
 
@@ -73,17 +75,17 @@ int main(int argc, char *argv[]){
 
   // Service (ON/OFF)
   ros::ServiceServer service_flash = n.advertiseService("flash", flash_enable);
-  ros::ServiceServer service_flash_speed = n.advertiseService("flash_speed", flash_speed);
+  ros::ServiceServer service_flash_number = n.advertiseService("flash_number", flash_number);
   ros::ServiceServer service_flash_counter = n.advertiseService("flash_counter", flash_counter);
   ros::ServiceServer service_sleep_mode = n.advertiseService("sleep_mode", sleep_mode);
   ros::ServiceServer service_sleep_mode_param = n.advertiseService("sleep_mode_param", sleep_mode_param);
 
-  if(p.get_version()!=0x05){
+  if(p.get_version()!=0x07){
     ROS_WARN("[POWER] Wrong PIC code version");
   }
 
   p.set_sleep_mode_countdown(1, 0, 0, 250);
-  p.set_flash_delay(20);
+  p.set_nb_flash(1);
   ROS_DEBUG("[POWER] Set sleep mode to 1 hour");
 
   // ToDo : Add serices to turn off/on Iridium, GPS
@@ -103,7 +105,7 @@ int main(int argc, char *argv[]){
 
     if(flash_sec_left>0){
       if(!flash_is_enable){
-        p.set_flash_enable_with_delay(flash_period);
+        p.set_flash_enable(true);
         flash_is_enable = true;
       }
       flash_sec_left -= 1./frequency;
