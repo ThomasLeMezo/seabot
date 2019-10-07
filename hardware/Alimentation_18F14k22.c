@@ -86,7 +86,7 @@ volatile unsigned short start_led_puissance = 0;
 #define LED_PUISSANCE_DELAY_LONG 20 // 100ms * val (default = 2s)
 #define LED_PUISSANCE_DELAY_COURT 5
 volatile unsigned short led_puissance_nb_flash = 1;
-volatile unsigned short led_puissance_state = 1;
+volatile unsigned short led_puissance_state = 0;
 unsigned short cpt_led_puissance = 20;
 
 // Led
@@ -139,7 +139,7 @@ void i2c_read_data_from_buffer(){
       start_led_puissance = (rxbuffer_tab[i+1]==0x01);
       break;
     case 0x02:
-      led_puissance_nb_flash = max(rxbuffer_tab[i+1], 1);
+      led_puissance_nb_flash = rxbuffer_tab[i+1];
       break;
     case 0x03:
       default_time_to_start[0] = rxbuffer_tab[i+1]; // hours
