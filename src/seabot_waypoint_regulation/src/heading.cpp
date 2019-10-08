@@ -52,7 +52,6 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   depth = msg->depth;
 }
 
-
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "waypoint_node");
   ros::NodeHandle n;

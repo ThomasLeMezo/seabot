@@ -124,6 +124,7 @@ area_piston = DockArea()
 area_regulation = DockArea()
 area_iridium = DockArea()
 area_position = DockArea()
+area_thruster = DockArea()
 
 tab.addTab(area_safety, "Safety")
 tab.addTab(area_data, "Data")
@@ -131,6 +132,7 @@ tab.addTab(area_piston, "Piston")
 tab.addTab(area_regulation, "Regulation")
 tab.addTab(area_iridium, "Iridium")
 tab.addTab(area_position, "Trajectory")
+tab.addTab(area_thruster, "Thruster")
 
 #################### Standard plot ####################
 
@@ -761,6 +763,8 @@ if(len(poseFusionData.east)>0 and len(fixData.time)>0):
     X = np.array(poseFusionData.east)
     X = X[~np.isnan(X)]
     Y = Y[~np.isnan(Y)]
+    print("mean_X = ", np.mean(X))
+    print("mean_Y = ", np.mean(Y))
     X -= np.mean(X)
     Y -= np.mean(Y)
     pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
@@ -770,6 +774,27 @@ if(len(poseFusionData.east)>0 and len(fixData.time)>0):
 
     saveBtn = QtGui.QPushButton('Export GPX')
     dock_gps2.addWidget(saveBtn, row=1, col=0)
+    saveBtn.clicked.connect(save_gpx)
+
+if(len(poseFusionData.east)>0 and len(fixData.time)>0 and len(missionData.time)>0):
+    dock_mission = Dock("Mission path")
+    area_position.addDock(dock_mission, 'above', dock_gps)
+    pg_gps2 = pg.PlotWidget()
+    set_plot_options(pg_gps2)
+    Y = np.array(poseFusionData.north)
+    X = np.array(poseFusionData.east)
+    X = X[~np.isnan(X)]
+    Y = Y[~np.isnan(Y)]
+    X_mission = np.array(missionData.east)
+    Y_mission = np.array(missionData.north)
+    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
+    pg_gps2.plot(X_mission, Y_mission, pen=(0,255,0), name="mission", symbol='o')
+    pg_gps2.setLabel('left', "Y", units="m")
+    pg_gps2.setLabel('bottom', "X", units="m")
+    dock_mission.addWidget(pg_gps2)
+
+    saveBtn = QtGui.QPushButton('Export GPX')
+    dock_mission.addWidget(saveBtn, row=1, col=0)
     saveBtn.clicked.connect(save_gpx)
 
 ####  Heading #### 
@@ -884,6 +909,21 @@ if(len(iridiumSessionData.time)>0):
     # iridium_session_mt = []
     # iridium_session_mtmsn = []
     # iridium_session_waiting = []
+
+if(len(engineData.time)>0):
+    dock_thrusters = Dock("Thrusters")
+    area_thruster.addDock(dock_thrusters)
+    pg_thruster_left = pg.PlotWidget()
+    set_plot_options(pg_thruster_left)
+    pg_thruster_left.plot(engineData.time, engineData.left[:-1], pen=(0,0,255), name="left", stepMode=True)
+    dock_thrusters.addWidget(pg_thruster_left)
+
+    pg_thruster_right = pg.PlotWidget()
+    set_plot_options(pg_thruster_right)
+    pg_thruster_right.plot(engineData.time, engineData.right[:-1], pen=(0,0,255), name="right", stepMode=True)
+    dock_thrusters.addWidget(pg_thruster_right)
+
+    pg_thruster_right.setXLink(pg_thruster_left)
 
 ###################################################
 

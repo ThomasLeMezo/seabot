@@ -210,6 +210,17 @@ class RegulationHeadingSetPointData(SeabotData):
         SeabotData.__init__(self, "/regulation/heading_set_point", bag)
         self.set_point = np.empty([self.nb_elements])
 
+class RegulationWaypointData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/regulation/waypoint_debug", bag)
+        self.yaw_set_point = np.empty([self.nb_elements])
+        self.yaw_error = np.empty([self.nb_elements])
+        self.distance_error = np.empty([self.nb_elements])
+        self.enable_regulation = np.empty([self.nb_elements])
+        self.hysteresis_inside = np.empty([self.nb_elements])
+        self.angular = np.empty([self.nb_elements])
+        self.angular_limit = np.empty([self.nb_elements])
+
 ####################### Mission #######################
 
 class MissionData(SeabotData):

@@ -60,11 +60,17 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       ros::WallTime t2 = m_waypoints[m_current_waypoint].time_end;
       ratio = (t_now-t1).toSec()/(t2-t1).toSec(); // Should be between [0, 1]
 
-      double d_north = m_waypoints[m_current_waypoint].north - m_waypoints[m_current_waypoint-1].north;
-      double d_east = m_waypoints[m_current_waypoint].east - m_waypoints[m_current_waypoint-1].east;
+      if(m_current_waypoint>0){
+        double d_north = m_waypoints[m_current_waypoint].north - m_waypoints[m_current_waypoint-1].north;
+        double d_east = m_waypoints[m_current_waypoint].east - m_waypoints[m_current_waypoint-1].east;
 
-      north = m_waypoints[m_current_waypoint-1].north + d_north*ratio;
-      east = m_waypoints[m_current_waypoint-1].east + d_east*ratio;
+        north = m_waypoints[m_current_waypoint-1].north + d_north*ratio;
+        east = m_waypoints[m_current_waypoint-1].east + d_east*ratio;
+      }
+      else{
+        north = m_waypoints[m_current_waypoint].north;
+        east = m_waypoints[m_current_waypoint].east;
+      }
 
       m_duration_next_waypoint = m_waypoints[m_current_waypoint].time_end-t_now;
     }

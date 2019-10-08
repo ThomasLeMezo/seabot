@@ -1,0 +1,8 @@
+float64 yaw_set_point
+float64 yaw_error
+float64 distance_error
+bool enable_regulation
+bool hysteresis_inside
+float64 angular
+float64 angular_limit
+bool valid_time

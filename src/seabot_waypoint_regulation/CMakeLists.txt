@@ -56,6 +56,7 @@ find_package(catkin REQUIRED
 		add_message_files(
 				FILES
 				HeadingDebug.msg
+				WaypointDebug.msg
 		)
 
 # Generate services in the 'srv' folder

@@ -27,11 +27,15 @@
     <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
         <param name="frequency" value="10.0" />
         <param name="delta_valid_time" value="3.0" />
-        <param name="coeff_P" value="1.0" />
+
 								<param name="hysteresis_circle_in" value="2.0" />
 								<param name="hysteresis_circle_out" value="4.0" />
-        <param name="linear_speed" value="1.0" />
+
+								<param name="coeff_P" value="0.8" />
+								<param name="coeff_D" value="0.4" />
+								<param name="linear_speed" value="1.0" />
 								<param name="depth_limit_switch_off" value="0.5" />
+								<param name="max_angular_velocity" value="1.0" />
     </node>
 
 </launch>
