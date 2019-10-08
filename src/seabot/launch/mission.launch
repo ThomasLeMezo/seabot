@@ -1,6 +1,6 @@
 <launch>
 
-    <param name="mission_file_name" value="mission_depth_only.xml"/>
+				<param name="mission_file_name" value="mission_empty.xml"/>
     <param name="mission_path" value="$(find seabot)/mission" />
 
     <include file="$(find seabot)/launch/base.launch"/>

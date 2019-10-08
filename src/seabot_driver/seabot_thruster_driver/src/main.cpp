@@ -74,10 +74,11 @@ int main(int argc, char *argv[]){
   const double frequency = n_private.param<double>("frequency", 10.0);
   coeff_cmd_to_pwm = n_private.param<float>("coeff_cmd_to_pwm", 9.0);
   const double delay_stop = n_private.param<float>("delay_stop", 0.5);
-  const bool backward_engine = n_private.param<bool>("backward_engine", false);
+  const bool allow_backward = n_private.param<bool>("allow_backward", false);
 
   const bool invert_left = n_private.param<bool>("invert_left", false);
   const bool invert_right = n_private.param<bool>("invert_right", false);
+  const bool invert_left_and_right = n_private.param<bool>("invert_left_and_right", false);
 
   const double max_angular_velocity = n_private.param<float>("max_angular_velocity", 1.0);
   const double max_linear_velocity = n_private.param<float>("max_linear_velocity", 1.0);
@@ -98,7 +99,7 @@ int main(int argc, char *argv[]){
   // Sensor initialization
   t.i2c_open();
 
-  if(t.get_version()!=0x03){
+  if(t.get_version()!=0x04){
     ROS_WARN("[Thruster] Wrong PIC code version");
   }
 
@@ -109,6 +110,8 @@ int main(int argc, char *argv[]){
   double cmd_left_double = MOTOR_PWM_STOP, cmd_right_double = MOTOR_PWM_STOP;
   double dt;
   ros::Time last_time = ros::Time::now();
+
+  uint8_t cmd_left_last, cmd_right_last;
 
   ROS_INFO("[Thruster] Start Ok");
   ros::Rate loop_rate(frequency);
@@ -122,56 +125,84 @@ int main(int argc, char *argv[]){
     if(state_enable){
       uint8_t cmd_left, cmd_right;
 
+      //// ************************* ///
+      /// Case Manual
       if((ros::Time::now() - manual_time_last_cmd).toSec() < delay_stop){
         double left = manual_linear_velocity + manual_angular_velocity;
         double right = manual_linear_velocity - manual_angular_velocity;
-        if(backward_engine==false){
+        if(allow_backward==false){
           left = max(0., left);
           right = max(0., right);
         }
         cmd_left = convert_u(left);
         cmd_right = convert_u(right);
       }
+
+      //// ************************* ///
+      /// Case autonomous
       else if((ros::Time::now() - time_last_cmd).toSec() < delay_stop){
+        // Saturation of linear and angular velocities
         if(abs(linear_velocity)>max_linear_velocity)
           linear_velocity = std::copysign(max_linear_velocity, linear_velocity);
         if(abs(angular_velocity)>max_angular_velocity)
           angular_velocity = std::copysign(max_angular_velocity, angular_velocity);
 
+        // Allocate right and left propellers
         double left = linear_velocity + angular_velocity;
         double right = linear_velocity - angular_velocity;
-        if(backward_engine==false){
+
+        // Backward saturation
+        if(allow_backward==false){
           left = max(0., left);
           right = max(0., right);
         }
+
+        // Convert to PWM
         cmd_left = convert_u(left);
         cmd_right = convert_u(right);
       }
       else{
         cmd_right = MOTOR_PWM_STOP;
         cmd_left = MOTOR_PWM_STOP;
+        cmd_left_double = MOTOR_PWM_STOP;
+        cmd_right_double = MOTOR_PWM_STOP;
       }
 
+      //// ************************* ///
+      /// Send Command to the PIC
+
+      // Test if there is an input different from STOP
       if(cmd_right != MOTOR_PWM_STOP || cmd_left != MOTOR_PWM_STOP
          || cmd_left_double != MOTOR_PWM_STOP || cmd_right_double != MOTOR_PWM_STOP){
         send_cmd = true;
         stop_sent = false;
       }
       else{
+        // Ask to send a "last" command stop
         if(!stop_sent){
-          send_cmd = true;
-          stop_sent = true;
+          send_cmd = true; // Ask to send stop
+          stop_sent = true; // Ack stop was sent
         }
         else
-          send_cmd = false;
+          send_cmd = false; // Do not stop cmd
       }
 
       if(send_cmd){
+
+        // Invert cmd if necessary
         if(invert_left)
           cmd_left = invert_cmd(cmd_left);
         if(invert_right)
           cmd_right = invert_cmd(cmd_right);
 
+        // Invert right and left if necessary
+        if(invert_left_and_right){
+          uint8_t cmd_tmp = cmd_right;
+          cmd_right = cmd_left;
+          cmd_left = cmd_tmp;
+        }
+
+        // Velocity of command saturation (avoid brutal input)
         double delta_left = (double)cmd_left - cmd_left_double;
         cmd_left_double += copysign(min(abs(delta_left), max_engine_change_dt), delta_left);
         cmd_left = (uint8_t)round(cmd_left_double);
@@ -180,12 +211,17 @@ int main(int argc, char *argv[]){
         cmd_right_double += copysign(min(abs(delta_right), max_engine_change_dt), delta_right);
         cmd_right = (uint8_t)round(cmd_right_double);
 
+        // Send command to the pic
         t.write_cmd(cmd_left, cmd_right);
 
         // Publish cmd send for loggin
-        cmd_msg.left = cmd_left;
-        cmd_msg.right = cmd_right;
-        cmd_pub.publish(cmd_msg);
+        if(cmd_left != cmd_left_last || cmd_right != cmd_right_last){
+          cmd_msg.left = cmd_left;
+          cmd_msg.right = cmd_right;
+          cmd_pub.publish(cmd_msg);
+          cmd_left_last = cmd_left;
+          cmd_right_last = cmd_right;
+        }
       }
     }
 

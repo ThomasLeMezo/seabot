@@ -45,7 +45,7 @@ Hardware:
 sbit LED at RA0_bit; // sortie LED
 sbit LED2 at RA2_bit; // sortie LED
 sbit LED3 at RA3_bit; // sortie LED
-#define CODE_VERSION 0x03
+#define CODE_VERSION 0x05
 
 // I2C Master
 void init_i2c_master();
@@ -58,23 +58,23 @@ void i2c_master_read_data(unsigned char cmd, unsigned char nb_bytes);
 #define TSYS01_PROM_READ 0xA0
 unsigned char mssp_interrupt_received = 0;
 #define SIZE_MASTER_RX_BUFFER 3
-unsigned char i2c_master_rxbuffer_tab[SIZE_MASTER_RX_BUFFER];
-unsigned char i2c_master_adc_tab[3];
+volatile unsigned char i2c_master_rxbuffer_tab[SIZE_MASTER_RX_BUFFER];
+volatile unsigned char i2c_master_adc_tab[3];
 
-unsigned char tsys01_prom[10];   // tableau de coefficients de calibration
-unsigned char debug_ov = 0;
-unsigned char debug_col = 0;
-unsigned char debug_bcl = 0;
+volatile unsigned char tsys01_prom[10];   // tableau de coefficients de calibration
+volatile unsigned char debug_ov = 0;
+volatile unsigned char debug_col = 0;
+volatile unsigned char debug_bcl = 0;
 
 // I2C Slave
 void init_i2c_slave();
 #define SIZE_RX_BUFFER 8
 const unsigned char ADDRESS_I2C = 0x45; // linux I2C Adresse
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
 
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+volatile unsigned short tmp_rx = 0;
+volatile unsigned short nb_tx_octet = 0;
+volatile unsigned short nb_rx_octet = 0;
 unsigned short k = 0;
 
 unsigned short reset = 0;
@@ -82,8 +82,8 @@ unsigned short conversion = 0;
 
 // State Machine
 enum power_state {IDLE,RESET_TSYS01,CONVERSION_READ, INIT};
-unsigned short state = INIT;
-unsigned short cpt = 0;
+volatile unsigned short state = INIT;
+volatile unsigned short cpt = 0;
 
 
 /**

@@ -142,7 +142,8 @@ def plot_depth(dock):
     pg_depth = pg.PlotWidget()
     set_plot_options(pg_depth)
     pg_depth.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="depth", stepMode=True)
-    pg_depth.plot(missionData.time, missionData.depth[:-1], pen=(0,255,0), name="set point", stepMode=True)
+    if(np.size(missionData.time)>0):
+        pg_depth.plot(missionData.time, missionData.depth[:-1], pen=(0,255,0), name="set point", stepMode=True)
     pg_depth.setLabel('left', "Depth", units="m")
     dock.addWidget(pg_depth)
     return pg_depth
@@ -504,8 +505,9 @@ if(np.size(pistonStateData.time)>0):
     dock_piston2 = Dock("Velocity")
     area_piston.addDock(dock_piston2, 'above', dock_piston_distance)
     pg_piston2 = plot_piston_position(dock_piston)
-    pg_piston2.plot(pistonSetPointData.time, pistonSetPointData.position[:-1], pen=(0,255,0), name="set point pi", stepMode=True)
-    pg_piston2.setLabel('left', "Piston state position and set point")
+    if(np.size(pistonSetPointData.time)>0):
+        pg_piston2.plot(pistonSetPointData.time, pistonSetPointData.position[:-1], pen=(0,255,0), name="set point pi", stepMode=True)
+        pg_piston2.setLabel('left', "Piston state position and set point")
     dock_piston2.addWidget(pg_piston2)
 
     pg_piston_speed = pg.PlotWidget()

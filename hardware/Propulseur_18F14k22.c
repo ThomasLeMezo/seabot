@@ -55,15 +55,15 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 */
 
-#define CODE_VERSION 0x03
+#define CODE_VERSION 0x04
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x20;
 #define SIZE_RX_BUFFER 8
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+volatile unsigned short tmp_rx = 0;
+volatile unsigned short nb_tx_octet = 0;
+volatile unsigned short nb_rx_octet = 0;
 
 void init_i2c();
 
@@ -79,15 +79,16 @@ sbit LED at LATA.B2; // sortie LED
 #define MOTOR_CMD_STOP 150
 #define PWM_PERIOD 2000
 unsigned short cmd_motor[3] = {MOTOR_CMD_STOP, MOTOR_CMD_STOP, MOTOR_CMD_STOP};
+#define TMR1_CPT 136 // 16MHz/4 and 10us delay, cpt incrementing from TMR1_CPT to 0xFFFF
+// 136, 215, 246
 
-
-unsigned char cpt_motor_1 = 0;
-unsigned char cpt_motor_2 = 0;
-unsigned char cpt_motor_3 = 0;
-unsigned int cpt_global = PWM_PERIOD;
+ unsigned char cpt_motor_1 = 0;
+ unsigned char cpt_motor_2 = 0;
+ unsigned char cpt_motor_3 = 0;
+ unsigned int cpt_global = PWM_PERIOD;
 
 // Watchdog
-unsigned short watchdog_restart = 3;
+volatile unsigned short watchdog_restart = 3;
 #define WATCHDOG_RESTART_DEFAULT 3 // 3 s
 
 /**
@@ -146,10 +147,10 @@ void init_timer0(){
  * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 10 us
  */
 void init_timer1(){
-  T1CON = 0x01;
-  TMR1IF_bit = 0;
-  TMR1H = 255;
-  TMR1L = 136;
+  T1CON = 0x01; // Enable time (TMR1ON)
+  TMR1IF_bit = 0; // Interupt flag
+  TMR1H = 0xFF; // 65416
+  TMR1L = TMR1_CPT;
   TMR1IE_bit = 0;
   INTCON = 0xC0;
 }
@@ -285,8 +286,8 @@ void interrupt(){
         cpt_motor_3--;
     }
 
-    TMR1H = 255;
-    TMR1L = 136;
+    TMR1H = 0xFF;
+    TMR1L = TMR1_CPT; //136
     TMR1IF_bit = 0;
   }
 

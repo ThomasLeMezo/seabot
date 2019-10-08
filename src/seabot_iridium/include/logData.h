@@ -7,11 +7,14 @@
 
 using boost::multiprecision::cpp_int;
 
-#define TIME_POSIX_START 1560347438 // 12 Juin 2019 => (18bit in minutes => ???)
+#define TIME_POSIX_START 1570529969 // 12 Juin 2019 => (18bit in minutes => ???)
 #define L93_EAST_MIN 0
 #define L93_EAST_MAX 1300000
 #define L93_NORTH_MIN 6000000
 #define L93_NORTH_MAX 7200000
+
+// Guerledan
+// 253502,6805671
 
 enum CMD_TYPE:unsigned int {CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
 

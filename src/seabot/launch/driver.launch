@@ -42,7 +42,8 @@
             <param name="frequency" value="15.0" />
             <param name="coeff_cmd_to_pwm" value="9" />
             <param name="delay_stop" value="0.5" />
-												<param name="backward_engine" value="false" />
+												<param name="allow_backward" value="false" />
+												<param name="invert_left_and_right" value="true" />
 												<param name="invert_left" value="true" />
 												<param name="invert_right" value="false" />
 												<param name="max_engine_change" value="15.0" />

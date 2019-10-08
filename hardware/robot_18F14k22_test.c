@@ -26,14 +26,14 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x05
+#define CODE_VERSION 0x06
 
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
-unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
-unsigned short tmp_rx = 0;
-unsigned short nb_tx_octet = 0;
-unsigned short nb_rx_octet = 0;
+volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
+volatile unsigned short tmp_rx = 0;
+volatile unsigned short nb_tx_octet = 0;
+volatile unsigned short nb_rx_octet = 0;
 
 void init_i2c();
 
@@ -43,39 +43,39 @@ sbit LED1 at RC0_bit;
 sbit LED2 at RC2_bit;
 
 // Sensors
-unsigned short optical_state;
-int nb_pulse = 0;  // Nombre d'impulsions de la sortie de l'opto OPB461T11
-unsigned short butee_out = 0;
-unsigned short butee_in = 0;
+volatile unsigned short optical_state;
+volatile int nb_pulse = 0;  // Nombre d'impulsions de la sortie de l'opto OPB461T11
+volatile unsigned short butee_out = 0;
+volatile unsigned short butee_in = 0;
 
 // Motor
-unsigned short motor_speed_in = 15; // 2 octets
-unsigned short motor_speed_out = 15; // 2 octets
-unsigned short motor_speed_out_reset = 30; // 2 octets
-unsigned short motor_current_speed = 50; // 2 octets
+volatile unsigned short motor_speed_in = 15; // 2 octets
+volatile unsigned short motor_speed_out = 15; // 2 octets
+volatile unsigned short motor_speed_out_reset = 30; // 2 octets
+volatile unsigned short motor_current_speed = 50; // 2 octets
 #define MOTOR_STOP 50
 
 // Regulation
-int position_set_point = 0;
-signed int error = 0;
-unsigned long int position_reached_max_value = 40000;
-unsigned long int position_reached_cpt = 0;
-unsigned short position_reached_enable = 0;
-unsigned short error_interval = 0;
+volatile int position_set_point = 0;
+volatile signed int error = 0;
+volatile unsigned long int position_reached_max_value = 40000;
+volatile unsigned long int position_reached_cpt = 0;
+volatile unsigned short position_reached_enable = 0;
+volatile unsigned short error_interval = 0;
 
-unsigned short zero_shift_error = 0;
-unsigned short time_zero_shift_error = 5;
+volatile unsigned short zero_shift_error = 0;
+volatile unsigned short time_zero_shift_error = 5;
 
 // State machine
-unsigned short motor_on = 1;
+volatile unsigned short motor_on = 1;
 enum robot_state {RESET_OUT,REGULATION,EMERGENCY, STOP};
-unsigned char state = RESET_OUT;
+volatile unsigned char state = RESET_OUT;
 
 // Watchdog
-unsigned short watchdog_restart = 60;
-unsigned short watchdog_restart_default = 60; // 3 s
+volatile unsigned short watchdog_restart = 60;
+volatile unsigned short watchdog_restart_default = 60; // 3 s
 
-unsigned short is_init = 1;
+volatile unsigned short is_init = 1;
 
 void i2c_read_data_from_buffer(){
     unsigned short i = 0;

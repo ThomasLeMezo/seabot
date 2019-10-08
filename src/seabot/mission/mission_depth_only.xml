@@ -10,38 +10,20 @@ k<?xml version="1.0"?>
 	</start_time_utc>
 </offset>-->
 
-<paths type ="1">
-	<loop number="2" depth_increment="0.0">
+<paths type ="0">
+<waypoint>
+	<duration>180</duration>
+	<east>-1</east>
+	<north>-2</north>
+	<depth>0</depth>
+</waypoint>
 
-<!--<waypoint>
-		<duration>300</duration>
-		<depth>1.0</depth>
-		<limit_velocity>0.02</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-	</waypoint>-->
-
-		<waypoint>
-			<duration>300</duration>
-			<depth>1.0</depth>
-			<limit_velocity>0.05</limit_velocity>
-			<approach_velocity>1.0</approach_velocity>
-		</waypoint>
-
-		<waypoint>
-			<duration>300</duration>
-			<depth>1.5</depth>
-			<limit_velocity>0.05</limit_velocity>
-			<approach_velocity>1.0</approach_velocity>
-		</waypoint>
-
-	<waypoint>
-		<duration>300</duration>
-		<depth>0.0</depth>
-		<limit_velocity>0.05</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-	</waypoint>
-
-	</loop>
+<waypoint>
+	<duration>20</duration>
+	<east>-1</east>
+	<north>-2</north>
+	<depth>0</depth>
+</waypoint>
 </paths>
 
 <!--<enable_thrusters>False</enable_thrusters-->
