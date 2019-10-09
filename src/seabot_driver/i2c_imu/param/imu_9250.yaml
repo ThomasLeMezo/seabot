@@ -39,7 +39,7 @@ publish_magnetometer: true
 # RTIMU_XEAST_YDOWN     -> 21
 # RTIMU_XSOUTH_YDOWN    -> 22
 # RTIMU_XWEST_YDOWN     -> 23
-axis_rotation: 2
+axis_rotation: 4
 
 mpu9250:
   #Sample Rates
@@ -92,20 +92,10 @@ seabot2:
   mag_declination: -1.722
 
 seabot3:
-  #ellipsoid_offset: [ 9.5296744553 ,  -6.85539266089 ,  40.9095773064 ]
-  #ellipsoid_matrix0: [ 1.0352544603 ,  0.0264255854671 ,  -0.0303184033011 ]
-  #ellipsoid_matrix1: [ 0.0264255854671 ,  1.04686539774 ,  0.0134054892963 ]
-  #ellipsoid_matrix2: [ -0.0303184033011 ,  0.0134054892963 ,  0.92437823152 ]
-
-  ellipsoid_offset: [ 7.43450548343 ,  -9.46702779623 ,  49.5610020985 ]
-  ellipsoid_matrix0: [ 0.987032443034 ,  -0.0112718092698 ,  0.0349877790987 ]
-  ellipsoid_matrix1: [ -0.0112718092698 ,  0.990162746381 ,  -0.00820314061991 ]
-  ellipsoid_matrix2: [ 0.0349877790987 ,  -0.00820314061991 ,  1.02463820731 ]
-
-  # ellipsoid_offset: [0, 0, 0]
-  # ellipsoid_matrix0: [1, 0, 0]
-  # ellipsoid_matrix1: [0, 1, 0]
-  # ellipsoid_matrix2: [0, 0, 1]
+  ellipsoid_offset: [ 6.74780627561 ,  -8.03625475318 ,  41.0918499046 ]
+  ellipsoid_matrix0: [ 1.02033827535 ,  0.0294237290223 ,  -0.0127605544002 ]
+  ellipsoid_matrix1: [ 0.0294237290223 ,  1.00842241112 ,  0.00669261513772 ]
+  ellipsoid_matrix2: [ -0.0127605544002 ,  0.00669261513772 ,  0.972909043907 ]
   
   #accel_min: [-0.896, -1.135, -1.109]
   #accel_max: [1.116,   1.015,  0.975]
@@ -115,4 +105,4 @@ seabot3:
 
   gyro_bias: [-3.81e-05, 3.63e-06, 4.32e-05]
 
-  mag_declination: -1.722
+  mag_declination: 0.0

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!--<offset>
+		<start_time_utc>
+		<year>2019</year>
+		<month>06</month>
+		<day>14</day>
+		<hour>13</hour>
+		<min>10</min>
+	</start_time_utc>
+</offset>-->
+
+<paths type ="0">
+<waypoint>
+	<duration>180</duration>
+	<east>253534</east>
+	<north>6805745</north>
+	<depth>0</depth>
+</waypoint>
+
+<waypoint>
+	<duration>180</duration>
+	<east>253513</east>
+	<north>6805748</north>
+	<depth>0</depth>
+</waypoint>
+
+<waypoint>
+	<duration>180</duration>
+	<east>253534</east>
+	<north>6805745</north>
+	<depth>0</depth>
+</waypoint>
+</paths>
+
+<!--<enable_thrusters>False</enable_thrusters-->

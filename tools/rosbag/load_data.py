@@ -220,6 +220,7 @@ class RegulationWaypointData(SeabotData):
         self.hysteresis_inside = np.empty([self.nb_elements])
         self.angular = np.empty([self.nb_elements])
         self.angular_limit = np.empty([self.nb_elements])
+        self.valid_time = np.empty([self.nb_elements])
 
 ####################### Mission #######################
 
@@ -285,7 +286,7 @@ end_time = 0.0
 ########################################################
 ####################### Function #######################
 
-def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData):
+def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData):
 
     bag = rosbag.Bag(filename, 'r')
 
@@ -322,6 +323,7 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
     safetyDebugData.__init__(bag)
     iridiumStatusData.__init__(bag)
     iridiumSessionData.__init__(bag)
+    regulationWaypointData.__init__(bag)
 
     for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
         if(topic==pistonSetPointData.topic_name):
@@ -563,6 +565,26 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
             iridiumSessionData.mtmsn[iridiumSessionData.k] = msg.mtmsn
             iridiumSessionData.waiting[iridiumSessionData.k] = msg.waiting
             iridiumSessionData.add_time(t, startTime)
+
+        elif(topic==regulationWaypointData.topic_name):
+            regulationWaypointData.yaw_set_point[regulationWaypointData.k] = msg.yaw_set_point
+            regulationWaypointData.yaw_error[regulationWaypointData.k] = msg.yaw_error
+            regulationWaypointData.distance_error[regulationWaypointData.k] = msg.distance_error
+            if(msg.enable_regulation):
+                regulationWaypointData.enable_regulation[regulationWaypointData.k] = 1
+            else:
+                regulationWaypointData.enable_regulation[regulationWaypointData.k] = 0
+            if(msg.hysteresis_inside):
+                regulationWaypointData.hysteresis_inside[regulationWaypointData.k] = 1
+            else:
+                regulationWaypointData.hysteresis_inside[regulationWaypointData.k] = 0
+            if(msg.valid_time):
+                regulationWaypointData.valid_time[regulationWaypointData.k] = 1
+            else:
+                regulationWaypointData.valid_time[regulationWaypointData.k] = 0
+            regulationWaypointData.angular[regulationWaypointData.k] = msg.angular
+            regulationWaypointData.angular_limit[regulationWaypointData.k] = msg.angular_limit
+            regulationWaypointData.add_time(t, startTime)
 
     bag.close()
 

@@ -258,7 +258,7 @@ void I2cImu::update(){
 
       msg.x = imuData.fusionPose.x();
       msg.y = imuData.fusionPose.y();
-      msg.z = -imuData.fusionPose.z();
+      msg.z = imuData.fusionPose.z();
 
       euler_pub_.publish(msg);
     }

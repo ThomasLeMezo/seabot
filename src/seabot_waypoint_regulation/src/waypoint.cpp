@@ -108,6 +108,7 @@ int main(int argc, char *argv[]){
   ros::WallTime t_last_debug;
 
   bool hysteresis_inside = false;
+  bool first_data_received = false;
 
   ROS_INFO("[Waypoint] Start Ok");
   // Main regulation loop
@@ -116,13 +117,14 @@ int main(int argc, char *argv[]){
 
     t = ros::WallTime::now();
 
-    // ToDo : Add repulsive field if near coastline !!
-    double yaw_set_point = atan2(north_set_point-north, east_set_point-east); // 0 deg yaw at in (x,y) != mag heading
-    double yaw_error = 2*atan(tan((yaw_imu+M_PI_2-yaw_set_point)/2.0)); // In (x,y) frame
+    // ToDo : Add repulsive field if near coastline (?)
+    double yaw_set_point = -(atan2(north_set_point-north, east_set_point-east)-M_PI_2); // 0 deg yaw at in (x,y) != mag heading
+    double yaw_error = -2*atan(tan((yaw_set_point-yaw_imu)/2.0)); // indirect frame => (-)
 
     double distance_error = sqrt(pow(north_set_point-north, 2)+pow(east_set_point-east, 2));
-    bool enable_regulation = true;
 
+    // Hysteresis
+    bool enable_regulation = true;
     if(distance_error > hysteresis_circle_out){
       hysteresis_inside = false;
       enable_regulation = true;
@@ -135,6 +137,7 @@ int main(int argc, char *argv[]){
       enable_regulation = false;
     }
 
+    // Valid Time
     bool valid_time = true;
     if(!((t-last_received_set_point).toSec()<delta_valid_time
        && (t-last_received_pose).toSec()<delta_valid_time
@@ -142,14 +145,21 @@ int main(int argc, char *argv[]){
       enable_regulation = false;
       valid_time = false;
     }
+    else{
+      first_data_received = true;
+    }
 
-    // Limitation of regulation
+    // Depth switch off & enable mission
     if(!mission_enable || depth>depth_limit_switch_off)
       enable_regulation = false;
 
     if(is_surface && enable_regulation && !depth_only){
       engine_msg.linear = linear_speed;
-      engine_msg.angular = coeff_P*yaw_error + coeff_D*angular_velocity;
+
+      if(abs(yaw_error)<M_PI/2.)
+        engine_msg.angular = coeff_P*yaw_error + coeff_D*angular_velocity;
+      else
+        engine_msg.angular = -max_angular_velocity;
     }
     else{
       engine_msg.linear = 0.0;
@@ -164,9 +174,16 @@ int main(int argc, char *argv[]){
     engine_pub.publish(engine_msg);
 
     if((t-t_last_debug).toSec()>1.0){
-      debug_msg.distance_error = distance_error;
-      debug_msg.yaw_error = yaw_error;
-      debug_msg.yaw_set_point = yaw_set_point;
+      if(!first_data_received){
+        debug_msg.distance_error = 0.0;
+        debug_msg.yaw_error = 0.0;
+        debug_msg.yaw_set_point = 0.0;
+      }
+      else{
+        debug_msg.distance_error = distance_error;
+        debug_msg.yaw_error = yaw_error;
+        debug_msg.yaw_set_point = yaw_set_point;
+      }
       debug_msg.enable_regulation = enable_regulation;
       debug_msg.hysteresis_inside = hysteresis_inside;
       debug_msg.valid_time = valid_time;

@@ -43,17 +43,17 @@ def save_gpx():
     gpx_track = gpxpy.gpx.GPXTrack()
     gpx_segment = gpxpy.gpx.GPXTrackSegment()
 
-    for i in range(len(fix_latitude)):
+    for i in range(len(fixData.latitude)):
         if(abs(last_fix_time-fixData.time[i])>30.):
-            if(fix_status[i]==3):
+            if(fixData.status[i]==3):
                 last_fix_time = fixData.time[i]
 
-                gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
-                    longitude=fix_longitude[i],
-                    elevation=fix_altitude[i],
+                gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fixData.latitude[i], 
+                    longitude=fixData.longitude[i],
+                    elevation=fixData.altitude[i],
                     time=datetime.datetime.fromtimestamp(fixData.time[i]+startTime),
-                    horizontal_dilution=fix_hdop[i],
-                    vertical_dilution=fix_hdop[i]
+                    horizontal_dilution=fixData.hdop[i],
+                    vertical_dilution=fixData.hdop[i]
                     ))
     gpx_track.segments.append(gpx_segment)
     gpx.tracks.append(gpx_track)
@@ -97,10 +97,11 @@ safetyData = SafetyData()
 safetyDebugData = SafetyDebugData()
 iridiumStatusData = IridiumStatusData()
 iridiumSessionData = IridiumSessionData()
+regulationWaypointData = RegulationWaypointData()
 
 
 filename = sys.argv[1]
-load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData)
+load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData)
 
 print("Data has been loaded")
 
@@ -124,15 +125,15 @@ area_piston = DockArea()
 area_regulation = DockArea()
 area_iridium = DockArea()
 area_position = DockArea()
-area_thruster = DockArea()
+area_waypoints = DockArea()
 
 tab.addTab(area_safety, "Safety")
 tab.addTab(area_data, "Data")
 tab.addTab(area_piston, "Piston")
 tab.addTab(area_regulation, "Regulation")
 tab.addTab(area_iridium, "Iridium")
-tab.addTab(area_position, "Trajectory")
-tab.addTab(area_thruster, "Thruster")
+tab.addTab(area_position, "GNSS")
+tab.addTab(area_waypoints, "Waypoints")
 
 #################### Standard plot ####################
 
@@ -170,6 +171,16 @@ def plot_regulation_state(dock):
     for i in np.where(tab[:-1] != tab[1:])[0]:
         text_write_plot(pg_regulation_state, regulationData.time[i+1], tab[i+1], regulation_state[tab[i+1]])
     return pg_regulation_state
+
+def plot_regulation_waypoint_heading(dock):
+    pg_heading = pg.PlotWidget()
+    set_plot_options(pg_heading)
+    pg_heading.plot(regulationWaypointData.time, regulationWaypointData.yaw_set_point[:-1], pen=(255,0,0), name="set_point", stepMode=True)
+    pg_heading.plot(eulerData.time, eulerData.z[:-1], pen=(0,255,0), name="yaw", stepMode=True)
+    pg_heading.setLabel('left', "heading")
+    dock.addWidget(pg_heading)
+
+    return pg_heading
 
 def text_write_reset(p, t):
     text = pg.TextItem(html='<div style="text-align: left"><span style="color: #FFF;">RESET</span></div>', anchor=(-0.3,1.3),border='w', fill=(0, 0, 255, 100))
@@ -776,27 +787,6 @@ if(len(poseFusionData.east)>0 and len(fixData.time)>0):
     dock_gps2.addWidget(saveBtn, row=1, col=0)
     saveBtn.clicked.connect(save_gpx)
 
-if(len(poseFusionData.east)>0 and len(fixData.time)>0 and len(missionData.time)>0):
-    dock_mission = Dock("Mission path")
-    area_position.addDock(dock_mission, 'above', dock_gps)
-    pg_gps2 = pg.PlotWidget()
-    set_plot_options(pg_gps2)
-    Y = np.array(poseFusionData.north)
-    X = np.array(poseFusionData.east)
-    X = X[~np.isnan(X)]
-    Y = Y[~np.isnan(Y)]
-    X_mission = np.array(missionData.east)
-    Y_mission = np.array(missionData.north)
-    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
-    pg_gps2.plot(X_mission, Y_mission, pen=(0,255,0), name="mission", symbol='o')
-    pg_gps2.setLabel('left', "Y", units="m")
-    pg_gps2.setLabel('bottom', "X", units="m")
-    dock_mission.addWidget(pg_gps2)
-
-    saveBtn = QtGui.QPushButton('Export GPX')
-    dock_mission.addWidget(saveBtn, row=1, col=0)
-    saveBtn.clicked.connect(save_gpx)
-
 ####  Heading #### 
 if(len(eulerData.time)>0 and len(fixData.time)>0):
     dock_euler = Dock("Heading")
@@ -910,20 +900,138 @@ if(len(iridiumSessionData.time)>0):
     # iridium_session_mtmsn = []
     # iridium_session_waiting = []
 
+#################### Waypoints Regulation ####################
+
 if(len(engineData.time)>0):
     dock_thrusters = Dock("Thrusters")
-    area_thruster.addDock(dock_thrusters)
+    area_waypoints.addDock(dock_thrusters)
+
     pg_thruster_left = pg.PlotWidget()
     set_plot_options(pg_thruster_left)
     pg_thruster_left.plot(engineData.time, engineData.left[:-1], pen=(0,0,255), name="left", stepMode=True)
+    pg_thruster_left.setLabel('left', "left")
     dock_thrusters.addWidget(pg_thruster_left)
 
     pg_thruster_right = pg.PlotWidget()
     set_plot_options(pg_thruster_right)
     pg_thruster_right.plot(engineData.time, engineData.right[:-1], pen=(0,0,255), name="right", stepMode=True)
+    pg_thruster_right.setLabel('left', "right")
     dock_thrusters.addWidget(pg_thruster_right)
 
-    pg_thruster_right.setXLink(pg_thruster_left)
+# if(len(engineData.time)>0):
+#     dock_regulation_output = Dock("Regulation Heading")
+#     area_waypoints.addDock(dock_regulation_output, 'above', dock_thrusters)
+
+#     pg_heading = plot_regulation_waypoint_heading(dock_regulation_output)
+
+#     pg_thruster_angular = pg.PlotWidget()
+#     set_plot_options(pg_thruster_angular)
+#     pg_thruster_angular.plot(engineCmdData.time, engineCmdData.angular[:-1], pen=(255,0,0), name="angular", stepMode=True)
+#     pg_thruster_angular.setLabel('left', "angular")
+#     dock_regulation_output.addWidget(pg_thruster_angular)
+
+#     pg_thruster_angular.setXLink(pg_heading)
+
+if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
+    dock_heading_error = Dock("Heading error")
+    area_waypoints.addDock(dock_heading_error, 'above', dock_thrusters)
+
+    pg_heading = plot_regulation_waypoint_heading(dock_heading_error)
+
+    pg_heading_error = pg.PlotWidget()
+    set_plot_options(pg_heading_error)
+    pg_heading_error.plot(regulationWaypointData.time, regulationWaypointData.yaw_error[:-1], pen=(255,0,0), name="error", stepMode=True)
+    dock_heading_error.addWidget(pg_heading_error)
+
+    pg_heading_cmd = pg.PlotWidget()
+    set_plot_options(pg_heading_cmd)
+    pg_heading_cmd.plot(regulationWaypointData.time, regulationWaypointData.angular[:-1], pen=(255,0,0), name="angular", stepMode=True)
+    pg_heading_cmd.plot(regulationWaypointData.time, regulationWaypointData.angular_limit[:-1], pen=(0,255,0), name="angular saturated", stepMode=True)
+    dock_heading_error.addWidget(pg_heading_cmd)
+
+    pg_heading_cmd.setXLink(pg_heading_error)
+    pg_heading_error.setXLink(pg_heading)
+
+# if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
+#     dock_heading_regulation = Dock("Heading regulation")
+#     area_waypoints.addDock(dock_heading_regulation, 'above', dock_thrusters)
+
+#     pg_heading = plot_regulation_waypoint_heading(dock_heading_regulation)
+
+#     pg_heading_error = pg.PlotWidget()
+#     set_plot_options(pg_heading_error)
+#     pg_heading_error.plot(regulationWaypointData.time, regulationWaypointData.yaw_error[:-1], pen=(255,0,0), name="error", stepMode=True)
+#     dock_heading_regulation.addWidget(pg_heading_error)
+
+#     pg_heading_cmd = pg.PlotWidget()
+#     set_plot_options(pg_heading_cmd)
+#     pg_heading_cmd.plot(regulationWaypointData.time, regulationWaypointData.angular[:-1], pen=(255,0,0), name="angular", stepMode=True)
+#     pg_heading_cmd.plot(regulationWaypointData.time, regulationWaypointData.angular_limit[:-1], pen=(0,255,0), name="angular saturated", stepMode=True)
+#     dock_heading_regulation.addWidget(pg_heading_cmd)
+
+#     pg_heading_cmd.setXLink(pg_heading_error)
+#     pg_heading_error.setXLink(pg_heading)
+
+#### Mission Path ####
+if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missionData.time)>0):
+    dock_mission = Dock("Mission path")
+    area_waypoints.addDock(dock_mission, 'above', dock_heading_error)
+    pg_gps2 = pg.PlotWidget()
+    set_plot_options(pg_gps2)
+    Y = np.array(poseFusionData.north)
+    X = np.array(poseFusionData.east)
+    X = X[~np.isnan(X)]
+    Y = Y[~np.isnan(Y)]
+    X_mission = np.array(missionData.east)
+    Y_mission = np.array(missionData.north)
+    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
+    pg_gps2.plot(X_mission, Y_mission, pen=(0,255,0), name="mission", symbol='x')
+    pg_gps2.setLabel('left', "Y", units="m")
+    pg_gps2.setLabel('bottom', "X", units="m")
+    dock_mission.addWidget(pg_gps2)
+
+    pg_distance_error = pg.PlotWidget()
+    set_plot_options(pg_distance_error)
+    pg_distance_error.plot(regulationWaypointData.time, regulationWaypointData.distance_error[:-1], pen=(255,0,0), name="distance_error", stepMode=True)
+    dock_mission.addWidget(pg_distance_error)
+
+if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
+    dock_distance = Dock("Distance")
+    area_waypoints.addDock(dock_distance, 'above', dock_heading_error)
+
+    pg_distance_error = pg.PlotWidget()
+    set_plot_options(pg_distance_error)
+    pg_distance_error.plot(regulationWaypointData.time, regulationWaypointData.distance_error[:-1], pen=(255,0,0), name="distance error", stepMode=True)
+    dock_distance.addWidget(pg_distance_error)
+
+    pg_enable_regulation = pg.PlotWidget()
+    set_plot_options(pg_enable_regulation)
+    pg_enable_regulation.plot(regulationWaypointData.time, regulationWaypointData.enable_regulation[:-1], pen=(255,0,0), name="enable regulation", stepMode=True)
+    pg_enable_regulation.plot(missionData.time, missionData.mission_enable[:-1], pen=(0,255,0), name="enable mission", stepMode=True)
+    pg_enable_regulation.plot(regulationWaypointData.time, regulationWaypointData.valid_time[:-1], pen=(0,0,255), name="valid time", stepMode=True)
+    dock_distance.addWidget(pg_enable_regulation)
+
+    pg_hysteresis = pg.PlotWidget()
+    set_plot_options(pg_hysteresis)
+    pg_hysteresis.plot(regulationWaypointData.time, regulationWaypointData.hysteresis_inside[:-1], pen=(255,0,0), name="hysteresis inside", stepMode=True)
+    dock_distance.addWidget(pg_hysteresis)
+
+    pg_hysteresis.setXLink(pg_enable_regulation)
+    pg_hysteresis.setXLink(pg_distance_error)
+
+# pg_thruster_linear = pg.PlotWidget()
+# set_plot_options(pg_thruster_linear)
+# pg_thruster_linear.plot(engineCmdData.time, engineCmdData.linear[:-1], pen=(255,0,0), name="linear", stepMode=True)
+# pg_thruster_linear.setLabel('left', "linear")
+# dock_regulation_output.addWidget(pg_thruster_linear)
+    
+# regulationWaypointData.yaw_set_point
+# regulationWaypointData.yaw_error
+# regulationWaypointData.distance_error
+# regulationWaypointData.enable_regulation
+# regulationWaypointData.hysteresis_inside
+# regulationWaypointData.angular
+# regulationWaypointData.angular_limit
 
 ###################################################
 
