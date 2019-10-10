@@ -918,6 +918,8 @@ if(len(engineData.time)>0):
     pg_thruster_right.setLabel('left', "right")
     dock_thrusters.addWidget(pg_thruster_right)
 
+    pg_thruster_right.setXLink(pg_thruster_left)
+
 # if(len(engineData.time)>0):
 #     dock_regulation_output = Dock("Regulation Heading")
 #     area_waypoints.addDock(dock_regulation_output, 'above', dock_thrusters)

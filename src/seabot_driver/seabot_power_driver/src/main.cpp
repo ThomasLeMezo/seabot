@@ -85,7 +85,7 @@ int main(int argc, char *argv[]){
   }
 
   p.set_sleep_mode_countdown(1, 0, 0, 250);
-  p.set_nb_flash(1);
+  p.set_nb_flash(0);
   ROS_DEBUG("[POWER] Set sleep mode to 1 hour");
 
   // ToDo : Add serices to turn off/on Iridium, GPS

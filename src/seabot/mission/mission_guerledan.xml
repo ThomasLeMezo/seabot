@@ -5,7 +5,7 @@
 		<year>2019</year>
 		<month>10</month>
 		<day>10</day>
-		<hour>13</hour>
+		<hour>08</hour>
 		<min>00</min>
 	</start_time_utc>
 </offset>
@@ -32,15 +32,15 @@
 	</waypoint>
 </loop>
 
-<loop number="5" depth_increment="-5.0">
+<loop number="6" depth_increment="-5.0">
 	<waypoint>
 		<duration>400</duration>
-		<depth>10.0</depth>
+		<depth>28</depth>
 		<limit_velocity>0.05</limit_velocity>
 		<approach_velocity>1.0</approach_velocity>
 		<east>253402</east>
 		<north>6805661</north>
-		<depth>28</depth>
+		
 	</waypoint>
 </loop>
 
@@ -55,7 +55,7 @@
 </waypoint>
 
 <waypoint>
-	<duration>350</duration>
+	<duration>450</duration>
 	<depth>0.0</depth>
 	<east>253358</east>
 	<north>6805660</north>
@@ -65,24 +65,22 @@
 <loop number="5" depth_increment="5.0">
 	<waypoint>
 		<duration>400</duration>
-		<depth>10.0</depth>
+		<depth>5</depth>
 		<limit_velocity>0.05</limit_velocity>
 		<approach_velocity>1.0</approach_velocity>
 		<east>253358</east>
 		<north>6805660</north>
-		<depth>5</depth>
 	</waypoint>
 </loop>
 
-<loop number="5" depth_increment="-5.0">
+<loop number="6" depth_increment="-5.0">
 	<waypoint>
 		<duration>400</duration>
-		<depth>10.0</depth>
+		<depth>28</depth>
 		<limit_velocity>0.05</limit_velocity>
 		<approach_velocity>1.0</approach_velocity>
 		<east>253358</east>
 		<north>6805660</north>
-		<depth>28</depth>
 	</waypoint>
 </loop>
 

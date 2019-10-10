@@ -1,6 +1,6 @@
 <launch>
     <node name="iridium_node" pkg="seabot_iridium" type="iridium_node" output="screen" ns="iridium" respawn="true" respawn_delay="5">
-								<param name="duration_between_msg" value="180" />
+								<param name="duration_between_msg" value="60" />
         <param name="wait_time_surface" value="10" />
         <param name="depth_surface_limit" value="0.5" />
 								<param name="debug" value="false" />
