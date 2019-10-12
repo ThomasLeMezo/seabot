@@ -226,6 +226,7 @@ int main(int argc, char *argv[]){
   duration_between_msg = n_private.param<double>("duration_between_msg", 60*5);
   wait_surface_time = n_private.param<double>("wait_time_surface", 2.0);
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
+  bool enable_gnss_iridium = n_private.param<double>("enable_gnss_iridium", false);
 
   const string mission_file_name = n.param<string>("mission_file_name", "mission_test.xml");
   const string mission_path = n.param<string>("mission_path", "");
@@ -297,7 +298,7 @@ int main(int argc, char *argv[]){
             if((t-time_last_log_version).toSec()>30.){
               string log_sentence = log_state.serialize_log_state(ros::WallTime::now().toSec());
               sbd.cmd_write_message(log_sentence);
-              if(valid_fix && (t-time_last_gnss).toSec()<10.)
+              if(enable_gnss_iridium && valid_fix && (t-time_last_gnss).toSec()<10.)
                 sbd.set_gnss(latitude, longitude);
               time_last_log_version = t;
             }

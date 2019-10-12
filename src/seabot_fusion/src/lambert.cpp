@@ -118,6 +118,8 @@ int main(int argc, char *argv[])
         msg_pose_mean.east = east_mean;
         msg_pose_mean.north = north_mean;
         msg_pose_mean.heading = heading_mean;
+
+        pose_mean_pub.publish(msg_pose_mean);
       }
       new_data = false;
     }

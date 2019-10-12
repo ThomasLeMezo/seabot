@@ -46,8 +46,9 @@ void SBD::read(){
   string result = m_serial.readStringUntil(SBD_TOKEN_SEPARATOR);
 
   if(result != ""){
+    if(m_debug)
+      ROS_INFO("[Iridium_raw] %s", result.c_str());
 
-    //    ROS_INFO("[Iridium_raw] %s", result.c_str());
     if(boost::starts_with(result, "OK")){
       omp_set_lock(&lock_data);
       m_OK = true;
@@ -216,7 +217,8 @@ void SBD::write(const std::string &at_cmd){
 
   string cmd = at_cmd + '\r';
   m_serial.writeString(cmd);
-  //  ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
+  if(m_debug)
+    ROS_INFO("[Iridium_raw] send = %s", cmd.c_str());
 }
 
 void SBD::disable_echo(){
@@ -354,7 +356,7 @@ int SBD::cmd_session(){
     if(lat_deg<0)
       lat_string << "-";
     lat_string << setfill('0') << setw(2) << abs(lat_deg);
-    lat_string << std::fixed << std::setprecision(3) << lat_min;
+    lat_string << setw(5) << std::fixed << std::setprecision(3) << lat_min;
     cmd += lat_string.str();
 
     cmd += ",";
@@ -362,7 +364,7 @@ int SBD::cmd_session(){
     if(lon_deg<0)
       lon_string << "-";
     lon_string << setfill('0') << setw(3) << abs(lon_deg);
-    lon_string << std::fixed << std::setprecision(3) << lon_min;
+    lon_string << setw(5) << std::fixed << std::setprecision(3) << lon_min;
     cmd += lon_string.str();
   }
 

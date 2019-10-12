@@ -33,7 +33,7 @@
 
 								<param name="coeff_P" value="0.8" />
 								<param name="coeff_D" value="0.2" />
-								<param name="linear_speed" value="1.0" />
+								<param name="linear_speed" value="1.3" />
 								<param name="depth_limit_switch_off" value="0.5" />
 								<param name="max_angular_velocity" value="1.0" />
     </node>

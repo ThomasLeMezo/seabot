@@ -361,8 +361,6 @@ inline int SBD::get_indicator_signal(){
 }
 
 inline int SBD::get_indicator_service(){
-  if(m_debug)
-    return 1;
   omp_set_lock(&lock_data);
   int result = m_indicator_service;
   omp_unset_lock(&lock_data);

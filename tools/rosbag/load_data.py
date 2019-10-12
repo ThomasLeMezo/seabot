@@ -3,6 +3,7 @@ import rosbag
 import yaml
 import numpy as np
 import datetime
+from numba import jit
 
 ####################### Driver #######################
 
@@ -286,6 +287,7 @@ end_time = 0.0
 ########################################################
 ####################### Function #######################
 
+@jit
 def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData):
 
     bag = rosbag.Bag(filename, 'r')

@@ -110,13 +110,13 @@ void SeabotMission::load_mission(const std::string &file_xml){
   m_waypoints.clear();
 
   try{
-    m_offset_north = tree.get_child("offset.north").get_value<double>();
+    m_offset_north = tree.get_child("mission.offset.north").get_value<double>();
   } catch (std::exception const&  ex){
     ROS_DEBUG("[Seabot_Mission] No north offset defined %s", ex.what());
   }
 
   try{
-    m_offset_east = tree.get_child("offset.east").get_value<double>();
+    m_offset_east = tree.get_child("mission.offset.east").get_value<double>();
   } catch (std::exception const&  ex){
     ROS_DEBUG("[Seabot_Mission] No east offset defined %s", ex.what());
   }
@@ -124,11 +124,11 @@ void SeabotMission::load_mission(const std::string &file_xml){
   m_time_start = ros::WallTime::now() + ros::WallDuration(60);
   // Read special offset time
   try{
-    const int year = tree.get_child("offset.start_time_utc.year").get_value<int>();
-    const int month = tree.get_child("offset.start_time_utc.month").get_value<int>();
-    const int day = tree.get_child("offset.start_time_utc.day").get_value<int>();
-    const int hour = tree.get_child("offset.start_time_utc.hour").get_value<int>();
-    const int min = tree.get_child("offset.start_time_utc.min").get_value<int>();
+    const int year = tree.get_child("mission.offset.start_time_utc.year").get_value<int>();
+    const int month = tree.get_child("mission.offset.start_time_utc.month").get_value<int>();
+    const int day = tree.get_child("mission.offset.start_time_utc.day").get_value<int>();
+    const int hour = tree.get_child("mission.offset.start_time_utc.hour").get_value<int>();
+    const int min = tree.get_child("mission.offset.start_time_utc.min").get_value<int>();
 
     struct tm time = { 0 };
     time.tm_year = year - 1900;
@@ -144,7 +144,7 @@ void SeabotMission::load_mission(const std::string &file_xml){
     ROS_DEBUG("[Seabot_Mission] No time offset defined %s - Set now + 60s", ex.what());
   }
 
-  int mission_type = tree.get_child("paths").get("<xmlattr>.type", 0);
+  int mission_type = tree.get_child("mission.paths").get("<xmlattr>.type", 0);
   switch (mission_type){
   case 0:
     ROS_INFO("[Seabot_Mission] Mission type : Depth and Waypoint regulation");
@@ -158,7 +158,7 @@ void SeabotMission::load_mission(const std::string &file_xml){
   }
 
   ros::WallTime last_time = m_time_start;
-  BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("paths")){
+  BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("mission.paths")){
     decode_waypoint(v, last_time, 0.0);
   }
 }
