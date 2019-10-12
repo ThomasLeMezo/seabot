@@ -117,10 +117,10 @@ bool Pressure_89BSD::measure(){
 
         m_pressure = ((p-0.1)/0.8*(P_MAX - P_MIN) + P_MIN);
 
-        if(m_temperature < 0.0 || m_temperature > 50.0 || m_pressure<0.7 || m_pressure>6.5){
+        if(m_temperature < 0.0 || m_temperature > 50.0 || m_pressure<0.7 || m_pressure>P_MAX){
             m_valid_data = false;
             ROS_WARN("[Pressure_89BSD] Data out of range (p=%f t=%f)", m_pressure, m_temperature);
-            if(m_temperature >0.0 && m_temperature < 50.0 && m_pressure > 0.7 && m_pressure<10.0) // detection of overpressure (>50m)
+            if(m_temperature >0.0 && m_temperature < 50.0 && m_pressure > 0.7 && m_pressure<P_MAX) // detection of overpressure (>50m)
               return true;
             else
               return false;

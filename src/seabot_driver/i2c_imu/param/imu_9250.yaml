@@ -43,8 +43,8 @@ axis_rotation: 4
 
 mpu9250:
   #Sample Rates
-  compass_sample_rate: 15
-  gyro_accel_sample_rate: 15
+  compass_sample_rate: 10
+  gyro_accel_sample_rate: 10
   
   #Accel
   accel_low_pass_filter: 4

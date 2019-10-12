@@ -351,8 +351,8 @@ if(len(temperatureData.time)>0 and len(depthFusionData.time)>0):
     dock_temp = Dock("T/depth")
     area_data.addDock(dock_temp, 'above', dock_internal_sensor)
     if(len(depthFusionData.depth)>0):
-        pg_temp = pg.PlotWidget()
-        set_plot_options(pg_temp)
+        pg_temp_depth = pg.PlotWidget()
+        set_plot_options(pg_temp_depth)
         
         f_temp = interpolate.interp1d(temperatureData.time, temperatureData.temperature, bounds_error=False)
         f_depth = interpolate.interp1d(depthFusionData.time, depthFusionData.depth, bounds_error=False)
@@ -361,12 +361,40 @@ if(len(temperatureData.time)>0 and len(depthFusionData.time)>0):
         temperature_interp = f_temp(time_interp)
         depth_interp = f_depth(time_interp)
 
-        pg_temp.plot(temperature_interp, depth_interp[:-1], pen=(255,0,0), name="Temperature", stepMode=True)
-        pg_temp.setLabel('left', "Depth")
-        pg_temp.setLabel('bottom', "Temperature")
+        mask_temp = (temperature_interp>0)
+        temp_mask = temperature_interp[mask_temp]
+        depth_mask = depth_interp[mask_temp]
+        time_mask = time_interp[mask_temp]
+
+        plot_t_d = pg_temp_depth.plot(temp_mask, depth_mask[:-1], pen=(255,0,0), name="T/D", stepMode=True)
+        pg_temp_depth.setDownsampling(mode='peak') # ToCheck
+        pg_temp_depth.setLabel('left', "Depth")
+        pg_temp_depth.setLabel('bottom', "Temperature")
         
-        pg_temp.getViewBox().invertY(True)
+        pg_temp_depth.getViewBox().invertY(True)
+        dock_temp.addWidget(pg_temp_depth)
+
+        pg_temp= pg.PlotWidget()
+        set_plot_options(pg_temp)
+        pg_temp.plot(time_mask, depth_mask[:-1], pen=(255,0,0), name="Depth", stepMode=True)
         dock_temp.addWidget(pg_temp)
+
+        lr = pg.LinearRegionItem([0, time_mask[-1]], bounds=[0,time_mask[-1]], movable=True)
+        pg_temp.addItem(lr)
+
+        def update_TP():
+            global plot_t_d, temp_mask, depth_mask, lr
+            t_bounds = lr.getRegion()
+            ub = np.where(time_mask <= np.max((1,t_bounds[1])))[0][-1]
+            lb = np.where(time_mask >= np.min((time_mask[-1],t_bounds[0])))[0][0]
+
+            ub = np.min((ub, np.size(time_mask)))
+            lb = np.max((lb,0))
+            plot_t_d.setData(temp_mask[lb:ub], depth_mask[lb:ub][:-1])
+
+        timer = pg.QtCore.QTimer()
+        timer.timeout.connect(update_TP)
+        timer.start(50)
 
 #### Sensor External ####
 if(len(sensorExtData.time)>0):
@@ -401,6 +429,7 @@ if(len(depthFusionData.time)>0):
     dock_fusion = Dock("Fusion")
     area_data.addDock(dock_fusion, 'above', dock_internal_sensor)
     pg_depth = plot_depth(dock_fusion)
+    pg_depth.plot(depthFusionData.time, depthFusionData.velocity[:-1], pen=(255,0,0), name="velocity", stepMode=True)
 
     pg_fusion_velocity = pg.PlotWidget()
     set_plot_options(pg_fusion_velocity)
@@ -908,13 +937,13 @@ if(len(engineData.time)>0):
 
     pg_thruster_left = pg.PlotWidget()
     set_plot_options(pg_thruster_left)
-    pg_thruster_left.plot(engineData.time, engineData.left[:-1], pen=(0,0,255), name="left", stepMode=True)
+    pg_thruster_left.plot(engineData.time, engineData.left[:-1]-150, pen=(0,0,255), name="left", stepMode=True)
     pg_thruster_left.setLabel('left', "left")
     dock_thrusters.addWidget(pg_thruster_left)
 
     pg_thruster_right = pg.PlotWidget()
     set_plot_options(pg_thruster_right)
-    pg_thruster_right.plot(engineData.time, engineData.right[:-1], pen=(0,0,255), name="right", stepMode=True)
+    pg_thruster_right.plot(engineData.time, engineData.right[:-1]-150, pen=(0,0,255), name="right", stepMode=True)
     pg_thruster_right.setLabel('left', "right")
     dock_thrusters.addWidget(pg_thruster_right)
 
