@@ -1049,6 +1049,7 @@ if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
 
     pg_hysteresis.setXLink(pg_enable_regulation)
     pg_hysteresis.setXLink(pg_distance_error)
+    pg_hysteresis.setXLink(pg_enable_regulation)
 
 # pg_thruster_linear = pg.PlotWidget()
 # set_plot_options(pg_thruster_linear)
