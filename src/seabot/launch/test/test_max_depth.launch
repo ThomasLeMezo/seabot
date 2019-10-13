@@ -41,9 +41,9 @@
      <include file="$(find i2c_imu)/launch/mpu_9250_param.launch"/>
  </group>
 
- <include file="$(find seabot_fusion)/launch/filter.launch"/>
- <include file="$(find seabot_fusion)/launch/lambert.launch"/>
+ <include file="$(find seabot)/launch/filter.launch"/>
+ <include file="$(find seabot)/launch/lambert.launch"/>
 
- <include file="$(find seabot_safety)/launch/safety.launch"/>
+	<include file="$(find seabot)/launch/safety.launch"/>
 	<node name="regulation_max_depth" pkg="seabot" type="test_depth.py" output="screen" />
 </launch>

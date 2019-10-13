@@ -148,6 +148,7 @@ def plot_depth(dock):
     if(np.size(missionData.time)>0):
         pg_depth.plot(missionData.time, missionData.depth[:-1], pen=(0,255,0), name="set point", stepMode=True)
     pg_depth.setLabel('left', "Depth", units="m")
+    pg_depth.showGrid(y=True)
     dock.addWidget(pg_depth)
     return pg_depth
 
@@ -157,6 +158,7 @@ def plot_piston_position(dock):
     pg_position.plot(pistonStateData.time, pistonStateData.position[:-1],pen=(255,0,0), name="position", stepMode=True)
     pg_position.plot(pistonStateData.time, pistonStateData.position_set_point[:-1],pen=(0,0,255), name="set point (pic)", stepMode=True)
     pg_position.setLabel('left', "Piston state position and set point")
+    pg_position.showGrid(y=True)
     dock.addWidget(pg_position)
     return pg_position
 
@@ -379,18 +381,21 @@ if(len(temperatureData.time)>0 and len(depthFusionData.time)>0):
         pg_temp.plot(time_mask, depth_mask[:-1], pen=(255,0,0), name="Depth", stepMode=True)
         dock_temp.addWidget(pg_temp)
 
-        lr = pg.LinearRegionItem([0, time_mask[-1]], bounds=[0,time_mask[-1]], movable=True)
-        pg_temp.addItem(lr)
+        lr_TP = pg.LinearRegionItem([0, time_mask[-1]], bounds=[0,time_mask[-1]], movable=True)
+        pg_temp.addItem(lr_TP)
+        lr_TP_bounds = lr_TP.getRegion()
 
         def update_TP():
-            global plot_t_d, temp_mask, depth_mask, lr
-            t_bounds = lr.getRegion()
-            ub = np.where(time_mask <= np.max((1,t_bounds[1])))[0][-1]
-            lb = np.where(time_mask >= np.min((time_mask[-1],t_bounds[0])))[0][0]
+            global plot_t_d, temp_mask, depth_mask, lr_TP, lr_TP_bounds
+            t_bounds = lr_TP.getRegion()
+            if(t_bounds != lr_TP_bounds):
+                lr_TP_bounds = t_bounds
+                ub = np.where(time_mask <= np.max((1,t_bounds[1])))[0][-1]
+                lb = np.where(time_mask >= np.min((time_mask[-1],t_bounds[0])))[0][0]
 
-            ub = np.min((ub, np.size(time_mask)))
-            lb = np.max((lb,0))
-            plot_t_d.setData(temp_mask[lb:ub], depth_mask[lb:ub][:-1])
+                ub = np.min((ub, np.size(time_mask)))
+                lb = np.max((lb,0))
+                plot_t_d.setData(temp_mask[lb:ub], depth_mask[lb:ub][:-1])
 
         timer = pg.QtCore.QTimer()
         timer.timeout.connect(update_TP)
@@ -937,13 +942,13 @@ if(len(engineData.time)>0):
 
     pg_thruster_left = pg.PlotWidget()
     set_plot_options(pg_thruster_left)
-    pg_thruster_left.plot(engineData.time, engineData.left[:-1]-150, pen=(0,0,255), name="left", stepMode=True)
+    pg_thruster_left.plot(engineData.time, (engineData.left[:-1]-150)/400., pen=(0,0,255), name="left", stepMode=True)
     pg_thruster_left.setLabel('left', "left")
     dock_thrusters.addWidget(pg_thruster_left)
 
     pg_thruster_right = pg.PlotWidget()
     set_plot_options(pg_thruster_right)
-    pg_thruster_right.plot(engineData.time, engineData.right[:-1]-150, pen=(0,0,255), name="right", stepMode=True)
+    pg_thruster_right.plot(engineData.time, (engineData.right[:-1]-150)/400., pen=(0,0,255), name="right", stepMode=True)
     pg_thruster_right.setLabel('left', "right")
     dock_thrusters.addWidget(pg_thruster_right)
 
@@ -1003,29 +1008,78 @@ if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
 #     pg_heading_cmd.setXLink(pg_heading_error)
 #     pg_heading_error.setXLink(pg_heading)
 
+def get_circle(center, radius):
+    t = np.linspace(-np.pi, np.pi, num=100)
+    X = radius*np.cos(t)+center[0]
+    Y = radius*np.sin(t)+center[1]
+    return (X,Y)
+
 #### Mission Path ####
 if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missionData.time)>0):
     dock_mission = Dock("Mission path")
     area_waypoints.addDock(dock_mission, 'above', dock_heading_error)
     pg_gps2 = pg.PlotWidget()
     set_plot_options(pg_gps2)
-    Y = np.array(poseFusionData.north)
-    X = np.array(poseFusionData.east)
-    X = X[~np.isnan(X)]
-    Y = Y[~np.isnan(Y)]
-    X_mission = np.array(missionData.east)
-    Y_mission = np.array(missionData.north)
-    pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
+    Y = poseFusionData.north[~np.isnan(poseFusionData.north)]
+    X = poseFusionData.east[~np.isnan(poseFusionData.east)]
+    X_mission = missionData.east
+    Y_mission = missionData.north
+    plot_XY_mission = pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)")
     pg_gps2.plot(X_mission, Y_mission, pen=(0,255,0), name="mission", symbol='x')
     pg_gps2.setLabel('left', "Y", units="m")
     pg_gps2.setLabel('bottom', "X", units="m")
+
+    f_mission_set_point = interpolate.interp1d(missionData.time, (missionData.east, missionData.north), bounds_error=False, kind="zero")
+    X_mission_interp, Y_mission_interp = f_mission_set_point(poseFusionData.time)
+
+    X_Circ_inside, Y_Circ_inside = get_circle((X_mission_interp[-1],Y_mission_interp[-1]),4.)
+    X_Circ_outside, Y_Circ_outside = get_circle((X_mission_interp[-1],Y_mission_interp[-1]),2.)
+    print(X_mission_interp[-1],Y_mission_interp[-1])
+    plot_circle_outside = pg_gps2.plot(X_Circ_inside, Y_Circ_inside, pen=(0,0,255))
+    plot_circle_inside = pg_gps2.plot(X_Circ_outside, Y_Circ_outside, pen=(0,255,255))
+
     dock_mission.addWidget(pg_gps2)
+
+    f_pose_gnss = interpolate.interp1d(regulationWaypointData.time, regulationWaypointData.distance_error, bounds_error=False, kind="zero")
+    distance_error_interp = f_pose_gnss(poseFusionData.time)
 
     pg_distance_error = pg.PlotWidget()
     set_plot_options(pg_distance_error)
-    pg_distance_error.plot(regulationWaypointData.time, regulationWaypointData.distance_error[:-1], pen=(255,0,0), name="distance_error", stepMode=True)
+    pg_distance_error.plot(poseFusionData.time, distance_error_interp[:-1], pen=(255,0,0), name="distance_error", stepMode=True)
     dock_mission.addWidget(pg_distance_error)
 
+    lr_mission = pg.LinearRegionItem([0, poseFusionData.time[-1]], bounds=[0,poseFusionData.time[-1]], movable=True)
+    pg_distance_error.addItem(lr_mission)
+    lr_bounds_mission = lr_mission.getRegion()
+
+    def update_plot_mission():
+        global plot_XY_mission, poseFusionData, lr_mission, poseFusionData, lr_bounds_mission
+        global plot_circle_outside, plot_circle_inside, X_mission_interp, Y_mission_interp
+        t_bounds = lr_mission.getRegion()
+        if(t_bounds != lr_bounds_mission):
+            lr_bounds_mission = t_bounds
+            ub = np.where(poseFusionData.time <= np.max((1,t_bounds[1])))[0][-1]
+            lb = np.where(poseFusionData.time >= np.min((poseFusionData.time[-1],t_bounds[0])))[0][0]
+
+            ub = np.min((ub, np.size(poseFusionData.time)))
+            lb = np.max((lb,0))
+            X = poseFusionData.east[lb:ub]
+            Y = poseFusionData.north[lb:ub]
+            X = X[~np.isnan(X)]
+            Y = Y[~np.isnan(Y)]
+            plot_XY_mission.setData(X,Y)
+
+            X_Circ_inside, Y_Circ_inside = get_circle((X_mission_interp[t_bounds[1]],Y_mission_interp[t_bounds[1]]),4.)
+            X_Circ_outside, Y_Circ_outside = get_circle((X_mission_interp[t_bounds[1]],Y_mission_interp[t_bounds[1]]),2.)
+
+            plot_circle_outside.setData(X_Circ_inside, Y_Circ_inside)
+            plot_circle_inside.setData(X_Circ_outside, Y_Circ_outside)
+
+    timer_mission = pg.QtCore.QTimer()
+    timer_mission.timeout.connect(update_plot_mission)
+    timer_mission.start(50)
+
+#### Distance error ####
 if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
     dock_distance = Dock("Distance")
     area_waypoints.addDock(dock_distance, 'above', dock_heading_error)
@@ -1048,8 +1102,7 @@ if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
     dock_distance.addWidget(pg_hysteresis)
 
     pg_hysteresis.setXLink(pg_enable_regulation)
-    pg_hysteresis.setXLink(pg_distance_error)
-    pg_hysteresis.setXLink(pg_enable_regulation)
+    pg_distance_error.setXLink(pg_hysteresis)
 
 # pg_thruster_linear = pg.PlotWidget()
 # set_plot_options(pg_thruster_linear)

@@ -221,6 +221,8 @@ int main(int argc, char *argv[]){
 
   const double piston_max_value = n.param<double>("piston_max_value", 2400);
 
+  const double limit_piston_position_reset_depth = n.param<double>("limit_piston_position_reset_depth", 2);
+
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
@@ -345,8 +347,13 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Analyze zero depth *******************
-    if(piston_position == 0 && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero)
+    if(piston_position < limit_piston_position_reset_depth && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero){
       call_zero_depth();
+      safety_debug_msg.zero_depth = true;
+    }
+    else{
+      safety_debug_msg.zero_depth = false;
+    }
 
     ///*******************************************************
     ///**************** Piston issue *************************

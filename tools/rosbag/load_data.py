@@ -184,6 +184,7 @@ class KalmanData(SeabotData):
         self.cov_volume = np.empty([self.nb_elements])
         self.cov_offset = np.empty([self.nb_elements])
         self.cov_chi = np.empty([self.nb_elements])
+        self.valid = np.empty([self.nb_elements])
 
 ####################### Regulation #######################
 
@@ -259,6 +260,7 @@ class SafetyDebugData(SeabotData):
         self.ratio_delta = np.empty([self.nb_elements])
         self.volume = np.empty([self.nb_elements])
         self.volume_delta = np.empty([self.nb_elements])
+        self.zero_depth = np.empty([self.nb_elements])
 
 ####################### Iridium #######################
 
@@ -513,6 +515,12 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
             kalmanData.cov_offset[kalmanData.k] = msg.covariance[2]
             kalmanData.cov_chi[kalmanData.k] = msg.covariance[3]
             kalmanData.add_time(t, startTime)
+            if hasattr(msg, 'valid'):
+                if(msg.valid):
+                    kalmanData.valid[kalmanData.k] = 1
+                else:
+                    kalmanData.valid[kalmanData.k] = 0
+
 
         elif(topic==safetyData.topic_name):
             if(msg.published_frequency):
@@ -551,6 +559,11 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
             safetyDebugData.ratio_delta[safetyDebugData.k] = msg.ratio_delta
             safetyDebugData.volume[safetyDebugData.k] = msg.volume
             safetyDebugData.volume_delta[safetyDebugData.k] = msg.volume_delta
+            if hasattr(msg, 'zero_depth'):
+                if(msg.zero_depth):
+                    safetyDebugData.zero_depth[safetyDebugData.k] = 1
+                else:
+                    safetyDebugData.zero_depth[safetyDebugData.k] = 0
             safetyDebugData.add_time(t, startTime)
 
         elif(topic==iridiumStatusData.topic_name):

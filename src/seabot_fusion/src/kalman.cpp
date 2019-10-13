@@ -11,6 +11,7 @@
 #include <seabot_depth_regulation/RegulationDebug.h>
 #include <seabot_fusion/Kalman.h>
 #include <std_msgs/Float64.h>
+#include <seabot_mission/Waypoint.h>
 
 #include <algorithm>    // std::sort
 #include <deque>
@@ -29,6 +30,7 @@ double velocity_fusion = 0.0;
 double piston_position = 0.0;
 double piston_set_point = 0.0;
 double piston_command_u = 0.0;
+double depth_set_point = 0.0;
 
 double coeff_A = 0.0;
 double coeff_B = 0.0;
@@ -46,10 +48,17 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
-    depth = msg->depth;
-    velocity_fusion = msg->velocity;
-    depth_valid = true;
-    time_last_depth = ros::Time::now();
+  depth = msg->depth;
+  velocity_fusion = msg->velocity;
+  depth_valid = true;
+  time_last_depth = ros::Time::now();
+}
+
+void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
+  if(msg->mission_enable)
+    depth_set_point = msg->depth;
+  else
+    depth_set_point = 0.0;
 }
 
 
@@ -120,6 +129,8 @@ int main(int argc, char *argv[]){
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
+  const double limit_offset = n.param<double>("limit_offset", 2400);
+  const double limit_chi = n.param<double>("limit_chi", 100);
 
   const double estimated_first_error_equilibrium_tick = n_private.param<double>("estimated_first_error_equilibrium_tick", 250);
 
@@ -145,6 +156,7 @@ int main(int argc, char *argv[]){
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
+  ros::Subscriber depth_set_point_sub = n.subscribe("/mission/set_point", 1, depth_set_point_callback);
 
   // Publisher
   ros::Publisher kalman_pub = n.advertise<seabot_fusion::Kalman>("kalman", 1);
@@ -186,34 +198,46 @@ int main(int argc, char *argv[]){
   Matrix<double,NB_MESURES, 1> measure = Matrix<double,NB_MESURES, 1>::Zero();
   Matrix<double,NB_COMMAND, 1> command = Matrix<double,NB_COMMAND, 1>::Zero();
 
-  double dt = 1./frequency;
-  ros::Time t_last, t;
-  t_last = ros::Time::now();
+  double dt = 0.0;
 
-  ROS_INFO("[FUSION depth] Start Ok");
+  ROS_INFO("[Kalman depth] Start Ok");
   ros::Rate loop_rate(frequency);
   while (ros::ok()){
     ros::spinOnce();
 
-    t = ros::Time::now();
     bool update = false;
 
-    if(depth>limit_min_depth && (t-time_last_depth).toSec()<0.1 && depth_valid){
-      dt = (t-t_last).toSec();
-      t_last = t;
-      if(dt>10./frequency)
-        dt=10./frequency;
+    /// Allow an update of the Kalman filter if:
+    /// * Min depth
+    /// * No surface set point
+    /// * Received a new depth measure
+    if(depth>limit_min_depth && depth_set_point!=0.0 && depth_valid){
+      dt = (time_last_depth-t_last).toSec();
+      t_last = time_last_depth;
+      if(dt>10./frequency) // Case where kalman is re-enabled
+        dt=1./frequency;
 
       Ak(0,0) = -2.*coeff_B*abs(xhat(0));
       Ak(0,1) = xhat(3)*coeff_A;
       Ak(0,3) = xhat(1)*coeff_A;
       Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
       measure(0) = depth;
-      command(0) = (piston_ref_eq - piston_position)*tick_to_volume;
+      command(0) = (piston_ref_eq - piston_position)*tick_to_volume; // u
 
       kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
       depth_valid = false;
       update = true;
+
+      // Case Divergence of Kalman filter
+      if(abs(xhat(2))>limit_offset || abs(xhat(3))>limit_chi){
+        xhat(2) = std::copysign(limit_offset, xhat(2));
+        xhat(3) = std::copysign(limit_chi, xhat(3));
+        gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2);
+        gamma(3,3) = pow(tick_to_volume*estimated_first_error_equilibrium_tick,2);
+        msg.valid = false;
+      }
+      else
+        msg.valid = true;
     }
     else if(depth<=limit_min_depth){
       xhat(0) = velocity_fusion;
@@ -221,6 +245,7 @@ int main(int argc, char *argv[]){
       xhat(2) = xhat(2);
       xhat(3) = xhat(3);
       update = true;
+      msg.valid = false;
     }
 
     if(update){

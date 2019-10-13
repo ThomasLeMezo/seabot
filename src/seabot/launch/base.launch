@@ -19,8 +19,8 @@
 				<param name="piston_max_value" value="2400" />
 
     <include file="$(find seabot)/launch/driver.launch"/>
-    <include file="$(find seabot_fusion)/launch/filter.launch"/>
-    <include file="$(find seabot_fusion)/launch/lambert.launch"/>
+    <include file="$(find seabot)/launch/filter.launch"/>
+    <include file="$(find seabot)/launch/lambert.launch"/>
     <include file="$(find seabot)/launch/kalman.launch"/>
 
 </launch>

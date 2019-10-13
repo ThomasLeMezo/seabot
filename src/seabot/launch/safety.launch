@@ -36,6 +36,7 @@
 
 								<param name="time_before_seafloor_emergency" value="300.0" />
 
+        <param name="limit_piston_position_reset_depth" value="2" />
     </node>
 </launch>
 
