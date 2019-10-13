@@ -177,7 +177,7 @@ def plot_regulation_state(dock):
 def plot_regulation_waypoint_heading(dock):
     pg_heading = pg.PlotWidget()
     set_plot_options(pg_heading)
-    pg_heading.plot(regulationWaypointData.time, regulationWaypointData.yaw_set_point[:-1], pen=(255,0,0), name="set_point", stepMode=True)
+    pg_heading.plot(regulationWaypointData.time, 2.*np.atan(np.tan(regulationWaypointData.yaw_set_point[:-1]/2.)), pen=(255,0,0), name="set_point", stepMode=True)
     pg_heading.plot(eulerData.time, eulerData.z[:-1], pen=(0,255,0), name="yaw", stepMode=True)
     pg_heading.setLabel('left', "heading")
     dock.addWidget(pg_heading)
@@ -434,7 +434,6 @@ if(len(depthFusionData.time)>0):
     dock_fusion = Dock("Fusion")
     area_data.addDock(dock_fusion, 'above', dock_internal_sensor)
     pg_depth = plot_depth(dock_fusion)
-    pg_depth.plot(depthFusionData.time, depthFusionData.velocity[:-1], pen=(255,0,0), name="velocity", stepMode=True)
 
     pg_fusion_velocity = pg.PlotWidget()
     set_plot_options(pg_fusion_velocity)
@@ -1022,10 +1021,8 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
     set_plot_options(pg_gps2)
     Y = poseFusionData.north
     X = poseFusionData.east
-    X_mission = missionData.east
-    Y_mission = missionData.north
-    print(np.max(X_mission), np.min(X_mission))
-    print(np.max(Y_mission), np.min(Y_mission))
+    X_mission = missionData.east[missionData.east>0]
+    Y_mission = missionData.north[missionData.north>0]
     plot_XY_mission = pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
     pg_gps2.plot(X_mission, Y_mission, pen=(0,255,0), name="mission", symbol='x')
     pg_gps2.setLabel('left', "Y", units="m")
@@ -1033,10 +1030,6 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
 
     f_mission_set_point = interpolate.interp1d(missionData.time, (missionData.east, missionData.north), bounds_error=False, kind="zero")
     X_mission_interp, Y_mission_interp = f_mission_set_point(poseFusionData.time)
-
-    print(np.size(X_mission_interp))
-    print(np.size(poseFusionData.time))
-    print(np.size(missionData.time))
 
     X_Circ_inside, Y_Circ_inside = get_circle((X_mission_interp[-1],Y_mission_interp[-1]),4.)
     X_Circ_outside, Y_Circ_outside = get_circle((X_mission_interp[-1],Y_mission_interp[-1]),2.)
