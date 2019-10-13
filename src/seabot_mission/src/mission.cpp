@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
   ROS_DEBUG("[Mission] Load mission");
   m.load_mission(mission_file_name); // Update mission file
 
-  double north, east, depth, ratio, limit_velocity, approach_velocity;
+  double north = 0.0, east = 0.0, depth = 0.0, ratio=0.0, limit_velocity=limit_velocity_default, approach_velocity=approach_velocity_default;
   bool enable_thrusters;
 
   ROS_INFO("[Mission] Start Ok");

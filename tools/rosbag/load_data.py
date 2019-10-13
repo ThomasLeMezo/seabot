@@ -514,12 +514,12 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
             kalmanData.cov_velocity[kalmanData.k] = msg.covariance[1]
             kalmanData.cov_offset[kalmanData.k] = msg.covariance[2]
             kalmanData.cov_chi[kalmanData.k] = msg.covariance[3]
-            kalmanData.add_time(t, startTime)
             if hasattr(msg, 'valid'):
                 if(msg.valid):
                     kalmanData.valid[kalmanData.k] = 1
                 else:
                     kalmanData.valid[kalmanData.k] = 0
+            kalmanData.add_time(t, startTime)
 
 
         elif(topic==safetyData.topic_name):

@@ -44,7 +44,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       }
       if(m_old_waypoint != m_current_waypoint){
         m_old_waypoint = m_current_waypoint;
-        ROS_DEBUG("[Mission] Start following waypoint %i (ending at %li)", m_current_waypoint, (long int)m_waypoints[m_current_waypoint].time_end.toSec());
+        ROS_DEBUG("[Mission] Start following waypoint %lu (ending at %li)", m_current_waypoint, (long int)m_waypoints[m_current_waypoint].time_end.toSec());
       }
 
       depth = m_waypoints[m_current_waypoint].depth;

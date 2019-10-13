@@ -1020,11 +1020,13 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
     area_waypoints.addDock(dock_mission, 'above', dock_heading_error)
     pg_gps2 = pg.PlotWidget()
     set_plot_options(pg_gps2)
-    Y = poseFusionData.north[~np.isnan(poseFusionData.north)]
-    X = poseFusionData.east[~np.isnan(poseFusionData.east)]
+    Y = poseFusionData.north
+    X = poseFusionData.east
     X_mission = missionData.east
     Y_mission = missionData.north
-    plot_XY_mission = pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)")
+    print(np.max(X_mission), np.min(X_mission))
+    print(np.max(Y_mission), np.min(Y_mission))
+    plot_XY_mission = pg_gps2.plot(X, Y, pen=(255,0,0), name="pose (centered on mean)", symbol='o')
     pg_gps2.plot(X_mission, Y_mission, pen=(0,255,0), name="mission", symbol='x')
     pg_gps2.setLabel('left', "Y", units="m")
     pg_gps2.setLabel('bottom', "X", units="m")
@@ -1032,9 +1034,12 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
     f_mission_set_point = interpolate.interp1d(missionData.time, (missionData.east, missionData.north), bounds_error=False, kind="zero")
     X_mission_interp, Y_mission_interp = f_mission_set_point(poseFusionData.time)
 
+    print(np.size(X_mission_interp))
+    print(np.size(poseFusionData.time))
+    print(np.size(missionData.time))
+
     X_Circ_inside, Y_Circ_inside = get_circle((X_mission_interp[-1],Y_mission_interp[-1]),4.)
     X_Circ_outside, Y_Circ_outside = get_circle((X_mission_interp[-1],Y_mission_interp[-1]),2.)
-    print(X_mission_interp[-1],Y_mission_interp[-1])
     plot_circle_outside = pg_gps2.plot(X_Circ_inside, Y_Circ_inside, pen=(0,0,255))
     plot_circle_inside = pg_gps2.plot(X_Circ_outside, Y_Circ_outside, pen=(0,255,255))
 
@@ -1069,8 +1074,8 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
             Y = Y[~np.isnan(Y)]
             plot_XY_mission.setData(X,Y)
 
-            X_Circ_inside, Y_Circ_inside = get_circle((X_mission_interp[t_bounds[1]],Y_mission_interp[t_bounds[1]]),4.)
-            X_Circ_outside, Y_Circ_outside = get_circle((X_mission_interp[t_bounds[1]],Y_mission_interp[t_bounds[1]]),2.)
+            X_Circ_inside, Y_Circ_inside = get_circle((X_mission_interp[ub],Y_mission_interp[ub]),4.)
+            X_Circ_outside, Y_Circ_outside = get_circle((X_mission_interp[ub],Y_mission_interp[ub]),2.)
 
             plot_circle_outside.setData(X_Circ_inside, Y_Circ_inside)
             plot_circle_inside.setData(X_Circ_outside, Y_Circ_outside)

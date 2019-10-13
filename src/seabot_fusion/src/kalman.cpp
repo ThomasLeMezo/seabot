@@ -199,6 +199,7 @@ int main(int argc, char *argv[]){
   Matrix<double,NB_COMMAND, 1> command = Matrix<double,NB_COMMAND, 1>::Zero();
 
   double dt = 0.0;
+  ros::Time t_last;
 
   ROS_INFO("[Kalman depth] Start Ok");
   ros::Rate loop_rate(frequency);

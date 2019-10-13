@@ -110,7 +110,7 @@ private:
   std::string m_folder_path = "";
   std::string m_file_name = "";
   std::vector<Waypoint> m_waypoints;
-  int m_current_waypoint = 0;
+  size_t m_current_waypoint = 0;
   int m_old_waypoint = -1;
   bool    m_mission_enable = false;
   bool    m_update_mission = true;
