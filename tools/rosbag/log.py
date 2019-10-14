@@ -177,7 +177,7 @@ def plot_regulation_state(dock):
 def plot_regulation_waypoint_heading(dock):
     pg_heading = pg.PlotWidget()
     set_plot_options(pg_heading)
-    pg_heading.plot(regulationWaypointData.time, 2.*np.atan(np.tan(regulationWaypointData.yaw_set_point[:-1]/2.)), pen=(255,0,0), name="set_point", stepMode=True)
+    pg_heading.plot(regulationWaypointData.time, 2.*np.arctan(np.tan(regulationWaypointData.yaw_set_point[:-1]/2.)), pen=(255,0,0), name="set_point", stepMode=True)
     pg_heading.plot(eulerData.time, eulerData.z[:-1], pen=(0,255,0), name="yaw", stepMode=True)
     pg_heading.setLabel('left', "heading")
     dock.addWidget(pg_heading)

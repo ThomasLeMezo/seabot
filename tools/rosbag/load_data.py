@@ -4,6 +4,7 @@ import yaml
 import numpy as np
 import datetime
 from numba import jit
+import time
 
 ####################### Driver #######################
 
@@ -290,7 +291,7 @@ end_time = 0.0
 ####################### Function #######################
 
 def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData):
-
+    start_time_process = time.time()
     bag = rosbag.Bag(filename, 'r')
 
     print(bag)
@@ -616,33 +617,5 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
 
         print("gyro_mean = ", max(imuData.gyro_x), max(imuData.gyro_y), max(imuData.gyro_z))
 
-    # if(len(time_fix)>0):
-    #     import gpxpy
-    #     import gpxpy.gpx
-
-    #     gpx = gpxpy.gpx.GPX()
-    #     last_fix_time = 0.
-
-    #     gpx_track = gpxpy.gpx.GPXTrack()
-    #     gpx_segment = gpxpy.gpx.GPXTrackSegment()
-
-    #     for i in range(len(fix_latitude)):
-    #         if(abs(last_fix_time-time_fix[i])>30.):
-    #             if(fix_status[i]==3):
-    #                 last_fix_time = time_fix[i]
-
-    #                 gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=fix_latitude[i], 
-    #                     longitude=fix_longitude[i],
-    #                     elevation=fix_altitude[i],
-    #                     time=datetime.datetime.fromtimestamp(time_fix[i]+startTime.to_sec()),
-    #                     horizontal_dilution=fix_hdop[i],
-    #                     vertical_dilution=fix_hdop[i]
-    #                     ))
-    #     gpx_track.segments.append(gpx_segment)
-    #     gpx.tracks.append(gpx_track)
-
-    #     file = open(filename+".gpx","w") 
-    #     file.write(gpx.to_xml()) 
-    #     file.close() 
-
-    # print(rosout_agg)
+    done_time_process = time.time()
+    print("LOAD TIME: ", done_time_process-start_time_process)

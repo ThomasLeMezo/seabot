@@ -198,7 +198,7 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
 
   ROS_INFO("[IMU] imu type = %i", imu_settings_.m_imuType);
   imu_ = RTIMU::createIMU(&imu_settings_);
-//  imu_->setDebugEnable(true);
+  //  imu_->setDebugEnable(true);
   if (imu_ == nullptr){
     ROS_FATAL("I2cImu - %s - Failed to open the i2c device", __FUNCTION__);
     ROS_BREAK();
@@ -220,7 +220,11 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
 }
 
 void I2cImu::update(){
-    imu_->IMURead();
+  bool valid = imu_->IMURead();
+  if(!valid){
+    ROS_WARN("[IMU] Failed to read data");
+  }
+  else{
     RTIMU_DATA imuData = imu_->getIMUData();
 
     /// ********** IMU msg **********
@@ -262,6 +266,7 @@ void I2cImu::update(){
 
       euler_pub_.publish(msg);
     }
+  }
 }
 
 void I2cImu::spin(){
