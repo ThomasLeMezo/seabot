@@ -46,6 +46,7 @@ public:
 
   void update();
   void spin();
+  void init();
 
 private:
   //ROS Stuff
@@ -64,6 +65,7 @@ private:
 
   ros::Time last_update_;
   double declination_radians_;
+  double reset_norm_acc = 2;
 
   //RTUIMULib stuff
   RTIMU *imu_;
@@ -193,6 +195,8 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   if(private_nh_.param<bool>("publish_euler", false))
     euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 1, false);
 
+  reset_norm_acc = private_nh_.param<double>("reset_norm_acc", 2);
+
   imu_settings_.loadSettings();
   imu_settings_.saveSettings();
 
@@ -207,7 +211,10 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
     ROS_FATAL("I2cImu - %s - Failed to open the i2c device", __FUNCTION__);
     ROS_BREAK();
   }
+  init();
+}
 
+void I2cImu::init(){
   if (!imu_->IMUInit()){ // After loading parameters
     ROS_FATAL("I2cImu - %s - Failed to init the IMU", __FUNCTION__);
     ROS_BREAK();
@@ -220,15 +227,14 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
 
   imu_->setCompassCalibrationMode(false);
   imu_->setAccelCalibrationMode(false);
-
 }
+
 
 void I2cImu::update(){
   bool valid = imu_->IMURead();
   if(!valid){
     ROS_WARN("[IMU] Failed to read data");
     debug_msg.readValid = false;
-
   }
   else{
     RTIMU_DATA imuData = imu_->getIMUData();
@@ -279,6 +285,10 @@ void I2cImu::update(){
 
       euler_pub_.publish(msg);
     }
+
+    // Test reset condition (norm of acc)
+    if(pow(imuData.accel.x(),2)+pow(imuData.accel.y(),2)+pow(imuData.accel.z(),2)>pow(reset_norm_acc,2))
+      init();
   }
   imu_debug_pub_.publish(debug_msg);
 }

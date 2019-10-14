@@ -492,6 +492,17 @@ if(len(imuData.time)>0):
     pg_gyro.plot(imuData.time, imuData.gyro_z[:-1], pen=(0,0,255), name="gyro z", stepMode=True)
     dock_imu_gyro.addWidget(pg_gyro)
 
+#### Euler ####
+if(len(eulerData.time)>0):
+    dock_euler = Dock("Euler")
+    area_data.addDock(dock_euler, 'above', dock_internal_sensor)
+    pg_euler = pg.PlotWidget()
+    set_plot_options(pg_euler)
+    pg_euler.plot(eulerData.time, eulerData.x[:-1], pen=(255,0,0), name="euler x", stepMode=True)
+    pg_euler.plot(eulerData.time, eulerData.y[:-1], pen=(0,255,0), name="euler y", stepMode=True)
+    pg_euler.plot(eulerData.time, eulerData.z[:-1], pen=(0,255,0), name="euler z", stepMode=True)
+    dock_euler.addWidget(pg_euler)
+
 #################### Piston ####################
 
 #### Distance ####
