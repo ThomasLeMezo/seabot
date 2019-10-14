@@ -132,8 +132,6 @@ int main(int argc, char *argv[]){
   const double limit_offset = n.param<double>("limit_offset", 2400);
   const double limit_chi = n.param<double>("limit_chi", 100);
 
-  const double estimated_first_error_equilibrium_tick = n_private.param<double>("estimated_first_error_equilibrium_tick", 250);
-
   const double limit_min_depth = n.param<double>("limit_min_depth", 0.5);
 
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-4);
@@ -174,8 +172,8 @@ int main(int argc, char *argv[]){
 
   gamma(0,0) = pow(1e-1, 2); // velocity
   gamma(1,1) = pow(1e-3, 2); // Depth
-  gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2); // Error offset;
-  gamma(3,3) = pow(tick_to_volume*estimated_first_error_equilibrium_tick,2); // Compressibility
+  gamma(2,2) = pow(tick_to_volume*limit_offset, 2); // Error offset;
+  gamma(3,3) = pow(tick_to_volume*limit_chi,2); // Compressibility
 
   gamma_alpha(0,0) = pow(gamma_alpha_velocity, 2); // velocity (1e-4)
   gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth (1e-5)
@@ -228,17 +226,20 @@ int main(int argc, char *argv[]){
       kalman(xhat,gamma,command,measure,gamma_alpha,gamma_beta,Ak_tmp,Ck, dt);
       depth_valid = false;
       update = true;
+      msg.valid = true;
 
       // Case Divergence of Kalman filter
-      if(abs(xhat(2))>limit_offset || abs(xhat(3))>limit_chi){
-        xhat(2) = std::copysign(limit_offset, xhat(2));
-        xhat(3) = std::copysign(limit_chi, xhat(3));
-        gamma(2,2) = pow(tick_to_volume*estimated_first_error_equilibrium_tick, 2);
-        gamma(3,3) = pow(tick_to_volume*estimated_first_error_equilibrium_tick,2);
+      if(abs(xhat(2))>limit_offset){
+        xhat(2) = min(max(xhat(2), -limit_offset), limit_offset);
+        gamma(2,2) = pow(tick_to_volume*limit_offset, 2); // Error offset;
         msg.valid = false;
       }
-      else
-        msg.valid = true;
+
+      if(abs(xhat(3))>limit_chi){
+        xhat(3) = min(max(xhat(3), -limit_chi), limit_chi);
+        gamma(3,3) = pow(tick_to_volume*limit_chi,2); // Compressibility
+        msg.valid = false;
+      }
     }
     else if(depth<=limit_min_depth){
       xhat(0) = velocity_fusion;

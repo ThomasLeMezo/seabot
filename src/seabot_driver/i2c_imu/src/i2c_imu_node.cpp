@@ -21,6 +21,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/MagneticField.h>
 #include <angles/angles.h>
+#include <i2c_imu/ImuDebug.h>
 
 #include "RTIMULib.h"
 #include "RTIMUSettings.h"
@@ -52,10 +53,12 @@ private:
   ros::NodeHandle private_nh_;
   // sensor msg topic output
   sensor_msgs::Imu imu_msg;
+  i2c_imu::ImuDebug debug_msg;
 
   ros::Publisher imu_pub_;
   ros::Publisher magnetometer_pub_;
   ros::Publisher euler_pub_;
+  ros::Publisher imu_debug_pub_;
 
   std::string imu_frame_id_;
 
@@ -181,13 +184,14 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   // do all the ros parameter reading & pulbishing
   private_nh_.param<std::string>("frame_id", imu_frame_id_, "imu_link");
 
-  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",10);
+  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",1);
+  imu_debug_pub_ = nh_.advertise<i2c_imu::ImuDebug>("imu_debug", 1);
 
   if(private_nh_.param<bool>("publish_magnetometer", false))
-    magnetometer_pub_ = nh_.advertise<geometry_msgs::Vector3>("mag", 10, false);
+    magnetometer_pub_ = nh_.advertise<geometry_msgs::Vector3>("mag", 1, false);
 
   if(private_nh_.param<bool>("publish_euler", false))
-    euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 10, false);
+    euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 1, false);
 
   imu_settings_.loadSettings();
   imu_settings_.saveSettings();
@@ -223,6 +227,8 @@ void I2cImu::update(){
   bool valid = imu_->IMURead();
   if(!valid){
     ROS_WARN("[IMU] Failed to read data");
+    debug_msg.readValid = false;
+
   }
   else{
     RTIMU_DATA imuData = imu_->getIMUData();
@@ -244,6 +250,13 @@ void I2cImu::update(){
     imu_msg.linear_acceleration.z = imuData.accel.z();
 
     imu_pub_.publish(imu_msg);
+
+    debug_msg.accelValid = imuData.accelValid;
+    debug_msg.fusionPoseValid = imuData.fusionPoseValid;
+    debug_msg.fusionQPoseValid = imuData.fusionQPoseValid;
+    debug_msg.gyroValid = imuData.gyroValid;
+    debug_msg.accelValid = imuData.accelValid;
+    debug_msg.compassValid = imuData.compassValid;
 
     /// ********** Mag msg **********
     if (magnetometer_pub_ != nullptr && imuData.compassValid){
@@ -267,6 +280,7 @@ void I2cImu::update(){
       euler_pub_.publish(msg);
     }
   }
+  imu_debug_pub_.publish(debug_msg);
 }
 
 void I2cImu::spin(){
