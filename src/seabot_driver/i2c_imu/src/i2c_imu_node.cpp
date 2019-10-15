@@ -65,7 +65,7 @@ private:
 
   ros::Time last_update_;
   double declination_radians_;
-  double reset_norm_acc = 2;
+  double reset_norm_acc = 4;
 
   //RTUIMULib stuff
   RTIMU *imu_;
@@ -195,7 +195,7 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   if(private_nh_.param<bool>("publish_euler", false))
     euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("euler", 1, false);
 
-  reset_norm_acc = private_nh_.param<double>("reset_norm_acc", 2);
+  reset_norm_acc = private_nh_.param<double>("reset_norm_acc", 4);
 
   imu_settings_.loadSettings();
   imu_settings_.saveSettings();
@@ -261,7 +261,6 @@ void I2cImu::update(){
     debug_msg.fusionPoseValid = imuData.fusionPoseValid;
     debug_msg.fusionQPoseValid = imuData.fusionQPoseValid;
     debug_msg.gyroValid = imuData.gyroValid;
-    debug_msg.accelValid = imuData.accelValid;
     debug_msg.compassValid = imuData.compassValid;
 
     /// ********** Mag msg **********

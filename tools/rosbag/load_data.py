@@ -31,11 +31,11 @@ class PistonStateData(SeabotData):
     def __init__(self, bag=None):
         SeabotData.__init__(self, "/driver/piston/state", bag)
         self.position = np.empty([self.nb_elements], dtype=np.float32)
-        self.switch_out = np.empty([self.nb_elements], dtype=np.bool)
-        self.switch_in = np.empty([self.nb_elements], dtype=np.bool)
+        self.switch_out = np.empty([self.nb_elements], dtype=np.uint8)
+        self.switch_in = np.empty([self.nb_elements], dtype=np.uint8)
         self.state = np.empty([self.nb_elements], dtype=np.uint16)
-        self.motor_on = np.empty([self.nb_elements], dtype=np.bool)
-        self.enable_on = np.empty([self.nb_elements], dtype=np.bool)
+        self.motor_on = np.empty([self.nb_elements], dtype=np.uint8)
+        self.enable_on = np.empty([self.nb_elements], dtype=np.uint8)
         self.position_set_point = np.empty([self.nb_elements], dtype=np.float32)
         self.motor_speed = np.empty([self.nb_elements], dtype=np.float32)
 
@@ -185,7 +185,7 @@ class KalmanData(SeabotData):
         self.cov_velocity = np.empty([self.nb_elements], dtype=np.float64)
         self.cov_offset = np.empty([self.nb_elements], dtype=np.float64)
         self.cov_chi = np.empty([self.nb_elements], dtype=np.float64)
-        self.valid = np.empty([self.nb_elements], dtype=np.bool)
+        self.valid = np.empty([self.nb_elements], dtype=np.uint8)
 
 ####################### Regulation #######################
 
@@ -219,11 +219,11 @@ class RegulationWaypointData(SeabotData):
         self.yaw_set_point = np.empty([self.nb_elements], dtype=np.float64)
         self.yaw_error = np.empty([self.nb_elements], dtype=np.float64)
         self.distance_error = np.empty([self.nb_elements], dtype=np.float64)
-        self.enable_regulation = np.empty([self.nb_elements], dtype=np.bool)
-        self.hysteresis_inside = np.empty([self.nb_elements], dtype=np.bool)
+        self.enable_regulation = np.empty([self.nb_elements], dtype=np.uint8)
+        self.hysteresis_inside = np.empty([self.nb_elements], dtype=np.uint8)
         self.angular = np.empty([self.nb_elements], dtype=np.float64)
         self.angular_limit = np.empty([self.nb_elements], dtype=np.float64)
-        self.valid_time = np.empty([self.nb_elements], dtype=np.bool)
+        self.valid_time = np.empty([self.nb_elements], dtype=np.uint8)
 
 ####################### Mission #######################
 
@@ -235,8 +235,8 @@ class MissionData(SeabotData):
         self.depth = np.empty([self.nb_elements], dtype=np.float32)
         self.limit_velocity = np.empty([self.nb_elements], dtype=np.float32)
         self.approach_velocity = np.empty([self.nb_elements], dtype=np.float32)
-        self.mission_enable = np.empty([self.nb_elements], dtype=np.bool)
-        self.depth_only = np.empty([self.nb_elements], dtype=np.bool)
+        self.mission_enable = np.empty([self.nb_elements], dtype=np.uint8)
+        self.depth_only = np.empty([self.nb_elements], dtype=np.uint8)
         self.waypoint_number = np.empty([self.nb_elements], dtype=np.uint16)
         self.wall_time = np.empty([self.nb_elements], dtype=np.uint64)
         self.time_to_next_waypoint = np.empty([self.nb_elements], dtype=np.uint64)
@@ -246,22 +246,22 @@ class MissionData(SeabotData):
 class SafetyData(SeabotData):
     def __init__(self, bag=None):
         SeabotData.__init__(self, "/safety/safety", bag)
-        self.published_frequency = np.empty([self.nb_elements], dtype=np.bool)
-        self.depth_limit = np.empty([self.nb_elements], dtype=np.bool)
-        self.batteries_limit = np.empty([self.nb_elements], dtype=np.bool)
-        self.depressurization = np.empty([self.nb_elements], dtype=np.bool)
-        self.seafloor = np.empty([self.nb_elements], dtype=np.bool)
-        self.piston = np.empty([self.nb_elements], dtype=np.bool)
+        self.published_frequency = np.empty([self.nb_elements], dtype=np.uint8)
+        self.depth_limit = np.empty([self.nb_elements], dtype=np.uint8)
+        self.batteries_limit = np.empty([self.nb_elements], dtype=np.uint8)
+        self.depressurization = np.empty([self.nb_elements], dtype=np.uint8)
+        self.seafloor = np.empty([self.nb_elements], dtype=np.uint8)
+        self.piston = np.empty([self.nb_elements], dtype=np.uint8)
 
 class SafetyDebugData(SeabotData):
     def __init__(self, bag=None):
         SeabotData.__init__(self, "/safety/debug", bag)
-        self.flash = np.empty([self.nb_elements], dtype=np.bool)
+        self.flash = np.empty([self.nb_elements], dtype=np.uint8)
         self.ratio_p_t = np.empty([self.nb_elements], dtype=np.float32)
         self.ratio_delta = np.empty([self.nb_elements], dtype=np.float32)
         self.volume = np.empty([self.nb_elements], dtype=np.float32)
         self.volume_delta = np.empty([self.nb_elements], dtype=np.float32)
-        self.zero_depth = np.empty([self.nb_elements], dtype=np.bool)
+        self.zero_depth = np.empty([self.nb_elements], dtype=np.uint8)
 
 ####################### Iridium #######################
 
