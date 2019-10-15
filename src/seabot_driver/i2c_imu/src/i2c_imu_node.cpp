@@ -90,7 +90,7 @@ bool ImuSettings::loadSettings(){
 
   m_SPIBus = (unsigned char)settings_nh_->param<int>("spi_bus", 0);
   m_SPISelect = (unsigned char)settings_nh_->param<int>("spi_select", 0);
-  m_SPISpeed = (unsigned char)settings_nh_->param<int>("spi_speed", 500000);
+  m_SPISpeed = (unsigned int)settings_nh_->param<int>("spi_speed", 500000);
 
   settings_nh_->getParam("axis_rotation", m_axisRotation);
 

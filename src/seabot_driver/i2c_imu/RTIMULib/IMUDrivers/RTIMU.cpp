@@ -320,83 +320,83 @@ void RTIMU::calibrateAverageCompass()
 {
     //  see if need to do runtime mag calibration (i.e. no stored calibration data)
 
-    if (!m_compassCalibrationMode && !m_settings->m_compassCalValid) {
-        // try runtime calibration
-        bool changed = false;
+//    if (!m_compassCalibrationMode && !m_settings->m_compassCalValid) {
+//        // try runtime calibration
+//        bool changed = false;
 
-        // see if there is a new max or min
+//        // see if there is a new max or min
 
-        if (m_runtimeMagCalMax[0] < m_imuData.compass.x()) {
-            m_runtimeMagCalMax[0] = m_imuData.compass.x();
-            changed = true;
-        }
-        if (m_runtimeMagCalMax[1] < m_imuData.compass.y()) {
-            m_runtimeMagCalMax[1] = m_imuData.compass.y();
-            changed = true;
-        }
-        if (m_runtimeMagCalMax[2] < m_imuData.compass.z()) {
-            m_runtimeMagCalMax[2] = m_imuData.compass.z();
-            changed = true;
-        }
+//        if (m_runtimeMagCalMax[0] < m_imuData.compass.x()) {
+//            m_runtimeMagCalMax[0] = m_imuData.compass.x();
+//            changed = true;
+//        }
+//        if (m_runtimeMagCalMax[1] < m_imuData.compass.y()) {
+//            m_runtimeMagCalMax[1] = m_imuData.compass.y();
+//            changed = true;
+//        }
+//        if (m_runtimeMagCalMax[2] < m_imuData.compass.z()) {
+//            m_runtimeMagCalMax[2] = m_imuData.compass.z();
+//            changed = true;
+//        }
 
-        if (m_runtimeMagCalMin[0] > m_imuData.compass.x()) {
-            m_runtimeMagCalMin[0] = m_imuData.compass.x();
-            changed = true;
-        }
-        if (m_runtimeMagCalMin[1] > m_imuData.compass.y()) {
-            m_runtimeMagCalMin[1] = m_imuData.compass.y();
-            changed = true;
-        }
-        if (m_runtimeMagCalMin[2] > m_imuData.compass.z()) {
-            m_runtimeMagCalMin[2] = m_imuData.compass.z();
-            changed = true;
-        }
+//        if (m_runtimeMagCalMin[0] > m_imuData.compass.x()) {
+//            m_runtimeMagCalMin[0] = m_imuData.compass.x();
+//            changed = true;
+//        }
+//        if (m_runtimeMagCalMin[1] > m_imuData.compass.y()) {
+//            m_runtimeMagCalMin[1] = m_imuData.compass.y();
+//            changed = true;
+//        }
+//        if (m_runtimeMagCalMin[2] > m_imuData.compass.z()) {
+//            m_runtimeMagCalMin[2] = m_imuData.compass.z();
+//            changed = true;
+//        }
 
-        //  now see if ranges are sufficient
+//        //  now see if ranges are sufficient
 
-        if (changed) {
+//        if (changed) {
 
-            float delta;
+//            float delta;
 
-            if (!m_runtimeMagCalValid) {
-                m_runtimeMagCalValid = true;
+//            if (!m_runtimeMagCalValid) {
+//                m_runtimeMagCalValid = true;
 
-                for (int i = 0; i < 3; i++)
-                {
-                    delta = m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i];
-                    if ((delta < RTIMU_RUNTIME_MAGCAL_RANGE) || (m_runtimeMagCalMin[i] > 0) || (m_runtimeMagCalMax[i] < 0))
-                    {
-                        m_runtimeMagCalValid = false;
-                        break;
-                    }
-                }
-            }
+//                for (int i = 0; i < 3; i++)
+//                {
+//                    delta = m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i];
+//                    if ((delta < RTIMU_RUNTIME_MAGCAL_RANGE) || (m_runtimeMagCalMin[i] > 0) || (m_runtimeMagCalMax[i] < 0))
+//                    {
+//                        m_runtimeMagCalValid = false;
+//                        break;
+//                    }
+//                }
+//            }
 
-            //  find biggest range and scale to that
+//            //  find biggest range and scale to that
 
-            if (m_runtimeMagCalValid) {
-                float magMaxDelta = -1;
+//            if (m_runtimeMagCalValid) {
+//                float magMaxDelta = -1;
 
-                for (int i = 0; i < 3; i++) {
-                    if ((m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i]) > magMaxDelta)
-                    {
-                        magMaxDelta = m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i];
-                    }
-                }
+//                for (int i = 0; i < 3; i++) {
+//                    if ((m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i]) > magMaxDelta)
+//                    {
+//                        magMaxDelta = m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i];
+//                    }
+//                }
 
-                // adjust for + and - range
+//                // adjust for + and - range
 
-                magMaxDelta /= 2.0;
+//                magMaxDelta /= 2.0;
 
-                for (int i = 0; i < 3; i++)
-                {
-                    delta = (m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i]) / 2.0;
-                    m_compassCalScale[i] = magMaxDelta / delta;
-                    m_compassCalOffset[i] = (m_runtimeMagCalMax[i] + m_runtimeMagCalMin[i]) / 2.0;
-                }
-            }
-        }
-    }
+//                for (int i = 0; i < 3; i++)
+//                {
+//                    delta = (m_runtimeMagCalMax[i] - m_runtimeMagCalMin[i]) / 2.0;
+//                    m_compassCalScale[i] = magMaxDelta / delta;
+//                    m_compassCalOffset[i] = (m_runtimeMagCalMax[i] + m_runtimeMagCalMin[i]) / 2.0;
+//                }
+//            }
+//        }
+//    }
 
     if (getCompassCalibrationValid() || getRuntimeCompassCalibrationValid()) {
         m_imuData.compass.setX((m_imuData.compass.x() - m_compassCalOffset[0]) * m_compassCalScale[0]);
