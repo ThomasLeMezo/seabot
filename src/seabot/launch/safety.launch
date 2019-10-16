@@ -2,23 +2,42 @@
     <node name="safety_node" pkg="seabot_safety" type="safety_node" output="screen" ns="safety" respawn="true" respawn_delay="5">
         <param name="frequency" value="1.0" />
 
-        <param name="safety_battery" value="true"/>
-        <param name="safety_pressure_limit" value="true"/>
+<!--Leak detection-->
         <param name="safety_depressure" value="true"/>
-								<param name="seafloor_detection" value="true"/>
-								<param name="internal_pressure_detection" value="true"/>
 
+								<param name="humidity_limit" value="70.0" />
+
+								<param name="internal_pressure_detection" value="true"/>
+								<param name="delta_volume_allowed" value="1.0" />
+								<param name="delta_ref_allowed" value="10.0" />
+								<param name="volume_ref" value="0.006" />
+								<param name="transition_tick_law" value="650.0" />
+								<param name="pressure_internal_max" value="850.0" />
+
+<!--Zero depth reset-->
         <param name="max_depth_reset_zero" value="1.0" />
         <param name="max_speed_reset_zero" value="0.1" />
+								<param name="limit_piston_position_reset_depth" value="3" />
+								<param name="time_delay_zero_depth_condition" value="5" />
 
+<!--Depth limit-->
+								<param name="safety_pressure_limit" value="true"/>
         <param name="pressure_limit" value="6.2" />
         <param name="time_before_pressure_emergency" value="3.0" />
 
+<!--Seafloor-->
+								<param name="seafloor_detection" value="true"/>
+								<param name="time_before_seafloor_emergency" value="300.0" />
+
+<!--Batteries-->
+								<param name="safety_battery" value="true"/>
+								<param name="battery_limit" value="10.0" />
+
+<!--Flash-->
         <param name="enable_flash" value="true"/>
         <param name="limit_depth_flash_enable" value="0.5"/>
 
-        <param name="battery_limit" value="10.0" />
-
+<!--Message delay-->
         <param name="time_delay_batteries_msg" value="30.0" />
         <param name="time_delay_internal_sensor_msg" value="2.0" />
         <param name="time_delay_external_sensor_msg" value="2.0" />
@@ -26,17 +45,6 @@
         <param name="time_delay_piston_state_msg" value="2.0" />
         <param name="time_delay_euler_msg" value="1.0" />
 
-								<param name="delta_volume_allowed" value="1.0" />
-        <param name="delta_ref_allowed" value="10.0" />
-        <param name="volume_ref" value="0.006" />
-        <param name="transition_tick_law" value="650.0" />
-        <param name="pressure_internal_max" value="850.0" />
-
-        <param name="humidity_limit" value="70.0" />
-
-								<param name="time_before_seafloor_emergency" value="300.0" />
-
-								<param name="limit_piston_position_reset_depth" value="3" />
     </node>
 </launch>
 

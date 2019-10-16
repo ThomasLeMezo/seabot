@@ -223,6 +223,8 @@ int main(int argc, char *argv[]){
 
   const double limit_piston_position_reset_depth = n.param<double>("limit_piston_position_reset_depth", 2);
 
+  const double d_zero_depth_condition = n.param<double>("time_delay_zero_depth_condition", 5.0);
+
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
@@ -316,6 +318,9 @@ int main(int argc, char *argv[]){
   safety_msg.depressurization = false;
   safety_msg.piston = false;
 
+  ros::Time t_reset_condition;
+  bool t_reset_condition_valid;
+
   ROS_INFO("[Safety] Start Ok");
   while (ros::ok()){
     ros::spinOnce();
@@ -347,13 +352,20 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Analyze zero depth *******************
+    safety_debug_msg.zero_depth = false;
     if(piston_position < limit_piston_position_reset_depth && depth < max_depth_reset_zero && abs(velocity) < max_speed_reset_zero){
-      call_zero_depth();
-      safety_debug_msg.zero_depth = true;
+      if(!t_reset_condition_valid){
+        t_reset_condition_valid = true;
+        t_reset_condition = ros::Time::now();
+      }
+      else if((ros::Time::now() - t_reset_condition).toSec()>d_zero_depth_condition){
+        t_reset_condition_valid = false;
+        call_zero_depth();
+        safety_debug_msg.zero_depth = true;
+      }
     }
-    else{
-      safety_debug_msg.zero_depth = false;
-    }
+    else
+      t_reset_condition_valid = false;
 
     ///*******************************************************
     ///**************** Piston issue *************************
