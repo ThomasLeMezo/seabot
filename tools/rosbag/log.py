@@ -18,7 +18,7 @@ from numpy import linalg as LA
 import sys
 from load_data import *
 
-from math import *
+import math
 
 class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
@@ -66,8 +66,12 @@ def save_gpx():
 #####################################################
 ### Init
 
-if(len(sys.argv)<2):
-    sys.exit(0)
+if ('filename' in locals()):
+    print("filename = ", filename)
+else:
+    if(len(sys.argv)<2):
+        sys.exit(0)
+    filename = sys.argv[1]
 
 pistonStateData = PistonStateData()
 pistonSetPointData = PistonSetPointData()
@@ -98,10 +102,10 @@ safetyDebugData = SafetyDebugData()
 iridiumStatusData = IridiumStatusData()
 iridiumSessionData = IridiumSessionData()
 regulationWaypointData = RegulationWaypointData()
+rosoutData = RosoutData()
+rosoutAggData = RosoutAggData()
 
-
-filename = sys.argv[1]
-load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData)
+load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData)
 
 print("Data has been loaded")
 
@@ -569,11 +573,11 @@ if(np.size(pistonStateData.time)>0):
 
     pg_piston_speed = pg.PlotWidget()
     set_plot_options(pg_piston_speed)
-    pg_piston_speed.plot(pistonStateData.time, pistonStateData.motor_speed[:-1].astype(int), pen=(255,0,0), name="speed", stepMode=True)
+    pg_piston_speed.plot(pistonStateData.time, pistonStateData.motor_speed[:-1], pen=(255,0,0), name="speed", stepMode=True)
     
     if(len(pistonSpeedData.speed_in)>1):
-        pg_piston_speed.plot(pistonSpeedData.time, 50-np.array(pistonSpeedData.speed_in)[:-1].astype(int), pen=(0,255,0), name="speed_max_in", stepMode=True)
-        pg_piston_speed.plot(pistonSpeedData.time, 50+np.array(pistonSpeedData.speed_out)[:-1].astype(int), pen=(0,255,0), name="speed_max_out", stepMode=True)
+        pg_piston_speed.plot(pistonSpeedData.time, 50-np.array(pistonSpeedData.speed_in)[:-1], pen=(0,255,0), name="speed_max_in", stepMode=True)
+        pg_piston_speed.plot(pistonSpeedData.time, 50+np.array(pistonSpeedData.speed_out)[:-1], pen=(0,255,0), name="speed_max_out", stepMode=True)
     pg_piston_speed.setLabel('left', "Speed")
     dock_piston2.addWidget(pg_piston_speed)
 

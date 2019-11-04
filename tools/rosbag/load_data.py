@@ -8,13 +8,7 @@ import time
 
 ####################### Driver #######################
 
-# /rosout
-time_rosout = []
-rosout = []
-time_rosout_agg = []
-rosout_agg = []
-
-class SeabotData:
+class SeabotData(object):
     def __init__(self, topic_name="", bag=None):
         if bag==None:
             self.nb_elements = 0
@@ -26,6 +20,26 @@ class SeabotData:
     def add_time(self, t, startTime):
         self.time[self.k] = (t-startTime).to_sec()
         self.k=self.k+1
+
+class RosoutData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/rosout", bag)
+        self.level = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.name = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.msg = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.file = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.function = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.line = np.empty([self.nb_elements], dtype=np.unicode_)
+
+class RosoutAggData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/rosout_agg", bag)
+        self.level = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.name = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.msg = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.file = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.function = np.empty([self.nb_elements], dtype=np.unicode_)
+        self.line = np.empty([self.nb_elements], dtype=np.unicode_)
 
 class PistonStateData(SeabotData):
     def __init__(self, bag=None):
@@ -290,7 +304,8 @@ end_time = 0.0
 ########################################################
 ####################### Function #######################
 
-def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData):
+#@jit#(nopython=True)
+def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData):
     start_time_process = time.time()
     bag = rosbag.Bag(filename, 'r')
 
@@ -299,6 +314,8 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
     startTime = rospy.Time.from_sec(bag.get_start_time())# + rospy.Duration(600)
     end_time = rospy.Time.from_sec(bag.get_end_time())# + rospy.Duration(100)
 
+    rosoutData.__init__(bag)
+    rosoutAggData.__init__(bag)
     pistonStateData.__init__(bag)
     pistonSetPointData.__init__(bag)
     imuData.__init__(bag)
@@ -345,12 +362,22 @@ def load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eu
             pistonStateData.motor_speed[pistonStateData.k] = msg.motor_speed
             pistonStateData.add_time(t,startTime)
 
-        elif(topic=="/rosout"):
-            time_rosout.append((t-startTime).to_sec())
-            rosout.append([msg.level,msg.name, msg.msg, msg.file, msg.function, msg.line])
-        elif(topic=="/rosout_agg"):
-            time_rosout_agg.append((t-startTime).to_sec())
-            rosout_agg.append([msg.level,msg.name, msg.msg, msg.file, msg.function, msg.line])
+        elif(topic==rosoutData.topic_name):
+            rosoutData.level[rosoutData.k] = msg.level
+            rosoutData.name[rosoutData.k] = msg.name
+            rosoutData.msg[rosoutData.k] = msg.msg
+            rosoutData.file[rosoutData.k] = msg.file
+            rosoutData.function[rosoutData.k] = msg.function
+            rosoutData.line[rosoutData.k] = msg.line
+            rosoutData.add_time(t,startTime)
+        elif(topic==rosoutAggData.topic_name):
+            rosoutAggData.level[rosoutAggData.k] = msg.level
+            rosoutAggData.name[rosoutAggData.k] = msg.name
+            rosoutAggData.msg[rosoutAggData.k] = msg.msg
+            rosoutAggData.file[rosoutAggData.k] = msg.file
+            rosoutAggData.function[rosoutAggData.k] = msg.function
+            rosoutAggData.line[rosoutAggData.k] = msg.line
+            rosoutAggData.add_time(t,startTime)
 
         elif(topic==batteryData.topic_name):
             batteryData.b1[batteryData.k] = msg.battery1

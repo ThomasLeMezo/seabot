@@ -44,6 +44,7 @@ regulationWaypointData = RegulationWaypointData()
 
 
 filename = sys.argv[1]
+filename = "/home/lemezoth/workspaceFlotteur/tools/rosbag/bag/guerledan/2019-10-10-15-06-02_0.bag"
 load_bag(filename, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData)
 
 g = 9.81
@@ -62,10 +63,10 @@ print("Data has been loaded")
 file_directory = "/home/lemezoth/workspaceQT/tikz-adapter/tikz/figs/svg/"
 
 offset = 0.
-x_min = -1. # for display
-x_max = 4368
+x_min = 0. # for display
+x_max = 61343/3600.
 y_min = -0.2
-y_max = 20.
+y_max = 32.
 
 def newFigure(name):
 	vibes.newFigure(name)
@@ -73,18 +74,20 @@ def newFigure(name):
 	vibes.axisLimits(x_min-offset, x_max+offset, y_min-offset, y_max+offset)
 	vibes.drawBox(x_min-offset, x_max+offset, y_min-offset, y_max+offset, "white[white]")
 
-data = np.transpose(np.vstack([depthFusionData.time, depthFusionData.depth]))
-data_ref = np.transpose(np.vstack([missionData.time, missionData.depth]))
+data = np.transpose(np.vstack([depthFusionData.time/3600., depthFusionData.depth]))
+data_ref = np.transpose(np.vstack([missionData.time/3600., missionData.depth]))
 
-data_piston = np.transpose(np.vstack([pistonStateData.time, pistonStateData.position*tick_to_volume*1e6]))
+data_piston = np.transpose(np.vstack([pistonStateData.time/3600., pistonStateData.position*tick_to_volume*1e6]))
 
 vibes.beginDrawing()
 newFigure("Depth regulation")
 vibes.drawLine(data.tolist(), "black")
 vibes.drawLine(data_ref.tolist(), "red")
 vibes.axisAuto()
-vibes.drawLine([[0,0.3],[4360,0.3]])
+# vibes.drawLine([[0,0.3],[4360,0.3]])
 vibes.saveImage(file_directory + 'float_regulation.svg')
+
+#######################################
 
 y_min = -1.*tick_to_volume*1e6
 y_max = 2400.*tick_to_volume*1e6
@@ -93,6 +96,34 @@ vibes.drawLine(data_piston.tolist(), "black")
 vibes.axisAuto()
 vibes.saveImage(file_directory + 'float_regulation_piston.svg')
 
+#######################################
+
+depth_factor = 1e2
+depth_offset = 9.5
+time_offset = 7.88
+time_scale = 60
+
+t_lb = 7.88*3600./time_scale
+t_ub = 8.12*3600./time_scale
+y_min = (9.485 -depth_offset)*depth_factor
+y_max = (9.505 -depth_offset)*depth_factor
+x_min = t_lb - time_offset
+x_max = t_ub - time_offset
+
+newFigure("Depth regulation zoom")
+lb = np.where(depthFusionData.time <= np.max((1,time_scale*t_lb)))[0][-1]
+ub = np.where(depthFusionData.time >= np.min((depthFusionData.time[-1],time_scale*t_ub)))[0][0]
+print(lb, ub)
+
+data_zoom = np.transpose(np.vstack([depthFusionData.time[lb:ub]/time_scale-time_offset, (depthFusionData.depth[lb:ub]-depth_offset)*depth_factor]))
+vibes.drawLine(data_zoom.tolist(), "black")
+
+lb = np.where(missionData.time <= np.max((1,time_scale*t_lb)))[0][-1]
+ub = np.where(missionData.time >= np.min((missionData.time[-1],time_scale*t_ub)))[0][0]
+data_mission_zoom = np.transpose(np.vstack([missionData.time[lb:ub]/time_scale-time_offset, (missionData.depth[lb:ub]-depth_offset)*depth_factor]))
+vibes.drawLine(data_mission_zoom.tolist(), "red")
+
+vibes.saveImage(file_directory + 'float_regulation_zoom.svg')
 
 ###
 # ti=280*5
