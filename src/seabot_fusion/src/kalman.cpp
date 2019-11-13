@@ -128,9 +128,11 @@ int main(int argc, char *argv[]){
   const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
   const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
   const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
+  tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
+
   const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
-  const double limit_offset = n.param<double>("limit_offset", 2400);
-  const double limit_chi = n.param<double>("limit_chi", 100);
+  const double limit_offset = n.param<double>("limit_offset", 2400)*tick_to_volume;
+  const double limit_chi = n.param<double>("limit_chi", 100)*tick_to_volume;
 
   const double limit_min_depth = n.param<double>("limit_min_depth", 0.5);
 
@@ -144,7 +146,7 @@ int main(int argc, char *argv[]){
   coeff_A = g*rho/m;
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   coeff_B = 0.5*rho*Cf/m;
-  tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
+
 
   //  ROS_INFO("tick_to_volume = %.10e", tick_to_volume);
   ROS_INFO("Coeff_A %.10e", coeff_A);
@@ -172,8 +174,8 @@ int main(int argc, char *argv[]){
 
   gamma(0,0) = pow(1e-1, 2); // velocity
   gamma(1,1) = pow(1e-3, 2); // Depth
-  gamma(2,2) = pow(tick_to_volume*limit_offset, 2); // Error offset;
-  gamma(3,3) = pow(tick_to_volume*limit_chi,2); // Compressibility
+  gamma(2,2) = pow(limit_offset, 2); // Error offset;
+  gamma(3,3) = pow(limit_chi,2); // Compressibility
 
   gamma_alpha(0,0) = pow(gamma_alpha_velocity, 2); // velocity (1e-4)
   gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth (1e-5)
@@ -196,8 +198,8 @@ int main(int argc, char *argv[]){
   Matrix<double,NB_MESURES, 1> measure = Matrix<double,NB_MESURES, 1>::Zero();
   Matrix<double,NB_COMMAND, 1> command = Matrix<double,NB_COMMAND, 1>::Zero();
 
-  double dt = 0.0;
-  ros::Time t_last;
+  const double dt = 1.0/frequency;
+//  ros::Time t_last;
 
   ROS_INFO("[Kalman depth] Start Ok");
   ros::Rate loop_rate(frequency);
@@ -211,10 +213,10 @@ int main(int argc, char *argv[]){
     /// * No surface set point
     /// * Received a new depth measure
     if(depth>limit_min_depth && depth_set_point!=0.0 && depth_valid){
-      dt = (time_last_depth-t_last).toSec();
-      t_last = time_last_depth;
-      if(dt>10./frequency) // Case where kalman is re-enabled
-        dt=1./frequency;
+//      dt = (time_last_depth-t_last).toSec();
+//      t_last = time_last_depth;
+//      if(dt>10./frequency) // Case where kalman is re-enabled
+//        dt=1./frequency;
 
       Ak(0,0) = -2.*coeff_B*abs(xhat(0));
       Ak(0,1) = xhat(3)*coeff_A;
@@ -231,13 +233,13 @@ int main(int argc, char *argv[]){
       // Case Divergence of Kalman filter
       if(abs(xhat(2))>limit_offset){
         xhat(2) = min(max(xhat(2), -limit_offset), limit_offset);
-        gamma(2,2) = pow(tick_to_volume*limit_offset, 2); // Error offset;
+        gamma(2,2) = pow(limit_offset, 2); // Error offset;
         msg.valid = false;
       }
 
       if(abs(xhat(3))>limit_chi){
         xhat(3) = min(max(xhat(3), -limit_chi), limit_chi);
-        gamma(3,3) = pow(tick_to_volume*limit_chi,2); // Compressibility
+        gamma(3,3) = pow(limit_chi,2); // Compressibility
         msg.valid = false;
       }
     }

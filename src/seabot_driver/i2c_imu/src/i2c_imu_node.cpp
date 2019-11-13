@@ -71,6 +71,9 @@ private:
   RTIMU *imu_;
 
   ImuSettings imu_settings_;
+
+  // Debug
+  bool m_valid_last = true;
 };
 
 bool ImuSettings::loadSettings(){
@@ -238,6 +241,7 @@ void I2cImu::update(){
   }
   else{
     RTIMU_DATA imuData = imu_->getIMUData();
+    debug_msg.readValid = true;
 
     /// ********** IMU msg **********
     imu_msg.header.stamp = ros::Time::now();
@@ -289,7 +293,11 @@ void I2cImu::update(){
     if(pow(imuData.accel.x(),2)+pow(imuData.accel.y(),2)+pow(imuData.accel.z(),2)>pow(reset_norm_acc,2))
       init();
   }
-  imu_debug_pub_.publish(debug_msg);
+
+  if(valid || (m_valid_last!=debug_msg.readValid)){
+    imu_debug_pub_.publish(debug_msg);
+    m_valid_last = debug_msg.readValid;
+  }
 }
 
 void I2cImu::spin(){

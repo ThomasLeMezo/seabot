@@ -100,8 +100,8 @@ vibes.saveImage(file_directory + 'float_regulation_piston.svg')
 
 depth_factor = 1e2
 depth_offset = 9.5
-time_offset = 7.88
 time_scale = 60
+time_offset = 7.88*3600./time_scale
 
 t_lb = 7.88*3600./time_scale
 t_ub = 8.12*3600./time_scale

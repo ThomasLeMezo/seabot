@@ -68,6 +68,16 @@ class ImuData(SeabotData):
         self.gyro_y = np.empty([self.nb_elements])
         self.gyro_z = np.empty([self.nb_elements])
 
+class ImuDebugData(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/driver/imu_debug", bag)
+        self.accelValid = np.empty([self.nb_elements], dtype=np.uint8)
+        self.fusionPoseValid = np.empty([self.nb_elements], dtype=np.uint8)
+        self.fusionQPoseValid = np.empty([self.nb_elements], dtype=np.uint8)
+        self.gyroValid = np.empty([self.nb_elements], dtype=np.uint8)
+        self.compassValid = np.empty([self.nb_elements], dtype=np.uint8)
+        self.readValid = np.empty([self.nb_elements], dtype=np.uint8)
+
 class MagData(SeabotData):
     def __init__(self, bag=None):
         SeabotData.__init__(self, "/driver/mag", bag)
@@ -305,7 +315,7 @@ end_time = 0.0
 ####################### Function #######################
 
 #@jit#(nopython=True)
-def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData):
+def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData, imuDebugData):
     start_time_process = time.time()
     bag = rosbag.Bag(filename, 'r')
 
@@ -345,6 +355,7 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
     iridiumStatusData.__init__(bag)
     iridiumSessionData.__init__(bag)
     regulationWaypointData.__init__(bag)
+    imuDebugData.__init__(bag)
 
     for topic, msg, t in bag.read_messages(start_time=startTime, end_time=end_time):
         if(topic==pistonSetPointData.topic_name):
@@ -523,6 +534,33 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
             imuData.gyro_y[imuData.k] = msg.angular_velocity.y
             imuData.gyro_z[imuData.k] = msg.angular_velocity.z
             imuData.add_time(t, startTime)
+
+        elif(topic==imuDebugData.topic_name):
+            if(msg.accelValid):
+                imuDebugData.accelValid[imuDebugData.k] = 1.0
+            else:
+                imuDebugData.accelValid[imuDebugData.k] = 0.0
+            if(msg.fusionPoseValid):
+                imuDebugData.fusionPoseValid[imuDebugData.k] = 1.0
+            else:
+                imuDebugData.fusionPoseValid[imuDebugData.k] = 0.0
+            if(msg.fusionQPoseValid):
+                imuDebugData.fusionQPoseValid[imuDebugData.k] = 1.0
+            else:
+                imuDebugData.fusionQPoseValid[imuDebugData.k] = 0.0
+            if(msg.gyroValid):
+                imuDebugData.gyroValid[imuDebugData.k] = 1.0
+            else:
+                imuDebugData.gyroValid[imuDebugData.k] = 0.0
+            if(msg.compassValid):
+                imuDebugData.compassValid[imuDebugData.k] = 1.0
+            else:
+                imuDebugData.compassValid[imuDebugData.k] = 0.0
+            if(msg.readValid):
+                imuDebugData.readValid[imuDebugData.k] = 1.0
+            else:
+                imuDebugData.readValid[imuDebugData.k] = 0.0
+            imuDebugData.add_time(t, startTime)
 
         elif(topic==eulerData.topic_name):
             eulerData.x[eulerData.k] = msg.x

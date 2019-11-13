@@ -104,8 +104,9 @@ iridiumSessionData = IridiumSessionData()
 regulationWaypointData = RegulationWaypointData()
 rosoutData = RosoutData()
 rosoutAggData = RosoutAggData()
+imuDebugData = ImuDebugData()
 
-load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData)
+load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData, imuDebugData)
 
 print("Data has been loaded")
 
@@ -367,7 +368,7 @@ if(len(temperatureData.time)>0 and len(depthFusionData.time)>0):
         temperature_interp = f_temp(time_interp)
         depth_interp = f_depth(time_interp)
 
-        mask_temp = (temperature_interp>0)
+        mask_temp = (temperature_interp>3.0)
         temp_mask = temperature_interp[mask_temp]
         depth_mask = depth_interp[mask_temp]
         time_mask = time_interp[mask_temp]
@@ -485,6 +486,27 @@ if(len(imuData.time)>0):
 
     pg_acc_n.setXLink(pg_acc)
 
+#### Imu Debug ####
+if(len(imuDebugData.time)>0):
+    dock_imu_debug = Dock("Debug Imu")
+    area_data.addDock(dock_imu_debug, 'above', dock_internal_sensor)
+    pg_imu_debug = pg.PlotWidget()
+    set_plot_options(pg_imu_debug)
+    pg_imu_debug.plot(imuDebugData.time, imuDebugData.accelValid[:-1], pen=(255,0,0), name="accelValid", stepMode=True)
+    pg_imu_debug.plot(imuDebugData.time, imuDebugData.fusionPoseValid[:-1], pen=(0,255,0), name="fusionPoseValid", stepMode=True)
+    pg_imu_debug.plot(imuDebugData.time, imuDebugData.fusionQPoseValid[:-1], pen=(0,0,255), name="fusionQPoseValid", stepMode=True)
+    pg_imu_debug.plot(imuDebugData.time, imuDebugData.gyroValid[:-1], pen=(255,255,0), name="gyroValid", stepMode=True)
+    pg_imu_debug.plot(imuDebugData.time, imuDebugData.compassValid[:-1], pen=(255,255,150), name="compassValid", stepMode=True)
+    pg_imu_debug.plot(imuDebugData.time, imuDebugData.readValid[:-1], pen=(255,150,150), name="readValid", stepMode=True)
+    # text_write_safety_msg(pg_imu_debug, imuDebugData.time, "accelValid", imuDebugData.accelValid)
+    # text_write_safety_msg(pg_imu_debug, imuDebugData.time, "fusionPoseValid", imuDebugData.fusionPoseValid)
+    # text_write_safety_msg(pg_imu_debug, imuDebugData.time, "fusionQPoseValid", imuDebugData.fusionQPoseValid)
+    # text_write_safety_msg(pg_imu_debug, imuDebugData.time, "gyroValid", imuDebugData.gyroValid)
+    # text_write_safety_msg(pg_imu_debug, imuDebugData.time, "compassValid", imuDebugData.compassValid)
+    # text_write_safety_msg(pg_imu_debug, imuDebugData.time, "readValid", imuDebugData.readValid)
+
+    dock_imu_debug.addWidget(pg_imu_debug)
+
 #### Imu Gyro ####
 if(len(imuData.time)>0):
     dock_imu_gyro = Dock("Gyro")
@@ -504,7 +526,7 @@ if(len(eulerData.time)>0):
     set_plot_options(pg_euler)
     pg_euler.plot(eulerData.time, eulerData.x[:-1], pen=(255,0,0), name="euler x", stepMode=True)
     pg_euler.plot(eulerData.time, eulerData.y[:-1], pen=(0,255,0), name="euler y", stepMode=True)
-    pg_euler.plot(eulerData.time, eulerData.z[:-1], pen=(0,255,0), name="euler z", stepMode=True)
+    pg_euler.plot(eulerData.time, eulerData.z[:-1], pen=(0,0,255), name="euler z", stepMode=True)
     dock_euler.addWidget(pg_euler)
 
 #################### Piston ####################
@@ -743,26 +765,34 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     pg_kalman_velocity = pg.PlotWidget()
     set_plot_options(pg_kalman_velocity)
     pg_kalman_velocity.plot(kalmanData.time, kalmanData.velocity[:-1], pen=(255,0,0), name="velocity (x1)", stepMode=True)
+    pg_kalman_velocity.plot(depthFusionData.time, depthFusionData.velocity[:-1], pen=(0,255,0), name="velocity (fusion)", stepMode=True)
     dock_kalman.addWidget(pg_kalman_velocity)
 
     pg_kalman_depth = pg.PlotWidget()
     set_plot_options(pg_kalman_depth)
     pg_kalman_depth.plot(kalmanData.time, kalmanData.depth[:-1], pen=(255,0,0), name="depth (x2)", stepMode=True)
+    pg_kalman_depth.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(0,255,0), name="depth (fusion)", stepMode=True)
     dock_kalman.addWidget(pg_kalman_depth)
 
     pg_kalman_offset = pg.PlotWidget()
     set_plot_options(pg_kalman_offset)
-    pg_kalman_offset.plot(kalmanData.time, np.array(kalmanData.offset[:-1])/tick_to_volume, pen=(255,0,0), name="offset (x4) [ticks]", stepMode=True)
+    pg_kalman_offset.plot(kalmanData.time, kalmanData.offset[:-1]/tick_to_volume, pen=(255,0,0), name="offset (x4) [ticks]", stepMode=True)
     dock_kalman.addWidget(pg_kalman_offset)
 
     pg_kalman_chi = pg.PlotWidget()
     set_plot_options(pg_kalman_chi)
-    pg_kalman_chi.plot(kalmanData.time, np.array(kalmanData.chi[:-1])/tick_to_volume, pen=(255,0,0), name="chi (x5) [ticks]", stepMode=True)
+    pg_kalman_chi.plot(kalmanData.time, kalmanData.chi[:-1]/tick_to_volume, pen=(255,0,0), name="chi (x5) [ticks]", stepMode=True)
     dock_kalman.addWidget(pg_kalman_chi)
+
+    pg_kalman_valid = pg.PlotWidget()
+    set_plot_options(pg_kalman_valid)
+    pg_kalman_valid.plot(kalmanData.time, kalmanData.valid[:-1], pen=(255,0,0), name="valid", stepMode=True)
+    dock_kalman.addWidget(pg_kalman_valid)
 
     pg_kalman_depth.setXLink(pg_kalman_velocity)
     pg_kalman_offset.setXLink(pg_kalman_velocity)
     pg_kalman_chi.setXLink(pg_kalman_velocity)
+    pg_kalman_velocity.setXLink(pg_kalman_valid)
 
 if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     dock_kalman_cov = Dock("Kalman Cov")
