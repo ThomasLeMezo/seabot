@@ -982,7 +982,7 @@ if(len(engineData.time)>0):
 
 #     pg_thruster_angular.setXLink(pg_heading)
 
-if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
+if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0 and len(engineData.time)>0):
     dock_heading_error = Dock("Heading error")
     area_waypoints.addDock(dock_heading_error, 'above', dock_thrusters)
 
@@ -1029,9 +1029,9 @@ def get_circle(center, radius):
     return (X,Y)
 
 #### Mission Path ####
-if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missionData.time)>0):
+if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missionData.time)>0 and len(engineData.time)>0):
     dock_mission = Dock("Mission path")
-    area_waypoints.addDock(dock_mission, 'above', dock_heading_error)
+    area_waypoints.addDock(dock_mission, 'above', dock_thrusters)
     pg_gps2 = pg.PlotWidget()
     set_plot_options(pg_gps2)
     Y = poseFusionData.north
@@ -1093,9 +1093,9 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
     timer_mission.start(50)
 
 #### Distance error ####
-if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0):
+if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0 and len(engineData.time)>0):
     dock_distance = Dock("Distance")
-    area_waypoints.addDock(dock_distance, 'above', dock_heading_error)
+    area_waypoints.addDock(dock_distance, 'above', dock_thrusters)
 
     pg_distance_error = pg.PlotWidget()
     set_plot_options(pg_distance_error)

@@ -3,7 +3,7 @@
 
     <node name="state_feedback" pkg="seabot_depth_regulation" type="state_feedback_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
 
-        <param name="frequency" value="5.0" />
+								<param name="frequency" value="1.0" />
 								<param name="root_regulation" value="-0.2" />
 								<param name="limit_depth_regulation" value="0.3" />
 

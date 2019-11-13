@@ -233,7 +233,7 @@ void I2cImu::init(){
 void I2cImu::update(){
   bool valid = imu_->IMURead();
   if(!valid){
-    ROS_WARN("[IMU] Failed to read data");
+//    ROS_WARN("[IMU] Failed to read data");
     debug_msg.readValid = false;
   }
   else{

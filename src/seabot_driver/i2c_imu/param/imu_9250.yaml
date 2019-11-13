@@ -105,4 +105,4 @@ seabot3:
 
   gyro_bias: [-3.81e-05, 3.63e-06, 4.32e-05]
 
-		mag_declination: -1.722
+  mag_declination: -1.722

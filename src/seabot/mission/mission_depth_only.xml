@@ -1,5 +1,6 @@
-k<?xml version="1.0"?>
+<?xml version="1.0"?>
 
+<mission>
 <!--<offset>
 		<start_time_utc>
 		<year>2019</year>
@@ -13,22 +14,15 @@ k<?xml version="1.0"?>
 <paths type ="1">
 	<loop number="2" depth_increment="0.0">
 
-<!--<waypoint>
-		<duration>300</duration>
-		<depth>1.0</depth>
-		<limit_velocity>0.02</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-	</waypoint>-->
-
 		<waypoint>
-			<duration>300</duration>
+			<duration>1200</duration>
 			<depth>1.0</depth>
 			<limit_velocity>0.05</limit_velocity>
 			<approach_velocity>1.0</approach_velocity>
 		</waypoint>
 
 		<waypoint>
-			<duration>300</duration>
+			<duration>1200</duration>
 			<depth>1.5</depth>
 			<limit_velocity>0.05</limit_velocity>
 			<approach_velocity>1.0</approach_velocity>
@@ -45,3 +39,4 @@ k<?xml version="1.0"?>
 </paths>
 
 <!--<enable_thrusters>False</enable_thrusters-->
+</mission>
