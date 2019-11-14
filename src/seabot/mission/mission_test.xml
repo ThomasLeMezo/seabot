@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-
+<mission>
 <offset>
 	<north>1</north>
 	<east>2</east>
@@ -43,3 +43,4 @@
 		</waypoint>
 	</loop>
 </paths>
+</mission>

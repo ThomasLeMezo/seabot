@@ -71,9 +71,6 @@ private:
   RTIMU *imu_;
 
   ImuSettings imu_settings_;
-
-  // Debug
-  bool m_valid_last = true;
 };
 
 bool ImuSettings::loadSettings(){
@@ -235,11 +232,7 @@ void I2cImu::init(){
 
 void I2cImu::update(){
   bool valid = imu_->IMURead();
-  if(!valid){
-//    ROS_WARN("[IMU] Failed to read data");
-    debug_msg.readValid = false;
-  }
-  else{
+  if(valid){
     RTIMU_DATA imuData = imu_->getIMUData();
     debug_msg.readValid = true;
 
@@ -290,13 +283,11 @@ void I2cImu::update(){
     }
 
     // Test reset condition (norm of acc)
-    if(pow(imuData.accel.x(),2)+pow(imuData.accel.y(),2)+pow(imuData.accel.z(),2)>pow(reset_norm_acc,2))
+    if(pow(imuData.accel.x(),2)+pow(imuData.accel.y(),2)+pow(imuData.accel.z(),2)>pow(reset_norm_acc,2)){
       init();
-  }
-
-  if(valid || (m_valid_last!=debug_msg.readValid)){
+      debug_msg.readValid = false;
+    }
     imu_debug_pub_.publish(debug_msg);
-    m_valid_last = debug_msg.readValid;
   }
 }
 

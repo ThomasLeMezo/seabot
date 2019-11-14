@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 
+<mission>
 <!--<offset>
 		<start_time_utc>
 		<year>2019</year>
@@ -32,5 +33,6 @@
 	<depth>0</depth>
 </waypoint>
 </paths>
+</mission>
 
 <!--<enable_thrusters>False</enable_thrusters-->

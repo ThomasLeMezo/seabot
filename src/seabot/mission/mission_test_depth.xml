@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 
+<mission>
 <offset>
 	<time>1535543727</time>
 </offset>
@@ -15,3 +16,4 @@
 		<depth>0.0</depth>
 	</waypoint>
 </paths>
+</mission>

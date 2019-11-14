@@ -192,7 +192,7 @@ int main(int argc, char *argv[]){
 
   xhat(0) = 0.0;
   xhat(1) = 0.0;
-  xhat(2) = 0.0;
+  xhat(2) = -limit_offset/2.0;
   xhat(3) = 0.0;
 
   Matrix<double,NB_MESURES, 1> measure = Matrix<double,NB_MESURES, 1>::Zero();
@@ -232,14 +232,16 @@ int main(int argc, char *argv[]){
 
       // Case Divergence of Kalman filter
       if(abs(xhat(2))>limit_offset){
-        xhat(2) = min(max(xhat(2), -limit_offset), limit_offset);
-        gamma(2,2) = pow(limit_offset, 2); // Error offset;
+//        xhat(2) = min(max(xhat(2), -limit_offset), limit_offset);
+//        gamma(2,2) = pow(limit_offset, 2); // Error offset;
+//        gamma(3,3) = pow(limit_chi,2); // Compressibility
         msg.valid = false;
       }
 
       if(abs(xhat(3))>limit_chi){
-        xhat(3) = min(max(xhat(3), -limit_chi), limit_chi);
-        gamma(3,3) = pow(limit_chi,2); // Compressibility
+//        xhat(3) = min(max(xhat(3), -limit_chi), limit_chi);
+//        gamma(2,2) = pow(limit_offset, 2); // Error offset;
+//        gamma(3,3) = pow(limit_chi,2); // Compressibility
         msg.valid = false;
       }
     }
