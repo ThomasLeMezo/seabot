@@ -71,6 +71,8 @@ int main(int argc, char *argv[]){
   vector<double>::const_iterator depth_first = depth.begin();
   vector<double>::const_iterator depth_last = depth.begin() + step;
   vector<double> depth_sub(depth_first, depth_last);
+  cout << depth_sub.size() << endl;
+
   fig.draw_curve(time_depth_sub, depth_sub, "red");
   fig.draw_circle_radius_final(time_depth[step], depth[step], 5.0, "black", "lightgray", ipe::EStrokedAndFilled, 30);
 
