@@ -57,27 +57,31 @@ int main(int argc, char *argv[]){
   cout << "frame_data = " << frame_data << endl;
   frame_data[0] += ibex::Interval(0, 30);
   frame_data[1] = ibex::Interval(-0.1, 1.6);
-  ipegenerator::Figure fig(frame_data, 200, 50);
-
-  fig.set_graduation_parameters(15.0, 240.0, 0.0, 0.25);
-  fig.draw_axis("t \\text{ (in s)}", "z \\text{ (in m)}");
-  fig.draw_curve(time_depth_set_point, depth_set_point, "green");
 
 
-  size_t step = 300;
-  vector<double>::const_iterator time_depth_first = time_depth.begin();
-  vector<double>::const_iterator time_depth_last = time_depth.begin() + step;
-  vector<double> time_depth_sub(time_depth_first, time_depth_last);
-  vector<double>::const_iterator depth_first = depth.begin();
-  vector<double>::const_iterator depth_last = depth.begin() + step;
-  vector<double> depth_sub(depth_first, depth_last);
-  cout << depth_sub.size() << endl;
+  for(size_t step = 2; step<time_depth.size(); step+=5){
+    vector<double>::const_iterator time_depth_first = time_depth.begin();
+    vector<double>::const_iterator time_depth_last = time_depth.begin() + step;
+    vector<double> time_depth_sub(time_depth_first, time_depth_last);
+    vector<double>::const_iterator depth_first = depth.begin();
+    vector<double>::const_iterator depth_last = depth.begin() + step;
+    vector<double> depth_sub(depth_first, depth_last);
 
-  fig.draw_curve(time_depth_sub, depth_sub, "red");
-  fig.draw_circle_radius_final(time_depth[step], depth[step], 5.0, "black", "lightgray", ipe::EStrokedAndFilled, 30);
+    ipegenerator::Figure fig(frame_data, 200, 50);
 
-  fig.save_ipe("/home/lemezoth/depth.ipe");
-  fig.save_pdf("/home/lemezoth/depth.pdf");
+    fig.set_graduation_parameters(15.0, 240.0, 0.0, 0.25);
+    fig.draw_axis("t \\text{ (in s)}", "z \\text{ (in m)}");
+    fig.draw_circle_radius_final(time_depth[step], depth[step], 5.0, "black", "lightgray", ipe::EStrokedAndFilled, 30);
+    fig.draw_curve(time_depth_set_point, depth_set_point, "green");
+    fig.draw_curve(time_depth_sub, depth_sub, "red");
+
+
+    std::stringstream filename;
+    filename << "/home/lemezoth/Videos/thesis/traj/traj";
+    filename << std::setfill('0') << std::setw(5) << step << ".ipe";
+    cout << filename.str() << '\r' << endl;
+    fig.save_ipe(filename.str());
+  }
 
   return 0;
 }
