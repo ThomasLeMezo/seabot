@@ -231,19 +231,14 @@ int main(int argc, char *argv[]){
       msg.valid = true;
 
       // Case Divergence of Kalman filter
-      if(abs(xhat(2))>limit_offset){
+      if((xhat(2)-xhat(3)*xhat(1))>limit_offset){
 //        xhat(2) = min(max(xhat(2), -limit_offset), limit_offset);
-//        gamma(2,2) = pow(limit_offset, 2); // Error offset;
-//        gamma(3,3) = pow(limit_chi,2); // Compressibility
+//        xhat(3) = min(max(xhat(3), -limit_chi), limit_chi);
+        gamma(2,2) = pow(limit_offset, 2); // Error offset;
+        gamma(3,3) = pow(limit_chi,2); // Compressibility
         msg.valid = false;
       }
 
-      if(abs(xhat(3))>limit_chi){
-//        xhat(3) = min(max(xhat(3), -limit_chi), limit_chi);
-//        gamma(2,2) = pow(limit_offset, 2); // Error offset;
-//        gamma(3,3) = pow(limit_chi,2); // Compressibility
-        msg.valid = false;
-      }
     }
     else if(depth<=limit_min_depth){
       xhat(0) = velocity_fusion;
