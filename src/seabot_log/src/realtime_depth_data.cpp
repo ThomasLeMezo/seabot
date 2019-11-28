@@ -71,9 +71,14 @@ int main(int argc, char *argv[]){
 
     fig.set_graduation_parameters(15.0, 240.0, 0.0, 0.25);
     fig.draw_axis("t \\text{ (in s)}", "z \\text{ (in m)}");
-    fig.draw_circle_radius_final(time_depth[step], depth[step], 5.0, "black", "lightgray", ipe::EStrokedAndFilled, 30);
-    fig.draw_curve(time_depth_set_point, depth_set_point, "green");
-    fig.draw_curve(time_depth_sub, depth_sub, "red");
+    fig.set_color_fill("lightgray");
+    fig.set_color_type(ipegenerator::STROKE_AND_FILL);
+    fig.draw_circle_radius_final(time_depth[step], depth[step], 5.0);
+    fig.set_color_fill("green");
+    fig.set_color_type(ipegenerator::STROKE_ONLY);
+    fig.draw_curve(time_depth_set_point, depth_set_point);
+    fig.set_color_fill("red");
+    fig.draw_curve(time_depth_sub, depth_sub);
 
 
     std::stringstream filename;
