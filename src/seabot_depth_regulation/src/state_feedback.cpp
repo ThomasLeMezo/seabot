@@ -36,7 +36,7 @@ double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
 
-enum STATE_MACHINE {STATE_SURFACE, STATE_SINK, STATE_REGULATION, STATE_STATIONARY, STATE_EMERGENCY, STATE_PISTON_ISSUE};
+enum STATE_MACHINE {STATE_SURFACE, STATE_SINK, STATE_REGULATION, STATE_STATIONARY, STATE_EMERGENCY, STATE_PISTON_ISSUE, STATE_HOLD_DEPTH};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
 seabot_depth_regulation::RegulationDebug debug_msg;
@@ -137,6 +137,11 @@ int main(int argc, char *argv[]){
 
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
   const double piston_max_velocity = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume; // in m3/sec
+
+  // Hold depth parameters
+  const bool hold_depth_enable = n_private.param<bool>("hold_depth", false);
+  const double hold_depth_value_enter = n_private.param<double>("hold_depth_value_enter", 0.05);
+  const double hold_depth_value_exit = n_private.param<double>("hold_depth_value_exit", 0.1);
 
   /// ************************* ROS Communication *************************
   // Subscriber
@@ -248,10 +253,20 @@ int main(int argc, char *argv[]){
       piston_set_point -= u/(tick_to_volume*frequency);
       // Previous form do not allow movement under 1 tick
       // piston_set_point = piston_position - u/(tick_to_volume*frequency);
+
+      if(hold_depth_enable && abs(depth_set_point-x(1))<hold_depth_value_enter)
+        regulation_state = STATE_HOLD_DEPTH;
+
+      break;
+
+    case STATE_HOLD_DEPTH:
+      u=0.0;
+      if(abs(depth_set_point-x(1))>=hold_depth_value_exit)
+        regulation_state = STATE_REGULATION;
       break;
 
     case STATE_EMERGENCY:
-      u = 0;
+      u = 0.0;
       piston_set_point = 0;
 
       if(!emergency)
@@ -259,7 +274,7 @@ int main(int argc, char *argv[]){
       break;
 
     case STATE_PISTON_ISSUE:
-      u = 0;
+      u = 0.0;
       if(piston_state==1)
         regulation_state = STATE_SURFACE;
       break;

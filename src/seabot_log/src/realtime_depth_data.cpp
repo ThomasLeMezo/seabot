@@ -10,23 +10,26 @@
 
 using namespace std;
 
-int main(int argc, char *argv[]){
+std::vector<double> depth, velocity, time_depth;
+std::vector<double> depth_set_point, time_depth_set_point;
+ibex::IntervalVector frame_data = ibex::IntervalVector(2, ibex::Interval::EMPTY_SET);
 
+void get_data()
+{
   std::vector<std::string> topics;
   topics.push_back(std::string("/fusion/depth"));
   topics.push_back(std::string("/mission/set_point"));
 
   rosbag::Bag bag;
-  bag.open("/home/lemezoth/Videos/thesis/2019-11-15-12-23-39_0.bag", rosbag::bagmode::Read);
+  bag.open("/home/lemezoth/Videos/thesis/flotteur/2019-11-15-12-23-39_0.bag", rosbag::bagmode::Read);
 
   rosbag::View view(bag, rosbag::TopicQuery(topics));
-  std::vector<double> depth, time_depth;
-  std::vector<double> depth_set_point, time_depth_set_point;
+
   double startTime = view.getBeginTime().toSec();
   cout << startTime << endl;
 
   cout << "Start Loop" << endl;
-  ibex::IntervalVector frame_data = ibex::IntervalVector(2, ibex::Interval::EMPTY_SET);
+  frame_data = ibex::IntervalVector(2, ibex::Interval::EMPTY_SET);
   for(rosbag::MessageInstance const m: view){
     if(m.getTopic() == "/fusion/depth"){
       seabot_fusion::DepthPose::ConstPtr s = m.instantiate<seabot_fusion::DepthPose>();
@@ -36,6 +39,7 @@ int main(int argc, char *argv[]){
         double d = s->depth;
         time_depth.push_back(t);
         depth.push_back(d);
+        velocity.push_back(s->velocity);
         frame_data[0] |= ibex::Interval(t);
         frame_data[1] |= ibex::Interval(d);
       }
@@ -53,11 +57,13 @@ int main(int argc, char *argv[]){
   }
   cout << "Data Loaded" << endl;
   bag.close();
+}
 
+void example1()
+{
   cout << "frame_data = " << frame_data << endl;
   frame_data[0] += ibex::Interval(0, 30);
   frame_data[1] = ibex::Interval(-0.1, 1.6);
-
 
   for(size_t step = 2; step<time_depth.size(); step+=5){
     vector<double>::const_iterator time_depth_first = time_depth.begin();
@@ -87,6 +93,35 @@ int main(int argc, char *argv[]){
     cout << filename.str() << '\r' << endl;
     fig.save_ipe(filename.str());
   }
+}
 
+void example2()
+{
+  cout << "frame_data = " << frame_data << endl;
+  frame_data[0] = ibex::Interval(-0.3, 1.5);
+  frame_data[1] = ibex::Interval(-0.15, 0.05);
+
+  ipegenerator::Figure fig(frame_data, 50, 50);
+  fig.set_graduation_parameters(0.0, 0.5, -0.1, 0.05);
+  fig.set_number_digits_axis_x(1);
+  fig.set_number_digits_axis_y(2);
+
+  fig.draw_curve(depth, velocity);
+  for(size_t i=0; i<time_depth_set_point.size(); ++i)
+  {
+    fig.draw_symbol(depth_set_point[i], 0.0, "disk(sx)");
+  }
+  fig.draw_axis("z","\\dot{z}");
+
+  std::stringstream filename;
+  filename << "/home/lemezoth/Videos/thesis/traj/depth_velocity.ipe";
+  fig.save_ipe(filename.str());
+}
+
+int main(int argc, char *argv[]){
+  get_data();
+
+  //  example1();
+  example2();
   return 0;
 }
