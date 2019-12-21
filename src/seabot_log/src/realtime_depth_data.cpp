@@ -59,7 +59,7 @@ int main(int argc, char *argv[]){
   frame_data[1] = ibex::Interval(-0.1, 1.6);
 
 
-  for(size_t step = 2; step<time_depth.size(); step+=5){
+  for(size_t step = 2; step<time_depth.size(); step+=1){
     vector<double>::const_iterator time_depth_first = time_depth.begin();
     vector<double>::const_iterator time_depth_last = time_depth.begin() + step;
     vector<double> time_depth_sub(time_depth_first, time_depth_last);

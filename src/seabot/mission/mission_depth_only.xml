@@ -15,18 +15,32 @@
 	<loop number="1" depth_increment="0.0">
 
 		<waypoint>
-			<duration>1200</duration>
+			<duration>1800</duration>
 			<depth>1.0</depth>
 			<limit_velocity>0.05</limit_velocity>
 			<approach_velocity>1.0</approach_velocity>
 		</waypoint>
 
 		<waypoint>
-			<duration>1200</duration>
+			<duration>1800</duration>
 			<depth>1.5</depth>
 			<limit_velocity>0.05</limit_velocity>
 			<approach_velocity>1.0</approach_velocity>
 		</waypoint>
+
+	<waypoint>
+		<duration>1800</duration>
+		<depth>1.0</depth>
+		<limit_velocity>0.05</limit_velocity>
+		<approach_velocity>1.0</approach_velocity>
+	</waypoint>
+
+	<waypoint>
+		<duration>1800</duration>
+		<depth>1.5</depth>
+		<limit_velocity>0.05</limit_velocity>
+		<approach_velocity>1.0</approach_velocity>
+	</waypoint>
 
 	</loop>
 </paths>
