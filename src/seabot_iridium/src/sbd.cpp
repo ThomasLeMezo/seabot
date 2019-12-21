@@ -1,7 +1,8 @@
 #include "sbd.h"
 #include <string>
 #include <vector>
-
+#include <math.h>
+//#include <cfenv>
 #include <boost/algorithm/string.hpp>
 
 #include <sstream>
@@ -352,10 +353,11 @@ int SBD::cmd_session(){
     double lon_min = int(abs(m_longitude - lon_deg)*60000.)/1000.;
     cmd += "=";
 
-    std::ostringstream lat_string, lon_string;
+    std::stringstream lat_string, lon_string;
     if(lat_deg<0)
       lat_string << "-";
     lat_string << setfill('0') << setw(2) << abs(lat_deg);
+    //std::fesetround(FE_TONEAREST);
     lat_string << setw(5) << std::fixed << std::setprecision(3) << lat_min;
     cmd += lat_string.str();
 

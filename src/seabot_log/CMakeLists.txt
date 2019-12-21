@@ -78,4 +78,15 @@ target_link_libraries(realtime_depth_data
   ${IBEX_LIBRARIES}
 )
 
+add_executable(log_state_space
+    src/log_state_space
+)
+add_dependencies(log_state_space ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(log_state_space
+  ${catkin_LIBRARIES}
+  ${IPEGENERATOR_LIBRARIES}
+  ${IBEX_LIBRARIES}
+)
+
 endif()
