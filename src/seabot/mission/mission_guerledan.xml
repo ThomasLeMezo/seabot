@@ -1,88 +1,88 @@
 <?xml version="1.0"?>
 <mission>
-<offset>
+	<offset>
 		<start_time_utc>
-		<year>2019</year>
-		<month>10</month>
-		<day>10</day>
-		<hour>08</hour>
-		<min>00</min>
-	</start_time_utc>
-</offset>
+			<year>2019</year>
+			<month>10</month>
+			<day>10</day>
+			<hour>08</hour>
+			<min>00</min>
+		</start_time_utc>
+	</offset>
 
-<paths type ="0">
-<waypoint>
-	<duration>180</duration>
-	<east>253402</east>
-	<north>6805661</north>
-	<depth>0</depth>
-</waypoint>
+	<paths type ="0">
+		<waypoint>
+			<duration>180</duration>
+			<east>253402</east>
+			<north>6805661</north>
+			<depth>0</depth>
+		</waypoint>
 
-<!-- Waypoint 1 -->
+		<!-- Waypoint 1 -->
 
-<loop number="5" depth_increment="5.0">
-	<waypoint>
-		<duration>400</duration>
-		<depth>10.0</depth>
-		<limit_velocity>0.05</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-		<east>253402</east>
-		<north>6805661</north>
-		<depth>5</depth>
-	</waypoint>
-</loop>
+		<loop number="5" depth_increment="5.0">
+			<waypoint>
+				<duration>400</duration>
+				<depth>10.0</depth>
+				<limit_velocity>0.05</limit_velocity>
+				<approach_velocity>1.0</approach_velocity>
+				<east>253402</east>
+				<north>6805661</north>
+				<depth>5</depth>
+			</waypoint>
+		</loop>
 
-<loop number="6" depth_increment="-5.0">
-	<waypoint>
-		<duration>400</duration>
-		<depth>28</depth>
-		<limit_velocity>0.05</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-		<east>253402</east>
-		<north>6805661</north>
-		
-	</waypoint>
-</loop>
+		<loop number="6" depth_increment="-5.0">
+			<waypoint>
+				<duration>400</duration>
+				<depth>28</depth>
+				<limit_velocity>0.05</limit_velocity>
+				<approach_velocity>1.0</approach_velocity>
+				<east>253402</east>
+				<north>6805661</north>
+				
+			</waypoint>
+		</loop>
 
-<!-- Waypoint 2 -->
+		<!-- Waypoint 2 -->
 
-<waypoint>
-	<duration>1.0</duration>
-	<depth>0.0</depth>
-	<east>253358</east>
-	<north>6805660</north>
-	<depth>0</depth>
-</waypoint>
+		<waypoint>
+			<duration>1.0</duration>
+			<depth>0.0</depth>
+			<east>253358</east>
+			<north>6805660</north>
+			<depth>0</depth>
+		</waypoint>
 
-<waypoint>
-	<duration>450</duration>
-	<depth>0.0</depth>
-	<east>253358</east>
-	<north>6805660</north>
-	<depth>0</depth>
-</waypoint>
+		<waypoint>
+			<duration>450</duration>
+			<depth>0.0</depth>
+			<east>253358</east>
+			<north>6805660</north>
+			<depth>0</depth>
+		</waypoint>
 
-<loop number="5" depth_increment="5.0">
-	<waypoint>
-		<duration>400</duration>
-		<depth>5</depth>
-		<limit_velocity>0.05</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-		<east>253358</east>
-		<north>6805660</north>
-	</waypoint>
-</loop>
+		<loop number="5" depth_increment="5.0">
+			<waypoint>
+				<duration>400</duration>
+				<depth>5</depth>
+				<limit_velocity>0.05</limit_velocity>
+				<approach_velocity>1.0</approach_velocity>
+				<east>253358</east>
+				<north>6805660</north>
+			</waypoint>
+		</loop>
 
-<loop number="6" depth_increment="-5.0">
-	<waypoint>
-		<duration>400</duration>
-		<depth>28</depth>
-		<limit_velocity>0.05</limit_velocity>
-		<approach_velocity>1.0</approach_velocity>
-		<east>253358</east>
-		<north>6805660</north>
-	</waypoint>
-</loop>
+		<loop number="6" depth_increment="-5.0">
+			<waypoint>
+				<duration>400</duration>
+				<depth>28</depth>
+				<limit_velocity>0.05</limit_velocity>
+				<approach_velocity>1.0</approach_velocity>
+				<east>253358</east>
+				<north>6805660</north>
+			</waypoint>
+		</loop>
 
-</paths>
+	</paths>
 </mission>

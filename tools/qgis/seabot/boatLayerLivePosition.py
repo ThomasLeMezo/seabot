@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from qgis.core import *
 import qgis.utils
 from PyQt5.QtCore import *
@@ -29,11 +31,13 @@ class GpsPoller(threading.Thread):
   def run(self):
     global gpsd, gpsd_latitude, gpsd_longitude, gpsd_track
     while self.running:
-        report = gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
-        if report['class'] == 'TPV':
-            gpsd_latitude = getattr(report,'lat',0.0)
-            gpsd_longitude = getattr(report,'lon',0.0)
-            gpsd_track = getattr(report,'track',0.0)
+        if(gpsd.waiting()):
+            report = gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
+            if report['class'] == 'TPV':
+                gpsd_latitude = getattr(report,'lat',0.0)
+                gpsd_longitude = getattr(report,'lon',0.0)
+                gpsd_track = getattr(report,'track',0.0)
+            time.sleep(0.2)
 
 class BoatLayerLivePosition():
 

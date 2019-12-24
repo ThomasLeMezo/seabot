@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-°
 """
 /***************************************************************************
  SeabotDockWidget
@@ -63,24 +63,24 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer_boat.timeout.connect(self.process_boat)
         self.timer_boat.setInterval(1000)
 
-        self.pushButton.clicked.connect(self.enable_timer_seabot)
-        self.pushButtonBoat.clicked.connect(self.enable_timer_boat)
+        self.pushButton_connexion.clicked.connect(self.enable_timer_seabot)
+        self.pushButton_boat.clicked.connect(self.enable_timer_boat)
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
         self.timer_boat.stop()
-        self.pushButton.setChecked(False)
+        self.pushButton_connexion.setChecked(False)
         self.closingPlugin.emit()
         event.accept()
 
     def enable_timer_seabot(self):
-        if(self.pushButton.isChecked()):
+        if(self.pushButton_connexion.isChecked()):
             self.timer_seabot.start()
         else:
             self.timer_seabot.stop()
 
     def enable_timer_boat(self):
-        if(self.pushButtonBoat.isChecked()):
+        if(self.pushButton_boat.isChecked()):
             self.boatLivePosition.start()
             self.timer_boat.start()
         else:
