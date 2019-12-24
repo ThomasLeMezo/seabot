@@ -130,10 +130,24 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def update_mission(self):
         wp = self.seabotMission.get_current_wp()
+        print(wp)
         if(wp!=None):
-            self.label_mission_start_time.setText(wp.time_start.str())
-            self.label_mission_end_time.setText(wp.time_end.str())
-            self.label_mission_depth.setText("")
-            self.label_mission_waypoint_id.setText(str(wp.wp_id))
-            self.label_mission_time_remain.setText("")
-            self.label_mission_next_depth.setText("")
+            if(wp.get_depth()==0.0):
+                self.label_mission_status.setText("SURFACE")
+            else:
+                self.label_mission_status.setText("UNDERWATER")
+
+            self.label_mission_start_time.setText(str(wp.get_time_start()))
+            self.label_mission_end_time.setText(str(wp.get_time_end()))
+            self.label_mission_depth.setText(str(wp.get_depth()))
+            self.label_mission_waypoint_id.setText(str(wp.get_id())+"/"+str(self.seabotMission.get_nb_wp()))
+            self.label_mission_time_remain.setText(str(wp.get_time_end()-datetime.datetime.now()))
+
+            wp_next = self.seabotMission.get_next_wp()
+            if(wp_next != None):
+                self.label_mission_next_depth.setText(str(wp_next.get_depth()))
+            else:
+                self.label_mission_next_depth.setText("-")
+        else:
+            self.label_mission_status.setText("NO WAYPOINTS")
+            self.label_mission_waypoint_id.setText(str(self.seabotMission.get_current_wp_id()+1) + "/"+str(self.seabotMission.get_nb_wp()))

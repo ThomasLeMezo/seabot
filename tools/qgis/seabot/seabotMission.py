@@ -30,6 +30,36 @@ class SeabotWaypoint():
 		s += "enable_thrusters" + "=" + str(self.enable_thrusters) + "\n"
 		return s
 
+	def get_time_end(self):
+		return self.time_end
+
+	def get_time_start(self):
+		return self.time_start
+
+	def get_duration(self):
+		return self.duration
+
+	def get_depth(self):
+		return self.depth
+
+	def get_east(self):
+		return self.east
+
+	def get_north(self):
+		return self.north
+
+	def get_limit_velocity(self):
+		return self.limit_velocity
+
+	def get_approach_velocity(self):
+		return self.approach_velocity
+
+	def get_enable_thrusters(self):
+		return self.enable_thrusters
+
+	def get_id(self):
+		return self.id
+
 class SeabotMission():
 
 	waypoint_list = []
@@ -38,14 +68,17 @@ class SeabotMission():
 	end_time = None
 	fileName = ""
 
-	# def __init__(self):
-		
-
 	def __str__(self):
 		s = ""
 		for wp in self.waypoint_list:
 			s+=wp.__str__()+"\n\n"
 		return s
+
+	def get_nb_wp(self):
+		return len(self.waypoint_list)
+
+	def get_current_wp_id(self):
+		return self.current_wp_id
 
 	def add_waypoint(self, wp):
 		self.waypoint_list.append(wp)
@@ -53,10 +86,10 @@ class SeabotMission():
 	def get_current_wp(self):
 		t = datetime.datetime.now()
 
-		while((len(self.waypoint_list)>self.current_wp_id+1) and (self.waypoint_list[self.current_wp_id+1].time_end<t)):
+		while(len(self.waypoint_list)-1>self.current_wp_id and self.waypoint_list[self.current_wp_id].time_end<t):
 			self.current_wp_id+=1
 
-		if self.current_wp_id+1<len(self.waypoint_list):
+		if self.current_wp_id<len(self.waypoint_list):
 			return self.waypoint_list[self.current_wp_id]
 		else:
 			return None

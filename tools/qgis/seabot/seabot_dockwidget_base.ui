@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>291</width>
-    <height>370</height>
+    <width>318</width>
+    <height>491</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -78,7 +78,7 @@
        <bool>false</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -197,7 +197,7 @@
          <rect>
           <x>10</x>
           <y>10</y>
-          <width>251</width>
+          <width>281</width>
           <height>403</height>
          </rect>
         </property>
