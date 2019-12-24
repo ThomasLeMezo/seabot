@@ -3,10 +3,11 @@
 import os, time, datetime, sys
 import xml.etree.ElementTree as ET
 
-class Seabotwaypoint():
+class SeabotWaypoint():
 
-	def __init__(self, time_end, duration, depth, east, north, limit_velocity, approach_velocity, enable_thrusters):
+	def __init__(self, wp_id ,time_end, time_start, duration, depth, east, north, limit_velocity, approach_velocity, enable_thrusters):
 		self.time_end = time_end
+		self.time_start = time_start
 		self.duration = duration
 		self.depth = depth
 		self.east = east
@@ -14,9 +15,11 @@ class Seabotwaypoint():
 		self.limit_velocity = limit_velocity
 		self.approach_velocity = approach_velocity
 		self.enable_thrusters = enable_thrusters
+		self.id = wp_id
 
 	def __str__(self):
 		s = ""
+		s += "time_start" + "=" + str(self.time_start) + "\n"
 		s += "time_end" + "=" + str(self.time_end) + "\n"
 		s += "duration" + "=" + str(self.duration) + "\n"
 		s += "depth" + "=" + str(self.depth) + "\n"
@@ -29,11 +32,14 @@ class Seabotwaypoint():
 
 class SeabotMission():
 
-	def __init__(self):
-		self.waypoint_list = []
-		self.start_time_utc = None
-		self.current_wp_id = 0
-		self.end_time = None
+	waypoint_list = []
+	current_wp_id = 0
+	start_time_utc = None
+	end_time = None
+	fileName = ""
+
+	# def __init__(self):
+		
 
 	def __str__(self):
 		s = ""
@@ -45,14 +51,24 @@ class SeabotMission():
 		self.waypoint_list.append(wp)
 
 	def get_current_wp(self):
-		d = datetime.datetime.now()
-		t = now.timestamp()
+		t = datetime.datetime.now()
 
-		if((len(wyapoint_list)>current_wp_id+1) and (waypoint_list[current_wp_id+1].time_end<t)):
-			current_wp_id+=1
-		return waypoint_list[current_wp_id+1]
+		while((len(self.waypoint_list)>self.current_wp_id+1) and (self.waypoint_list[self.current_wp_id+1].time_end<t)):
+			self.current_wp_id+=1
+
+		if self.current_wp_id+1<len(self.waypoint_list):
+			return self.waypoint_list[self.current_wp_id]
+		else:
+			return None
+
+	def get_next_wp(self):
+		if self.current_wp_id+1<len(self.waypoint_list):
+			return self.waypoint_list[self.current_wp_id+1]
+		else:
+			return None
 
 	def load_mission_xml(self, filename):
+		self.fileName = filename
 		self.waypoint_list.clear()
 		tree = ET.parse(filename)
 		root = tree.getroot()
@@ -78,15 +94,18 @@ class SeabotMission():
 
 	def parse_wy(self, wp, depth_offset=0.0):
 		duration = datetime.timedelta(seconds=float(wp.findtext("duration")))
+		time_start = self.end_time
 		self.end_time += duration
-		self.waypoint_list.append(Seabotwaypoint(time_end = self.end_time,
+		self.waypoint_list.append(SeabotWaypoint(time_start = time_start,
+											time_end = self.end_time,
 											duration=duration,
 											depth=float(wp.findtext("depth"))+depth_offset,
 											east=int(wp.findtext("east")),
 											north=int(wp.findtext("north")),
 											limit_velocity=float(wp.findtext("limit_velocity", default="0.02")),
 											approach_velocity=float(wp.findtext("approach_velocity", default="1.0")),
-											enable_thrusters=True))
+											enable_thrusters=True,
+											wp_id=len(self.waypoint_list)+1))
 
 	def parse_loop(self, l, depth_offset=0.0):
 		n = int(l.attrib["number"])

@@ -102,7 +102,7 @@
           <height>281</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1">
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1,0">
          <property name="spacing">
           <number>3</number>
          </property>
@@ -122,7 +122,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="label_status">
            <property name="minimumSize">
             <size>
              <width>100</width>
@@ -146,7 +146,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Connexion</string>
+            <string>Enable Iridium</string>
            </property>
            <property name="checkable">
             <bool>true</bool>
@@ -162,7 +162,23 @@
             </size>
            </property>
            <property name="text">
-            <string>Boat Position</string>
+            <string>Enable Boat Position</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_mission">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Enable Mission Status</string>
            </property>
            <property name="checkable">
             <bool>true</bool>
@@ -182,7 +198,7 @@
           <x>10</x>
           <y>10</y>
           <width>251</width>
-          <height>219</height>
+          <height>403</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -191,10 +207,22 @@
          </property>
          <item>
           <layout class="QFormLayout" name="formLayout">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetMaximumSize</enum>
+           </property>
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+           </property>
+           <property name="rowWrapPolicy">
+            <enum>QFormLayout::WrapLongRows</enum>
+           </property>
            <item row="0" column="0">
             <widget class="QLabel" name="label_6">
              <property name="text">
-              <string>Mission name</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Mission name&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -208,7 +236,10 @@
            <item row="2" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>Status</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Status&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -222,7 +253,10 @@
            <item row="3" column="0">
             <widget class="QLabel" name="label_7">
              <property name="text">
-              <string>Start Time</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Start Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -236,7 +270,10 @@
            <item row="4" column="0">
             <widget class="QLabel" name="label_9">
              <property name="text">
-              <string>End Time</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;End Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -250,7 +287,10 @@
            <item row="5" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>Depth</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Depth&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -264,7 +304,10 @@
            <item row="6" column="0">
             <widget class="QLabel" name="label_3">
              <property name="text">
-              <string>Waypoint</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Waypoint&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -278,7 +321,10 @@
            <item row="7" column="0">
             <widget class="QLabel" name="label_5">
              <property name="text">
-              <string>Time (remain)</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Time (remain)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -292,7 +338,10 @@
            <item row="8" column="0">
             <widget class="QLabel" name="label_11">
              <property name="text">
-              <string>Next depth</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Next depth&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -304,7 +353,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="pushButton_open_mission">
              <property name="text">
               <string>Open mission</string>
              </property>

@@ -25,10 +25,13 @@
 import os, time
 
 from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtCore import pyqtSignal, QTimer
+from PyQt5.QtCore import pyqtSignal, QTimer, QFile, QFileInfo
+from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+from PyQt5.QtGui import QIcon
 
 from .seabotLayerLivePosition import SeabotLayerLivePosition
 from .boatLayerLivePosition import BoatLayerLivePosition
+from .seabotMission import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'seabot_dockwidget_base.ui'))
@@ -39,11 +42,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     closingPlugin = pyqtSignal()
     timer_seabot = QTimer()
     timer_boat = QTimer()
+    timer_mission = QTimer()
     flag = False
     count = 0
 
     layerLivePosition = SeabotLayerLivePosition()
     boatLivePosition = BoatLayerLivePosition()
+    seabotMission = SeabotMission()
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -63,8 +68,25 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer_boat.timeout.connect(self.process_boat)
         self.timer_boat.setInterval(1000)
 
+        self.timer_mission.timeout.connect(self.update_mission)
+        self.timer_mission.setInterval(1000)
+
         self.pushButton_connexion.clicked.connect(self.enable_timer_seabot)
         self.pushButton_boat.clicked.connect(self.enable_timer_boat)
+        self.pushButton_mission.clicked.connect(self.enable_timer_mission)
+
+        self.pushButton_open_mission.clicked.connect(self.open_mission)
+
+    def open_mission(self, event):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Mission Files (*.xml);;All Files (*)", options=options)
+        print("filename=", fileName)
+        self.seabotMission.load_mission_xml(fileName)
+
+        file_info = QFileInfo(fileName)
+        self.label_mission_file.setText(file_info.fileName())
+
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
@@ -87,14 +109,31 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.timer_boat.stop()
             self.boatLivePosition.stop()
 
+    def enable_timer_mission(self):
+        if(self.pushButton_mission.isChecked()):
+            # self.boatLivePosition.start()
+            self.timer_mission.start()
+        else:
+            self.timer_mission.stop()
+            # self.boatLivePosition.stop()
+
     def process_seabot(self):
         if(self.layerLivePosition.update()):
-            self.label.setText("Connected - " + str(self.count))
+            self.label_status.setText("Connected - " + str(self.count))
             self.count += 1
         else:
-            self.label.setText("Error")
+            self.label_status.setText("Error")
             self.count = 0
 
     def process_boat(self):
         self.boatLivePosition.update()
-        
+
+    def update_mission(self):
+        wp = self.seabotMission.get_current_wp()
+        if(wp!=None):
+            self.label_mission_start_time.setText(wp.time_start.str())
+            self.label_mission_end_time.setText(wp.time_end.str())
+            self.label_mission_depth.setText("")
+            self.label_mission_waypoint_id.setText(str(wp.wp_id))
+            self.label_mission_time_remain.setText("")
+            self.label_mission_next_depth.setText("")
