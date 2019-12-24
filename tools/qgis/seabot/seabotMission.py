@@ -74,6 +74,9 @@ class SeabotMission():
 			s+=wp.__str__()+"\n\n"
 		return s
 
+	def get_wp_list(self):
+		return self.waypoint_list
+
 	def get_nb_wp(self):
 		return len(self.waypoint_list)
 

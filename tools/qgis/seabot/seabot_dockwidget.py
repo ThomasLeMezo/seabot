@@ -32,10 +32,10 @@ from PyQt5.QtGui import QIcon
 from .seabotLayerLivePosition import SeabotLayerLivePosition
 from .boatLayerLivePosition import BoatLayerLivePosition
 from .seabotMission import *
+from .missionLayer import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'seabot_dockwidget_base.ui'))
-
 
 class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
@@ -49,6 +49,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     layerLivePosition = SeabotLayerLivePosition()
     boatLivePosition = BoatLayerLivePosition()
     seabotMission = SeabotMission()
+    missionLayer = MissionLayer()
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -86,7 +87,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         file_info = QFileInfo(fileName)
         self.label_mission_file.setText(file_info.fileName())
-
+        self.missionLayer.update_mission(self.seabotMission)
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
