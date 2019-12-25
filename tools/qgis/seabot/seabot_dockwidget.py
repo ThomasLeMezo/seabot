@@ -60,7 +60,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
 
-        print(self.__dir__)
+        # print(self.__dir__)
         self.setupUi(self)
 
         self.timer_seabot.timeout.connect(self.process_seabot)
@@ -87,7 +87,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         file_info = QFileInfo(fileName)
         self.label_mission_file.setText(file_info.fileName())
-        self.missionLayer.update_mission(self.seabotMission)
+        self.missionLayer.update_mission_layer(self.seabotMission)
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
@@ -130,8 +130,12 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.boatLivePosition.update()
 
     def update_mission(self):
+        # Update mission set point on map
+        self.missionLayer.update_mission_set_point(self.seabotMission)
+
+        # Update IHM with mission data set point
         wp = self.seabotMission.get_current_wp()
-        print(wp)
+        # print(wp)
         if(wp!=None):
             if(wp.get_depth()==0.0):
                 self.label_mission_status.setText("SURFACE")

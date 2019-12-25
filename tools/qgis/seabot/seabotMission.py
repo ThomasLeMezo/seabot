@@ -74,6 +74,12 @@ class SeabotMission():
 			s+=wp.__str__()+"\n\n"
 		return s
 
+	def is_empty(self):
+		if(len(self.waypoint_list)==0):
+			return True
+		else:
+			return False
+
 	def get_wp_list(self):
 		return self.waypoint_list
 
@@ -149,6 +155,40 @@ class SeabotMission():
 		for i in range(n):
 			for child in l:
 				self.parse_node(child, depth_offset+i*dz)
+
+	def get_set_point_east(self):
+		if self.current_wp_id+1<len(self.waypoint_list):
+			east1 = self.waypoint_list[self.current_wp_id].get_east()
+			east2 = self.waypoint_list[self.current_wp_id+1].get_east()
+			t1 = self.waypoint_list[self.current_wp_id].get_time_start().timestamp()
+			t2 = self.waypoint_list[self.current_wp_id].get_time_end().timestamp()
+			if(t1!=t2):
+				t = datetime.datetime.now().timestamp()
+				if(t>t2):
+					t=t2
+				ratio = (t-t1)/(t2-t1)
+				return east1+(east2-east1)*ratio
+			else:
+				return east2
+		else:
+			return self.waypoint_list[self.current_wp_id].get_east()
+
+	def get_set_point_north(self):
+		if self.current_wp_id+1<len(self.waypoint_list):
+			north1 = self.waypoint_list[self.current_wp_id].get_north()
+			north2 = self.waypoint_list[self.current_wp_id+1].get_north()
+			t1 = self.waypoint_list[self.current_wp_id].get_time_start().timestamp()
+			t2 = self.waypoint_list[self.current_wp_id].get_time_end().timestamp()
+			if(t1!=t2):
+				t = datetime.datetime.now().timestamp()
+				if(t>t2):
+					t=t2
+				ratio = (t-t1)/(t2-t1)
+				return north1+(north2-north1)*ratio
+			else:
+				return north2
+		else:
+			return self.waypoint_list[self.current_wp_id].get_north()
 
 if __name__ == '__main__':
     s_m = SeabotMission()

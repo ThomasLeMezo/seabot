@@ -17,18 +17,19 @@ import threading
 class MissionLayer():
 
 	fields = QgsFields()
-	layer_name = 'Seabot - Mission Track'
+	layer_mission = 'Seabot - Mission Track'
+	layer_set_point = 'Seabot - Mission Set Point'
 
 	def __init__(self):
 		self.fields.append(QgsField('Title', QVariant.String))
 		self.fields.append(QgsField('wp_id', QVariant.Double))
 		return
 
-	def update_mission(self, seabotMission):
+	def update_mission_layer(self, seabotMission):
 		# Global mission
 
 		## Find if layer already exist
-		layer_list = QgsProject.instance().mapLayersByName(self.layer_name)
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_mission)
 
 		# Build list of points
 		list_wp = []
@@ -39,7 +40,7 @@ class MissionLayer():
 			QgsProject.instance().removeMapLayer(layer_list[0])
 		
 		### Add New layer Last Position
-		layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_name , "memory")
+		layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_mission , "memory")
 
 		pr = layer.dataProvider()
 
@@ -66,5 +67,47 @@ class MissionLayer():
 
 		return True
 
-	def update_current_wp(self, seabotMission):
-		# Position of the current wp
+	def update_mission_set_point(self, seabotMission):
+		if seabotMission.is_empty():
+			return True
+		### ADD DATA TO LAYER ###
+		## Find if layer already exist
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_set_point)
+		point = QgsPointXY(seabotMission.get_set_point_east(), seabotMission.get_set_point_north())
+		# print(point)
+		if(len(layer_list)==0):
+			### Add New layer Last Position
+			layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', self.layer_set_point , "memory")
+			pr = layer.dataProvider()
+
+			# add the first point
+			feature = QgsFeature()
+			feature.setGeometry(QgsGeometry.fromPointXY(point))
+			pr.addFeatures([feature])
+
+			# Configure the marker.
+			svg_marker = QgsSvgMarkerSymbolLayer("/usr/share/qgis/svg/crosses/Cross1.svg")
+			svg_marker.setPreservedAspectRatio(True)
+			svg_marker.setSize(8)
+			svg_marker.setColor(Qt.darkBlue) # QColor(255,255,255)
+
+			marker = QgsMarkerSymbol()
+			marker.changeSymbolLayer(0, svg_marker)
+
+			renderer = QgsSingleSymbolRenderer(marker)
+			layer.setRenderer(renderer)
+
+			# add the layer to the canvas
+			layer.updateExtents()
+			QgsProject.instance().addMapLayer(layer)
+
+		else:
+			layer = layer_list[0]
+			pr = layer.dataProvider()
+
+			for feature in layer.getFeatures():
+				pr.changeGeometryValues({feature.id():QgsGeometry.fromPointXY(point)})
+				layer.triggerRepaint()
+				break
+
+		return True
