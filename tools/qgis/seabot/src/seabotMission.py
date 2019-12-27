@@ -166,6 +166,8 @@ class SeabotMission():
 				t = datetime.datetime.now().timestamp()
 				if(t>t2):
 					t=t2
+				if(t<t1):
+					t=t1
 				ratio = (t-t1)/(t2-t1)
 				return east1+(east2-east1)*ratio
 			else:
@@ -183,6 +185,8 @@ class SeabotMission():
 				t = datetime.datetime.now().timestamp()
 				if(t>t2):
 					t=t2
+				if(t<t1):
+					t=t1
 				ratio = (t-t1)/(t2-t1)
 				return north1+(north2-north1)*ratio
 			else:

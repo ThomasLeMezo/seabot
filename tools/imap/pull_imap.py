@@ -15,13 +15,13 @@ file = open(expanduser("~") + "/log_imap", "w")
 credential_file = expanduser("~") + "/iridium/credential.yaml"
 
 with open(credential_file, 'r') as stream:
-    try:
-        credential_data = yaml.load(stream)
-    except yaml.YAMLError as exc:
-        print(exc)
-        exit(1)
+	try:
+		credential_data = yaml.load(stream)
+	except yaml.YAMLError as exc:
+		print(exc)
+		exit(1)
 
-server = credential_data["server"]
+server_add = credential_data["server"]
 port = credential_data["port"]
 login = credential_data["login"]
 password = credential_data["password"]
@@ -30,61 +30,65 @@ unseen = True
 file_exist = False
 filepath = expanduser("~") + "/iridium/received/raw/"
 
-server = imaplib.IMAP4_SSL(server, port)
+server = imaplib.IMAP4_SSL(server_add, port)
 server.login(login, password)
 
-rv, data = server.select()
+mailbox = 'INBOX'
+rsp, nb_message_inbox = server.select(mailbox=mailbox, readonly=False)
 
 date = (datetime.date.today() - datetime.timedelta(10)).strftime("%d-%b-%Y")
 # date = datetime.date(2018,10, 07).strftime("%d-%b-%Y")
 
 typ, data = server.search(None, ('UNSEEN' if unseen else 'ALL'), '(SENTSINCE {date})'.format(date=date), '(FROM "sbdservice@sbd.iridium.com")')
 
+# rsp, id = server.recent()
+
+
 file_list = []
 
 file.write("Start\n")
 
 for num in data[0].split():
-    typ, data = server.fetch(num, '(RFC822)')
-    mail = email.message_from_string(data[0][1])
-        
-    IMEI = mail["Subject"].split(": ")[1]
-    file.write(str(IMEI) + "\n")
-    
-    for part in mail.walk():
-            if part.get_content_maintype() != 'application':
-                continue
+	typ, data_msg = server.fetch(num, '(RFC822)')
+	mail = email.message_from_string(data_msg[0][1])
+		
+	IMEI = mail["Subject"].split(": ")[1]
+	file.write(str(IMEI) + "\n")
+	
+	for part in mail.walk():
+			if part.get_content_maintype() != 'application':
+				continue
 
-            filename = part.get_filename()
-            
-            att_path = os.path.join(filepath, filename)
-            # att_path = filename
+			filename = part.get_filename()
+			
+			att_path = os.path.join(filepath, filename)
+			# att_path = filename
 
-            if file_exist and os.path.isfile(att_path) :
-                continue
-            
-            print(IMEI, filename)
-            file_list.append([filepath, filename, IMEI])
-            # finally write the stuff
-            fp = open(att_path, 'wb')
-            fp.write(part.get_payload(decode=True))
-            fp.close()
+			if file_exist and os.path.isfile(att_path) :
+				continue
+			
+			print(IMEI, filename)
+			file_list.append([filepath, filename, IMEI])
+			# finally write the stuff
+			fp = open(att_path, 'wb')
+			fp.write(part.get_payload(decode=True))
+			fp.close()
 
 server.close()
 server.logout()
 
 ### Process files ###
 for d in file_list:
-    print("Decode trajectory")
-    subprocess.call(["rosrun", "seabot_iridium", "decode_log_state", d[0], d[1], d[2]])
-    print("Read data")
+	print("Decode trajectory")
+	subprocess.call(["rosrun", "seabot_iridium", "decode_log_state", d[0], d[1], d[2]])
+	print("Read data")
 
-    with open(expanduser("~") + "/iridium/received/last_received.yaml", 'r') as stream:
-        try:
-            pose = yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-            continue
-    print("Generate trajectory")
-    subprocess.call([expanduser("~") + "/workspaceQT/invariant-lib/build/build-debug/examples/cpp/seabot/seabot_live/seabot_live", str(pose["ts"]), str(pose["east"]), str(pose["north"])])
-    file.write(d[0])
+	with open(expanduser("~") + "/iridium/received/last_received.yaml", 'r') as stream:
+		try:
+			pose = yaml.load(stream)
+		except yaml.YAMLError as exc:
+			print(exc)
+			continue
+	print("Generate trajectory")
+	subprocess.call([expanduser("~") + "/workspaceQT/invariant-lib/build/build-debug/examples/cpp/seabot/seabot_live/seabot_live", str(pose["ts"]), str(pose["east"]), str(pose["north"])])
+	file.write(d[0])

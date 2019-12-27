@@ -86,13 +86,12 @@ class MissionLayer():
 			pr.addFeatures([feature])
 
 			# Configure the marker.
-			svg_marker = QgsSvgMarkerSymbolLayer("/usr/share/qgis/svg/crosses/Cross1.svg")
-			svg_marker.setPreservedAspectRatio(True)
-			svg_marker.setSize(8)
-			svg_marker.setColor(Qt.darkBlue) # QColor(255,255,255)
-
+			simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=8,color=Qt.darkBlue)
+			simple_marker_small_circle = QgsSimpleMarkerSymbolLayer(color=Qt.red)
 			marker = QgsMarkerSymbol()
-			marker.changeSymbolLayer(0, svg_marker)
+			marker.setOpacity(0.5)
+			marker.changeSymbolLayer(0, simple_marker_large_circle)
+			marker.appendSymbolLayer(simple_marker_small_circle)
 
 			renderer = QgsSingleSymbolRenderer(marker)
 			layer.setRenderer(renderer)
@@ -100,7 +99,6 @@ class MissionLayer():
 			# add the layer to the canvas
 			layer.updateExtents()
 			QgsProject.instance().addMapLayer(layer)
-
 		else:
 			layer = layer_list[0]
 			pr = layer.dataProvider()
@@ -109,5 +107,4 @@ class MissionLayer():
 				pr.changeGeometryValues({feature.id():QgsGeometry.fromPointXY(point)})
 				layer.triggerRepaint()
 				break
-
 		return True

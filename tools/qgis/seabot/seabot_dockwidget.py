@@ -26,13 +26,13 @@ import os, time
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import pyqtSignal, QTimer, QFile, QFileInfo
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QTreeWidgetItem
 from PyQt5.QtGui import QIcon
 
-from .seabotLayerLivePosition import SeabotLayerLivePosition
-from .boatLayerLivePosition import BoatLayerLivePosition
-from .seabotMission import *
-from .missionLayer import *
+from seabot.src.seabotLayerLivePosition import SeabotLayerLivePosition
+from seabot.src.boatLayerLivePosition import BoatLayerLivePosition
+from seabot.src.seabotMission import *
+from seabot.src.missionLayer import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'seabot_dockwidget_base.ui'))
@@ -77,6 +77,20 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_mission.clicked.connect(self.enable_timer_mission)
 
         self.pushButton_open_mission.clicked.connect(self.open_mission)
+
+        ## Init iridium data
+        self.treeWidget_iridium.setColumnCount(2)
+        tree = self.treeWidget_iridium.setHeaderLabels(["Parameter","Data"])
+        item = QTreeWidgetItem(tree)
+        item.setText(0, "IMEI")
+        item.setText(1, "10000")
+        item_sub = QTreeWidgetItem(item)
+        item_sub.setText(0, "Heading")
+        item_sub.setText(1, "10")
+        self.treeWidget_iridium.addTopLevelItem(item)
+        self.treeWidget_iridium.expandItem(item)
+        # self.treeWidget_iridium.setHeaderLabel("Data")
+        
 
     def open_mission(self, event):
         options = QFileDialog.Options()
