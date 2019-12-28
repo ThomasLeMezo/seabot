@@ -50,7 +50,7 @@ class MissionLayer():
 		feature.setGeometry(QgsGeometry.fromPolyline(list_wp))
 		pr.addFeatures([feature])
 
-		# Configure the marker.
+		# Configure the marker
 		marker_line = QgsSimpleLineSymbolLayer()
 		marker_point = QgsMarkerLineSymbolLayer()
 		marker_point.setPlacement(QgsMarkerLineSymbolLayer.Vertex)

@@ -8,14 +8,17 @@ import struct
 import datetime
 import subprocess
 import yaml
+import sqlite3
 from os.path import expanduser
 
+## Connection to IMAP server and retreive sbd messages
 class SeabotIridiumIMAP():
 	server_ip = "40.100.175.146"
 	server_port = "993"
 	login = ""
 	password = ""
 	credential_file = expanduser("~") + "/iridium/credential.yaml"
+	db_file = expanduser("~") + "/.local/share/QGIS/QGIS3/profiles/default/python/plugins/seabot/" + "Seabot_iridium.db"
 
 	server = None
 	mailbox = 'INBOX'
@@ -24,9 +27,118 @@ class SeabotIridiumIMAP():
 	is_connected = False
 	is_first_connection = True
 
+	sqliteConnection = None
+	sqliteCursor = None
+
+	sqlite_tables_name = ["ROBOTS", "SBD_LOG_STATE", "CONFIG"]
+	sqlite_create_table = ['''CREATE TABLE "'''+sqlite_tables_name[0]+'''" (
+										`IMEI`	NUMERIC NOT NULL,
+										`NAME`	TEXT NOT NULL,
+										PRIMARY KEY(IMEI)
+									)''',
+							'''CREATE TABLE "'''+sqlite_tables_name[1]+'''" (
+								`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+								`IMEI`	NUMERIC NOT NULL,
+								`ts` DATETIME NOT NULL,
+								`east` REAL NOT NULL,
+								`north` REAL NOT NULL,
+								`gnss_speed` REAL NOT NULL,
+								`gnss_heading` REAL NOT NULL,
+								`safety_published_frequency` BOOLEAN NOT NULL,
+								`safety_depth_limit` BOOLEAN NOT NULL,
+								`safety_batteries_limit` BOOLEAN NOT NULL,
+								`safety_depressurization` BOOLEAN NOT NULL,
+								`enable_mission` BOOLEAN NOT NULL,
+								`enable_depth` BOOLEAN NOT NULL,
+								`enable_engine` BOOLEAN NOT NULL,
+								`enable_flash` BOOLEAN NOT NULL,
+								`battery0` REAL NOT NULL,
+								`battery1` REAL NOT NULL,
+								`battery2` REAL NOT NULL,
+								`battery3` REAL NOT NULL,
+								`pressure` REAL NOT NULL,
+								`temperature` REAL NOT NULL,
+								`humidity` REAL NOT NULL,
+								`waypoint` INTEGER NOT NULL,
+								`last_cmd_received` INTEGER NOT NULL,
+								FOREIGN KEY(`IMEI`) REFERENCES ROBOTS (`IMEI`)
+							)''',
+							'''CREATE TABLE "'''+sqlite_tables_name[2]+'''" (
+									`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+									`email`	TEXT NOT NULL,
+									`password`	TEXT NOT NULL,
+									`server_ip`	TEXT NOT NULL,
+									`server_port`	TEXT NOT NULL,
+									`last_sync`	DATETIME
+							)'''
+							]
+
+	sqlite_create_table_get_table = '''SELECT name FROM sqlite_master WHERE type='table' and name NOT LIKE 'sqlite_%';'''
+
 	def __init__(self, credential_file=None):
 		if(credential_file!=None):
 			self.credential_file = credential_file
+
+		# Connection to DB to store iridium messages
+		try:
+			self.sqliteConnection = sqlite3.connect(self.db_file)
+			self.sqliteCursor = self.sqliteConnection.cursor()
+
+			# Querry the list of table names
+			self.sqliteCursor.execute(self.sqlite_create_table_get_table)
+			records = self.sqliteCursor.fetchall()
+			print(records)
+
+			# Extract the names and create a list of names
+			list_table_name = []
+			for name in records:
+				list_table_name.append(name[0])
+			
+			# Test if the table exists, otherwise add a new table
+			for i in range(len(self.sqlite_tables_name)):
+				if(self.sqlite_tables_name[i] not in list_table_name):
+					self.sqliteCursor.execute(self.sqlite_create_table[i])
+					self.sqliteConnection.commit()
+
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+			exit()
+
+	def get_email_list(self):
+		try:
+			self.sqliteCursor.execute('''SELECT email, id FROM CONFIG''')
+			records = self.sqliteCursor.fetchall()
+			list_email = []
+			for data in records:
+				list_email.append([data[0], data[1]])
+			return list_email
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+			return []
+
+	def save_server(self, email, password, server_ip, server_port):
+		try:
+			sqlite_insert_config = '''INSERT INTO CONFIG
+						  (email, password, server_ip, server_port) 
+						  VALUES (?, ?, ?, ?);'''
+
+			data_tuple = (email, password, server_ip, server_port) 
+			self.sqliteCursor.execute(sqlite_insert_config, data_tuple)
+			self.sqliteConnection.commit()
+			return True
+		except:
+			print("Error while connecting to sqlite", error)
+			return False
+
+	def delete_server(self, id_row):
+		try:
+			sqlite_delete_config = '''DELETE FROM CONFIG WHERE id=?;'''
+			self.sqliteCursor.execute(sqlite_insert_config, id_row)
+			self.sqliteConnection.commit()
+			return True
+		except:
+			print("Error while connecting to sqlite", error)
+			return False
 
 	def set_credential_file(self, namefile):
 		self.credential_file = namefile

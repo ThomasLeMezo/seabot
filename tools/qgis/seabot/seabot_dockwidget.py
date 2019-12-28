@@ -33,6 +33,7 @@ from seabot.src.seabotLayerLivePosition import SeabotLayerLivePosition
 from seabot.src.boatLayerLivePosition import BoatLayerLivePosition
 from seabot.src.seabotMission import *
 from seabot.src.missionLayer import *
+from seabot.src.seabotIridiumIMAP import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'seabot_dockwidget_base.ui'))
@@ -50,6 +51,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     boatLivePosition = BoatLayerLivePosition()
     seabotMission = SeabotMission()
     missionLayer = MissionLayer()
+    seabotIridiumIMAP = SeabotIridiumIMAP()
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -78,6 +80,10 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self.pushButton_open_mission.clicked.connect(self.open_mission)
 
+        self.pushButton_server_save.clicked.connect(self.server_save)
+
+        self.comboBox_config_email.currentIndexChanged.connect(self.select_server)
+
         ## Init iridium data
         self.treeWidget_iridium.setColumnCount(2)
         tree = self.treeWidget_iridium.setHeaderLabels(["Parameter","Data"])
@@ -90,7 +96,35 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeWidget_iridium.addTopLevelItem(item)
         self.treeWidget_iridium.expandItem(item)
         # self.treeWidget_iridium.setHeaderLabel("Data")
-        
+
+        # Fill list of email account
+        self.update_server_list()
+       
+
+    def server_save(self, event):
+        email = self.lineEdit_email.text()
+        password = self.lineEdit_password.text()
+        server_ip = self.lineEdit_server_ip.text()
+        server_port = self.lineEdit_server_port.text()
+        self.seabotIridiumIMAP.save_server(email, password, server_ip, server_port)
+        self.update_server_list()
+        return True
+
+    def server_delete(self, event):
+        id_config = self.comboBox_config_email.currentData()
+        self.seabotIridiumIMAP.delete_server(id_config)
+        self.update_server_list()
+        return True
+
+    def update_server_list(self):
+        self.comboBox_config_email.clear()
+        email_list = self.seabotIridiumIMAP.get_email_list()
+        for email in email_list:
+            self.comboBox_config_email.addItem(email[0], email[1])
+
+    def select_server(self, index):
+        print(index)
+
 
     def open_mission(self, event):
         options = QFileDialog.Options()
