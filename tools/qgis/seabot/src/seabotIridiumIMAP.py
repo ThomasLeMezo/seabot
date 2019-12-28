@@ -140,6 +140,23 @@ class SeabotIridiumIMAP():
 			print("Error while connecting to sqlite", error)
 			return False
 
+	def get_server_data(self, server_id):
+		try:
+			print(server_id)
+			self.sqliteCursor.execute('''SELECT * FROM CONFIG where id='''+str(server_id)+";")
+			records = self.sqliteCursor.fetchall()
+			data = {}
+			data["id"] = records[0][0]
+			data["email"] = records[0][1]
+			data["password"] = records[0][2]
+			data["server_ip"] = records[0][3]
+			data["server_port"] = records[0][4]
+			data["last_sync"] = records[0][5]
+			return data
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+			return []
+
 	def set_credential_file(self, namefile):
 		self.credential_file = namefile
 		self.is_credential_configured = False

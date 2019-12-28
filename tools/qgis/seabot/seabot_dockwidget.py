@@ -120,11 +120,16 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.comboBox_config_email.clear()
         email_list = self.seabotIridiumIMAP.get_email_list()
         for email in email_list:
-            self.comboBox_config_email.addItem(email[0], email[1])
+            self.comboBox_config_email.addItem(str(email[1]) + " " + email[0], email[1])
 
     def select_server(self, index):
-        print(index)
-
+        if index != -1:
+            server_id = self.comboBox_config_email.currentData()
+            server_data = self.seabotIridiumIMAP.get_server_data(server_id)
+            self.lineEdit_email.setText(server_data["email"])
+            self.lineEdit_password.setText(server_data["password"])
+            self.lineEdit_server_ip.setText(server_data["server_ip"])
+            self.lineEdit_server_port.setText(server_data["server_port"])
 
     def open_mission(self, event):
         options = QFileDialog.Options()
