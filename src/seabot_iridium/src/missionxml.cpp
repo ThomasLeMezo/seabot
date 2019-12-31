@@ -24,7 +24,8 @@ void MissionXML::write(const std::string &filename) const{
   tree.put("offset.north", m_log.m_offset_north);
   tree.put("offset.east", m_log.m_offset_east);
 
-  time_t rawtime = m_log.m_offset_time;
+  // TODO !!! WRONG
+  time_t rawtime = 0.0;//m_log.m_offset_time;
   time(&rawtime);
   struct tm *timeinfo = localtime(&rawtime);
 

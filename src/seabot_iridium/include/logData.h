@@ -7,7 +7,7 @@
 
 using boost::multiprecision::cpp_int;
 
-#define TIME_POSIX_START 1570529969 // 12 Juin 2019 => (18bit in minutes => ???)
+//#define TIME_POSIX_START 1570529969 // 12 Juin 2019 => (18bit in minutes => ???)
 #define L93_EAST_MIN 0
 #define L93_EAST_MAX 1300000
 #define L93_NORTH_MIN 6000000
@@ -16,7 +16,7 @@ using boost::multiprecision::cpp_int;
 // Guerledan
 // 253502,6805671
 
-enum CMD_TYPE:unsigned int {CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
+enum MSG_TYPE:unsigned int {LOG_STATE=0, CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
 
 #define NB_BITS_LOG1 136
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_LOG1, NB_BITS_LOG1, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_log1_t;
@@ -240,7 +240,7 @@ public:
   std::vector<Waypoint> m_waypoint_list;
   double m_offset_east = 0.;
   double m_offset_north = 0.;
-  long long m_offset_time = TIME_POSIX_START; // in sec
+//  long long m_offset_time = TIME_POSIX_START; // in sec
 
   bool m_enable_mission = true;
   bool m_enable_flash = true;
@@ -255,7 +255,7 @@ public:
   bool m_safety_batteries_limit = false;
   bool m_safety_depressurization = false;
 
-  CMD_TYPE m_cmd_type;
+  MSG_TYPE m_msg_type;
 };
 
 template<typename _T>

@@ -174,7 +174,7 @@ void call_decode(const string &data_raw){
   LogData log_cmd;
   log_cmd.deserialize_log_CMD(data_raw);
 
-  switch(log_cmd.m_cmd_type){
+  switch(log_cmd.m_msg_type){
   case CMD_SLEEP:
   {
     int sleep_time = log_cmd.m_sleep_time;
@@ -203,7 +203,7 @@ void call_decode(const string &data_raw){
   default:
     break;
   }
-  log_state.m_last_cmd_received = log_cmd.m_cmd_type;
+  log_state.m_last_cmd_received = log_cmd.m_msg_type;
 }
 
 int main(int argc, char *argv[]){
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]){
             send_data_required = true;
 
             // Update LogData
-            if((t-time_last_log_version).toSec()>30.){
+            if((t-time_last_log_version).toSec()>30.){              
               string log_sentence = log_state.serialize_log_state(ros::WallTime::now().toSec());
               sbd.cmd_write_message(log_sentence);
               if(enable_gnss_iridium && valid_fix && (t-time_last_gnss).toSec()<10.)

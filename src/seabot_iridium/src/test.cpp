@@ -31,7 +31,7 @@ void test1(){
   Waypoint w2(100, 5, 1, 2);
   logData.m_waypoint_list.push_back(w1);
   logData.m_waypoint_list.push_back(w2);
-  logData.m_offset_time = 100;
+//  logData.m_offset_time = 100;
   logData.m_offset_east = 3;
   logData.m_offset_north = 3;
 
