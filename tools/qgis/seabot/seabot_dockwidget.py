@@ -82,16 +82,21 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         ### UI pushButton handle
 
+        # Config tab
         self.pushButton_seabot.clicked.connect(self.enable_timer_seabot)
         self.pushButton_boat.clicked.connect(self.enable_timer_boat)
         self.pushButton_mission.clicked.connect(self.enable_timer_mission)
-
-        self.pushButton_open_mission.clicked.connect(self.open_mission)
 
         self.pushButton_server_save.clicked.connect(self.server_save)
         self.pushButton_server_delete.clicked.connect(self.server_delete)
         self.comboBox_config_email.currentIndexChanged.connect(self.select_server)
         self.pushButton_server_connect.clicked.connect(self.server_connect)
+
+        # Mission tab
+        self.pushButton_open_mission.clicked.connect(self.open_mission)
+
+        # State tab
+        self.pushButton_state_rename.clicked.connect(self.rename_robot)
 
         ## Init iridium data
         # self.treeWidget_iridium.setColumnCount(2)
@@ -108,6 +113,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Fill list of email account
         self.update_server_list()
+
+        self.update_robots_list()
 
     def server_save(self, event):
         email = self.lineEdit_email.text()
@@ -129,6 +136,33 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         email_list = self.dataBaseConnection.get_email_list()
         for email in email_list:
             self.comboBox_config_email.addItem(str(email["id"]) + " - " + email["email"], email["id"])
+
+    def update_robots_list(self, index_comboBox=-1):
+        self.comboBox_state_imei.clear()
+        robot_list = self.dataBaseConnection.get_robot_list()
+        if(len(robot_list)==0):
+            return
+
+        for robot in robot_list:
+            if robot["name"] != None:
+                self.comboBox_state_imei.addItem(robot["name"] + " (" + str(robot["imei"]) + ")", robot["imei"])
+            else:
+                self.comboBox_state_imei.addItem(str(robot["imei"]), robot["imei"])
+        
+        if index_comboBox==-1:
+            self.comboBox_state_imei.setCurrentIndex(len(robot_list)-1)
+        else:
+            self.comboBox_state_imei.setCurrentIndex(index_comboBox)
+
+    def rename_robot(self):
+        if(self.comboBox_state_imei.currentIndex() != -1):
+            currentIndex = self.comboBox_state_imei.currentIndex()
+            text, ok = QInputDialog().getText(self, "Database update",
+                                         "Robot name:", QLineEdit.Normal,
+                                         self.dataBaseConnection.get_robot_name(self.comboBox_state_imei.currentData()))
+            if ok and text:
+                self.dataBaseConnection.update_robot_name(text, self.comboBox_state_imei.currentData())
+                self.update_robots_list(currentIndex)
 
     def select_server(self, index):
         if index != -1:
