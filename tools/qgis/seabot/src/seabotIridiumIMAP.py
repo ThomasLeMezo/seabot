@@ -21,7 +21,7 @@ import re
 
 import threading, queue
 
-from seabotDataBase import *
+from .seabotDataBase import *
 
 class ImapServer():#threading.Thread):
 	serverIMAP = None

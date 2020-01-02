@@ -48,6 +48,11 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     flag = False
     count = 0
 
+    momsn_min = 0
+    momsn_max = 0
+    momsn_current = 0
+    data_log = {}
+
     layerLivePosition = SeabotLayerLivePosition()
     boatLivePosition = BoatLayerLivePosition()
     seabotMission = SeabotMission()
@@ -81,6 +86,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer_IMAP.setInterval(1000)
 
         ### UI pushButton handle
+        # Init tree Widget
+        self.treeWidget_iridium.setColumnCount(2)
+        self.tree_log_data = self.treeWidget_iridium.setHeaderLabels(["Parameter","Data"])
 
         # Config tab
         self.pushButton_seabot.clicked.connect(self.enable_timer_seabot)
@@ -97,24 +105,15 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # State tab
         self.pushButton_state_rename.clicked.connect(self.rename_robot)
-
-        ## Init iridium data
-        # self.treeWidget_iridium.setColumnCount(2)
-        # tree = self.treeWidget_iridium.setHeaderLabels(["Parameter","Data"])
-        # item = QTreeWidgetItem(tree)
-        # item.setText(0, "IMEI")
-        # item.setText(1, "10000")
-        # item_sub = QTreeWidgetItem(item)
-        # item_sub.setText(0, "Heading")
-        # item_sub.setText(1, "10")
-        # self.treeWidget_iridium.addTopLevelItem(item)
-        # self.treeWidget_iridium.expandItem(item)
-        # self.treeWidget_iridium.setHeaderLabel("Data")
+        self.pushButton_state_previous.clicked.connect(self.previous_log_state)
+        self.pushButton_state_next.clicked.connect(self.next_log_state)
+        self.comboBox_state_imei.currentIndexChanged.connect(self.update_state_imei)
 
         # Fill list of email account
         self.update_server_list()
 
         self.update_robots_list()
+        self.update_state_imei()
 
     def server_save(self, event):
         email = self.lineEdit_email.text()
@@ -214,6 +213,50 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.pushButton_server_save.setEnabled(False)
             self.pushButton_server_delete.setEnabled(False)
 
+    def add_item_treeWidget(self, val1, val2=None):
+        item = None
+        if(val2==None):
+            item = QTreeWidgetItem([str(val1), str(self.data_log[val1])])
+        else:
+             item = QTreeWidgetItem([str(val1), str(val2)])   
+        self.treeWidget_iridium.addTopLevelItem(item)
+
+    def fill_treeWidget_log_state(self):
+        self.treeWidget_iridium.clear()
+        self.add_item_treeWidget("message_id")
+        self.add_item_treeWidget("ts", datetime.datetime.fromtimestamp(self.data_log["ts"]))
+        self.add_item_treeWidget("east")
+        self.add_item_treeWidget("north")
+        self.add_item_treeWidget("gnss_speed")
+        self.add_item_treeWidget("gnss_heading")
+        self.add_item_treeWidget("safety_published_frequency")
+        self.add_item_treeWidget("safety_depth_limit")
+        self.add_item_treeWidget("safety_batteries_limit")
+        self.add_item_treeWidget("safety_depressurization")
+        self.add_item_treeWidget("enable_mission")
+        self.add_item_treeWidget("enable_depth")
+        self.add_item_treeWidget("enable_engine")
+        self.add_item_treeWidget("enable_flash")
+        self.add_item_treeWidget("battery0")
+        self.add_item_treeWidget("battery1")
+        self.add_item_treeWidget("battery2")
+        self.add_item_treeWidget("battery3")
+        self.add_item_treeWidget("pressure")
+        self.add_item_treeWidget("temperature")
+        self.add_item_treeWidget("humidity")
+        self.add_item_treeWidget("waypoint")
+        self.add_item_treeWidget("last_cmd_received")            
+
+    def update_state_info(self):
+        # Get current momsn
+        self.momsn_current = self.dataBaseConnection.get_momsn_from_message_id(self.data_log["message_id"])
+
+        # Update Text
+        self.label_state_info.setText(str(self.momsn_current) + "/ [" + str(self.momsn_min) + ", " + str(self.momsn_max) + "]")
+
+    def update_momsn_bounds(self):
+        self.momsn_min, self.momsn_max = self.dataBaseConnection.get_bounds_momsn(self.comboBox_state_imei.currentData())
+
     ###########################################################################
     ### Handler Button
 
@@ -256,6 +299,28 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             ## Thread IMAP
             self.imapServer.stop_server()
             self.timer_IMAP.stop()
+
+    def next_log_state(self):
+        data = self.dataBaseConnection.get_next_log_state(self.data_log["message_id"])
+        if(data != None):
+            self.data_log = data
+            self.update_state_info()
+            self.fill_treeWidget_log_state()
+
+    def previous_log_state(self):
+        data = self.dataBaseConnection.get_previous_log_state(self.data_log["message_id"])
+        if(data != None):
+            self.data_log = data
+            self.update_state_info()
+            self.fill_treeWidget_log_state()
+
+    def update_state_imei(self):
+        if(self.comboBox_state_imei.currentIndex() != -1):
+            self.data_log, self.momsn_current = self.dataBaseConnection.get_last_log_state(self.comboBox_state_imei.currentData())
+            
+            self.fill_treeWidget_log_state()
+            self.update_momsn_bounds()
+            self.update_state_info()
 
     ###########################################################################
     ## TIMERS processing

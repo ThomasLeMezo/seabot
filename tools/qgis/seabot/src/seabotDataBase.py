@@ -227,30 +227,30 @@ class DataBaseConnection():
 
 	def fill_data_log_state(self, row):
 		data = {}
-				data["log_state_id"] = row[0]
-				data["message_id"] = row[1]
-				data["ts"] = row[2]
-				data["east"] = row[3]
-				data["north"] = row[4]
-				data["gnss_speed"] = row[5]
-				data["gnss_heading"] = row[6]
-				data["safety_published_frequency"] = row[7]
-				data["safety_depth_limit"] = row[8]
-				data["safety_batteries_limit"] = row[9]
-				data["safety_depressurization"] = row[10]
-				data["enable_mission"] = row[11]
-				data["enable_depth"] = row[12]
-				data["enable_engine"] = row[13]
-				data["enable_flash"] = row[14]
-				data["battery0"] = row[15]
-				data["battery1"] = row[16]
-				data["battery2"] = row[17]
-				data["battery3"] = row[18]
-				data["pressure"] = row[19]
-				data["temperature"] = row[20]
-				data["humidity"] = row[21]
-				data["waypoint"] = row[22]
-				data["last_cmd_received"] = row[23]
+		data["log_state_id"] = row[0]
+		data["message_id"] = row[1]
+		data["ts"] = row[2]
+		data["east"] = row[3]
+		data["north"] = row[4]
+		data["gnss_speed"] = row[5]
+		data["gnss_heading"] = row[6]
+		data["safety_published_frequency"] = row[7]
+		data["safety_depth_limit"] = row[8]
+		data["safety_batteries_limit"] = row[9]
+		data["safety_depressurization"] = row[10]
+		data["enable_mission"] = row[11]
+		data["enable_depth"] = row[12]
+		data["enable_engine"] = row[13]
+		data["enable_flash"] = row[14]
+		data["battery0"] = row[15]
+		data["battery1"] = row[16]
+		data["battery2"] = row[17]
+		data["battery3"] = row[18]
+		data["pressure"] = row[19]
+		data["temperature"] = row[20]
+		data["humidity"] = row[21]
+		data["waypoint"] = row[22]
+		data["last_cmd_received"] = row[23]
 		return data
 
 	def get_next_log_state(self, message_id):
@@ -269,7 +269,7 @@ class DataBaseConnection():
 			self.sqliteCursor.execute(sql_sentence, [message_id, message_id])
 			row = self.sqliteCursor.fetchone()
 			if(row!=None):
-				return fill_data_log_state(row)
+				return self.fill_data_log_state(row)
 			else:
 				return None
 		except sqlite3.Error as error:
@@ -291,7 +291,20 @@ class DataBaseConnection():
 			self.sqliteCursor.execute(sql_sentence, [message_id, message_id])
 			row = self.sqliteCursor.fetchone()
 			if(row!=None):
-				return fill_data_log_state(row)
+				return self.fill_data_log_state(row)
+			else:
+				return None
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+
+	def get_momsn_from_message_id(self, message_id):
+		try:
+			sql_sentence = '''SELECT SBD_RECEIVED.MOMSN FROM SBD_RECEIVED 
+								WHERE SBD_RECEIVED.message_id = ? '''
+			self.sqliteCursor.execute(sql_sentence, [message_id])
+			row = self.sqliteCursor.fetchone()
+			if(row!=None):
+				return row[0]
 			else:
 				return None
 		except sqlite3.Error as error:
@@ -306,31 +319,42 @@ class DataBaseConnection():
 			self.sqliteCursor.execute(sql_sentence, [message_id, message_id])
 			row = self.sqliteCursor.fetchone()
 			if(row!=None):
-				return fill_data_log_state(row)
+				return self.fill_data_log_state(row)
 			else:
 				return None
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)
 
-	def get_last_log_state(self, imei)
+	def get_last_log_state(self, imei):
 		try:
-				sql_sentence = '''SELECT *
-								FROM SBD_LOG_STATE 
-								INNER JOIN SBD_RECEIVED ON (
-									SBD_LOG_STATE.message_id = SBD_RECEIVED.message_id 
-									AND
-									SBD_RECEIVED.IMEI = ?
-								)
-								ORDER BY SBD_RECEIVED.MOMSN DESC
-								LIMIT 1'''
-				self.sqliteCursor.execute(sql_sentence, [imei])
-				row = self.sqliteCursor.fetchone()
-				if(row!=None):
-					return fill_data_log_state(row)
-				else:
-					return None
-			except sqlite3.Error as error:
-				print("Error while connecting to sqlite", error)
+			sql_sentence = '''SELECT *, SBD_RECEIVED.MOMSN
+							FROM SBD_LOG_STATE 
+							INNER JOIN SBD_RECEIVED ON (
+								SBD_LOG_STATE.message_id = SBD_RECEIVED.message_id 
+								AND
+								SBD_RECEIVED.IMEI = ?
+							)
+							ORDER BY SBD_RECEIVED.MOMSN DESC
+							LIMIT 1'''
+			self.sqliteCursor.execute(sql_sentence, [imei])
+			row = self.sqliteCursor.fetchone()
+			if(row!=None):
+				return self.fill_data_log_state(row[0:-2]), row[-1]
+			else:
+				return None
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+
+	def get_bounds_momsn(self, imei):
+		try:
+			sql_sentence = '''SELECT MIN(SBD_RECEIVED.momsn), MAX(SBD_RECEIVED.momsn)
+							FROM SBD_RECEIVED
+							WHERE SBD_RECEIVED.imei = ?'''
+			self.sqliteCursor.execute(sql_sentence, [imei])
+			data = self.sqliteCursor.fetchone()
+			return data[0], data[1]
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
 
 	def add_sbd_log_state(self, message_id, data):
 		try:
@@ -390,8 +414,7 @@ class DataBaseConnection():
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)
 
-
 if __name__ == '__main__':
 	db = DataBaseConnection()
-	result = db.get_next_log_state(100)
-	print(result)
+	print(db.get_next_log_state(100))
+	print(db.get_max_momsn(5))
