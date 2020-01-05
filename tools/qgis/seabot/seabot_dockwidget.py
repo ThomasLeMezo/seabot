@@ -176,12 +176,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Mission Files (*.xml);;All Files (*)", options=options)
-        print("filename=", fileName)
-        self.seabotMission.load_mission_xml(fileName)
+        if fileName!="":
+            print("filename=", fileName)
+            self.seabotMission.load_mission_xml(fileName)
 
-        file_info = QFileInfo(fileName)
-        self.label_mission_file.setText(file_info.fileName())
-        self.missionLayer.update_mission_layer(self.seabotMission)
+            file_info = QFileInfo(fileName)
+            self.label_mission_file.setText(file_info.fileName())
+            self.missionLayer.update_mission_layer(self.seabotMission)
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
