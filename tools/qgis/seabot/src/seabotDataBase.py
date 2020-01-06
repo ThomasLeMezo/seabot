@@ -2,6 +2,7 @@ import sqlite3
 import datetime
 import os
 from os.path import expanduser
+from PyQt5.QtCore import QDate, QTime, QDateTime, Qt
 
 ## Database connection to store parameters and sbd messages
 class DataBaseConnection():
@@ -49,7 +50,7 @@ class DataBaseConnection():
 									`password`	TEXT NOT NULL,
 									`server_ip`	TEXT NOT NULL,
 									`server_port`	TEXT NOT NULL,
-									`last_sync`	timestamp NOT NULL
+									`last_sync`	TEXT NOT NULL
 							)''',
 							'''CREATE TABLE "'''+sqlite_tables_name[3]+'''" (
 									`message_id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -94,13 +95,13 @@ class DataBaseConnection():
 
 	def get_email_list(self):
 		try:
-			self.sqliteCursor.execute('''SELECT email, id FROM CONFIG''')
+			self.sqliteCursor.execute('''SELECT email, config_id FROM CONFIG''')
 			records = self.sqliteCursor.fetchall()
 			list_email = []
 			for data in records:
 				table = {}
 				table["email"] = data[0]
-				table["id"] = data[1]
+				table["config_id"] = data[1]
 				list_email.append(table)
 			return list_email
 		except sqlite3.Error as error:
@@ -139,13 +140,13 @@ class DataBaseConnection():
 			print("Error while connecting to sqlite", error)
 
 
-	def save_server(self, email, password, server_ip, server_port):
+	def save_server(self, email, password, server_ip, server_port, t_zero = datetime.datetime.fromtimestamp(0)):
 		try:
 			sqlite_insert_config = '''INSERT INTO CONFIG
 						  (email, password, server_ip, server_port, last_sync) 
 						  VALUES (?, ?, ?, ?, ?);'''
 
-			data_tuple = (email, password, server_ip, server_port, datetime.date.fromtimestamp(0)) 
+			data_tuple = (email, password, server_ip, server_port, t_zero) 
 			self.sqliteCursor.execute(sqlite_insert_config, data_tuple)
 			self.sqliteConnection.commit()
 			return True
@@ -155,8 +156,7 @@ class DataBaseConnection():
 
 	def delete_server(self, id_row):
 		try:
-			sqlite_delete_config = '''DELETE FROM CONFIG WHERE id=(?);'''
-			self.sqliteCursor.execute(sqlite_delete_config, (id_row,))
+			self.sqliteCursor.execute("DELETE FROM CONFIG WHERE config_id=(?)", [id_row])
 			self.sqliteConnection.commit()
 			return True
 		except sqlite3.Error as error:
@@ -165,17 +165,16 @@ class DataBaseConnection():
 
 	def get_server_data(self, server_id):
 		try:
-			sqlite_search_config = '''SELECT * FROM CONFIG where id=(?);'''
-			self.sqliteCursor.execute(sqlite_search_config, (server_id,))
-			records = self.sqliteCursor.fetchall()
+			self.sqliteCursor.execute("SELECT * FROM CONFIG where config_id=?", [server_id])
+			records = self.sqliteCursor.fetchone()
 			data = {}
 			if(len(records)>0):
-				data["id"] = records[0][0]
-				data["email"] = records[0][1]
-				data["password"] = records[0][2]
-				data["server_ip"] = records[0][3]
-				data["server_port"] = records[0][4]
-				data["last_sync"] = records[0][5]
+				data["server_id"] = records[0]
+				data["email"] = records[1]
+				data["password"] = records[2]
+				data["server_ip"] = records[3]
+				data["server_port"] = records[4]
+				data["last_sync"] = QDateTime.fromString(records[5], Qt.ISODate)
 			return data
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)
@@ -183,17 +182,17 @@ class DataBaseConnection():
 
 	def update_last_sync(self, server_id, t):
 		try:
-			self.sqliteCursor.execute("UPDATE CONFIG SET last_sync = ? WHERE id=?", [t,server_id])
+			self.sqliteCursor.execute("UPDATE CONFIG SET last_sync = ? WHERE config_id=?", [t,server_id])
 			self.sqliteConnection.commit()
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)
 
 	def get_last_sync(self, server_id):
 		try:
-			self.sqliteCursor.execute("SELECT last_sync from CONFIG WHERE id=?", [server_id])
+			self.sqliteCursor.execute("SELECT last_sync from CONFIG WHERE config_id=?", [server_id])
 			row = self.sqliteCursor.fetchone()
 			if(len(row)!=0):
-				return row[0]
+				return QDateTime.fromString(row[0], Qt.ISODate)
 			else:
 				return None
 		except sqlite3.Error as error:

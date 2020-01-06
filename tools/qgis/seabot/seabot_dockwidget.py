@@ -26,6 +26,7 @@ import os, time
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import pyqtSignal, QTimer, QFile, QFileInfo
+from PyQt5.QtCore import QDate, QTime, QDateTime, Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QTreeWidgetItem
 from PyQt5.QtGui import QIcon
 
@@ -93,7 +94,6 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Config tab
         self.pushButton_seabot.clicked.connect(self.enable_timer_seabot)
         self.pushButton_boat.clicked.connect(self.enable_timer_boat)
-        self.pushButton_mission.clicked.connect(self.enable_timer_mission)
 
         self.pushButton_server_save.clicked.connect(self.server_save)
         self.pushButton_server_delete.clicked.connect(self.server_delete)
@@ -102,6 +102,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Mission tab
         self.pushButton_open_mission.clicked.connect(self.open_mission)
+        self.pushButton_mission.clicked.connect(self.enable_timer_mission)
 
         # State tab
         self.pushButton_state_rename.clicked.connect(self.rename_robot)
@@ -120,7 +121,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         password = self.lineEdit_password.text()
         server_ip = self.lineEdit_server_ip.text()
         server_port = self.lineEdit_server_port.text()
-        self.dataBaseConnection.save_server(email, password, server_ip, server_port)
+        t_zero = self.dateTimeEdit_last_sync.dateTime().toString(Qt.ISODate)
+        self.dataBaseConnection.save_server(email, password, server_ip, server_port, t_zero)
         self.update_server_list()
         return True
 
@@ -134,7 +136,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.comboBox_config_email.clear()
         email_list = self.dataBaseConnection.get_email_list()
         for email in email_list:
-            self.comboBox_config_email.addItem(str(email["id"]) + " - " + email["email"], email["id"])
+            self.comboBox_config_email.addItem(str(email["config_id"]) + " - " + email["email"], email["config_id"])
 
     def update_robots_list(self, index_comboBox=-1):
         self.comboBox_state_imei.clear()
@@ -167,10 +169,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if index != -1:
             server_id = self.comboBox_config_email.currentData()
             server_data = self.dataBaseConnection.get_server_data(server_id)
-            self.lineEdit_email.setText(server_data["email"])
-            self.lineEdit_password.setText(server_data["password"])
-            self.lineEdit_server_ip.setText(server_data["server_ip"])
-            self.lineEdit_server_port.setText(server_data["server_port"])
+            self.lineEdit_email.setText(str(server_data["email"]))
+            self.lineEdit_password.setText(str(server_data["password"]))
+            self.lineEdit_server_ip.setText(str(server_data["server_ip"]))
+            self.lineEdit_server_port.setText(str(server_data["server_port"]))
+            print(server_data["last_sync"])
+            print(QDateTime.fromString(str(server_data["last_sync"]), Qt.ISODate))
+            self.dateTimeEdit_last_sync.setDateTime(server_data["last_sync"])
 
     def open_mission(self, event):
         options = QFileDialog.Options()
@@ -214,39 +219,46 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.pushButton_server_save.setEnabled(False)
             self.pushButton_server_delete.setEnabled(False)
 
-    def add_item_treeWidget(self, val1, val2=None):
+    def add_item_treeWidget(self, val1, val2=None, nb_digit=-1):
         item = None
         if(val2==None):
-            item = QTreeWidgetItem([str(val1), str(self.data_log[val1])])
+            text = self.data_log[val1]
         else:
-             item = QTreeWidgetItem([str(val1), str(val2)])   
+            text = val2
+
+        if nb_digit>0:
+            text = round(float(text), nb_digit)
+        elif nb_digit==0:
+            text = int(round(float(text)))
+
+        item = QTreeWidgetItem([str(val1), str(text)])   
         self.treeWidget_iridium.addTopLevelItem(item)
 
     def fill_treeWidget_log_state(self):
         self.treeWidget_iridium.clear()
         self.add_item_treeWidget("message_id")
         self.add_item_treeWidget("ts", datetime.datetime.fromtimestamp(self.data_log["ts"]))
-        self.add_item_treeWidget("east")
-        self.add_item_treeWidget("north")
-        self.add_item_treeWidget("gnss_speed")
-        self.add_item_treeWidget("gnss_heading")
-        self.add_item_treeWidget("safety_published_frequency")
-        self.add_item_treeWidget("safety_depth_limit")
-        self.add_item_treeWidget("safety_batteries_limit")
-        self.add_item_treeWidget("safety_depressurization")
-        self.add_item_treeWidget("enable_mission")
-        self.add_item_treeWidget("enable_depth")
-        self.add_item_treeWidget("enable_engine")
-        self.add_item_treeWidget("enable_flash")
-        self.add_item_treeWidget("battery0")
-        self.add_item_treeWidget("battery1")
-        self.add_item_treeWidget("battery2")
-        self.add_item_treeWidget("battery3")
-        self.add_item_treeWidget("pressure")
-        self.add_item_treeWidget("temperature")
-        self.add_item_treeWidget("humidity")
-        self.add_item_treeWidget("waypoint")
-        self.add_item_treeWidget("last_cmd_received")            
+        self.add_item_treeWidget("east", nb_digit=0)
+        self.add_item_treeWidget("north", nb_digit=0)
+        self.add_item_treeWidget("gnss_speed", nb_digit=2)
+        self.add_item_treeWidget("gnss_heading", nb_digit=0)
+        self.add_item_treeWidget("safety_published_frequency", nb_digit=0)
+        self.add_item_treeWidget("safety_depth_limit", nb_digit=0)
+        self.add_item_treeWidget("safety_batteries_limit", nb_digit=0)
+        self.add_item_treeWidget("safety_depressurization", nb_digit=0)
+        self.add_item_treeWidget("enable_mission", nb_digit=0)
+        self.add_item_treeWidget("enable_depth", nb_digit=0)
+        self.add_item_treeWidget("enable_engine", nb_digit=0)
+        self.add_item_treeWidget("enable_flash", nb_digit=0)
+        self.add_item_treeWidget("battery0", nb_digit=2)
+        self.add_item_treeWidget("battery1", nb_digit=2)
+        self.add_item_treeWidget("battery2", nb_digit=2)
+        self.add_item_treeWidget("battery3", nb_digit=2)
+        self.add_item_treeWidget("pressure", nb_digit=0)
+        self.add_item_treeWidget("temperature", nb_digit=1)
+        self.add_item_treeWidget("humidity", nb_digit=2)
+        self.add_item_treeWidget("waypoint", nb_digit=0)
+        self.add_item_treeWidget("last_cmd_received")
 
     def update_state_info(self):
         # Get current momsn

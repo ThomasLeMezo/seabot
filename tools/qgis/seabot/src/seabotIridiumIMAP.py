@@ -122,7 +122,7 @@ class ImapServer():#threading.Thread):
 				for num in msgnums[0].split():
 					self.download_msg(num.decode())
 
-			self.db_connection.update_last_sync(self.server_id, t)
+			self.db_connection.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
 		except imaplib.IMAP4.error as err:
 			self.is_connected = False
 			print(err, flush=True)
@@ -132,7 +132,7 @@ class ImapServer():#threading.Thread):
 		t = datetime.datetime.now()
 
 		# Search for email since last sync date
-		date = self.db_connection.get_last_sync(1).strftime("%d-%b-%Y")
+		date = self.db_connection.get_last_sync(self.server_id).toString("dd-MM-YYY")
 		typ, msgnums = self.serverIMAP.search(None, 'SENTSINCE {date}'.format(date=date), 'FROM "sbdservice@sbd.iridium.com"')
 
 		if(msgnums[0] != None):
