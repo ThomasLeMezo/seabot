@@ -156,6 +156,7 @@ class Seabot:
 
         if add_to_toolbar:
             self.toolbar.addAction(action)
+            self.iface.addToolBarIcon(action)
 
         if add_to_menu:
             self.iface.addPluginToMenu(
