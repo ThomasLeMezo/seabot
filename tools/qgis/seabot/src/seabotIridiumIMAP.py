@@ -20,47 +20,47 @@ import sys
 import re
 
 import threading, queue
+import logging
+
+from PyQt5.QtCore import QDate, QTime, QDateTime, Qt, QLocale
 
 from .seabotDataBase import *
 
-class ImapServer():#threading.Thread):
+class ImapServer():
 	serverIMAP = None
 	mailbox = 'INBOX'
 	is_connected = False
 	is_first_connection = True
 	running = False
-	time_last_check = 0.0 #time.time()
-	dt_check = 5.0
 	log = "?"
 	server_id = -1
+	thread = None
 
 	db_connection = DataBaseConnection(init_table=True)
+	locale = QLocale(QLocale.English, QLocale.UnitedStates)
 
 	# ToDo : write database last time access
 	# ToDo : write database msg
 
-	# def __init__(self):
-		# threading.Thread.__init__(self)
-		# self.lock = threading.Lock()
-		# self.start()
+	#def __init__(self):
 
 	def __del__(self):
 		# with self.lock:
 		self.running = False
-		# self.join()
+		if(threading.active_count()!=0):
+			self.thread.join()
 
 	def start_server(self):
 		# with self.lock:
-		ImapServer.running = True
-		ImapServer.log = str(ImapServer.running)
-			# self.log = "Test 1" + str(self.running)
-			# self.time_last_check = time.time()
-			#self.log = "Test 0" + str(self.running)
+		self.running = True
+		self.thread = threading.Thread(target=self.update_imap, daemon=True)
+		self.thread.start()
 
 	def stop_server(self):
 		# with self.lock:
 		if(self.running == True):
-			ImapServer.running = False
+			self.running = False
+		self.thread.join()
 		self.close_server()
 
 	def close_server(self):
@@ -76,10 +76,16 @@ class ImapServer():#threading.Thread):
 	def __del__(self):
 		self.close_server()
  
-	def run(self):
-		if self.running:
-			self.update_imap()
-		time.sleep(0.1)
+	def update_imap(self):
+		self.db_connection = DataBaseConnection(init_table=True)
+		while self.running:
+			if(not self.is_connected):
+				self.connect()
+			if(self.is_connected and self.is_first_connection):
+				self.update_first_connection()
+			if(self.is_connected and not self.is_first_connection):
+				self.update_recent()
+			time.sleep(5.0)
 
 	def set_server_id(self, server_id):
 		self.server_id = server_id
@@ -100,20 +106,22 @@ class ImapServer():#threading.Thread):
 				print("select rsp = ", rsp, " nb_message = ", nb_message_inbox[0].decode())
 				self.is_connected = True
 				self.is_first_connection = True
+				self.log = "Connected"
 			else:
 				raise Exception('Failed to select')
 			
 		except imaplib.IMAP4.error as err:
 			print("Error imap ", err)
+			self.log = "Error IMAP"
 		except sqlite3.Error as error:
 			print("Error sqlite ", error)
+			self.log = "Error SQLITE"
 		except:
 			print("Error ", sys.exc_info())
-		
-		return "Connected"
+			self.log = "Error"
 
 	def update_recent(self):
-		print("Try update_recent")
+		self.log = "Update " + str(datetime.datetime.now().replace(microsecond=0))
 		try:
 			t = datetime.datetime.now()
 			rsp, msgnums = self.serverIMAP.recent()
@@ -121,6 +129,7 @@ class ImapServer():#threading.Thread):
 				print(msgnums)
 				for num in msgnums[0].split():
 					self.download_msg(num.decode())
+					self.log = "Update recent " + str(num.decode())
 
 			self.db_connection.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
 		except imaplib.IMAP4.error as err:
@@ -132,16 +141,19 @@ class ImapServer():#threading.Thread):
 		t = datetime.datetime.now()
 
 		# Search for email since last sync date
-		date = self.db_connection.get_last_sync(self.server_id).toString("dd-MM-YYY")
-		typ, msgnums = self.serverIMAP.search(None, 'SENTSINCE {date}'.format(date=date), 'FROM "sbdservice@sbd.iridium.com"')
+		date = self.db_connection.get_last_sync(self.server_id)
+		date_string = self.locale.toString(date, "dd-MMM-yyyy")
+		print(date_string)
+		typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
 
 		if(msgnums[0] != None):
 			for num in msgnums[0].split():
 				self.download_msg(num.decode())
+				self.log = "Update" + str(num.decode())
 
 		self.is_first_connection = False
 		self.db_connection.update_last_sync(self.server_id, t)
-		return "Connected"
+		self.log =  "Connected"
 
 	def download_msg(self, msgnum):
 		if(msgnum == "0"):
@@ -175,18 +187,8 @@ class ImapServer():#threading.Thread):
 						msg_data = part.get_payload(decode=True)
 						IridiumMessageParser(msg_data, self.db_connection, message_id, send_time)
 
-	def update_imap(self):
-		if(time.time()-self.time_last_check > self.dt_check):
-			if(not self.is_connected):
-				self.connect()
-			if(self.is_connected and self.is_first_connection):
-				self.update_first_connection()
-			if(self.is_connected and not self.is_first_connection):
-				self.update_recent()
-			self.time_last_check = time.time()
-
 	def get_log(self):
-		return ImapServer.log
+		return self.log
 
 class IridiumMessageParser():
 	message_type = 0
@@ -253,13 +255,13 @@ class IridiumMessageParser():
 		print(fields)
 		return fields
 
-if __name__ == '__main__':
-	imapServer = ImapServer()
-	imapServer.set_server_id(1)
-	imapServer.start_server()
-	try:
-		while True:
-			imapServer.run()
-			time.sleep(1)
-	except KeyboardInterrupt:
-		print('interrupted!', flush=True)
+# if __name__ == '__main__':
+# 	imapServer = ImapServer()
+# 	imapServer.set_server_id(1)
+# 	imapServer.start_server()
+# 	try:
+# 		while True:
+# 			imapServer.run_imap()
+# 			time.sleep(1)
+# 	except KeyboardInterrupt:
+# 		print('interrupted!', flush=True)

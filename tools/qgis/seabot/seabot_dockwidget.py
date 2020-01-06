@@ -95,6 +95,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_seabot.clicked.connect(self.enable_timer_seabot)
         self.pushButton_boat.clicked.connect(self.enable_timer_boat)
 
+        self.spinBox_gnss_trace.valueChanged.connect(self.update_vanish_trace)
+
         self.pushButton_server_save.clicked.connect(self.server_save)
         self.pushButton_server_delete.clicked.connect(self.server_delete)
         self.comboBox_config_email.currentIndexChanged.connect(self.select_server)
@@ -173,8 +175,6 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lineEdit_password.setText(str(server_data["password"]))
             self.lineEdit_server_ip.setText(str(server_data["server_ip"]))
             self.lineEdit_server_port.setText(str(server_data["server_port"]))
-            print(server_data["last_sync"])
-            print(QDateTime.fromString(str(server_data["last_sync"]), Qt.ISODate))
             self.dateTimeEdit_last_sync.setDateTime(server_data["last_sync"])
 
     def open_mission(self, event):
@@ -269,6 +269,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def update_momsn_bounds(self):
         self.momsn_min, self.momsn_max = self.dataBaseConnection.get_bounds_momsn(self.comboBox_state_imei.currentData())
+
+    def update_vanish_trace(self, value):
+        if(value==-1):
+            self.boatLivePosition.set_nb_points_max(value, False)
+        else:
+            self.boatLivePosition.set_nb_points_max(value, True)
+
 
     ###########################################################################
     ### Handler Button
