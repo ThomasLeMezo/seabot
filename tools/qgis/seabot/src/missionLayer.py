@@ -17,8 +17,9 @@ import threading
 class MissionLayer():
 
 	fields = QgsFields()
-	layer_mission = 'Seabot - Mission Track'
-	layer_set_point = 'Seabot - Mission Set Point'
+	group_name = 'Seabot Mission'
+	layer_track = 'Seabot track'
+	layer_pose = 'Seabot pose'
 
 	def __init__(self):
 		self.fields.append(QgsField('Title', QVariant.String))
@@ -27,10 +28,13 @@ class MissionLayer():
 
 	def update_mission_layer(self, seabotMission):
 		# Global mission
+		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+		if(root == None):
+			root = QgsProject.instance().layerTreeRoot().addGroup(self.group_name)
 
 		## Find if layer already exist
-		layer_list = QgsProject.instance().mapLayersByName(self.layer_mission)
-
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_track)
+		
 		# Build list of points
 		list_wp = []
 		for wp in seabotMission.get_wp_list():
@@ -63,21 +67,29 @@ class MissionLayer():
 		renderer = QgsSingleSymbolRenderer(marker)
 		layer.setRenderer(renderer)
 		layer.updateExtents()
-		QgsProject.instance().addMapLayer(layer)
+		QgsProject.instance().addMapLayer(layer, addToLegend=False)
+		root.addLayer(layer)
 
 		return True
 
 	def update_mission_set_point(self, seabotMission):
 		if seabotMission.is_empty():
 			return True
+
+		point = QgsPointXY(seabotMission.get_set_point_east(), seabotMission.get_set_point_north())
+
 		### ADD DATA TO LAYER ###
 		## Find if layer already exist
-		layer_list = QgsProject.instance().mapLayersByName(self.layer_set_point)
-		point = QgsPointXY(seabotMission.get_set_point_east(), seabotMission.get_set_point_north())
+		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+		if(root == None):
+			root = QgsProject.instance().layerTreeRoot().addGroup(self.group_name)
+
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_pose)
+		
 		# print(point)
 		if(len(layer_list)==0):
 			### Add New layer Last Position
-			layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', self.layer_set_point , "memory")
+			layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', self.layer_pose , "memory")
 			pr = layer.dataProvider()
 
 			# add the first point
@@ -86,7 +98,7 @@ class MissionLayer():
 			pr.addFeatures([feature])
 
 			# Configure the marker.
-			simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=8,color=Qt.darkBlue)
+			simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=8,color=Qt.gray)
 			simple_marker_small_circle = QgsSimpleMarkerSymbolLayer(color=Qt.red)
 			marker = QgsMarkerSymbol()
 			marker.setOpacity(0.5)
@@ -98,7 +110,8 @@ class MissionLayer():
 
 			# add the layer to the canvas
 			layer.updateExtents()
-			QgsProject.instance().addMapLayer(layer)
+			QgsProject.instance().addMapLayer(layer, addToLegend=False)
+			root.addLayer(layer)
 		else:
 			layer = layer_list[0]
 			pr = layer.dataProvider()

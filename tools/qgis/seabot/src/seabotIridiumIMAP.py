@@ -21,6 +21,7 @@ import re
 
 import threading, queue
 import logging
+import socket
 
 from PyQt5.QtCore import QDate, QTime, QDateTime, Qt, QLocale
 
@@ -28,6 +29,8 @@ from .seabotDataBase import *
 
 class ImapServer():
 	serverIMAP = None
+	socket.setdefaulttimeout(10)
+
 	mailbox = 'INBOX'
 	is_connected = False
 	is_first_connection = True
@@ -118,7 +121,7 @@ class ImapServer():
 			self.log = "Error SQLITE"
 		except:
 			print("Error ", sys.exc_info())
-			self.log = "Error"
+			self.log = "Error - No connection"
 
 	def update_recent(self):
 		self.log = "Update " + str(datetime.datetime.now().replace(microsecond=0))
@@ -135,25 +138,39 @@ class ImapServer():
 		except imaplib.IMAP4.error as err:
 			self.is_connected = False
 			print(err, flush=True)
+			self.log = "Error imaplib"
+		except:
+			self.is_connected = False
+			self.log = "Error (timeout)"
 
 	def update_first_connection(self):
 		print("Try update_first_connection")
 		t = datetime.datetime.now()
 
-		# Search for email since last sync date
-		date = self.db_connection.get_last_sync(self.server_id)
-		date_string = self.locale.toString(date, "dd-MMM-yyyy")
-		print(date_string)
-		typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
+		try:
+			# Search for email since last sync date
+			date = self.db_connection.get_last_sync(self.server_id)
+			date_string = self.locale.toString(date, "dd-MMM-yyyy")
+			print(date_string)
+			typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
 
-		if(msgnums[0] != None):
-			for num in msgnums[0].split():
-				self.download_msg(num.decode())
-				self.log = "Update" + str(num.decode())
+			if(msgnums[0] != None):
+				for num in msgnums[0].split():
+					self.download_msg(num.decode())
+					self.log = "Update" + str(num.decode())
 
-		self.is_first_connection = False
-		self.db_connection.update_last_sync(self.server_id, t)
-		self.log =  "Connected"
+			self.is_first_connection = False
+			self.db_connection.update_last_sync(self.server_id, t)
+			self.log =  "Connected"
+		except imaplib.IMAP4.error as err:
+			self.is_connected = False
+			self.log = "Error IMAP"
+		except sqlite3.Error as error:
+			self.is_connected = False
+			self.log = "Error SQLITE"
+		except:
+			self.is_connected = False
+			self.log = "Error - No connection"
 
 	def download_msg(self, msgnum):
 		if(msgnum == "0"):
@@ -189,6 +206,9 @@ class ImapServer():
 
 	def get_log(self):
 		return self.log
+
+	def get_is_connected(self):
+		return self.is_connected
 
 class IridiumMessageParser():
 	message_type = 0

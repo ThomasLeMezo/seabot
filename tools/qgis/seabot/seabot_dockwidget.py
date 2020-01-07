@@ -210,6 +210,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lineEdit_server_port.setEnabled(True)
             self.pushButton_server_save.setEnabled(True)
             self.pushButton_server_delete.setEnabled(True)
+            self.dateTimeEdit_last_sync.setEnabled(True)
         else:
             self.comboBox_config_email.setEnabled(False)
             self.lineEdit_email.setEnabled(False)
@@ -218,6 +219,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lineEdit_server_port.setEnabled(False)
             self.pushButton_server_save.setEnabled(False)
             self.pushButton_server_delete.setEnabled(False)
+            self.dateTimeEdit_last_sync.setEnabled(False)
 
     def add_item_treeWidget(self, val1, val2=None, nb_digit=-1):
         item = None
@@ -303,6 +305,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             # self.boatLivePosition.stop()
 
     def server_connect(self):
+        self.pushButton_server_connect.setStyleSheet("background-color: red")
         if(self.pushButton_server_connect.isChecked()):
             self.set_enable_form_connect(False)
             self.imapServer.set_server_id(self.comboBox_config_email.currentData())
@@ -313,9 +316,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             ## UI update
             self.timer_IMAP.start()
         else:
+
             self.set_enable_form_connect(True)
             self.label_server_log.setText("Disconnected")
-
             ## Thread IMAP
             self.imapServer.stop_server()
             self.timer_IMAP.stop()
@@ -358,6 +361,11 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def process_IMAP(self):
         self.label_server_log.setText(self.imapServer.get_log())
+        if(self.imapServer.get_is_connected()):
+            self.pushButton_server_connect.setStyleSheet("background-color: green")
+        else:
+            self.pushButton_server_connect.setStyleSheet("background-color: red")
+
     
     def process_mission(self):
         # Update mission set point on map
