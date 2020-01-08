@@ -27,9 +27,9 @@ from PyQt5.QtCore import QDate, QTime, QDateTime, Qt, QLocale, QObject, pyqtSign
 from .database import *
 
 class ImapServer(QObject):
-	socket.setdefaulttimeout(10)
+	socket.setdefaulttimeout(1)
 	imap_signal = pyqtSignal()
-
+	
 	def __init__(self):
 		super().__init__()
 		self.serverIMAP = None
@@ -63,7 +63,6 @@ class ImapServer(QObject):
 		if(self.thread != None):
 			self.thread.join()
 		
-
 	def close_server(self):
 		if self.is_connected == True:
 			self.is_connected = False
@@ -78,7 +77,7 @@ class ImapServer(QObject):
 		self.db_connection = DataBaseConnection(init_table=True)
 		while self.running:
 			if(not self.is_connected):
-				self.connect()
+				self.connect_imap()
 			if(self.is_connected and self.is_first_connection):
 				self.update_first_connection()
 			if(self.is_connected and not self.is_first_connection):
@@ -88,7 +87,7 @@ class ImapServer(QObject):
 	def set_server_id(self, server_id):
 		self.server_id = server_id
 
-	def connect(self):
+	def connect_imap(self):
 		print("Try connect")
 		try:
 			# Retreive data from DB
@@ -100,10 +99,10 @@ class ImapServer(QObject):
 			rsp = self.serverIMAP.login(login_data["email"], login_data["password"])
 
 			if(rsp[1][0].decode()=="LOGIN completed."):
-				rsp, nb_message_inbox = self.serverIMAP.select(mailbox=self.mailbox, readonly=False)
-				print("select rsp = ", rsp, " nb_message = ", nb_message_inbox[0].decode())
 				self.is_connected = True
 				self.is_first_connection = True
+				rsp, nb_message_inbox = self.serverIMAP.select(mailbox=self.mailbox, readonly=False)
+				print("select rsp = ", rsp, " nb_message = ", nb_message_inbox[0].decode())
 				self.log = "Connected"
 			else:
 				raise Exception('Failed to select')
@@ -111,12 +110,15 @@ class ImapServer(QObject):
 		except imaplib.IMAP4.error as err:
 			print("Error imap ", err)
 			self.log = "Error IMAP"
+			self.close_server()
 		except sqlite3.Error as error:
 			print("Error sqlite ", error)
 			self.log = "Error SQLITE"
+			self.close_server()
 		except:
 			print("Error ", sys.exc_info())
 			self.log = "Error - No connection"
+			self.close_server()
 
 	def process_msg(self, msgnums):
 		if(msgnums[0] != None):
@@ -125,24 +127,24 @@ class ImapServer(QObject):
 				for num in list_msg_num:
 					self.download_msg(num.decode())
 					self.log = "Update " + str(k) + "/" + len(list_msg_num) + " (" + str(num.decode()) + ")"
-					self.imap_signal.emit()
 					k+=1
+				self.imap_signal.emit()
 
 	def update_recent(self):
 		self.log = "Update " + str(datetime.datetime.now().replace(microsecond=0))
 		try:
 			t = datetime.datetime.now()
 			rsp, msgnums = self.serverIMAP.recent()
-			process_msg(msgnums)
+			#process_msg(msgnums)
 
 			self.db_connection.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
 		except imaplib.IMAP4.error as err:
-			self.is_connected = False
+			self.close_server()
 			print(err, flush=True)
 			self.log = "Error imaplib"
 		except:
-			print("Error")
-			self.is_connected = False
+			print("Error ", sys.exc_info())
+			self.close_server()
 			self.log = "Error (timeout)"
 
 	def update_first_connection(self):
@@ -155,23 +157,23 @@ class ImapServer(QObject):
 			date_string = self.locale.toString(date, "dd-MMM-yyyy")
 			print(date_string)
 			typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
-			process_msg(msgnums)
+			self.process_msg(msgnums)
 
 			self.is_first_connection = False
 			self.db_connection.update_last_sync(self.server_id, t)
 			self.log =  "Connected"
 		except imaplib.IMAP4.error as err:
-			self.is_connected = False
+			self.close_server()
 			self.log = "Error IMAP"
 			print(err)
 		except sqlite3.Error as error:
-			self.is_connected = False
+			self.close_server()
 			self.log = "Error SQLITE"
 			print(error)
 		except:
-			self.is_connected = False
+			print("Error ", sys.exc_info())
+			self.close_server()
 			self.log = "Error - No connection"
-			print("Error")
 
 	def download_msg(self, msgnum):
 		if(msgnum == "0"):
