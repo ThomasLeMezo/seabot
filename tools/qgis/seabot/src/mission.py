@@ -63,14 +63,14 @@ class SeabotWaypoint():
 
 class SeabotMission():
 
-	waypoint_list = []
-	current_wp_id = 0
-	start_time_utc = None
-	end_time = None
-	filepath = ""
-	filename = ""
-
 	def __init__(self, filename=None):
+		self.waypoint_list = []
+		self.current_wp_id = 0
+		self.start_time_utc = None
+		self.end_time = None
+		self.filepath = ""
+		self.filename = ""
+
 		if filename!=None:
 			self.load_mission_xml(filename)
 
@@ -136,6 +136,7 @@ class SeabotMission():
 
 		for child in paths:
 			self.parse_node(child)
+		self.get_current_wp() # Update current_wp_id
 
 	def parse_node(self, child, depth_offset=0.0):
 		if child.tag=="waypoint":

@@ -23,35 +23,32 @@ import threading, queue
 import logging
 import socket
 
-from PyQt5.QtCore import QDate, QTime, QDateTime, Qt, QLocale
-
+from PyQt5.QtCore import QDate, QTime, QDateTime, Qt, QLocale, QObject, pyqtSignal
 from .database import *
 
-class ImapServer():
-	serverIMAP = None
+class ImapServer(QObject):
 	socket.setdefaulttimeout(10)
+	imap_signal = pyqtSignal()
 
-	mailbox = 'INBOX'
-	is_connected = False
-	is_first_connection = True
-	running = False
-	log = "?"
-	server_id = -1
-	thread = None
-
-	db_connection = DataBaseConnection(init_table=True)
-	locale = QLocale(QLocale.English, QLocale.UnitedStates)
-
-	# ToDo : write database last time access
-	# ToDo : write database msg
-
-	#def __init__(self):
+	def __init__(self):
+		super().__init__()
+		self.serverIMAP = None
+		self.mailbox = 'INBOX'
+		self.is_connected = False
+		self.is_first_connection = True
+		self.running = False
+		self.log = "?"
+		self.server_id = -1
+		self.thread = None
+		self.db_connection = DataBaseConnection(init_table=True)
+		self.locale = QLocale(QLocale.English, QLocale.UnitedStates)
 
 	def __del__(self):
 		# with self.lock:
 		self.running = False
 		if(threading.active_count()!=0):
 			self.thread.join()
+		self.close_server()
 
 	def start_server(self):
 		# with self.lock:
@@ -65,7 +62,7 @@ class ImapServer():
 			self.running = False
 		if(self.thread != None):
 			self.thread.join()
-		self.close_server()
+		
 
 	def close_server(self):
 		if self.is_connected == True:
@@ -76,9 +73,6 @@ class ImapServer():
 				self.serverIMAP.logout()
 			except imaplib.IMAP4.error as err:
 				print(err, flush=True)
-
-	def __del__(self):
-		self.close_server()
  
 	def update_imap(self):
 		self.db_connection = DataBaseConnection(init_table=True)
@@ -124,16 +118,22 @@ class ImapServer():
 			print("Error ", sys.exc_info())
 			self.log = "Error - No connection"
 
+	def process_msg(self, msgnums):
+		if(msgnums[0] != None):
+				k=1
+				list_msg_num = msgnums[0].split()
+				for num in list_msg_num:
+					self.download_msg(num.decode())
+					self.log = "Update " + str(k) + "/" + len(list_msg_num) + " (" + str(num.decode()) + ")"
+					self.imap_signal.emit()
+					k+=1
+
 	def update_recent(self):
 		self.log = "Update " + str(datetime.datetime.now().replace(microsecond=0))
 		try:
 			t = datetime.datetime.now()
 			rsp, msgnums = self.serverIMAP.recent()
-			if(msgnums[0] != None):
-				print(msgnums)
-				for num in msgnums[0].split():
-					self.download_msg(num.decode())
-					self.log = "Update recent " + str(num.decode())
+			process_msg(msgnums)
 
 			self.db_connection.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
 		except imaplib.IMAP4.error as err:
@@ -141,6 +141,7 @@ class ImapServer():
 			print(err, flush=True)
 			self.log = "Error imaplib"
 		except:
+			print("Error")
 			self.is_connected = False
 			self.log = "Error (timeout)"
 
@@ -154,11 +155,7 @@ class ImapServer():
 			date_string = self.locale.toString(date, "dd-MMM-yyyy")
 			print(date_string)
 			typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
-
-			if(msgnums[0] != None):
-				for num in msgnums[0].split():
-					self.download_msg(num.decode())
-					self.log = "Update" + str(num.decode())
+			process_msg(msgnums)
 
 			self.is_first_connection = False
 			self.db_connection.update_last_sync(self.server_id, t)
@@ -166,12 +163,15 @@ class ImapServer():
 		except imaplib.IMAP4.error as err:
 			self.is_connected = False
 			self.log = "Error IMAP"
+			print(err)
 		except sqlite3.Error as error:
 			self.is_connected = False
 			self.log = "Error SQLITE"
+			print(error)
 		except:
 			self.is_connected = False
 			self.log = "Error - No connection"
+			print("Error")
 
 	def download_msg(self, msgnum):
 		if(msgnum == "0"):

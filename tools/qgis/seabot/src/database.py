@@ -6,9 +6,7 @@ from PyQt5.QtCore import QDate, QTime, QDateTime, Qt
 
 ## Database connection to store parameters and sbd messages
 class DataBaseConnection():
-	sqliteConnection = None
-	sqliteCursor = None
-
+	
 	db_file = expanduser("~") + "/.local/share/QGIS/QGIS3/profiles/default/python/plugins/seabot/" + "Seabot_iridium.db"
 
 	sqlite_tables_name = ["ROBOTS", "SBD_LOG_STATE", "CONFIG", "SBD_RECEIVED"]
@@ -63,6 +61,9 @@ class DataBaseConnection():
 	sqlite_create_table_get_table = '''SELECT name FROM sqlite_master WHERE type='table' and name NOT LIKE 'sqlite_%';'''
 
 	def __init__(self, credential_file=None, init_table=True):
+		self.sqliteConnection = None
+		self.sqliteCursor = None
+
 		if(credential_file!=None):
 			self.credential_file = credential_file
 

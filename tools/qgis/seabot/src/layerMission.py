@@ -16,14 +16,14 @@ import threading
 
 class LayerMission():
 
-	fields = QgsFields()
-	group_name = 'Mission '
-	layer_track = 'track '
-	layer_pose = 'pose '
-	surface = False
-	seabotMission = None
-
 	def __init__(self, seabotMission=None):
+		self.fields = QgsFields()
+		self.group_name = 'Mission '
+		self.layer_track = 'track '
+		self.layer_pose = 'pose '
+		self.surface = False
+		self.seabotMission = None
+
 		self.fields.append(QgsField('wp_nb', QVariant.Int))
 		self.seabotMission = seabotMission
 		if self.seabotMission != None:
@@ -36,6 +36,7 @@ class LayerMission():
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root != None):
 			root.removeAllChildren()
+			QgsProject.instance().layerTreeRoot().removeChildNode(root)
 
 	def update_mission_layer(self):
 		# Global mission

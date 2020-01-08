@@ -62,6 +62,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     dataBaseConnection = DataBaseConnection()
     imapServer = ImapServer()
 
+    mission_selected = -1
+
     def __init__(self, parent=None):
         """Constructor."""
         super(SeabotDockWidget, self).__init__(parent)
@@ -73,6 +75,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # print(self.__dir__)
         self.setupUi(self)
+
+        # Imap Update
+        self.imapServer.imap_signal.connect(self.update_imap)
 
         ### Timer handle
         self.timer_seabot.timeout.connect(self.process_seabot)
@@ -107,7 +112,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Mission tab
         self.pushButton_open_mission.clicked.connect(self.open_mission)
         self.pushButton_delete_mission.clicked.connect(self.delete_mission)
-
+        self.listWidget_mission.currentRowChanged.connect(self.update_mission_info)
         # State tab
         self.pushButton_state_rename.clicked.connect(self.rename_robot)
         self.pushButton_state_previous.clicked.connect(self.previous_log_state)
@@ -186,13 +191,17 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         filenameList, _ = QFileDialog.getOpenFileNames(self,"Select mission file(s)", "","Mission Files (*.xml)")
         for filename in filenameList:
             print("filename=", filename)
-            layermission = LayerMission(SeabotMission(filename))
+            mission = SeabotMission(filename)
+            layermission = LayerMission(mission)
             self.layerMissions.append(layermission)
             layermission.update_mission_layer()
             self.listWidget_mission.addItem(layermission.get_mission().get_mission_name())
 
     def delete_mission(self, event):
-        print(self.listWidget_mission.selectedItems())
+        row = self.listWidget_mission.currentRow()
+        if row != -1:
+            self.listWidget_mission.takeItem(row)
+            del self.layerMissions[row]
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
@@ -203,6 +212,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.imapServer.stop_server()
 
         self.pushButton_seabot.setChecked(False)
+        self.layerMissions.clear()
         self.closingPlugin.emit()
         event.accept()
 
@@ -342,6 +352,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.update_momsn_bounds()
             self.update_state_info()
 
+    def update_mission_info(self, row):
+        self.mission_selected = row
+        self.update_mission_ui()
+
+    def update_imap(self):
+        self.update_state_imei()
+
     ###########################################################################
     ## TIMERS processing
 
@@ -362,10 +379,44 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.pushButton_server_connect.setStyleSheet("background-color: green")
         else:
             self.pushButton_server_connect.setStyleSheet("background-color: red")
-
     
     def process_mission(self):
-        if(len(self.layerMissions)==0):
+        if(len(self.layerMissions)>0):
+            for layerMission in self.layerMissions:
+                # Update mission set point on map
+                layerMission.update_mission_pose()
+            self.update_mission_ui()
+
+    def update_mission_ui(self):
+        if self.mission_selected != -1:
+            seabotMission = self.layerMissions[self.mission_selected].get_mission()
+            self.label_mission_file.setText(seabotMission.get_filename())
+            # Update IHM with mission data set point
+            wp = seabotMission.get_current_wp()
+            # print(wp)
+            if(wp!=None):
+                if(wp.get_depth()==0.0 or seabotMission.is_end_mission()):
+                    self.label_mission_status.setText("SURFACE")
+                    self.label_mission_status.setStyleSheet("background-color: green")
+                else:
+                    self.label_mission_status.setText("UNDERWATER")
+                    self.label_mission_status.setStyleSheet("background-color: red")
+
+                self.label_mission_start_time.setText(str(wp.get_time_start()))
+                self.label_mission_end_time.setText(str(wp.get_time_end()))
+                self.label_mission_depth.setText(str(wp.get_depth()))
+                self.label_mission_waypoint_id.setText(str(wp.get_id())+"/"+str(seabotMission.get_nb_wp()))
+                self.label_mission_time_remain.setText(str(wp.get_time_end()-datetime.datetime.now().replace(microsecond=0)))
+
+                wp_next = seabotMission.get_next_wp()
+                if(wp_next != None):
+                    self.label_mission_next_depth.setText(str(wp_next.get_depth()))
+                else:
+                    self.label_mission_next_depth.setText("END OF MISSION")
+            else:
+                self.label_mission_status.setText("NO WAYPOINTS")
+                self.label_mission_waypoint_id.setText(str(seabotMission.get_current_wp_id()+1) + "/"+str(seabotMission.get_nb_wp()))
+        else:
             self.label_mission_status.setStyleSheet("background-color: gray")
             self.label_mission_start_time.setText("-")
             self.label_mission_end_time.setText("-")
@@ -375,36 +426,3 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.label_mission_next_depth.setText("-")
             self.label_mission_status.setText("-")
             self.label_mission_waypoint_id.setText("-")
-        else:
-            for layerMission in self.layerMissions:
-                seabotMission = layerMission.get_mission()
-
-                # Update mission set point on map
-                layerMission.update_mission_pose()
-
-                self.label_mission_file.setText(seabotMission.get_filename())
-                # Update IHM with mission data set point
-                wp = seabotMission.get_current_wp()
-                # print(wp)
-                if(wp!=None):
-                    if(wp.get_depth()==0.0 or seabotMission.is_end_mission()):
-                        self.label_mission_status.setText("SURFACE")
-                        self.label_mission_status.setStyleSheet("background-color: green")
-                    else:
-                        self.label_mission_status.setText("UNDERWATER")
-                        self.label_mission_status.setStyleSheet("background-color: red")
-
-                    self.label_mission_start_time.setText(str(wp.get_time_start()))
-                    self.label_mission_end_time.setText(str(wp.get_time_end()))
-                    self.label_mission_depth.setText(str(wp.get_depth()))
-                    self.label_mission_waypoint_id.setText(str(wp.get_id())+"/"+str(seabotMission.get_nb_wp()))
-                    self.label_mission_time_remain.setText(str(wp.get_time_end()-datetime.datetime.now().replace(microsecond=0)))
-
-                    wp_next = seabotMission.get_next_wp()
-                    if(wp_next != None):
-                        self.label_mission_next_depth.setText(str(wp_next.get_depth()))
-                    else:
-                        self.label_mission_next_depth.setText("END OF MISSION")
-                else:
-                    self.label_mission_status.setText("NO WAYPOINTS")
-                    self.label_mission_waypoint_id.setText(str(seabotMission.get_current_wp_id()+1) + "/"+str(seabotMission.get_nb_wp()))
