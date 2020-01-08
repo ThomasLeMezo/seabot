@@ -17,17 +17,27 @@ import threading
 class LayerMission():
 
 	fields = QgsFields()
-	group_name = 'Seabot Mission'
-	layer_track = 'Seabot track'
-	layer_pose = 'Seabot pose'
+	group_name = 'Mission '
+	layer_track = 'track '
+	layer_pose = 'pose '
 	surface = False
+	seabotMission = None
 
-	def __init__(self):
-		self.fields.append(QgsField('Title', QVariant.String))
-		self.fields.append(QgsField('wp_id', QVariant.Double))
+	def __init__(self, seabotMission=None):
+		self.fields.append(QgsField('wp_nb', QVariant.Int))
+		self.seabotMission = seabotMission
+		if self.seabotMission != None:
+			self.group_name += self.seabotMission.get_mission_name()
+			self.layer_track += self.seabotMission.get_mission_name()
+			self.layer_pose += self.seabotMission.get_mission_name()
 		return
 
-	def update_mission_layer(self, seabotMission):
+	def __del__(self):
+		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+		if(root != None):
+			root.removeAllChildren()
+
+	def update_mission_layer(self):
 		# Global mission
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root == None):
@@ -38,7 +48,7 @@ class LayerMission():
 		
 		# Build list of points
 		list_wp = []
-		for wp in seabotMission.get_wp_list():
+		for wp in self.seabotMission.get_wp_list():
 			list_wp.append(QgsPoint(wp.get_east(), wp.get_north()))
 
 		if(len(layer_list)!=0):
@@ -48,11 +58,16 @@ class LayerMission():
 		layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_track , "memory")
 
 		pr = layer.dataProvider()
+		pr.addAttributes(self.fields)
+		layer.updateFields()
 
 		# add the first point
 		feature = QgsFeature()
-
 		feature.setGeometry(QgsGeometry.fromPolyline(list_wp))
+
+		feature.setFields(self.fields)
+		feature['wp_nb'] = 0
+
 		pr.addFeatures([feature])
 
 		# Configure the marker
@@ -74,11 +89,11 @@ class LayerMission():
 
 		return True
 
-	def update_mission_set_point(self, seabotMission):
-		if seabotMission.is_empty():
+	def update_mission_pose(self):
+		if self.seabotMission == None:
 			return True
 
-		point = QgsPointXY(seabotMission.get_set_point_east(), seabotMission.get_set_point_north())
+		point = QgsPointXY(self.seabotMission.get_set_point_east(), self.seabotMission.get_set_point_north())
 
 		### ADD DATA TO LAYER ###
 		## Find if layer already exist
@@ -118,8 +133,8 @@ class LayerMission():
 			layer = layer_list[0]
 
 			# Renderer
-			if(seabotMission.is_surface()!=self.surface):
-				self.surface = seabotMission.is_surface()
+			if(self.seabotMission.is_surface()!=self.surface):
+				self.surface = self.seabotMission.is_surface()
 				singleSymbolRenderer = layer.renderer()
 				markerSymbol = singleSymbolRenderer.symbol()
 				simpleMarkerSymbolLayer = markerSymbol.symbolLayer(0)
@@ -139,3 +154,6 @@ class LayerMission():
 			return Qt.darkBlue
 		else:
 			return Qt.gray
+
+	def get_mission(self):
+		return self.seabotMission

@@ -48,7 +48,7 @@
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="1" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
@@ -107,7 +107,7 @@
           <number>3</number>
          </property>
          <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
+          <enum>QLayout::SetMaximumSize</enum>
          </property>
          <property name="leftMargin">
           <number>0</number>
@@ -356,7 +356,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_last_sync">
            <property name="dateTime">
             <datetime>
-             <hour>22</hour>
+             <hour>20</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2018</year>
@@ -366,7 +366,7 @@
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>20</hour>
+             <hour>18</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2014</year>
@@ -435,12 +435,12 @@
           <x>10</x>
           <y>10</y>
           <width>321</width>
-          <height>601</height>
+          <height>231</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <property name="sizeConstraint">
-          <enum>QLayout::SetMaximumSize</enum>
+          <enum>QLayout::SetDefaultConstraint</enum>
          </property>
          <item>
           <layout class="QFormLayout" name="formLayout">
@@ -453,6 +453,22 @@
            <property name="rowWrapPolicy">
             <enum>QFormLayout::WrapLongRows</enum>
            </property>
+           <item row="0" column="0" colspan="2">
+            <widget class="QPushButton" name="pushButton_mission">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Enable Mission Status</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_6">
              <property name="text">
@@ -470,7 +486,7 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="0">
+           <item row="3" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Status&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -480,14 +496,14 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="3" column="1">
             <widget class="QLabel" name="label_mission_status">
              <property name="text">
               <string>UNKNOWN</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
+           <item row="4" column="0">
             <widget class="QLabel" name="label_7">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Start Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -497,14 +513,14 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
+           <item row="4" column="1">
             <widget class="QLabel" name="label_mission_start_time">
              <property name="text">
               <string>-1</string>
              </property>
             </widget>
            </item>
-           <item row="6" column="0">
+           <item row="5" column="0">
             <widget class="QLabel" name="label_9">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;End Time&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -514,14 +530,14 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="1">
+           <item row="5" column="1">
             <widget class="QLabel" name="label_mission_end_time">
              <property name="text">
               <string>-1</string>
              </property>
             </widget>
            </item>
-           <item row="7" column="0">
+           <item row="6" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Depth&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -531,14 +547,14 @@
              </property>
             </widget>
            </item>
-           <item row="7" column="1">
+           <item row="6" column="1">
             <widget class="QLabel" name="label_mission_depth">
              <property name="text">
               <string>-10</string>
              </property>
             </widget>
            </item>
-           <item row="8" column="0">
+           <item row="7" column="0">
             <widget class="QLabel" name="label_3">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Waypoint&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -548,14 +564,14 @@
              </property>
             </widget>
            </item>
-           <item row="8" column="1">
+           <item row="7" column="1">
             <widget class="QLabel" name="label_mission_waypoint_id">
              <property name="text">
               <string>-1</string>
              </property>
             </widget>
            </item>
-           <item row="9" column="0">
+           <item row="8" column="0">
             <widget class="QLabel" name="label_5">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Time (remain)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -565,14 +581,14 @@
              </property>
             </widget>
            </item>
-           <item row="9" column="1">
+           <item row="8" column="1">
             <widget class="QLabel" name="label_mission_time_remain">
              <property name="text">
               <string>0</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="0">
+           <item row="9" column="0">
             <widget class="QLabel" name="label_11">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Next depth&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -582,33 +598,10 @@
              </property>
             </widget>
            </item>
-           <item row="10" column="1">
+           <item row="9" column="1">
             <widget class="QLabel" name="label_mission_next_depth">
              <property name="text">
               <string>-1</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QPushButton" name="pushButton_open_mission">
-             <property name="text">
-              <string>Open mission</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="QPushButton" name="pushButton_mission">
-             <property name="minimumSize">
-              <size>
-               <width>100</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Enable Mission Status</string>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -616,6 +609,46 @@
          </item>
         </layout>
        </widget>
+       <widget class="QPushButton" name="pushButton_open_mission">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>400</y>
+          <width>111</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Open mission</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_delete_mission">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>400</y>
+          <width>131</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Remove mission</string>
+        </property>
+       </widget>
+       <widget class="QListWidget" name="listWidget_mission">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>250</y>
+          <width>321</width>
+          <height>141</height>
+         </rect>
+        </property>
+       </widget>
+       <zorder>verticalLayoutWidget_2</zorder>
+       <zorder>pushButton_delete_mission</zorder>
+       <zorder>pushButton_open_mission</zorder>
+       <zorder>listWidget_mission</zorder>
       </widget>
       <widget class="QWidget" name="tab_state">
        <attribute name="title">
@@ -631,6 +664,9 @@
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetMaximumSize</enum>
+         </property>
          <item row="3" column="1">
           <widget class="QPushButton" name="pushButton_state_next">
            <property name="text">

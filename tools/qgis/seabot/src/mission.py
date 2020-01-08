@@ -2,6 +2,7 @@
 
 import os, time, datetime, sys
 import xml.etree.ElementTree as ET
+from PyQt5.QtCore import QFileInfo
 
 class SeabotWaypoint():
 
@@ -66,7 +67,12 @@ class SeabotMission():
 	current_wp_id = 0
 	start_time_utc = None
 	end_time = None
-	fileName = ""
+	filepath = ""
+	filename = ""
+
+	def __init__(self, filename=None):
+		if filename!=None:
+			self.load_mission_xml(filename)
 
 	def __str__(self):
 		s = ""
@@ -109,10 +115,13 @@ class SeabotMission():
 		else:
 			return None
 
-	def load_mission_xml(self, filename):
-		self.fileName = filename
+	def load_mission_xml(self, filepath):
+		self.filepath = filepath
+		file_info = QFileInfo(filepath)
+		self.filename = file_info.fileName()
 		self.waypoint_list.clear()
-		tree = ET.parse(filename)
+		self.current_wp_id = 0
+		tree = ET.parse(filepath)
 		root = tree.getroot()
 
 		child_offset = root.find("offset/start_time_utc")
@@ -209,11 +218,17 @@ class SeabotMission():
 		else:
 			return True
 
+	def get_filename(self):
+		return self.filename
+
+	def get_mission_name(self):
+		return self.filename # ToDo
+
 
 if __name__ == '__main__':
-    s_m = SeabotMission()
-    if(sys.argv[1] != ""):
-    	s_m.load_mission_xml(sys.argv[1])
-    else:
-    	s_m.load_mission_xml("/home/lemezoth/workspaceFlotteur/src/seabot/mission/mission_guerledan.xml")
-    print(s_m)
+	s_m = SeabotMission()
+	if(sys.argv[1] != ""):
+		s_m.load_mission_xml(sys.argv[1])
+	else:
+		s_m.load_mission_xml("/home/lemezoth/workspaceFlotteur/src/seabot/mission/mission_guerledan.xml")
+	print(s_m)
