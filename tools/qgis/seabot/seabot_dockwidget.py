@@ -30,11 +30,12 @@ from PyQt5.QtCore import QDate, QTime, QDateTime, Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QTreeWidgetItem
 from PyQt5.QtGui import QIcon
 
-from seabot.src.seabotLayerLivePosition import SeabotLayerLivePosition
-from seabot.src.boatLayerLivePosition import BoatLayerLivePosition
-from seabot.src.seabotMission import *
-from seabot.src.missionLayer import *
-from seabot.src.seabotIridiumIMAP import *
+from seabot.src.layerSeabot import *
+from seabot.src.layerBoat import *
+from seabot.src.layerMission import *
+
+from seabot.src.mission import *
+from seabot.src.iridiumIMAP import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'seabot_dockwidget_base.ui'))
@@ -54,10 +55,12 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     momsn_current = 0
     data_log = {}
 
-    layerLivePosition = SeabotLayerLivePosition()
-    boatLivePosition = BoatLayerLivePosition()
+    layerSeabot = LayerSeabot()
+    layerBoat = LayerBoat()
+    layerMission = LayerMission()
+
     seabotMission = SeabotMission()
-    missionLayer = MissionLayer()
+    
     dataBaseConnection = DataBaseConnection()
     imapServer = ImapServer()
 
@@ -187,7 +190,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
             file_info = QFileInfo(fileName)
             self.label_mission_file.setText(file_info.fileName())
-            self.missionLayer.update_mission_layer(self.seabotMission)
+            self.layerMission.update_mission_layer(self.seabotMission)
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
@@ -274,9 +277,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def update_vanish_trace(self, value):
         if(value==-1):
-            self.boatLivePosition.set_nb_points_max(value, False)
+            self.layerBoat.set_nb_points_max(value, False)
         else:
-            self.boatLivePosition.set_nb_points_max(value, True)
+            self.layerBoat.set_nb_points_max(value, True)
 
 
     ###########################################################################
@@ -290,19 +293,19 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def enable_timer_boat(self):
         if(self.pushButton_boat.isChecked()):
-            self.boatLivePosition.start()
+            self.layerBoat.start()
             self.timer_boat.start()
         else:
             self.timer_boat.stop()
-            self.boatLivePosition.stop()
+            self.layerBoat.stop()
 
     def enable_timer_mission(self):
         if(self.pushButton_mission.isChecked()):
-            # self.boatLivePosition.start()
+            # self.layerBoat.start()
             self.timer_mission.start()
         else:
             self.timer_mission.stop()
-            # self.boatLivePosition.stop()
+            # self.layerBoat.stop()
 
     def server_connect(self):
         self.pushButton_server_connect.setStyleSheet("background-color: red")
@@ -349,7 +352,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     ## TIMERS processing
 
     def process_seabot(self):
-        if(self.layerLivePosition.update()):
+        if(self.layerSeabot.update()):
             self.label_status.setText("Connected - " + str(self.count))
             self.count += 1
         else:
@@ -357,7 +360,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.count = 0
 
     def process_boat(self):
-        self.boatLivePosition.update()
+        self.layerBoat.update()
 
     def process_IMAP(self):
         self.label_server_log.setText(self.imapServer.get_log())
@@ -369,13 +372,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     
     def process_mission(self):
         # Update mission set point on map
-        self.missionLayer.update_mission_set_point(self.seabotMission)
+        self.layerMission.update_mission_set_point(self.seabotMission)
 
         # Update IHM with mission data set point
         wp = self.seabotMission.get_current_wp()
         # print(wp)
         if(wp!=None):
-            if(wp.get_depth()==0.0):
+            if(wp.get_depth()==0.0 or self.seabotMission.is_end_mission()):
                 self.label_mission_status.setText("SURFACE")
             else:
                 self.label_mission_status.setText("UNDERWATER")

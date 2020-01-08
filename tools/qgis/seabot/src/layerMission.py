@@ -14,12 +14,13 @@ import math
 from pyproj import Proj, transform
 import threading
 
-class MissionLayer():
+class LayerMission():
 
 	fields = QgsFields()
 	group_name = 'Seabot Mission'
 	layer_track = 'Seabot track'
 	layer_pose = 'Seabot pose'
+	surface = False
 
 	def __init__(self):
 		self.fields.append(QgsField('Title', QVariant.String))
@@ -30,7 +31,7 @@ class MissionLayer():
 		# Global mission
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root == None):
-			root = QgsProject.instance().layerTreeRoot().addGroup(self.group_name)
+			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
 		## Find if layer already exist
 		layer_list = QgsProject.instance().mapLayersByName(self.layer_track)
@@ -44,7 +45,7 @@ class MissionLayer():
 			QgsProject.instance().removeMapLayer(layer_list[0])
 		
 		### Add New layer Last Position
-		layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_mission , "memory")
+		layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_track , "memory")
 
 		pr = layer.dataProvider()
 
@@ -66,6 +67,7 @@ class MissionLayer():
 
 		renderer = QgsSingleSymbolRenderer(marker)
 		layer.setRenderer(renderer)
+
 		layer.updateExtents()
 		QgsProject.instance().addMapLayer(layer, addToLegend=False)
 		root.addLayer(layer)
@@ -82,7 +84,7 @@ class MissionLayer():
 		## Find if layer already exist
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root == None):
-			root = QgsProject.instance().layerTreeRoot().addGroup(self.group_name)
+			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
 		layer_list = QgsProject.instance().mapLayersByName(self.layer_pose)
 		
@@ -98,7 +100,7 @@ class MissionLayer():
 			pr.addFeatures([feature])
 
 			# Configure the marker.
-			simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=8,color=Qt.gray)
+			simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=8,color=self.color_symbol())
 			simple_marker_small_circle = QgsSimpleMarkerSymbolLayer(color=Qt.red)
 			marker = QgsMarkerSymbol()
 			marker.setOpacity(0.5)
@@ -114,10 +116,26 @@ class MissionLayer():
 			root.addLayer(layer)
 		else:
 			layer = layer_list[0]
-			pr = layer.dataProvider()
 
+			# Renderer
+			if(seabotMission.is_surface()!=self.surface):
+				self.surface = seabotMission.is_surface()
+				singleSymbolRenderer = layer.renderer()
+				markerSymbol = singleSymbolRenderer.symbol()
+				simpleMarkerSymbolLayer = markerSymbol.symbolLayer(0)
+				simpleMarkerSymbolLayer.setColor(self.color_symbol())
+				# layer.updateExtents()
+
+			# Data
+			pr = layer.dataProvider()
 			for feature in layer.getFeatures():
 				pr.changeGeometryValues({feature.id():QgsGeometry.fromPointXY(point)})
 				layer.triggerRepaint()
 				break
 		return True
+
+	def color_symbol(self):
+		if(self.surface):
+			return Qt.darkBlue
+		else:
+			return Qt.gray

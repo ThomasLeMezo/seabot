@@ -23,28 +23,28 @@ gpsd_track = 0.0
 gpsd_received = True
 
 class GpsPoller(threading.Thread):
-  def __init__(self):
-	threading.Thread.__init__(self)
-	self.daemon=True
-	global gpsd #bring it in scope
-	gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
-	self.current_value = None
-	self.running = True #setting the thread running to true
- 
-  def run(self):
-	global gpsd, gpsd_latitude, gpsd_longitude, gpsd_track
-	while self.running:
-		if(gpsd.waiting()):
-			report = gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
-			if report['class'] == 'TPV':
-				gpsd_latitude = getattr(report,'lat',0.0)
-				gpsd_longitude = getattr(report,'lon',0.0)
-				gpsd_track = getattr(report,'track',0.0)
-				gpsd_received = True
-		# while wait
-		time.sleep(0.2)
+	def __init__(self):
+		threading.Thread.__init__(self)
+		self.daemon=True
+		global gpsd #bring it in scope
+		gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
+		self.current_value = None
+		self.running = True #setting the thread running to true
+	 
+		def run(self):
+			global gpsd, gpsd_latitude, gpsd_longitude, gpsd_track
+			while self.running:
+				if(gpsd.waiting()):
+					report = gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
+					if report['class'] == 'TPV':
+						gpsd_latitude = getattr(report,'lat',0.0)
+						gpsd_longitude = getattr(report,'lon',0.0)
+						gpsd_track = getattr(report,'track',0.0)
+						gpsd_received = True
+				# while wait
+				time.sleep(0.2)
 
-class BoatLayerLivePosition():
+class LayerBoat():
 
 	east = 130241
 	north =  6833446
@@ -102,7 +102,7 @@ class BoatLayerLivePosition():
 		### ADD DATA TO LAYER ###
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root == None):
-			root = QgsProject.instance().layerTreeRoot().addGroup(self.group_name)
+			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
 		## Find if layer already exist
 		layer_list = QgsProject.instance().mapLayersByName(self.layer_track)
@@ -159,7 +159,7 @@ class BoatLayerLivePosition():
 		## Find if layer already exist
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root == None):
-			root = QgsProject.instance().layerTreeRoot().addGroup(self.group_name)
+			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
 		layer_list = QgsProject.instance().mapLayersByName(self.layer_pose)
 		if(len(layer_list)==0):
@@ -206,10 +206,12 @@ class BoatLayerLivePosition():
 
 		else:
 			layer = layer_list[0]
-			pr = layer.dataProvider()
 
+			# Data
+			pr = layer.dataProvider()
 			for feature in layer.getFeatures():
 				pr.changeFeatures({feature.id():{0:self.layer_pose,1:self.heading}}, {feature.id():QgsGeometry.fromPointXY(point)})
+
 				layer.updateExtents()
 				layer.triggerRepaint()
 				break

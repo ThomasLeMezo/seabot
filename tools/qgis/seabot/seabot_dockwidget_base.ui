@@ -78,7 +78,7 @@
        <bool>false</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -173,7 +173,7 @@
            <item>
             <widget class="QSpinBox" name="spinBox_gnss_trace">
              <property name="suffix">
-              <string> </string>
+              <string/>
              </property>
              <property name="minimum">
               <number>-1</number>
@@ -356,7 +356,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_last_sync">
            <property name="dateTime">
             <datetime>
-             <hour>23</hour>
+             <hour>22</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2018</year>
@@ -366,7 +366,7 @@
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>21</hour>
+             <hour>20</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2014</year>

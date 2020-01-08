@@ -10,7 +10,7 @@ import numpy as np
 import time
 import math
 
-class SeabotLayerLivePosition():
+class LayerSeabot():
 
     first_load = True    
     fields = QgsFields()
