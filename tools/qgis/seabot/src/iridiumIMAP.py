@@ -126,7 +126,7 @@ class ImapServer(QObject):
 				list_msg_num = msgnums[0].split()
 				for num in list_msg_num:
 					self.download_msg(num.decode())
-					self.log = "Update " + str(k) + "/" + len(list_msg_num) + " (" + str(num.decode()) + ")"
+					self.log = "Update " + str(k) + "/" + str(len(list_msg_num)) + " (" + str(num.decode()) + ")"
 					k+=1
 				self.imap_signal.emit()
 

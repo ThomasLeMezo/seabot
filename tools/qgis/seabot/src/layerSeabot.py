@@ -17,35 +17,47 @@ from .database import *
 
 class LayerSeabot():
 
-    fields = QgsFields()
-    group_name = 'Seabot Live ('
-    layer_track = 'Seabot track'
-    layer_pose = 'Seabot pose'
-    surface = False
-
     def __init__(self, imei):
-        self.group_name += str(imei) + ")"
+        self.fields = QgsFields()
+        self.group_name = 'Seabot Live (' + str(imei) + ")"
+        self.layer_track = 'Seabot track ('  + str(imei) + ")"
+        self.layer_pose = 'Seabot pose ('  + str(imei) + ")"
+        self.surface = False
+
         self.fields.append(QgsField('Title', QVariant.String))
         self.fields.append(QgsField('gnss_heading', QVariant.Double))
-        return
+        self.fields.append(QgsField('sec_since_received', QVariant.Double))
 
-    def update_seabot_layer(self, seabotMission):
+        self.imei = imei
+
+        self.db = DataBaseConnection()
+
+    def update(self):
+        self.update_track()
+        self.update_pose()
+
+    def __del__(self):
+        root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+        if(root != None):
+            root.removeAllChildren()
+            QgsProject.instance().layerTreeRoot().removeChildNode(root)
+
+    def update_track(self):
         # Global mission
         root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
         if(root == None):
             root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
-        ## Find if layer already exist
+        ## Find if layer already exist (and removed it)
         layer_list = QgsProject.instance().mapLayersByName(self.layer_track)
-        
-        # Build list of points
-        list_wp = []
-        for wp in seabotMission.get_wp_list():
-            list_wp.append(QgsPoint(wp.get_east(), wp.get_north()))
-
         if(len(layer_list)!=0):
             QgsProject.instance().removeMapLayer(layer_list[0])
         
+        # Build list of points
+        list_pose = self.db.get_pose(self.imei)
+        if(len(list_pose)==0):
+            return
+
         ### Add New layer Last Position
         layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_track , "memory")
 
@@ -54,6 +66,9 @@ class LayerSeabot():
         # add the first point
         feature = QgsFeature()
 
+        list_wp = []
+        for wp in list_pose:
+            list_wp.append(QgsPoint(wp[0], wp[1]))
         feature.setGeometry(QgsGeometry.fromPolyline(list_wp))
         pr.addFeatures([feature])
 
@@ -65,7 +80,7 @@ class LayerSeabot():
         marker = QgsLineSymbol()
         marker.changeSymbolLayer(0, marker_line)
         marker.appendSymbolLayer(marker_point)
-        marker.setColor(Qt.blue)
+        marker.setColor(Qt.red)
 
         renderer = QgsSingleSymbolRenderer(marker)
         layer.setRenderer(renderer)
@@ -76,11 +91,11 @@ class LayerSeabot():
 
         return True
 
-    def update_seabot_pose(self, seabotMission):
-        if seabotMission.is_empty():
-            return True
-
-        point = QgsPointXY(seabotMission.get_set_point_east(), seabotMission.get_set_point_north())
+    def update_pose(self):
+        data = self.db.get_last_log_state(self.imei)[0]
+        if(data==None):
+            return
+        point = QgsPointXY(float(data["east"]), float(data["north"]))
 
         ### ADD DATA TO LAYER ###
         ## Find if layer already exist
@@ -89,187 +104,90 @@ class LayerSeabot():
             root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
         layer_list = QgsProject.instance().mapLayersByName(self.layer_pose)
-        
-        # print(point)
         if(len(layer_list)==0):
+        # if(len(layer_list)==0):
             ### Add New layer Last Position
             layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', self.layer_pose , "memory")
+
             pr = layer.dataProvider()
+
+            pr.addAttributes(self.fields)
+            layer.updateFields()
 
             # add the first point
             feature = QgsFeature()
             feature.setGeometry(QgsGeometry.fromPointXY(point))
+
+            feature.setFields(self.fields)
+            feature['Title'] = self.layer_pose
+            feature['gnss_heading'] = data["gnss_heading"]
+            feature['sec_since_received'] = -1
+
             pr.addFeatures([feature])
 
             # Configure the marker.
-            simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=8,color=self.color_symbol())
-            simple_marker_small_circle = QgsSimpleMarkerSymbolLayer(color=Qt.red)
+            svg_marker = QgsSvgMarkerSymbolLayer("/usr/share/qgis/svg/arrows/NorthArrow_11.svg")
+            svg_marker.setPreservedAspectRatio(True)
+            svg_marker.setSize(5)
+            # svg_marker.setAngle(0)
+            svg_marker.setColor(Qt.red) # QColor(255,255,255)
+
             marker = QgsMarkerSymbol()
-            marker.setOpacity(0.5)
-            marker.changeSymbolLayer(0, simple_marker_large_circle)
-            marker.appendSymbolLayer(simple_marker_small_circle)
+            marker.changeSymbolLayer(0, svg_marker)
+
+            prop=QgsProperty()
+            prop.setField("gnss_heading")
+            marker.setDataDefinedAngle(prop) #QgsProperty () 
 
             renderer = QgsSingleSymbolRenderer(marker)
             layer.setRenderer(renderer)
 
+            # Text
+            buffer_settings = QgsTextBufferSettings()
+            buffer_settings.setEnabled(True)
+            buffer_settings.setSize(6)
+            buffer_settings.setColor(Qt.white)
+
+            text_format = QgsTextFormat()
+            text_format.setFont(QFont("Ubuntu", 8))
+            text_format.setSize(8)
+            text_format.setBuffer(buffer_settings)
+
+            layer_settings  = QgsPalLayerSettings()
+            layer_settings.setFormat(text_format)
+            layer_settings.fieldName = "(sec_since_received)"
+            layer_settings.isExpression = True
+            layer_settings.placement = QgsPalLayerSettings.OverPoint
+            layer_settings.predefinedPositionOrder = QgsPalLayerSettings.TopMiddle
+            layer_settings.yOffset = -8
+            layer_settings.enabled = True
+
+            layer_label = QgsVectorLayerSimpleLabeling(layer_settings)
+            layer.setLabelsEnabled(True)
+            layer.setLabeling(layer_label)
+            layer.triggerRepaint()
+
             # add the layer to the canvas
             layer.updateExtents()
-            QgsProject.instance().addMapLayer(layer, addToLegend=False)
+            QgsProject.instance().addMapLayer(layer, addToLegend=False) # Do not add to tree here, see next line
             root.addLayer(layer)
+
         else:
             layer = layer_list[0]
-
-            # Renderer
-            if(seabotMission.is_surface()!=self.surface):
-                self.surface = seabotMission.is_surface()
-                singleSymbolRenderer = layer.renderer()
-                markerSymbol = singleSymbolRenderer.symbol()
-                simpleMarkerSymbolLayer = markerSymbol.symbolLayer(0)
-                simpleMarkerSymbolLayer.setColor(self.color_symbol())
-                # layer.updateExtents()
 
             # Data
             pr = layer.dataProvider()
             for feature in layer.getFeatures():
-                pr.changeGeometryValues({feature.id():QgsGeometry.fromPointXY(point)})
+                delta_t =  round((time.clock_gettime(time.CLOCK_REALTIME) - data["ts"]))
+                if(delta_t>60):
+                    delta_t /= 60.
+                    delta_t = str(round(delta_t)) + " min"
+                else:
+                    delta_t = str(delta_t) + " sec"
+                pr.changeFeatures({feature.id():{0:self.layer_pose,1:data["gnss_heading"], 2:delta_t}}, {feature.id():QgsGeometry.fromPointXY(point)})
+
+                layer.updateExtents()
                 layer.triggerRepaint()
                 break
+
         return True
-
-
-    # def update_iridium_track(self):
-    #         ### ADD DATA TO LAYER ###
-    #         layer_name = 'Seabot - Iridium Track'
-
-    #         ## Find if layer already exist
-    #         layer_list = QgsProject.instance().mapLayersByName(layer_name)
-    #         point = QgsPoint(self.iridium_map_file['east'], self.iridium_map_file['north'])
-
-    #         if(len(layer_list)==0):
-    #             ### Add New layer Last Position
-    #             layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', layer_name , "memory")
-
-    #             pr = layer.dataProvider()
-
-    #             # add the first point
-    #             feature = QgsFeature()
-
-    #             feature.setGeometry(QgsGeometry.fromPolyline([point]))
-    #             pr.addFeatures([feature])
-
-    #             # Configure the marker.
-    #             marker_line = QgsSimpleLineSymbolLayer()
-    #             marker_point = QgsMarkerLineSymbolLayer()
-    #             marker_point.setPlacement(QgsMarkerLineSymbolLayer.Vertex)
-
-    #             marker = QgsLineSymbol()
-    #             marker.changeSymbolLayer(0, marker_line)
-    #             marker.appendSymbolLayer(marker_point)
-
-    #             renderer = QgsSingleSymbolRenderer(marker)
-    #             layer.setRenderer(renderer)
-    #             layer.updateExtents()
-    #             QgsProject.instance().addMapLayer(layer)
-
-    #         else:
-    #             layer = layer_list[0]
-    #             pr = layer.dataProvider()
-
-    #             for feature in layer.getFeatures():
-    #                 geo = feature.geometry()
-    #                 geo.insertVertex(point, 0)
-    #                 pr.changeGeometryValues({feature.id():geo})
-    #                 layer.triggerRepaint()
-    #                 break
-
-    #         return True
-
-    #     def update_iridium_position(self):
-    #         ### ADD DATA TO LAYER ###
-    #         layer_name = 'Seabot - Last Iridium Position'
-
-    #         ## Find if layer already exist
-    #         layer_list = QgsProject.instance().mapLayersByName(layer_name)
-    #         point = QgsPointXY(self.iridium_map_file['east'], self.iridium_map_file['north'])
-
-    #         if(len(layer_list)==0):
-    #             ### Add New layer Last Position
-    #             layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', layer_name , "memory")
-
-    #             pr = layer.dataProvider()
-
-    #             if(self.first_load==True):
-    #                 self.add_fields_from_yaml()
-    #                 self.first_load = False
-
-    #             pr.addAttributes(self.fields)
-    #             layer.updateFields()
-
-    #             # add the first point
-    #             feature = QgsFeature()
-    #             feature.setGeometry(QgsGeometry.fromPointXY(point))
-
-    #             feature.setFields(self.fields)
-    #             feature['Title'] = "Last Position Received"
-    #             feature['min_since_received'] = -1
-    #             self.update_feature(feature)
-
-    #             pr.addFeatures([feature])
-
-    #             # Configure the marker.
-    #             svg_marker = QgsSvgMarkerSymbolLayer("/usr/share/qgis/svg/arrows/NorthArrow_11.svg")
-    #             svg_marker.setPreservedAspectRatio(True)
-    #             svg_marker.setSize(5)
-    #             # svg_marker.setAngle(0)
-    #             svg_marker.setColor(Qt.red) # QColor(255,255,255)
-
-    #             marker = QgsMarkerSymbol()
-    #             marker.changeSymbolLayer(0, svg_marker)
-
-    #             prop=QgsProperty()
-    #             prop.setField("gnss_heading")
-    #             marker.setDataDefinedAngle(prop) #QgsProperty () 
-
-    #             renderer = QgsSingleSymbolRenderer(marker)
-    #             layer.setRenderer(renderer)
-
-    #             # Text
-    #             buffer_settings = QgsTextBufferSettings()
-    #             buffer_settings.setEnabled(True)
-    #             buffer_settings.setSize(6)
-    #             buffer_settings.setColor(Qt.white)
-
-    #             text_format = QgsTextFormat()
-    #             text_format.setFont(QFont("Ubuntu", 8))
-    #             text_format.setSize(8)
-    #             text_format.setBuffer(buffer_settings)
-
-    #             layer_settings  = QgsPalLayerSettings()
-    #             layer_settings.setFormat(text_format)
-    #             layer_settings.fieldName = "concat(to_string(min_since_received),' min')"
-    #             layer_settings.isExpression = True
-    #             layer_settings.placement = QgsPalLayerSettings.OverPoint
-    #             layer_settings.predefinedPositionOrder = QgsPalLayerSettings.TopMiddle
-    #             layer_settings.yOffset = -8
-    #             layer_settings.enabled = True
-
-    #             layer_label = QgsVectorLayerSimpleLabeling(layer_settings)
-    #             layer.setLabelsEnabled(True)
-    #             layer.setLabeling(layer_label)
-    #             layer.triggerRepaint()
-
-    #             # add the layer to the canvas
-    #             layer.updateExtents()
-    #             QgsProject.instance().addMapLayer(layer)
-
-    #         else:
-    #             layer = layer_list[0]
-    #             pr = layer.dataProvider()
-
-    #             for feature in layer.getFeatures():
-    #                 pr.changeFeatures({feature.id():self.get_update_map_attribute()}, {feature.id():QgsGeometry.fromPointXY(point)})
-    #                 layer.updateExtents()
-    #                 layer.triggerRepaint()
-    #                 break
-
-    #         return True

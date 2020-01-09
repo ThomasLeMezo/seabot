@@ -55,7 +55,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     momsn_current = 0
     data_log = {}
 
-    layerSeabot = LayerSeabot("123456")
+    layerSeabots = {}
     layerBoat = LayerBoat()
     layerMissions = []
     
@@ -82,6 +82,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         ### Timer handle
         self.timer_seabot.timeout.connect(self.process_seabot)
         self.timer_seabot.setInterval(5000)
+        self.timer_seabot.start()
 
         self.timer_boat.timeout.connect(self.process_boat)
         self.timer_boat.setInterval(1000)
@@ -99,7 +100,6 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.tree_log_data = self.treeWidget_iridium.setHeaderLabels(["Parameter","Data"])
 
         # Config tab
-        self.pushButton_seabot.clicked.connect(self.enable_timer_seabot)
         self.pushButton_boat.clicked.connect(self.enable_timer_boat)
 
         self.spinBox_gnss_trace.valueChanged.connect(self.update_vanish_trace)
@@ -113,6 +113,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_open_mission.clicked.connect(self.open_mission)
         self.pushButton_delete_mission.clicked.connect(self.delete_mission)
         self.listWidget_mission.currentRowChanged.connect(self.update_mission_info)
+
         # State tab
         self.pushButton_state_rename.clicked.connect(self.rename_robot)
         self.pushButton_state_previous.clicked.connect(self.previous_log_state)
@@ -164,6 +165,14 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         else:
             self.comboBox_state_imei.setCurrentIndex(index_comboBox)
 
+        # Create associate track
+        for robot in robot_list:
+            if robot["imei"] not in self.layerSeabots:
+                self.layerSeabots[robot["imei"]]=LayerSeabot(robot["imei"])
+
+        for key in self.layerSeabots:
+            self.layerSeabots[key].update()
+
     def rename_robot(self):
         if(self.comboBox_state_imei.currentIndex() != -1):
             currentIndex = self.comboBox_state_imei.currentIndex()
@@ -198,10 +207,12 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.listWidget_mission.addItem(layermission.get_mission().get_mission_name())
 
     def delete_mission(self, event):
-        row = self.listWidget_mission.currentRow()
-        if row != -1:
-            self.listWidget_mission.takeItem(row)
-            del self.layerMissions[row]
+        self.mission_selected = self.listWidget_mission.currentRow()
+        if self.mission_selected != -1:
+            self.listWidget_mission.takeItem(self.mission_selected)
+            del self.layerMissions[self.mission_selected]
+        self.mission_selected = self.listWidget_mission.currentRow()
+
 
     def closeEvent(self, event):
         self.timer_seabot.stop()
@@ -210,8 +221,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer_mission.stop()
 
         self.imapServer.stop_server()
+        self.layerSeabots.clear()
+        self.layerMissions.clear()
 
-        self.pushButton_seabot.setChecked(False)
         self.layerMissions.clear()
         self.closingPlugin.emit()
         event.accept()
@@ -297,12 +309,6 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     ###########################################################################
     ### Handler Button
 
-    def enable_timer_seabot(self):
-        if(self.pushButton_seabot.isChecked()):
-            self.timer_seabot.start()
-        else:
-            self.timer_seabot.stop()
-
     def enable_timer_boat(self):
         if(self.pushButton_boat.isChecked()):
             self.layerBoat.start()
@@ -357,18 +363,16 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.update_mission_ui()
 
     def update_imap(self):
+        self.update_robots_list()
         self.update_state_imei()
+
 
     ###########################################################################
     ## TIMERS processing
 
     def process_seabot(self):
-        if(self.layerSeabot.update()):
-            self.label_status.setText("Connected - " + str(self.count))
-            self.count += 1
-        else:
-            self.label_status.setText("Error")
-            self.count = 0
+        for key in self.layerSeabots:
+            self.layerSeabots[key].update_pose()
 
     def process_boat(self):
         self.layerBoat.update()

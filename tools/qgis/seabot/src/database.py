@@ -345,6 +345,39 @@ class DataBaseConnection():
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)
 
+	def get_last_log_state_momsn(self, imei, momsn):
+		try:
+			sql_sentence = '''SELECT *
+							FROM SBD_LOG_STATE 
+							INNER JOIN SBD_RECEIVED ON (
+								SBD_RECEIVED.MOMSN = ?
+								AND
+								SBD_RECEIVED.IMEI = ?
+							)
+							LIMIT 1'''
+			self.sqliteCursor.execute(sql_sentence, [momsn, imei])
+			row = self.sqliteCursor.fetchone()
+			if(row!=None):
+				return self.fill_data_log_state(row)
+			else:
+				return None
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+
+	def get_pose(self, imei):
+		try:
+			sql_sentence = '''SELECT SBD_LOG_STATE.east, SBD_LOG_STATE.north
+							FROM SBD_LOG_STATE 
+							INNER JOIN SBD_RECEIVED ON (
+								SBD_RECEIVED.IMEI = ?
+							)
+							ORDER BY SBD_RECEIVED.MOMSN DESC'''
+			self.sqliteCursor.execute(sql_sentence, [imei])
+			row = self.sqliteCursor.fetchall()
+			return row
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+
 	def get_bounds_momsn(self, imei):
 		try:
 			sql_sentence = '''SELECT MIN(SBD_RECEIVED.momsn), MAX(SBD_RECEIVED.momsn)
@@ -417,4 +450,6 @@ class DataBaseConnection():
 if __name__ == '__main__':
 	db = DataBaseConnection()
 	print(db.get_next_log_state(100))
-	print(db.get_max_momsn(5))
+	print(db.get_bounds_momsn("300234065392110"))
+	print(db.get_pose("300234065392110"))
+	print(db.get_last_log_state(""))
