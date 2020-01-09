@@ -111,7 +111,8 @@ class DataBaseConnection():
 
 	def get_robot_list(self):
 		try:
-			self.sqliteCursor.execute('''SELECT imei, name FROM ROBOTS''')
+			# Remove robots where there is no message received
+			self.sqliteCursor.execute('''SELECT ROBOTS.imei, ROBOTS.name FROM ROBOTS''')
 			records = self.sqliteCursor.fetchall()
 			list_robots = []
 			for data in records:
@@ -376,6 +377,17 @@ class DataBaseConnection():
 							ORDER BY SBD_RECEIVED.MOMSN DESC'''
 			self.sqliteCursor.execute(sql_sentence, [imei])
 			row = self.sqliteCursor.fetchall()
+			return row
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+
+	def get_name(self, imei):
+		try:
+			sql_sentence = '''SELECT ROBOTS.name
+							FROM SBD_LOG_STATE 
+							WHERE ROBOTS.imei = ?'''
+			self.sqliteCursor.execute(sql_sentence, [imei])
+			row = self.sqliteCursor.fetchone()
 			return row
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)

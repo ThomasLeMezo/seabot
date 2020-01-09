@@ -16,92 +16,95 @@ from pyproj import Proj, transform
 import threading
 import datetime
 
-gpsd = None
-gpsd_latitude = 0.0
-gpsd_longitude = 0.0
-gpsd_track = 0.0
-gpsd_received = True
+from .database import *
 
 class GpsPoller(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
 		self.daemon=True
-		global gpsd #bring it in scope
-		gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
+
+		self.gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
 		self.current_value = None
 		self.running = True #setting the thread running to true
+
+		self.gpsd_latitude = 0.0
+		self.gpsd_longitude = 0.0
+		self.gpsd_track = 0.0
+		self.gpsd_received = True
 	 
-		def run(self):
-			global gpsd, gpsd_latitude, gpsd_longitude, gpsd_track
-			while self.running:
-				if(gpsd.waiting()):
-					report = gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
-					if report['class'] == 'TPV':
-						gpsd_latitude = getattr(report,'lat',0.0)
-						gpsd_longitude = getattr(report,'lon',0.0)
-						gpsd_track = getattr(report,'track',0.0)
-						gpsd_received = True
-				# while wait
-				time.sleep(0.2)
+	def run(self):
+		while self.running:
+			if(self.gpsd.waiting()):
+				report = self.gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
+				if report['class'] == 'TPV':
+					self.gpsd_latitude = getattr(report,'lat',0.0)
+					self.gpsd_longitude = getattr(report,'lon',0.0)
+					self.gpsd_track = getattr(report,'track',0.0)
+					self.gpsd_received = True
+			# while wait
+			time.sleep(0.2)
 
 class LayerBoat():
 
-	east = 130241
-	north =  6833446
-	heading = 0.0
-	gpsd_thread = None
-
 	inProj = Proj(init='epsg:4326')
 	outProj = Proj(init='epsg:2154')
-	fields = QgsFields()
 	
-	group_name = 'Boat'
-	layer_track = 'Boat track'
-	layer_pose = 'Boat pose'
-
-	trace_max_points = 15
-	enable_trace_vanish = True
-
 	def __init__(self):
+		self.trace_max_points = 15
+		self.enable_trace_vanish = True
+
+		self.east = 130241
+		self.north =  6833446
+		self.heading = 0.0
+		self.gpsPoller = None
+
+		self.fields = QgsFields()
+		self.group_name = 'Boat'
+		self.layer_track = 'Boat track'
+		self.layer_pose = 'Boat pose'
 		self.fields.append(QgsField('Title', QVariant.String))
 		self.fields.append(QgsField('gnss_heading', QVariant.Double))
+
+		self.db = DataBaseConnection(init_table=False)
 		return
 
-	def __del__(self):
-		if self.gpsd_thread != None:
-			self.gpsd_thread.running = False
-			time.sleep(0.2)
-			if(threading.active_count()!=0 and self.gpsd_thread!=None):
-				self.gpsd_thread.join()
-
+	def remove_layer(self):
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
 		if(root != None):
 			root.removeAllChildren()
 			QgsProject.instance().layerTreeRoot().removeChildNode(root)
+
+	def __del__(self):
+		if self.gpsPoller != None:
+			self.gpsPoller.running = False
+			time.sleep(0.2)
+			if(threading.active_count()!=0 and self.gpsPoller!=None):
+				self.gpsPoller.join()
+		self.remove_layer()
 
 	def set_nb_points_max(self, trace_max_points=15, enable_trace_vanish=True):
 		self.trace_max_points = trace_max_points
 		self.enable_trace_vanish = enable_trace_vanish
 
 	def stop(self):
-		self.gpsd_thread.running = False
+		self.gpsPoller.running = False
 		time.sleep(0.2)
 		if(threading.active_count()!=0):
-			self.gpsd_thread.join()
+			self.gpsPoller.join()
 
 	def start(self):
-		self.gpsd_thread = GpsPoller()
-		self.gpsd_thread.start()
+		self.gpsPoller = GpsPoller()
+		self.gpsPoller.start()
 
 	def update(self):
-		if(gpsd_received):
+		if(self.gpsPoller.gpsd_received):
 			self.get_new_position()
 			self.update_boat_pose()
 			self.update_boat_trace()
 
 	def get_new_position(self):
-		self.heading = gpsd_track
-		self.east, self.north = transform(self.inProj,self.outProj,gpsd_longitude,gpsd_latitude)
+		self.heading = self.gpsPoller.gpsd_track
+		self.east, self.north = transform(self.inProj,self.outProj,self.gpsPoller.gpsd_longitude,self.gpsPoller.gpsd_latitude)
 
 	def update_boat_trace(self):
 		### ADD DATA TO LAYER ###
@@ -222,3 +225,8 @@ class LayerBoat():
 				break
 
 		return True
+
+
+	def compute_distance_heading_seabots(self):
+		# Get list of data
+		self.db

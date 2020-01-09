@@ -43,26 +43,6 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
-    timer_seabot = QTimer()
-    timer_boat = QTimer()
-    timer_mission = QTimer()
-    timer_IMAP = QTimer()
-    flag = False
-    count = 0
-
-    momsn_min = 0
-    momsn_max = 0
-    momsn_current = 0
-    data_log = {}
-
-    layerSeabots = {}
-    layerBoat = LayerBoat()
-    layerMissions = []
-    
-    dataBaseConnection = DataBaseConnection()
-    imapServer = ImapServer()
-
-    mission_selected = -1
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -75,6 +55,29 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # print(self.__dir__)
         self.setupUi(self)
+        
+        self.timer_seabot = QTimer()
+        self.timer_boat = QTimer()
+        self.timer_mission = QTimer()
+        self.timer_IMAP = QTimer()
+
+        self.momsn_min = 0
+        self.momsn_max = 0
+        self.momsn_current = 0
+
+        self.data_log = {}
+
+        # Layers
+        self.layerSeabots = {}
+        self.layerBoat = LayerBoat()
+        self.layerMissions = []
+
+        # DB
+        self.db = DataBaseConnection()
+        self.imapServer = ImapServer()
+        self.mission_selected = -1
+
+        ################################################################
 
         # Imap Update
         self.imapServer.imap_signal.connect(self.update_imap)
@@ -132,25 +135,25 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         server_ip = self.lineEdit_server_ip.text()
         server_port = self.lineEdit_server_port.text()
         t_zero = self.dateTimeEdit_last_sync.dateTime().toString(Qt.ISODate)
-        self.dataBaseConnection.save_server(email, password, server_ip, server_port, t_zero)
+        self.db.save_server(email, password, server_ip, server_port, t_zero)
         self.update_server_list()
         return True
 
     def server_delete(self, event):
         id_config = self.comboBox_config_email.currentData()
-        self.dataBaseConnection.delete_server(id_config)
+        self.db.delete_server(id_config)
         self.update_server_list()
         return True
 
     def update_server_list(self):
         self.comboBox_config_email.clear()
-        email_list = self.dataBaseConnection.get_email_list()
+        email_list = self.db.get_email_list()
         for email in email_list:
             self.comboBox_config_email.addItem(str(email["config_id"]) + " - " + email["email"], email["config_id"])
 
     def update_robots_list(self, index_comboBox=-1):
         self.comboBox_state_imei.clear()
-        robot_list = self.dataBaseConnection.get_robot_list()
+        robot_list = self.db.get_robot_list()
         if(len(robot_list)==0):
             return
 
@@ -168,7 +171,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Create associate track
         for robot in robot_list:
             if robot["imei"] not in self.layerSeabots:
-                self.layerSeabots[robot["imei"]]=LayerSeabot(robot["imei"])
+                self.layerSeabots[robot["imei"]]=LayerSeabot(robot["imei"], robot["name"])
 
         for key in self.layerSeabots:
             self.layerSeabots[key].update()
@@ -178,15 +181,16 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             currentIndex = self.comboBox_state_imei.currentIndex()
             text, ok = QInputDialog().getText(self, "Database update",
                                          "Robot name:", QLineEdit.Normal,
-                                         self.dataBaseConnection.get_robot_name(self.comboBox_state_imei.currentData()))
+                                         self.db.get_robot_name(self.comboBox_state_imei.currentData()))
             if ok and text:
-                self.dataBaseConnection.update_robot_name(text, self.comboBox_state_imei.currentData())
+                self.db.update_robot_name(text, self.comboBox_state_imei.currentData())
                 self.update_robots_list(currentIndex)
+                self.layerSeabots[self.comboBox_state_imei.currentData()].name = text
 
     def select_server(self, index):
         if index != -1:
             server_id = self.comboBox_config_email.currentData()
-            server_data = self.dataBaseConnection.get_server_data(server_id)
+            server_data = self.db.get_server_data(server_id)
             self.lineEdit_email.setText(str(server_data["email"]))
             self.lineEdit_password.setText(str(server_data["password"]))
             self.lineEdit_server_ip.setText(str(server_data["server_ip"]))
@@ -221,8 +225,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.timer_mission.stop()
 
         self.imapServer.stop_server()
-        self.layerSeabots.clear()
-        self.layerMissions.clear()
+        # self.layerSeabots.clear()
+        # self.layerMissions.clear()
 
         self.closingPlugin.emit()
         event.accept()
@@ -290,13 +294,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def update_state_info(self):
         # Get current momsn
-        self.momsn_current = self.dataBaseConnection.get_momsn_from_message_id(self.data_log["message_id"])
+        self.momsn_current = self.db.get_momsn_from_message_id(self.data_log["message_id"])
 
         # Update Text
         self.label_state_info.setText(str(self.momsn_current) + "/ [" + str(self.momsn_min) + ", " + str(self.momsn_max) + "]")
 
     def update_momsn_bounds(self):
-        self.momsn_min, self.momsn_max = self.dataBaseConnection.get_bounds_momsn(self.comboBox_state_imei.currentData())
+        self.momsn_min, self.momsn_max = self.db.get_bounds_momsn(self.comboBox_state_imei.currentData())
 
     def update_vanish_trace(self, value):
         if(value==-1):
@@ -336,14 +340,14 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.timer_IMAP.stop()
 
     def next_log_state(self):
-        data = self.dataBaseConnection.get_next_log_state(self.data_log["message_id"])
+        data = self.db.get_next_log_state(self.data_log["message_id"])
         if(data != None):
             self.data_log = data
             self.update_state_info()
             self.fill_treeWidget_log_state()
 
     def previous_log_state(self):
-        data = self.dataBaseConnection.get_previous_log_state(self.data_log["message_id"])
+        data = self.db.get_previous_log_state(self.data_log["message_id"])
         if(data != None):
             self.data_log = data
             self.update_state_info()
@@ -351,7 +355,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def update_state_imei(self):
         if(self.comboBox_state_imei.currentIndex() != -1):
-            self.data_log, self.momsn_current = self.dataBaseConnection.get_last_log_state(self.comboBox_state_imei.currentData())
+            self.data_log, self.momsn_current = self.db.get_last_log_state(self.comboBox_state_imei.currentData())
             
             self.fill_treeWidget_log_state()
             self.update_momsn_bounds()

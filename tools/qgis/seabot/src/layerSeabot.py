@@ -14,10 +14,11 @@ import math
 from pyproj import Proj, transform
 import threading
 from .database import *
+import datetime
 
 class LayerSeabot():
 
-    def __init__(self, imei):
+    def __init__(self, imei, name=None):
         self.fields = QgsFields()
         self.group_name = 'Seabot Live (' + str(imei) + ")"
         self.layer_track = 'Seabot track ('  + str(imei) + ")"
@@ -29,6 +30,10 @@ class LayerSeabot():
         self.fields.append(QgsField('sec_since_received', QVariant.Double))
 
         self.imei = imei
+        if(name !=None):
+            self.name = name
+        else:
+            self.name = ""
 
         self.db = DataBaseConnection()
 
@@ -143,15 +148,19 @@ class LayerSeabot():
             layer.setRenderer(renderer)
 
             # Text
-            buffer_settings = QgsTextBufferSettings()
-            buffer_settings.setEnabled(True)
-            buffer_settings.setSize(6)
-            buffer_settings.setColor(Qt.white)
+            # White background under the text
+            bg_settings = QgsTextBackgroundSettings()
+            bg_settings.setEnabled(True)
+            bg_settings.setSizeType(QgsTextBackgroundSettings.SizeBuffer)
+            bg_settings.setStrokeColor(Qt.white)
+            bg_settings.setFillColor(Qt.white)
+            bg_settings.setOpacity(0.7)
 
             text_format = QgsTextFormat()
             text_format.setFont(QFont("Ubuntu", 8))
-            text_format.setSize(8)
-            text_format.setBuffer(buffer_settings)
+            text_format.setSize(10)
+            # text_format.setBuffer(buffer_settings)
+            text_format.setBackground(bg_settings)
 
             layer_settings  = QgsPalLayerSettings()
             layer_settings.setFormat(text_format)
@@ -159,7 +168,7 @@ class LayerSeabot():
             layer_settings.isExpression = True
             layer_settings.placement = QgsPalLayerSettings.OverPoint
             layer_settings.predefinedPositionOrder = QgsPalLayerSettings.TopMiddle
-            layer_settings.yOffset = -8
+            layer_settings.yOffset = -10
             layer_settings.enabled = True
 
             layer_label = QgsVectorLayerSimpleLabeling(layer_settings)
@@ -178,12 +187,13 @@ class LayerSeabot():
             # Data
             pr = layer.dataProvider()
             for feature in layer.getFeatures():
-                delta_t =  round((time.clock_gettime(time.CLOCK_REALTIME) - data["ts"]))
-                if(delta_t>60):
-                    delta_t /= 60.
-                    delta_t = str(round(delta_t)) + " min"
-                else:
-                    delta_t = str(delta_t) + " sec"
+                delta_t =  datetime.timedelta(seconds=round(time.clock_gettime(time.CLOCK_REALTIME) - data["ts"]))
+                # if(delta_t>60):
+                #     delta_t /= 60.
+                #     delta_t = str(round(delta_t)) + " min"
+                # else:
+                #     delta_t = str(delta_t) + " sec"
+                delta_t = self.name + '\n' + str(delta_t)
                 pr.changeFeatures({feature.id():{0:self.layer_pose,1:data["gnss_heading"], 2:delta_t}}, {feature.id():QgsGeometry.fromPointXY(point)})
 
                 layer.updateExtents()

@@ -40,7 +40,7 @@ class ImapServer(QObject):
 		self.log = "?"
 		self.server_id = -1
 		self.thread = None
-		self.db_connection = DataBaseConnection(init_table=True)
+		self.db = DataBaseConnection(init_table=True)
 		self.locale = QLocale(QLocale.English, QLocale.UnitedStates)
 
 	def __del__(self):
@@ -74,7 +74,7 @@ class ImapServer(QObject):
 				print(err, flush=True)
  
 	def update_imap(self):
-		self.db_connection = DataBaseConnection(init_table=True)
+		self.db = DataBaseConnection(init_table=True)
 		while self.running:
 			if(not self.is_connected):
 				self.connect_imap()
@@ -91,7 +91,7 @@ class ImapServer(QObject):
 		print("Try connect")
 		try:
 			# Retreive data from DB
-			login_data = self.db_connection.get_server_data(self.server_id)
+			login_data = self.db.get_server_data(self.server_id)
 			if(len(login_data)==0):
 				raise Exception('wrong server_id ', self.server_id)
 
@@ -137,7 +137,7 @@ class ImapServer(QObject):
 			rsp, msgnums = self.serverIMAP.recent()
 			#process_msg(msgnums)
 
-			self.db_connection.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
+			self.db.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
 		except imaplib.IMAP4.error as err:
 			self.close_server()
 			print(err, flush=True)
@@ -153,14 +153,14 @@ class ImapServer(QObject):
 
 		try:
 			# Search for email since last sync date
-			date = self.db_connection.get_last_sync(self.server_id)
+			date = self.db.get_last_sync(self.server_id)
 			date_string = self.locale.toString(date, "dd-MMM-yyyy")
 			print(date_string)
 			typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
 			self.process_msg(msgnums)
 
 			self.is_first_connection = False
-			self.db_connection.update_last_sync(self.server_id, t)
+			self.db.update_last_sync(self.server_id, t)
 			self.log =  "Connected"
 		except imaplib.IMAP4.error as err:
 			self.close_server()
@@ -192,7 +192,7 @@ class ImapServer(QObject):
 				print("No attachment")
 				return
 
-			self.db_connection.add_new_robot(imei) # Add new robot if not existing
+			self.db.add_new_robot(imei) # Add new robot if not existing
 			## Extract enclosed file
 			for part in mail.iter_attachments():
 				if part.get_content_maintype() == 'application':
@@ -200,12 +200,12 @@ class ImapServer(QObject):
 					momsn = int(re.search("_(.*)\.", part.get_filename()).group(1))
 					
 					# Add new entry to the database with the association of the imei and momsn
-					message_id = self.db_connection.add_sbd_received(imei, momsn)
+					message_id = self.db.add_sbd_received(imei, momsn)
 
 					# Test if message is already saved
 					if(message_id != None):
 						msg_data = part.get_payload(decode=True)
-						IridiumMessageParser(msg_data, self.db_connection, message_id, send_time)
+						IridiumMessageParser(msg_data, self.db, message_id, send_time)
 
 	def get_log(self):
 		return self.log
