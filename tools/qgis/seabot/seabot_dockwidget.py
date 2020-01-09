@@ -224,7 +224,6 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.layerSeabots.clear()
         self.layerMissions.clear()
 
-        self.layerMissions.clear()
         self.closingPlugin.emit()
         event.accept()
 

@@ -46,7 +46,7 @@ class ImapServer(QObject):
 	def __del__(self):
 		# with self.lock:
 		self.running = False
-		if(threading.active_count()!=0):
+		if(threading.active_count()!=0 and self.thread!=None):
 			self.thread.join()
 		self.close_server()
 

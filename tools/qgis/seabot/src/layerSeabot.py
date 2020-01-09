@@ -170,7 +170,7 @@ class LayerSeabot():
             # add the layer to the canvas
             layer.updateExtents()
             QgsProject.instance().addMapLayer(layer, addToLegend=False) # Do not add to tree here, see next line
-            root.addLayer(layer)
+            root.insertLayer(0, layer)
 
         else:
             layer = layer_list[0]

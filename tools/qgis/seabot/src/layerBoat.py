@@ -71,8 +71,13 @@ class LayerBoat():
 		if self.gpsd_thread != None:
 			self.gpsd_thread.running = False
 			time.sleep(0.2)
-			if(threading.active_count()!=0):
+			if(threading.active_count()!=0 and self.gpsd_thread!=None):
 				self.gpsd_thread.join()
+
+		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+		if(root != None):
+			root.removeAllChildren()
+			QgsProject.instance().layerTreeRoot().removeChildNode(root)
 
 	def set_nb_points_max(self, trace_max_points=15, enable_trace_vanish=True):
 		self.trace_max_points = trace_max_points

@@ -370,6 +370,8 @@ class DataBaseConnection():
 							FROM SBD_LOG_STATE 
 							INNER JOIN SBD_RECEIVED ON (
 								SBD_RECEIVED.IMEI = ?
+								AND
+								SBD_RECEIVED.message_id=SBD_LOG_STATE.message_id
 							)
 							ORDER BY SBD_RECEIVED.MOMSN DESC'''
 			self.sqliteCursor.execute(sql_sentence, [imei])
