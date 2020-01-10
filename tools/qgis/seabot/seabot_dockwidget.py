@@ -44,7 +44,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, iface, parent=None):
         """Constructor."""
         super(SeabotDockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -52,6 +52,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # self.<objectname>, and you can use autoconnect slots - see
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
+        self.iface = iface
 
         # print(self.__dir__)
         self.setupUi(self)
@@ -69,7 +70,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Layers
         self.layerSeabots = {}
-        self.layerBoat = LayerBoat()
+        self.layerBoat = LayerBoat(self.iface)
         self.layerMissions = []
 
         # DB
@@ -111,6 +112,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_server_delete.clicked.connect(self.server_delete)
         self.comboBox_config_email.currentIndexChanged.connect(self.select_server)
         self.pushButton_server_connect.clicked.connect(self.server_connect)
+
+        self.checkBox_gnss_lock.stateChanged.connect(self.update_lock_view)
 
         # Mission tab
         self.pushButton_open_mission.clicked.connect(self.open_mission)
@@ -360,6 +363,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.fill_treeWidget_log_state()
             self.update_momsn_bounds()
             self.update_state_info()
+            self.update_tracking_seabot()
 
     def update_mission_info(self, row):
         self.mission_selected = row
@@ -369,6 +373,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.update_robots_list()
         self.update_state_imei()
 
+    def update_tracking_seabot(self):
+        data = self.db.get_pose(self.comboBox_state_imei.currentData())
+        self.layerBoat.seabot_east = data[0][0]
+        self.layerBoat.seabot_north = data[0][1]
+
+    def update_lock_view(self, val):
+        self.layerBoat.enable_lock_view(val==2) # 2 = Checked
 
     ###########################################################################
     ## TIMERS processing

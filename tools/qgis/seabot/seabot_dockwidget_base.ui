@@ -78,7 +78,7 @@
        <bool>false</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -102,7 +102,7 @@
           <height>411</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
          <property name="spacing">
           <number>3</number>
          </property>
@@ -192,6 +192,22 @@
           </layout>
          </item>
          <item>
+          <widget class="QCheckBox" name="checkBox_gnss_lock">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Lock Boat Position</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="Line" name="line_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -279,7 +295,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_last_sync">
            <property name="dateTime">
             <datetime>
-             <hour>18</hour>
+             <hour>17</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2018</year>
@@ -289,7 +305,7 @@
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>16</hour>
+             <hour>15</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2014</year>

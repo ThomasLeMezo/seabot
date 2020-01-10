@@ -381,6 +381,23 @@ class DataBaseConnection():
 		except sqlite3.Error as error:
 			print("Error while connecting to sqlite", error)
 
+	def get_last_pose(self, imei):
+		try:
+			sql_sentence = '''SELECT SBD_LOG_STATE.east, SBD_LOG_STATE.north
+							FROM SBD_LOG_STATE 
+							INNER JOIN SBD_RECEIVED ON (
+								SBD_RECEIVED.IMEI = ?
+								AND
+								SBD_RECEIVED.message_id=SBD_LOG_STATE.message_id
+							)
+							ORDER BY SBD_RECEIVED.MOMSN DESC
+							LIMIT 1'''
+			self.sqliteCursor.execute(sql_sentence, [imei])
+			row = self.sqliteCursor.fetchone()
+			return row
+		except sqlite3.Error as error:
+			print("Error while connecting to sqlite", error)
+
 	def get_name(self, imei):
 		try:
 			sql_sentence = '''SELECT ROBOTS.name

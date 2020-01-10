@@ -49,7 +49,8 @@ class LayerBoat():
 	inProj = Proj(init='epsg:4326')
 	outProj = Proj(init='epsg:2154')
 	
-	def __init__(self):
+	def __init__(self, iface):
+		self.iface = iface
 		self.trace_max_points = 15
 		self.enable_trace_vanish = True
 
@@ -65,8 +66,17 @@ class LayerBoat():
 		self.fields.append(QgsField('Title', QVariant.String))
 		self.fields.append(QgsField('gnss_heading', QVariant.Double))
 
-		self.db = DataBaseConnection(init_table=False)
+		self.seabot_north = 0.0
+		self.seabot_east = 0.0
+		self.locked = False
 		return
+
+	def enable_lock_view(self, val=False):
+		if val:
+			self.locked = True
+		else:
+			self.locked = False
+			self.iface.mapCanvas().setRotation(0)
 
 	def remove_layer(self):
 		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
@@ -101,9 +111,12 @@ class LayerBoat():
 			self.get_new_position()
 			self.update_boat_pose()
 			self.update_boat_trace()
+			self.compute_distance_heading_seabots()
+			if(self.locked):
+				self.lock_view()
 
 	def get_new_position(self):
-		self.heading = self.gpsPoller.gpsd_track
+		self.heading = 30 # self.gpsPoller.gpsd_track
 		self.east, self.north = transform(self.inProj,self.outProj,self.gpsPoller.gpsd_longitude,self.gpsPoller.gpsd_latitude)
 
 	def update_boat_trace(self):
@@ -226,7 +239,9 @@ class LayerBoat():
 
 		return True
 
-
 	def compute_distance_heading_seabots(self):
-		# Get list of data
-		self.db
+		distance = math.sqrt(math.pow(self.seabot_east - self.east, 2)+math.pow(self.seabot_north - self.north, 2))
+		heading = math.atan2(self.seabot_north - self.north, self.seabot_east - self.east)
+		
+	def lock_view(self):
+		self.iface.mapCanvas().setRotation(self.heading)
