@@ -136,7 +136,7 @@ class ImapServer(QObject):
 		try:
 			t = datetime.datetime.now()
 			rsp, msgnums = self.serverIMAP.recent()
-			#process_msg(msgnums)
+			self.process_msg(msgnums)
 
 			self.db.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
 		except imaplib.IMAP4.error as err:
@@ -181,11 +181,12 @@ class ImapServer(QObject):
 			return
 		print("Download msg ", msgnum)
 		try:
-		typ, data_msg = self.serverIMAP.fetch(msgnum, '(BODY.PEEK[])')
+			typ, data_msg = self.serverIMAP.fetch(msgnum, '(BODY.PEEK[])')
 		except imaplib.IMAP4.error as err:
 			self.close_server()
 			self.log = "Error IMAP"
 			print(err)
+			return
 
 		# Parse received part (starting with "Received: ")
 		mail = email.message_from_bytes(data_msg[0][1], policy=default)

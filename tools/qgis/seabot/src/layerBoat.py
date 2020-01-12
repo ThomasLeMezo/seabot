@@ -126,7 +126,7 @@ class LayerBoat():
 			
 
 	def get_new_position(self):
-		self.heading = 30 # self.gpsPoller.gpsd_track
+		self.heading = self.gpsPoller.gpsd_track
 		self.east, self.north = transform(self.inProj,self.outProj,self.gpsPoller.gpsd_longitude,self.gpsPoller.gpsd_latitude)
 
 	def update_boat_trace(self):

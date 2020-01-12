@@ -255,6 +255,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lineEdit_server_ip.setEnabled(True)
             self.lineEdit_server_port.setEnabled(True)
             self.pushButton_server_save.setEnabled(True)
+            self.pushButton_server_new.setEnabled(True)
             self.pushButton_server_delete.setEnabled(True)
             self.dateTimeEdit_last_sync.setEnabled(True)
         else:
@@ -264,6 +265,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.lineEdit_server_ip.setEnabled(False)
             self.lineEdit_server_port.setEnabled(False)
             self.pushButton_server_save.setEnabled(False)
+            self.pushButton_server_new.setEnabled(False)
             self.pushButton_server_delete.setEnabled(False)
             self.dateTimeEdit_last_sync.setEnabled(False)
 
