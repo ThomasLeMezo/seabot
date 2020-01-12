@@ -102,7 +102,7 @@
           <height>411</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
          <property name="spacing">
           <number>3</number>
          </property>
@@ -208,6 +208,16 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="checkBox_gnss_distance">
+           <property name="text">
+            <string>Show Distance and Heading to Seabot</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="Line" name="line_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -295,7 +305,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_last_sync">
            <property name="dateTime">
             <datetime>
-             <hour>17</hour>
+             <hour>16</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2018</year>
@@ -305,7 +315,7 @@
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>15</hour>
+             <hour>14</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2014</year>

@@ -30,7 +30,7 @@ class GpsPoller(threading.Thread):
 		self.gpsd_latitude = 0.0
 		self.gpsd_longitude = 0.0
 		self.gpsd_track = 0.0
-		self.gpsd_received = True
+		self.gpsd_received = False
 	 
 	def run(self):
 		while self.running:
@@ -53,9 +53,10 @@ class LayerBoat():
 		self.iface = iface
 		self.trace_max_points = 15
 		self.enable_trace_vanish = True
+		self.enable_seabot = True
 
-		self.east = 130241
-		self.north =  6833446
+		self.east = 253247
+		self.north =  8605639
 		self.heading = 0.0
 		self.gpsPoller = None
 
@@ -63,8 +64,12 @@ class LayerBoat():
 		self.group_name = 'Boat'
 		self.layer_track = 'Boat track'
 		self.layer_pose = 'Boat pose'
+		self.layer_seabot = 'Boat to seabot'
 		self.fields.append(QgsField('Title', QVariant.String))
 		self.fields.append(QgsField('gnss_heading', QVariant.Double))
+
+		self.fields_seabot = QgsFields()
+		self.fields_seabot.append(QgsField('seabot_info', QVariant.String))
 
 		self.seabot_north = 0.0
 		self.seabot_east = 0.0
@@ -111,9 +116,11 @@ class LayerBoat():
 			self.get_new_position()
 			self.update_boat_pose()
 			self.update_boat_trace()
-			self.compute_distance_heading_seabots()
+			if(self.enable_seabot):
+				self.update_boat_to_seabot()
 			if(self.locked):
 				self.lock_view()
+			
 
 	def get_new_position(self):
 		self.heading = 30 # self.gpsPoller.gpsd_track
@@ -236,12 +243,123 @@ class LayerBoat():
 				layer.updateExtents()
 				layer.triggerRepaint()
 				break
-
 		return True
 
-	def compute_distance_heading_seabots(self):
+	def update_boat_to_seabot(self):
+		### ADD DATA TO LAYER ###
+		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+		if(root == None):
+			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
+
+		## Find if layer already exist
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_seabot)
+		point1 = QgsPoint(self.east, self.north)
+		point2 = QgsPoint(self.seabot_east, self.seabot_north)
+
+		if(len(layer_list)==0):
+			### Add New layer Last Position
+			layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_seabot , "memory")
+
+			pr = layer.dataProvider()
+
+
+			pr.addAttributes(self.fields_seabot)
+			layer.updateFields()
+
+			# First feature
+			feature = QgsFeature()
+			feature.setGeometry(QgsGeometry.fromPolyline([point1, point2]))
+
+			feature.setFields(self.fields_seabot)
+			feature['seabot_info'] = ""
+
+			# add the first point
+			
+			pr.addFeatures([feature])
+
+			# Configure the marker.
+			marker_line = QgsSimpleLineSymbolLayer(Qt.darkGreen)
+			marker = QgsLineSymbol()
+			marker.setWidth(2)
+			marker.changeSymbolLayer(0, marker_line)
+
+			renderer = QgsSingleSymbolRenderer(marker)
+			layer.setRenderer(renderer)
+
+			# Text
+			# White background under the text
+			bg_settings = QgsTextBackgroundSettings()
+			bg_settings.setEnabled(True)
+			bg_settings.setSizeType(QgsTextBackgroundSettings.SizeBuffer)
+			bg_settings.setStrokeColor(Qt.white)
+			bg_settings.setFillColor(Qt.white)
+			bg_settings.setOpacity(0.7)
+
+			text_format = QgsTextFormat()
+			text_format.setFont(QFont("Ubuntu", 8))
+			text_format.setSize(10)
+			# text_format.setBuffer(buffer_settings)
+			text_format.setBackground(bg_settings)
+
+			layer_settings  = QgsPalLayerSettings()
+			layer_settings.setFormat(text_format)
+			layer_settings.fieldName = "(seabot_info)"
+			layer_settings.isExpression = True
+			layer_settings.placement = QgsPalLayerSettings.Horizontal
+			# layer_settings.placementFlags = QgsPalLayerSettings.MapOrientation
+			layer_settings.predefinedPositionOrder = QgsPalLayerSettings.TopMiddle
+			# layer_settings.yOffset = -10
+			layer_settings.enabled = True
+
+			layer_label = QgsVectorLayerSimpleLabeling(layer_settings)
+			layer.setLabelsEnabled(True)
+			layer.setLabeling(layer_label)
+			layer.triggerRepaint()
+
+			layer.updateExtents()
+			QgsProject.instance().addMapLayer(layer, addToLegend=False)
+			root.addLayer(layer)
+
+		else:
+			layer = layer_list[0]
+			pr = layer.dataProvider()
+
+			for feature in layer.getFeatures():
+				geo = QgsGeometry.fromPolyline([point1, point2])
+
+				# Update feature
+				pr.changeFeatures({feature.id():{0:self.get_text_seabot()}}, {feature.id():geo})
+				# Commit changes
+				layer.updateExtents()
+				layer.triggerRepaint()
+
+				break
+
+
+	def rad_to_heading(self, angle):
+		angle = -(angle - np.pi/2.)
+		# [0, 2*pi]
+		angle = 2*np.arctan(np.tan((angle+np.pi)/2.))+np.pi
+		# Convert to def
+		angle = angle*180.0/np.pi
+		return angle
+
+	def get_text_seabot(self):
 		distance = math.sqrt(math.pow(self.seabot_east - self.east, 2)+math.pow(self.seabot_north - self.north, 2))
-		heading = math.atan2(self.seabot_north - self.north, self.seabot_east - self.east)
+		
+		heading_abs = self.rad_to_heading(math.atan2(self.seabot_north - self.north, self.seabot_east - self.east))
+
+		heading_diff = heading_abs-self.heading
+		
+		return str(round(distance)) + "m\n" + str(round(heading_abs)) + "°"
 		
 	def lock_view(self):
 		self.iface.mapCanvas().setRotation(self.heading)
+
+	def set_enable_seabot(self, val):
+		self.enable_seabot = val
+		if(val == False):
+			layer_list = QgsProject.instance().mapLayersByName(self.layer_seabot)
+			if(len(layer_list)>0):
+				QgsProject.instance().removeMapLayer(layer_list[0])
+

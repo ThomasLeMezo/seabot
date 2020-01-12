@@ -114,6 +114,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_server_connect.clicked.connect(self.server_connect)
 
         self.checkBox_gnss_lock.stateChanged.connect(self.update_lock_view)
+        self.checkBox_gnss_distance.stateChanged.connect(self.update_gnss_seabot_pose)
 
         # Mission tab
         self.pushButton_open_mission.clicked.connect(self.open_mission)
@@ -374,12 +375,16 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.update_state_imei()
 
     def update_tracking_seabot(self):
-        data = self.db.get_pose(self.comboBox_state_imei.currentData())
-        self.layerBoat.seabot_east = data[0][0]
-        self.layerBoat.seabot_north = data[0][1]
+        data = self.db.get_last_pose(self.comboBox_state_imei.currentData())
+        if(data!=None):
+            self.layerBoat.seabot_east = data[0]
+            self.layerBoat.seabot_north = data[1]
 
     def update_lock_view(self, val):
         self.layerBoat.enable_lock_view(val==2) # 2 = Checked
+
+    def update_gnss_seabot_pose(self, val):
+        self.layerBoat.set_enable_seabot((val==2)) # 2 = Checked
 
     ###########################################################################
     ## TIMERS processing
