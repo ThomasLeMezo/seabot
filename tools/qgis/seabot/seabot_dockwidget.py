@@ -109,12 +109,14 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.spinBox_gnss_trace.valueChanged.connect(self.update_vanish_trace)
 
         self.pushButton_server_save.clicked.connect(self.server_save)
+        self.pushButton_server_new.clicked.connect(self.server_new)
         self.pushButton_server_delete.clicked.connect(self.server_delete)
         self.comboBox_config_email.currentIndexChanged.connect(self.select_server)
         self.pushButton_server_connect.clicked.connect(self.server_connect)
 
         self.checkBox_gnss_lock.stateChanged.connect(self.update_lock_view)
         self.checkBox_gnss_distance.stateChanged.connect(self.update_gnss_seabot_pose)
+        self.checkBox_gnss_delete.stateChanged.connect(self.update_gnss_delete)
 
         # Mission tab
         self.pushButton_open_mission.clicked.connect(self.open_mission)
@@ -139,7 +141,17 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         server_ip = self.lineEdit_server_ip.text()
         server_port = self.lineEdit_server_port.text()
         t_zero = self.dateTimeEdit_last_sync.dateTime().toString(Qt.ISODate)
-        self.db.save_server(email, password, server_ip, server_port, t_zero)
+        self.db.save_server(email, password, server_ip, server_port, t_zero, self.comboBox_config_email.currentData())
+        self.update_server_list()
+        return True
+
+    def server_new(self, event):
+        email = self.lineEdit_email.text()
+        password = self.lineEdit_password.text()
+        server_ip = self.lineEdit_server_ip.text()
+        server_port = self.lineEdit_server_port.text()
+        t_zero = self.dateTimeEdit_last_sync.dateTime().toString(Qt.ISODate)
+        self.db.new_server(email, password, server_ip, server_port, t_zero)
         self.update_server_list()
         return True
 
@@ -385,6 +397,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def update_gnss_seabot_pose(self, val):
         self.layerBoat.set_enable_seabot((val==2)) # 2 = Checked
+
+    def update_gnss_delete(self, val):
+        self.layerBoat.delete_layer_exist = (val==2)
 
     ###########################################################################
     ## TIMERS processing

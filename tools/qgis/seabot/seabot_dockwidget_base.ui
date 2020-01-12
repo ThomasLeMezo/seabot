@@ -78,7 +78,7 @@
        <bool>false</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -99,10 +99,10 @@
           <x>10</x>
           <y>10</y>
           <width>321</width>
-          <height>411</height>
+          <height>455</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
          <property name="spacing">
           <number>3</number>
          </property>
@@ -211,6 +211,16 @@
           <widget class="QCheckBox" name="checkBox_gnss_distance">
            <property name="text">
             <string>Show Distance and Heading to Seabot</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_gnss_delete">
+           <property name="text">
+            <string>Delete trajectory on exit</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -331,6 +341,13 @@
            </property>
            <property name="timeSpec">
             <enum>Qt::UTC</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_server_new">
+           <property name="text">
+            <string>New</string>
            </property>
           </widget>
          </item>

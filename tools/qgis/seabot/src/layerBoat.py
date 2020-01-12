@@ -30,7 +30,7 @@ class GpsPoller(threading.Thread):
 		self.gpsd_latitude = 0.0
 		self.gpsd_longitude = 0.0
 		self.gpsd_track = 0.0
-		self.gpsd_received = False
+		self.gpsd_received = True
 	 
 	def run(self):
 		while self.running:
@@ -74,6 +74,8 @@ class LayerBoat():
 		self.seabot_north = 0.0
 		self.seabot_east = 0.0
 		self.locked = False
+
+		self.delete_layer_exist = True
 		return
 
 	def enable_lock_view(self, val=False):
@@ -84,10 +86,11 @@ class LayerBoat():
 			self.iface.mapCanvas().setRotation(0)
 
 	def remove_layer(self):
-		root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
-		if(root != None):
-			root.removeAllChildren()
-			QgsProject.instance().layerTreeRoot().removeChildNode(root)
+		if self.delete_layer_exist:
+			root = QgsProject.instance().layerTreeRoot().findGroup(self.group_name)
+			if(root != None):
+				root.removeAllChildren()
+				QgsProject.instance().layerTreeRoot().removeChildNode(root)
 
 	def __del__(self):
 		if self.gpsPoller != None:

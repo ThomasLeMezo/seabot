@@ -142,13 +142,27 @@ class DataBaseConnection():
 			print("Error while connecting to sqlite", error)
 
 
-	def save_server(self, email, password, server_ip, server_port, t_zero = datetime.datetime.fromtimestamp(0)):
+	def new_server(self, email, password, server_ip, server_port, t_zero = datetime.datetime.fromtimestamp(0)):
 		try:
 			sqlite_insert_config = '''INSERT INTO CONFIG
 						  (email, password, server_ip, server_port, last_sync) 
 						  VALUES (?, ?, ?, ?, ?);'''
 
 			data_tuple = (email, password, server_ip, server_port, t_zero) 
+			self.sqliteCursor.execute(sqlite_insert_config, data_tuple)
+			self.sqliteConnection.commit()
+			return True
+		except:
+			print("Error while connecting to sqlite", error)
+			return False
+
+	def save_server(self, email, password, server_ip, server_port, t_zero, config_id):
+		try:
+			sqlite_insert_config = '''UPDATE CONFIG SET
+						  email= ?, password=?, server_ip=?, server_port=?, last_sync=?
+						  WHERE config_id = ?'''
+
+			data_tuple = (email, password, server_ip, server_port, t_zero, config_id) 
 			self.sqliteCursor.execute(sqlite_insert_config, data_tuple)
 			self.sqliteConnection.commit()
 			return True

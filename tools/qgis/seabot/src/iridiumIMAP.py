@@ -42,6 +42,7 @@ class ImapServer(QObject):
 		self.thread = None
 		self.db = DataBaseConnection(init_table=True)
 		self.locale = QLocale(QLocale.English, QLocale.UnitedStates)
+		self.start_sync = None
 
 	def __del__(self):
 		# with self.lock:
@@ -153,8 +154,8 @@ class ImapServer(QObject):
 
 		try:
 			# Search for email since last sync date
-			date = self.db.get_last_sync(self.server_id)
-			date_string = self.locale.toString(date, "dd-MMM-yyyy")
+			self.start_sync = self.db.get_last_sync(self.server_id)
+			date_string = self.locale.toString(self.start_sync, "dd-MMM-yyyy")
 			print(date_string)
 			typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
 			self.process_msg(msgnums)
@@ -179,7 +180,13 @@ class ImapServer(QObject):
 		if(msgnum == "0"):
 			return
 		print("Download msg ", msgnum)
+		try:
 		typ, data_msg = self.serverIMAP.fetch(msgnum, '(BODY.PEEK[])')
+		except imaplib.IMAP4.error as err:
+			self.close_server()
+			self.log = "Error IMAP"
+			print(err)
+
 		# Parse received part (starting with "Received: ")
 		mail = email.message_from_bytes(data_msg[0][1], policy=default)
 
@@ -187,6 +194,12 @@ class ImapServer(QObject):
 			# imei = mail["Subject"].split(": ")[1]
 			imei = re.search("SBD Msg From Unit: (.*)",mail["Subject"]).group(1)			
 			send_time = calendar.timegm(parsedate(mail["Date"]))
+
+			# Check timed received
+			mail_datetime = QDateTime.fromString(mail["Date"], Qt.RFC2822Date)
+			if(self.start_sync>mail_datetime):
+				print("Before start_sync")
+				return
 
 			if mail.get_content_maintype() != 'multipart':
 				print("No attachment")
