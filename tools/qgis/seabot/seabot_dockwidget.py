@@ -33,6 +33,7 @@ from PyQt5.QtGui import QIcon
 from seabot.src.layerSeabot import *
 from seabot.src.layerBoat import *
 from seabot.src.layerMission import *
+from seabot.src.layerInfo import *
 
 from seabot.src.mission import *
 from seabot.src.iridiumIMAP import *
@@ -72,6 +73,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.layerSeabots = {}
         self.layerBoat = LayerBoat(self.iface)
         self.layerMissions = []
+        self.layerInfo = LayerInfo()
 
         # DB
         self.db = DataBaseConnection()
@@ -127,6 +129,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_state_rename.clicked.connect(self.rename_robot)
         self.pushButton_state_previous.clicked.connect(self.previous_log_state)
         self.pushButton_state_next.clicked.connect(self.next_log_state)
+        self.pushButton_state_last.clicked.connect(self.last_log_state)
         self.comboBox_state_imei.currentIndexChanged.connect(self.update_state_imei)
 
         # Fill list of email account
@@ -317,6 +320,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Update Text
         self.label_state_info.setText(str(self.momsn_current) + "/ [" + str(self.momsn_min) + ", " + str(self.momsn_max) + "]")
 
+        # Update view of log
+        self.layerInfo.update(self.data_log["message_id"])
+
     def update_momsn_bounds(self):
         self.momsn_min, self.momsn_max = self.db.get_bounds_momsn(self.comboBox_state_imei.currentData())
 
@@ -366,6 +372,13 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def previous_log_state(self):
         data = self.db.get_previous_log_state(self.data_log["message_id"])
+        if(data != None):
+            self.data_log = data
+            self.update_state_info()
+            self.fill_treeWidget_log_state()
+
+    def last_log_state(self):
+        data, momsn_current = self.db.get_last_log_state(self.comboBox_state_imei.currentData())
         if(data != None):
             self.data_log = data
             self.update_state_info()

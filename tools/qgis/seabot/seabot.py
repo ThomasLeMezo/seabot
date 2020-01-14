@@ -66,7 +66,7 @@ class Seabot:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Seabot')
+        self.menu = "Seabot"
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'Seabot')
         self.toolbar.setObjectName(u'Seabot')
@@ -192,7 +192,6 @@ class Seabot:
         # for reuse if plugin is reopened
         # Commented next statement since it causes QGIS crashe
         # when closing the docked window:
-        self.dockwidget
         self.dockwidget = None
 
         self.pluginIsActive = False
