@@ -124,7 +124,6 @@ class LayerBoat():
 			if(self.locked):
 				self.lock_view()
 			
-
 	def get_new_position(self):
 		self.heading = self.gpsPoller.gpsd_track
 		self.east, self.north = transform(self.inProj,self.outProj,self.gpsPoller.gpsd_longitude,self.gpsPoller.gpsd_latitude)
