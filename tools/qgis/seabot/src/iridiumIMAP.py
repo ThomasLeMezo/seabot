@@ -107,46 +107,57 @@ class ImapServer(QObject):
 				self.log = "Connected"
 			else:
 				raise Exception('Failed to select')
+
+			return True
 			
 		except imaplib.IMAP4.error as err:
 			print("Error imap ", err)
 			self.log = "Error IMAP"
 			self.close_server()
+			return False
 		except sqlite3.Error as error:
 			print("Error sqlite ", error)
 			self.log = "Error SQLITE"
 			self.close_server()
+			return False
 		except:
 			print("Error ", sys.exc_info())
 			self.log = "Error - No connection"
 			self.close_server()
+			return False
 
 	def process_msg(self, msgnums):
 		if(msgnums[0] != None):
-				k=1
-				list_msg_num = msgnums[0].split()
-				for num in list_msg_num:
-					self.download_msg(num.decode())
-					self.log = "Update " + str(k) + "/" + str(len(list_msg_num)) + " (" + str(num.decode()) + ")"
-					k+=1
-				self.imap_signal.emit()
+			k=1
+			list_msg_num = msgnums[0].split()
+			for num in list_msg_num:
+				if(not self.download_msg(num.decode())):
+					return False
+				self.log = "Update " + str(k) + "/" + str(len(list_msg_num)) + " (" + str(num.decode()) + ")"
+				k+=1
+			self.imap_signal.emit()
+			return True
 
 	def update_recent(self):
 		self.log = "Update " + str(datetime.datetime.now().replace(microsecond=0))
 		try:
 			t = datetime.datetime.now()
 			rsp, msgnums = self.serverIMAP.recent()
-			self.process_msg(msgnums)
+			if(not self.process_msg(msgnums)):
+				return False
 
 			self.db.update_last_sync(self.server_id, t.replace(microsecond=0).isoformat()) # without microsecond
+			return True
 		except imaplib.IMAP4.error as err:
 			self.close_server()
 			print(err, flush=True)
 			self.log = "Error imaplib"
+			return False
 		except:
 			print("Error ", sys.exc_info())
 			self.close_server()
 			self.log = "Error (timeout)"
+			return False
 
 	def update_first_connection(self):
 		print("Try update_first_connection")
@@ -158,27 +169,32 @@ class ImapServer(QObject):
 			date_string = self.locale.toString(self.start_sync, "dd-MMM-yyyy")
 			print(date_string)
 			typ, msgnums = self.serverIMAP.search(None, 'SINCE {date}'.format(date=date_string), 'FROM "sbdservice@sbd.iridium.com"')
-			self.process_msg(msgnums)
+			if(not self.process_msg(msgnums)):
+				return False
 
 			self.is_first_connection = False
 			self.db.update_last_sync(self.server_id, t)
 			self.log =  "Connected"
+			return True
 		except imaplib.IMAP4.error as err:
 			self.close_server()
 			self.log = "Error IMAP"
 			print(err)
+			return False
 		except sqlite3.Error as error:
 			self.close_server()
 			self.log = "Error SQLITE"
 			print(error)
+			return False
 		except:
 			print("Error ", sys.exc_info())
 			self.close_server()
 			self.log = "Error - No connection"
+			return False
 
 	def download_msg(self, msgnum):
 		if(msgnum == "0"):
-			return
+			return True
 		print("Download msg ", msgnum)
 		try:
 			typ, data_msg = self.serverIMAP.fetch(msgnum, '(BODY.PEEK[])')
@@ -186,7 +202,7 @@ class ImapServer(QObject):
 			self.close_server()
 			self.log = "Error IMAP"
 			print(err)
-			return
+			return False
 
 		# Parse received part (starting with "Received: ")
 		mail = email.message_from_bytes(data_msg[0][1], policy=default)
@@ -200,11 +216,11 @@ class ImapServer(QObject):
 			mail_datetime = QDateTime.fromString(mail["Date"], Qt.RFC2822Date)
 			if(self.start_sync>mail_datetime):
 				print("Before start_sync")
-				return
+				return True
 
 			if mail.get_content_maintype() != 'multipart':
 				print("No attachment")
-				return
+				return True
 
 			self.db.add_new_robot(imei) # Add new robot if not existing
 			## Extract enclosed file
@@ -220,6 +236,7 @@ class ImapServer(QObject):
 					if(message_id != None):
 						msg_data = part.get_payload(decode=True)
 						IridiumMessageParser(msg_data, self.db, message_id, send_time)
+		return True
 
 	def get_log(self):
 		return self.log

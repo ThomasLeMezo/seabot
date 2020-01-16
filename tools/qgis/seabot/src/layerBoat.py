@@ -62,8 +62,8 @@ class LayerBoat():
 
 		self.fields = QgsFields()
 		self.group_name = 'Boat'
-		self.layer_track = 'Boat track'
-		self.layer_pose = 'Boat pose'
+		self.layer_track_name = 'Boat track'
+		self.layer_pose_name = 'Boat pose'
 		self.layer_seabot = 'Boat to seabot'
 		self.fields.append(QgsField('Title', QVariant.String))
 		self.fields.append(QgsField('gnss_heading', QVariant.Double))
@@ -76,6 +76,8 @@ class LayerBoat():
 		self.locked = False
 
 		self.delete_layer_exist = True
+
+		self.layer_pose = None
 		return
 
 	def enable_lock_view(self, val=False):
@@ -135,12 +137,12 @@ class LayerBoat():
 			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
 		## Find if layer already exist
-		layer_list = QgsProject.instance().mapLayersByName(self.layer_track)
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_track_name)
 		point = QgsPoint(self.east, self.north)
 
 		if(len(layer_list)==0):
 			### Add New layer Last Position
-			layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_track , "memory")
+			layer =  QgsVectorLayer('linestring?crs=epsg:2154&index=yes', self.layer_track_name , "memory")
 
 			pr = layer.dataProvider()
 
@@ -191,11 +193,11 @@ class LayerBoat():
 		if(root == None):
 			root = QgsProject.instance().layerTreeRoot().insertGroup(0, self.group_name)
 
-		layer_list = QgsProject.instance().mapLayersByName(self.layer_pose)
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_pose_name)
 		if(len(layer_list)==0):
 		# if(len(layer_list)==0):
 			### Add New layer Last Position
-			layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', self.layer_pose , "memory")
+			layer =  QgsVectorLayer('point?crs=epsg:2154&index=yes', self.layer_pose_name , "memory")
 
 			pr = layer.dataProvider()
 
@@ -207,7 +209,7 @@ class LayerBoat():
 			feature.setGeometry(QgsGeometry.fromPointXY(point))
 
 			feature.setFields(self.fields)
-			feature['Title'] = self.layer_pose
+			feature['Title'] = self.layer_pose_name
 			feature['gnss_heading'] = self.heading
 
 			pr.addFeatures([feature])
@@ -240,7 +242,7 @@ class LayerBoat():
 			# Data
 			pr = layer.dataProvider()
 			for feature in layer.getFeatures():
-				pr.changeFeatures({feature.id():{0:self.layer_pose,1:self.heading}}, {feature.id():QgsGeometry.fromPointXY(point)})
+				pr.changeFeatures({feature.id():{0:self.layer_pose_name,1:self.heading}}, {feature.id():QgsGeometry.fromPointXY(point)})
 
 				layer.updateExtents()
 				layer.triggerRepaint()
@@ -356,7 +358,13 @@ class LayerBoat():
 		return str(round(distance)) + "m\n" + str(round(heading_abs)) + "°"
 		
 	def lock_view(self):
-		self.iface.mapCanvas().setRotation(self.heading)
+		self.iface.mapCanvas().setRotation(-self.heading)
+		# print(self.heading)
+
+		layer_list = QgsProject.instance().mapLayersByName(self.layer_pose_name)
+		if(len(layer_list)!=0):
+			self.iface.mapCanvas().setExtent(layer_list[0].extent())
+			self.iface.mapCanvas().refresh()
 
 	def set_enable_seabot(self, val):
 		self.enable_seabot = val

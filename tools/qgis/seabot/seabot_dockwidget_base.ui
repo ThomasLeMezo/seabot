@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>357</width>
+    <width>360</width>
     <height>691</height>
    </rect>
   </property>
@@ -21,8 +21,8 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>250</width>
-    <height>269</height>
+    <width>360</width>
+    <height>691</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -48,7 +48,7 @@
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
+    <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
@@ -78,7 +78,7 @@
        <bool>false</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -99,10 +99,10 @@
           <x>10</x>
           <y>10</y>
           <width>321</width>
-          <height>455</height>
+          <height>460</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
          <property name="spacing">
           <number>3</number>
          </property>
@@ -315,7 +315,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_last_sync">
            <property name="dateTime">
             <datetime>
-             <hour>16</hour>
+             <hour>15</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2018</year>
@@ -325,7 +325,7 @@
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>14</hour>
+             <hour>13</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2014</year>
@@ -345,18 +345,22 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_server_new">
-           <property name="text">
-            <string>New</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_server_save">
-           <property name="text">
-            <string>Save</string>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QPushButton" name="pushButton_server_new">
+             <property name="text">
+              <string>New</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_server_save">
+             <property name="text">
+              <string>Save</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_server_delete">
@@ -617,6 +621,18 @@
          <property name="sizeConstraint">
           <enum>QLayout::SetMaximumSize</enum>
          </property>
+         <item row="5" column="0" colspan="2">
+          <widget class="QTreeWidget" name="treeWidget_iridium">
+           <attribute name="headerDefaultSectionSize">
+            <number>150</number>
+           </attribute>
+           <column>
+            <property name="text">
+             <string notr="true">1</string>
+            </property>
+           </column>
+          </widget>
+         </item>
          <item row="3" column="1">
           <widget class="QPushButton" name="pushButton_state_next">
            <property name="text">
@@ -651,16 +667,11 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
-          <widget class="QTreeWidget" name="treeWidget_iridium">
-           <attribute name="headerDefaultSectionSize">
-            <number>150</number>
-           </attribute>
-           <column>
-            <property name="text">
-             <string notr="true">1</string>
-            </property>
-           </column>
+         <item row="4" column="1">
+          <widget class="QPushButton" name="pushButton_state_last">
+           <property name="text">
+            <string>Last</string>
+           </property>
           </widget>
          </item>
         </layout>
@@ -675,7 +686,7 @@
          <rect>
           <x>10</x>
           <y>10</y>
-          <width>281</width>
+          <width>321</width>
           <height>81</height>
          </rect>
         </property>

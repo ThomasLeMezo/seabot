@@ -331,7 +331,7 @@ class DataBaseConnection():
 								FROM SBD_LOG_STATE 
 								WHERE SBD_LOG_STATE.message_id = ?
 								LIMIT 1'''
-			self.sqliteCursor.execute(sql_sentence, [message_id, message_id])
+			self.sqliteCursor.execute(sql_sentence, [message_id])
 			row = self.sqliteCursor.fetchone()
 			if(row!=None):
 				return self.fill_data_log_state(row)
