@@ -1072,7 +1072,7 @@ avoid_safe_mode=1
 ##
 ##     Default off.
 ##
-dtparam=audio=on
+dtparam=audio=off
 
 ## i2c_arm
 ##     Enable the ARM's i2c interface

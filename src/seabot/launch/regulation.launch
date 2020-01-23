@@ -1,39 +1,50 @@
 <launch>
-				<param name="velocity_depth_default" value="0.06" />
 
-    <node name="state_feedback" pkg="seabot_depth_regulation" type="state_feedback_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+	<node name="depth_controller" pkg="seabot_depth_controller" type="depth_controller" output="screen" ns="regulation" respawn="true" respawn_delay="5">
 
-								<param name="frequency" value="1.0" />
-								<param name="root_regulation" value="-0.2" />
-								<param name="limit_depth_regulation" value="0.3" />
+		<remap from="~frequency" to="/regulation/depth_controller/frequency"/>
+		<remap from="~root_regulation" to="/regulation/depth_controller/root_regulation"/>
+		<remap from="~limit_depth_controller" to="/regulation/depth_controller/limit_depth_controller"/>
 
-								<param name="delta_velocity_lb" value="-0.01" />
-								<param name="delta_velocity_ub" value="0.01" />
+		<remap from="~delta_velocity_lb" to="/regulation/depth_controller/delta_velocity_lb"/>
+		<remap from="~delta_velocity_ub" to="/regulation/depth_controller/delta_velocity_ub"/>
 
-								<param name="delta_position_lb" value="0.0" />
-								<param name="delta_position_ub" value="0.0" />
+		<remap from="~delta_position_lb" to="/regulation/depth_controller/delta_position_lb"/>
+		<remap from="~delta_position_ub" to="/regulation/depth_controller/delta_position_ub"/>
 
-        <param name="hysteresis_piston" value="0.6" />
-								<param name="speed_volume_sink" value="2.0" />
+		<remap from="~hysteresis_piston" to="/regulation/depth_controller/hysteresis_piston"/>
+		<remap from="~speed_volume_sink" to="/regulation/depth_controller/speed_volume_sink"/>
 
-								<param name="hold_depth_enable" value="false" />
-								<param name="hold_depth_value_enter" value="0.05" />
-								<param name="hold_depth_value_exit" value="0.1" />
-    </node>
+		<remap from="~hold_depth_enable" to="/regulation/depth_controller/hold_depth_enable"/>
+		<remap from="~hold_depth_value_enter" to="/regulation/depth_controller/hold_depth_value_enter"/>
+		<remap from="~hold_depth_value_exit" to="/regulation/depth_controller/hold_depth_value_exit"/>
 
-    <node name="waypoint_node" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
-        <param name="frequency" value="10.0" />
-        <param name="delta_valid_time" value="3.0" />
+		<remap from="~rho" to="/physics/rho"/>
+		<remap from="~g" to="/physics/g"/>
+		<remap from="~m" to="/physics/m"/>
+		<remap from="~diam_collerette" to="/physics/diam_collerette"/>
+		<remap from="~screw_thread" to="/physics/screw_thread"/>
+		<remap from="~tick_per_turn" to="/physics/tick_per_turn"/>
+		<remap from="~piston_diameter" to="/physics/piston_diameter"/>
+		<remap from="~piston_ref_eq" to="/physics/piston_ref_eq"/>
+		<remap from="~piston_max_value" to="/physics/piston_max_value"/>
+		<remap from="~piston_speed_max_tick" to="/physics/piston_speed_max_tick"/>
 
-								<param name="hysteresis_circle_in" value="2.0" />
-								<param name="hysteresis_circle_out" value="4.0" />
+	</node>
 
-								<param name="coeff_P" value="0.8" />
-								<param name="coeff_D" value="0.2" />
-								<param name="linear_speed" value="1.3" />
-								<param name="depth_limit_switch_off" value="0.5" />
-								<param name="max_angular_velocity" value="1.0" />
-    </node>
+	<node name="waypoint" pkg="seabot_waypoint_regulation" type="waypoint_node" output="screen" ns="regulation" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/regulation/waypoint/frequency"/>
+		<remap from="~delta_valid_time" to="/regulation/waypoint/delta_valid_time"/>
+
+		<remap from="~hysteresis_circle_in" to="/regulation/waypoint/hysteresis_circle_in"/>
+		<remap from="~hysteresis_circle_out" to="/regulation/waypoint/hysteresis_circle_out"/>
+
+		<remap from="~coeff_P" to="/regulation/waypoint/coeff_P"/>
+		<remap from="~coeff_D" to="/regulation/waypoint/coeff_D"/>
+		<remap from="~linear_speed" to="/regulation/waypoint/linear_speed"/>
+		<remap from="~depth_limit_switch_off" to="/regulation/waypoint/depth_limit_switch_off"/>
+		<remap from="~max_angular_velocity" to="/regulation/waypoint/max_angular_velocity"/>
+	</node>
 
 </launch>
 

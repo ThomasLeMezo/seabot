@@ -1,50 +1,35 @@
 <launch>
-    <node name="safety_node" pkg="seabot_safety" type="safety_node" output="screen" ns="safety" respawn="true" respawn_delay="5">
-        <param name="frequency" value="1.0" />
+	<node name="safety_node" pkg="seabot_safety" type="safety_node" output="screen" ns="safety" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/safety/frequency"/>
+		<remap from="~safety_depressure" to="/safety/safety_depressure"/>
+		<remap from="~humidity_limit" to="/safety/humidity_limit"/>
+		<remap from="~internal_pressure_detection" to="/safety/internal_pressure_detection"/>
+		<remap from="~delta_volume_allowed" to="/safety/delta_volume_allowed"/>
+		<remap from="~delta_ref_allowed" to="/safety/delta_ref_allowed"/>
+		<remap from="~volume_ref" to="/safety/volume_ref"/>
+		<remap from="~transition_tick_law" to="/safety/transition_tick_law"/>
+		<remap from="~pressure_internal_max" to="/safety/pressure_internal_max"/>
+		<remap from="~max_depth_reset_zero" to="/safety/max_depth_reset_zero"/>
+		<remap from="~max_speed_reset_zero" to="/safety/max_speed_reset_zero"/>
+		<remap from="~limit_piston_position_reset_depth" to="/safety/limit_piston_position_reset_depth"/>
+		<remap from="~time_delay_zero_depth_condition" to="/safety/time_delay_zero_depth_condition"/>
+		<remap from="~safety_pressure_limit" to="/safety/safety_pressure_limit"/>
+		<remap from="~pressure_limit" to="/safety/pressure_limit"/>
+		<remap from="~time_before_pressure_emergency" to="/safety/time_before_pressure_emergency"/>
+		<remap from="~seafloor_detection" to="/safety/seafloor_detection"/>
+		<remap from="~time_before_seafloor_emergency" to="/safety/time_before_seafloor_emergency"/>
+		<remap from="~safety_battery" to="/safety/safety_battery"/>
+		<remap from="~battery_limit" to="/safety/battery_limit"/>
+		<remap from="~enable_flash" to="/safety/enable_flash"/>
+		<remap from="~limit_depth_flash_enable" to="/safety/limit_depth_flash_enable"/>
+		<remap from="~time_delay_batteries_msg" to="/safety/time_delay_batteries_msg"/>
+		<remap from="~time_delay_internal_sensor_msg" to="/safety/time_delay_internal_sensor_msg"/>
+		<remap from="~time_delay_external_sensor_msg" to="/safety/time_delay_external_sensor_msg"/>
+		<remap from="~time_delay_depth_msg" to="/safety/time_delay_depth_msg"/>
+		<remap from="~time_delay_piston_state_msg" to="/safety/time_delay_piston_state_msg"/>
+		<remap from="~time_delay_euler_msg" to="/safety/time_delay_euler_msg"/>
 
-<!--Leak detection-->
-        <param name="safety_depressure" value="true"/>
-
-								<param name="humidity_limit" value="70.0" />
-
-								<param name="internal_pressure_detection" value="true"/>
-								<param name="delta_volume_allowed" value="1.0" />
-								<param name="delta_ref_allowed" value="10.0" />
-								<param name="volume_ref" value="0.006" />
-								<param name="transition_tick_law" value="650.0" />
-								<param name="pressure_internal_max" value="850.0" />
-
-<!--Zero depth reset-->
-        <param name="max_depth_reset_zero" value="1.0" />
-        <param name="max_speed_reset_zero" value="0.1" />
-								<param name="limit_piston_position_reset_depth" value="3" />
-								<param name="time_delay_zero_depth_condition" value="5" />
-
-<!--Depth limit-->
-								<param name="safety_pressure_limit" value="true"/>
-        <param name="pressure_limit" value="6.2" />
-        <param name="time_before_pressure_emergency" value="3.0" />
-
-<!--Seafloor-->
-								<param name="seafloor_detection" value="true"/>
-								<param name="time_before_seafloor_emergency" value="300.0" />
-
-<!--Batteries-->
-								<param name="safety_battery" value="true"/>
-								<param name="battery_limit" value="10.0" />
-
-<!--Flash-->
-        <param name="enable_flash" value="true"/>
-        <param name="limit_depth_flash_enable" value="0.5"/>
-
-<!--Message delay-->
-        <param name="time_delay_batteries_msg" value="30.0" />
-        <param name="time_delay_internal_sensor_msg" value="2.0" />
-        <param name="time_delay_external_sensor_msg" value="2.0" />
-        <param name="time_delay_depth_msg" value="2.0" />
-        <param name="time_delay_piston_state_msg" value="2.0" />
-        <param name="time_delay_euler_msg" value="1.0" />
-
-    </node>
+		<remap from="~piston_max_value" to="/physics/piston_max_value" />
+	</node>
 </launch>
 

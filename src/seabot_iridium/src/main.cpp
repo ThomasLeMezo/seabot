@@ -228,8 +228,8 @@ int main(int argc, char *argv[]){
   depth_surface_limit = n_private.param<double>("depth_surface_limit", 0.5);
   bool enable_gnss_iridium = n_private.param<double>("enable_gnss_iridium", false);
 
-  const string mission_file_name = n.param<string>("mission_file_name", "mission_test.xml");
-  const string mission_path = n.param<string>("mission_path", "");
+  const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
+  const string mission_path = n_private.param<string>("mission_path", "");
   mission_file_path = mission_path + "/" + mission_file_name;
 
   const bool debug = n_private.param<bool>("debug", false);

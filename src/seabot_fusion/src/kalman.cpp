@@ -121,20 +121,20 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 5.0);
 
-  const double rho = n.param<double>("/rho", 1025.0);
-  const double g = n.param<double>("/g", 9.81);
-  const double m = n.param<double>("/m", 9.045);
-  const double diam_collerette = n.param<double>("/diam_collerette", 0.24);
-  const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
-  const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
-  const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
+  const double rho = n_private.param<double>("/rho", 1025.0);
+  const double g = n_private.param<double>("/g", 9.81);
+  const double m = n_private.param<double>("/m", 9.045);
+  const double diam_collerette = n_private.param<double>("/diam_collerette", 0.24);
+  const double screw_thread = n_private.param<double>("/screw_thread", 1.75e-3);
+  const double tick_per_turn = n_private.param<double>("/tick_per_turn", 48);
+  const double piston_diameter = n_private.param<double>("/piston_diameter", 0.05);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
 
-  const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
-  const double limit_offset = n.param<double>("limit_offset", 2400)*tick_to_volume;
-  const double limit_chi = n.param<double>("limit_chi", 100)*tick_to_volume;
+  const double piston_ref_eq = n_private.param<double>("/piston_ref_eq", 2100);
+  const double limit_offset = n_private.param<double>("limit_offset", 2400)*tick_to_volume;
+  const double limit_chi = n_private.param<double>("limit_chi", 100)*tick_to_volume;
 
-  const double limit_min_depth = n.param<double>("limit_min_depth", 0.5);
+  const double limit_min_depth = n_private.param<double>("limit_min_depth", 0.5);
 
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-4);
   const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5);

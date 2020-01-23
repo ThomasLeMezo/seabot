@@ -10,7 +10,7 @@
   <author email="ken@tossell.net">Ken Tossell</author>
   <author email="rob@umd.edu">Rob Thomson</author>
 
-    <author email="thomas.le_mezo@ensta-bretagne.org">Thomas Le Mezo</author>
+  <author email="thomas.le_mezo@ensta-bretagne.org">Thomas Le Mezo</author>
 
   <license>BSD</license>
   <url type="website">http://ros.org/wiki/gpsd_client</url>

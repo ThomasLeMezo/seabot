@@ -1,10 +1,13 @@
 <launch>
-    <node name="iridium_node" pkg="seabot_iridium" type="iridium_node" output="screen" ns="iridium" respawn="true" respawn_delay="5">
-								<param name="duration_between_msg" value="60" />
-        <param name="wait_time_surface" value="10" />
-        <param name="depth_surface_limit" value="0.5" />
-								<param name="debug" value="false" />
-								<param name="enable_gnss_iridium" value="false" />
-    </node>
+	<node name="iridium_node" pkg="seabot_iridium" type="iridium_node" output="screen" ns="iridium" respawn="true" respawn_delay="5">
+		<remap from="~duration_between_msg" to="/iridium/duration_between_msg" />
+		<remap from="~wait_time_surface" to="/iridium/wait_time_surface" />
+		<remap from="~depth_surface_limit" to="/iridium/depth_surface_limit" />
+		<remap from="~debug" to="/iridium/debug" />
+		<remap from="~enable_gnss_iridium" to="/iridium/enable_gnss_iridium" />
+
+		<remap from="~mission_file_name" to="/mission_file_name" />
+		<remap from="~mission_path" to="/mission/mission_path" />
+	</node>
 </launch>
 

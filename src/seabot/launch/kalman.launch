@@ -1,18 +1,27 @@
 <launch>
 
-  <node name="kalman_node" pkg="seabot_fusion" type="kalman_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-				<param name="frequency" value="5" />
-				<param name="limit_min_depth" value="0.3" />
+	<node name="kalman" pkg="seabot_fusion" type="kalman_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/kalman/frequency" />
+		<remap from="~limit_min_depth" to="/kalman/limit_min_depth" />
 
-				<param name="estimated_first_error_equilibrium_tick" value="250" />
+		<remap from="~estimated_first_error_equilibrium_tick" to="/kalman/estimated_first_error_equilibrium_tick" />
 
-				<param name="gamma_alpha_velocity" value="1e-4" />
-				<param name="gamma_alpha_depth" value="1e-5" />
-				<param name="gamma_alpha_offset" value="1e-8" />
-				<param name="gamma_alpha_chi" value="1e-8" />
+		<remap from="~gamma_alpha_velocity" to="/kalman/gamma_alpha_velocity" />
+		<remap from="~gamma_alpha_depth" to="/kalman/gamma_alpha_depth" />
+		<remap from="~gamma_alpha_offset" to="/kalman/gamma_alpha_offset" />
+		<remap from="~gamma_alpha_chi" to="/kalman/gamma_alpha_chi" />
 
-    <param name="limit_offset" value="2400" />
-				<param name="limit_chi" value="500" />
-  </node>
+		<remap from="~limit_offset" to="/kalman/limit_offset" />
+		<remap from="~limit_chi" to="/kalman/limit_chi" />
+
+		<remap from="~rho" to="/physics/rho" />
+		<remap from="~g" to="/physics/g" />
+		<remap from="~m" to="/physics/m" />
+		<remap from="~diam_collerette" to="/physics/diam_collerette" />
+		<remap from="~screw_thread" to="/physics/screw_thread" />
+		<remap from="~tick_per_turn" to="/physics/tick_per_turn" />
+		<remap from="~piston_diameter" to="/physics/piston_diameter" />
+		<remap from="~piston_ref_eq" to="/physics/piston_ref_eq" />
+	</node>
 
 </launch>

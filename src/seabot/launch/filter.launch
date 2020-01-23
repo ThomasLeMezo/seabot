@@ -1,41 +1,42 @@
 <launch>
-    <node name="depth_filter_node" pkg="seabot_fusion" type="depth_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-        <param name="frequency" value="5" />
-        <param name="rho" value="1020.0" />
-        <param name="g" value="9.81" />
+	<node name="depth_filter" pkg="seabot_fusion" type="depth_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/filter/depth_filter/frequency" />
+		<remap from="~rho" to="/physics/rho" />
+		<remap from="~g" to="/physics/g" />
+		<remap from="~filter_window_size" to="/filter/depth_filter/filter_window_size" />
+		<remap from="~filter_mean_half_width" to="/filter/depth_filter/filter_mean_half_width" />
+		<remap from="~filter_mean_width_velocity" to="/filter/depth_filter/filter_mean_width_velocity" />
+		<remap from="~velocity_dt_sample" to="/filter/depth_filter/velocity_dt_sample" />
+		<remap from="~filter_velocity_mean_half_width" to="/filter/depth_filter/filter_velocity_mean_half_width" />
+		<remap from="~velocity_limit" to="/filter/depth_filter/velocity_limit" />
+		<remap from="~zero_depth_pressure" to="/filter/depth_filter/zero_depth_pressure" />
+	</node>
 
-        <param name="filter_window_size" value="6" />
-        <param name="filter_mean_half_width" value="2" />
+	<node name="temperature_filter" pkg="seabot_fusion" type="temperature_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/filter/temperature_filter/frequency"/>
+		<remap from="~filter_median_size" to="/filter/temperature_filter/filter_median_size"/>
+		<remap from="~filter_mean_width" to="/filter/temperature_filter/filter_mean_width"/>
+		<remap from="~filter_mean_width_velocity" to="/filter/temperature_filter/filter_mean_width_velocity"/>
+		<remap from="~velocity_delta_size" to="/filter/temperature_filter/velocity_delta_size"/>
+		<remap from="~velocity_limit" to="/filter/temperature_filter/velocity_limit"/>
+	</node>
 
-        <param name="filter_mean_width_velocity" value="6" />
-        <param name="velocity_dt_sample" value="5" />
-        <param name="filter_velocity_mean_half_width" value="2" />
-
-        <param name="velocity_limit" value="0.5" />
-
-        <param name="zero_depth_pressure" value="1.024" />
-    </node>
-
-    <node name="temperature_filter_node" pkg="seabot_fusion" type="temperature_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-      <param name="frequency" value="5" />
-
-      <param name="filter_median_size" value="6" />
-      <param name="filter_mean_width" value="2" />
-      <param name="filter_mean_width_velocity" value="5" />
-      <param name="velocity_delta_size" value="5" />
-      <param name="velocity_limit" value="2.0" />
-    </node>
-
-	<node name="batteries_filter_node" pkg="seabot_fusion" type="batteries_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-    <param name="frequency" value="0.2" />
-    <param name="filter_median_size" value="6" />
-    <param name="filter_mean_width" value="2" />
+	<node name="batteries_filter" pkg="seabot_fusion" type="batteries_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/filter/batteries_filter/frequency"/>
+		<remap from="~filter_median_size" to="/filter/batteries_filter/filter_median_size"/>
+		<remap from="~filter_mean_width" to="/filter/batteries_filter/filter_mean_width"/>
  </node>
 
-    <node name="internal_sensor_filter_node" pkg="seabot_fusion" type="internal_sensor_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
-        <param name="frequency" value="5" />
-        <param name="filter_median_size" value="6" />
-        <param name="filter_mean_width" value="2" />
-    </node>
+	<node name="internal_sensor_filter" pkg="seabot_fusion" type="internal_sensor_filter_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+			<remap from="~frequency" to="/filter/internal_sensor_filter/frequency"/>
+			<remap from="~filter_median_size" to="/filter/internal_sensor_filter/filter_median_size"/>
+			<remap from="~filter_mean_width" to="/filter/internal_sensor_filter/filter_mean_width"/>
+	</node>
+
+	<node name="lambert" pkg="seabot_fusion" type="lambert_node" output="screen" ns="fusion" respawn="true" respawn_delay="5">
+		<remap from="~frequency" to="/filter/lambert/frequency"/>
+		<remap from="~nb_sample_mean" to="/filter/lambert/nb_sample_mean"/>
+		<remap from="~nb_sample_between_heading" to="/filter/lambert/nb_sample_between_heading"/>
+	</node>
 
 </launch>

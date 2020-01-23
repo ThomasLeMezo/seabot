@@ -30,10 +30,6 @@ private:
     ros::Publisher gps_fix_pub;
     gpsmm *gps = nullptr;
 
-//    ros::WallTime m_last_valid_lat_lon;
-//    ros::WallTime m_last_valid_track_speed;
-
-    bool use_gps_time = true;
     std::string frame_id = "gps";
 
     bool m_last_fix_state = true;

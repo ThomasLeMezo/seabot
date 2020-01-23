@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>seabot_depth_regulation</name>
+  <name>seabot_depth_controller</name>
   <version>0.0.0</version>
   <description>The seabot regulation package</description>
 
    <maintainer email="thomas.le_mezo@ensta-bretagne.org">Thomas Le Mézo</maintainer>
 
-  <license>MIT</license>
+  <license>GPL-3.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
