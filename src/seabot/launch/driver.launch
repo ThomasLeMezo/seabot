@@ -1,5 +1,6 @@
 <launch>
 	<rosparam file="$(find seabot)/param/config_$(env HOST).yaml"/>
+	<rosparam command="dump" file="~/.ros/mission_config.yaml" />
 
 	<group ns="driver">
 		<node name="power" pkg="seabot_power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">

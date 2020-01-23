@@ -17,6 +17,5 @@
 		<remap from="~approach_velocity_default" to="/mission/approach_velocity_default" />        
 	</node>
 
-	<rosparam command="dump" file="~/mission.yaml" />
 </launch>
 
