@@ -5,7 +5,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_controller/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>

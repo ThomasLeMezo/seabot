@@ -11,7 +11,7 @@ find_package(catkin REQUIRED
     roscpp
     rospy
     message_generation
-    seabot_depth_regulation
+    seabot_depth_controller
     seabot_power_driver
 )
 

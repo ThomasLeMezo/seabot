@@ -2,7 +2,7 @@
 <package format="2">
   <name>seabot_depth_controller</name>
   <version>0.0.0</version>
-  <description>The seabot regulation package</description>
+  <description>The seabot controller package</description>
 
    <maintainer email="thomas.le_mezo@ensta-bretagne.org">Thomas Le Mézo</maintainer>
 

@@ -8,7 +8,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonVelocity.h>
-#include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_controller/RegulationDebug.h>
 #include <seabot_fusion/Kalman.h>
 #include <std_msgs/Float64.h>
 #include <seabot_mission/Waypoint.h>

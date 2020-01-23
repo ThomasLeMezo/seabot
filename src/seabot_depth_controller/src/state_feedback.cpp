@@ -5,7 +5,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_controller/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
 #include <std_msgs/Float64.h>
 
@@ -39,7 +39,7 @@ double tick_to_volume = 0.;
 enum STATE_MACHINE {STATE_SURFACE, STATE_SINK, STATE_REGULATION, STATE_STATIONARY, STATE_EMERGENCY, STATE_PISTON_ISSUE, STATE_HOLD_DEPTH};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
-seabot_depth_regulation::RegulationDebug debug_msg;
+seabot_depth_controller::RegulationDebug debug_msg;
 
 #define NB_STATES 5
 // [Velocity; Depth; Volume; Offset]
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);
-  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug>("debug", 1);
+  ros::Publisher debug_pub = n.advertise<seabot_depth_controller::RegulationDebug>("debug", 1);
 
   seabot_piston_driver::PistonPosition position_msg;
 
