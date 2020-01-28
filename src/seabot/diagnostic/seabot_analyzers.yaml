@@ -1,9 +1,0 @@
-analyzers:
-  pressure:
-    type: GenericAnalyzer
-    path: Pressure
-    contains: ['pressure_internal']
-  batteries:
-    type: GenericAnalyzer
-    path: Battery
-    contains: ['power_node']

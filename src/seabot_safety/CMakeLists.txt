@@ -53,6 +53,7 @@ find_package(catkin REQUIRED
    FILES
    SafetyLog.msg
    SafetyDebug.msg
+			SafetyCpu.msg
 #   Message2.msg
  )
 

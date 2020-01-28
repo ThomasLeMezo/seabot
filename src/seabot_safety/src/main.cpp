@@ -15,10 +15,14 @@
 #include <seabot_power_driver/Battery.h>
 #include <seabot_safety/SafetyLog.h>
 #include <seabot_safety/SafetyDebug.h>
+#include <seabot_safety/SafetyCpu.h>
 #include <geometry_msgs/Vector3.h>
 #include <seabot_power_driver/FlashSpeed.h>
 
-#include <cmath>
+#include <math.h>
+
+#include "sys/types.h"
+#include "sys/sysinfo.h"
 
 using namespace std;
 
@@ -69,6 +73,9 @@ ros::ServiceClient service_flash_enable;
 ros::ServiceClient service_flash_number;
 ros::ServiceClient service_emergency;
 ros::ServiceClient service_sleep;
+
+// Cpu / Ram usage
+struct sysinfo memInfo;
 
 /// ****************** CALLBACK ****************** ///
 
@@ -174,6 +181,38 @@ bool reset_limit_depth(std_srvs::Trigger::Request &req, std_srvs::Trigger::Respo
   return true;
 }
 
+/// CPU Usage (https://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process)
+static unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys, lastTotalIdle;
+double get_cpu_usage_value(){
+    double percent;
+    FILE* file;
+    unsigned long long totalUser, totalUserLow, totalSys, totalIdle, total;
+
+    file = fopen("/proc/stat", "r");
+    fscanf(file, "cpu %llu %llu %llu %llu", &totalUser, &totalUserLow, &totalSys, &totalIdle);
+    fclose(file);
+
+    if (totalUser < lastTotalUser || totalUserLow < lastTotalUserLow ||
+        totalSys < lastTotalSys || totalIdle < lastTotalIdle){
+        //Overflow detection. Just skip this value.
+        percent = -1.0;
+    }
+    else{
+        total = (totalUser - lastTotalUser) + (totalUserLow - lastTotalUserLow) + (totalSys - lastTotalSys);
+        percent = total;
+        total += (totalIdle - lastTotalIdle);
+        percent /= total;
+        percent *= 100;
+    }
+
+    lastTotalUser = totalUser;
+    lastTotalUserLow = totalUserLow;
+    lastTotalSys = totalSys;
+    lastTotalIdle = totalIdle;
+
+    return percent;
+}
+
 /// ****************** MAIN ****************** ///
 
 int main(int argc, char *argv[]){
@@ -236,6 +275,7 @@ int main(int argc, char *argv[]){
   // Publisher
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
   ros::Publisher safety_debug_pub = n.advertise<seabot_safety::SafetyDebug>("debug", 1);
+  ros::Publisher safety_cpu_pub = n.advertise<seabot_safety::SafetyCpu>("cpu", 1);
 
   // Service
   ROS_DEBUG("[Safety] Wait for zero depth service from fusion");
@@ -490,6 +530,19 @@ int main(int argc, char *argv[]){
       ROS_WARN("[Safety] Sealing issue detected %i (p=%f, t=%f, h=%f)", warning_number, internal_pressure, internal_temperature, internal_humidity);
       ROS_WARN("[Safety] Ratio (%f / %f)", p_t_ratio, p_t_ratio_ref);
     }
+
+    ///*******************************************************
+    ///**************** CPU ******************************
+
+    seabot_safety::SafetyCpu cpu_msg;
+    sysinfo(&memInfo);
+    long long physMemUsed = memInfo.totalram - memInfo.freeram;
+    //Multiply in next statement to avoid int overflow on right hand side...
+    physMemUsed *= memInfo.mem_unit;
+    cpu_msg.ram = physMemUsed;
+    cpu_msg.cpu = get_cpu_usage_value();
+
+    safety_cpu_pub.publish(cpu_msg);
 
     ///*******************************************************
     ///**************** Summary ******************************

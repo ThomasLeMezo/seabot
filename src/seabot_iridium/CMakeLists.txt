@@ -31,45 +31,7 @@ find_package(OpenMP REQUIRED)
 			IridiumStatus.msg
 	)
 
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
-
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
-
-# Generate added messages and services with any dependencies listed here
-	generate_messages(
-#			DEPENDENCIES
-#			std_msgs  # Or other packages containing msgs
-	)
-
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-
-## To declare and build dynamic reconfigure parameters within this
-## package, follow these steps:
-## * In the file package.xml:
-##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
-## * In this file (CMakeLists.txt):
-##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
-
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+	generate_messages()
 
 ###################################
 ## catkin specific configuration ##
@@ -117,22 +79,22 @@ target_link_libraries(iridium_node
     ${OpenMP_CXX_FLAGS}
     )
 
-if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+#if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 
- add_executable(decode_log_state src/decode_log_state.cpp ${SRC})
- add_dependencies(decode_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- target_link_libraries(decode_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+# add_executable(decode_log_state src/decode_log_state.cpp ${SRC})
+# add_dependencies(decode_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(decode_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
- add_executable(generate_cmd_sleep src/generate_cmd_sleep.cpp ${SRC})
- add_dependencies(generate_cmd_sleep ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- target_link_libraries(generate_cmd_sleep ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+# add_executable(generate_cmd_sleep src/generate_cmd_sleep.cpp ${SRC})
+# add_dependencies(generate_cmd_sleep ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(generate_cmd_sleep ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
- add_executable(generate_cmd_parameters src/generate_cmd_parameters.cpp ${SRC})
- add_dependencies(generate_cmd_parameters ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- target_link_libraries(generate_cmd_parameters ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+# add_executable(generate_cmd_parameters src/generate_cmd_parameters.cpp ${SRC})
+# add_dependencies(generate_cmd_parameters ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(generate_cmd_parameters ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
-endif()
+#endif()
 
-add_executable(test_checksum src/test.cpp ${SRC})
-add_dependencies(test_checksum ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_checksum ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+#add_executable(test_checksum src/test.cpp ${SRC})
+#add_dependencies(test_checksum ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(test_checksum ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})

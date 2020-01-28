@@ -5,7 +5,13 @@
 #include <iostream>
 #include <fstream>
 
-#include <linux/i2c-dev.h>
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(5,3,26)
+    #include <linux/i2c-dev.h>
+#else
+    #include <linux/i2c-dev.h>
+    #include <i2c/smbus.h>
+#endif
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
