@@ -5,7 +5,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_controller/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
 #include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>
@@ -258,11 +258,11 @@ int main(int argc, char *argv[]){
 
   const double time_before_seafloor_emergency = n_private.param<double>("time_before_seafloor_emergency", 30.0);
 
-  const double piston_max_value = n.param<double>("piston_max_value", 2400);
+  const double piston_max_value = n_private.param<double>("piston_max_value", 2400);
 
-  const double limit_piston_position_reset_depth = n.param<double>("limit_piston_position_reset_depth", 2);
+  const double limit_piston_position_reset_depth = n_private.param<double>("limit_piston_position_reset_depth", 2);
 
-  const double d_zero_depth_condition = n.param<double>("time_delay_zero_depth_condition", 5.0);
+  const double d_zero_depth_condition = n_private.param<double>("time_delay_zero_depth_condition", 5.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);

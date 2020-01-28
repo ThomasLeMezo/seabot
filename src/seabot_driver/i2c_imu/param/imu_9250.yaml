@@ -55,54 +55,14 @@ mpu9250:
   gyro_full_scale_range: 16
 
 #Calibration
-seabot1:
-  # ellipsoid_offset: [ 43.0094674495 ,  24.9017840665 ,  7.40342032043 ]
-  # ellipsoid_matrix0: [ 0.934236354913 ,  -0.461094612098 ,  0.00264028335605 ]
-  # ellipsoid_matrix1: [ -0.461094612098 ,  1.34710786391 ,  -0.0103892294907 ]
-  # ellipsoid_matrix2: [ 0.00264028335605 ,  -0.0103892294907 ,  0.956187420653 ]
+ellipsoid_offset: [0, 0, 0]
+ellipsoid_matrix0: [1, 0, 0]
+ellipsoid_matrix1: [0, 1, 0]
+ellipsoid_matrix2: [0, 0, 1]
 
-  ellipsoid_offset: [0, 0, 0]
-  ellipsoid_matrix0: [1, 0, 0]
-  ellipsoid_matrix1: [0, 1, 0]
-  ellipsoid_matrix2: [0, 0, 1]
-  
-  accel_min: [-9.61750807,  -9.97663832, -10.20648168]
-  accel_max: [10.20169327,   9.88087025,   9.74918916]
+accel_min: [-1, -1, -1]
+accel_max: [1, 1, 1]
 
-  gyro_bias: [-0.00013038, 0.00055432,  -0.00025377]
+gyro_bias: [0, 0, 0]
 
-  mag_declination: -1.722
-
-seabot2:
-  # ellipsoid_offset: [ 40.8633121108 ,  34.0438726256 ,  -4.37166348387 ]
-  # ellipsoid_matrix0: [ 0.933027617833 ,  -0.478867123658 ,  0.000475957850516 ]
-  # ellipsoid_matrix1: [ -0.478867123658 ,  1.37427350708 ,  0.00670849292034 ]
-  # ellipsoid_matrix2: [ 0.000475957850516 ,  0.00670849292034 ,  0.94978157484 ]
-
-  ellipsoid_offset: [0, 0, 0]
-  ellipsoid_matrix0: [1, 0, 0]
-  ellipsoid_matrix1: [0, 1, 0]
-  ellipsoid_matrix2: [0, 0, 1]
-
-  accel_min: [-1.08, -0.92, -1.0]
-  accel_max: [1.04,  1.01,  1.11]
-
-  gyro_bias: [-2.36e-05, 4.64e-07, 2.22e-05]
-
-  mag_declination: -1.722
-
-seabot3:
-  ellipsoid_offset: [ 6.74780627561 ,  -8.03625475318 ,  41.0918499046 ]
-  ellipsoid_matrix0: [ 1.02033827535 ,  0.0294237290223 ,  -0.0127605544002 ]
-  ellipsoid_matrix1: [ 0.0294237290223 ,  1.00842241112 ,  0.00669261513772 ]
-  ellipsoid_matrix2: [ -0.0127605544002 ,  0.00669261513772 ,  0.972909043907 ]
-  
-  #accel_min: [-0.896, -1.135, -1.109]
-  #accel_max: [1.116,   1.015,  0.975]
-
-  accel_min: [-0.889, -1.043, -1.116]
-  accel_max: [1.155, 0.987, 0.957]
-
-  gyro_bias: [-3.81e-05, 3.63e-06, 4.32e-05]
-
-  mag_declination: -1.722
+mag_declination: -1.722

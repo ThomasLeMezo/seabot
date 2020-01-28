@@ -4,7 +4,6 @@
 bool GPSDClient::start() {
   gps_fix_pub = node.advertise<gpsd_client::GPSFix>("fix", 1);
 
-  privnode.getParam("use_gps_time", use_gps_time);
   privnode.param("frame_id", frame_id, frame_id);
 
   gps = new gpsmm("localhost", DEFAULT_GPSD_PORT);

@@ -1,26 +1,7 @@
 <launch>
+	<node pkg="rosbag" type="record" name="record" output="screen" args="-j --split --size 1024 --all" respawn="true" respawn_delay="5"/>
 
-				<node pkg="rosbag" type="record" name="record" output="screen" args="-j --split --size 1024 --all" respawn="true" respawn_delay="5"/>
-
-    <param name="rho" value="1025.0" />
-    <param name="g" value="9.81" />
-
-<!--With added mass-->
-				<param name="m" value="18.09" />
-
-				<param name="diam_collerette" value="0.24" />
-    <param name="screw_thread" value="1.75e-3" />
-    <param name="tick_per_turn" value="48" />
-    <param name="piston_diameter" value="0.05" />
-
-				<param name="piston_speed_max_tick" value="20" />
-
-				<param name="piston_ref_eq" value="1800" />
-				<param name="piston_max_value" value="2400" />
-
-    <include file="$(find seabot)/launch/driver.launch"/>
-    <include file="$(find seabot)/launch/filter.launch"/>
-    <include file="$(find seabot)/launch/lambert.launch"/>
-    <include file="$(find seabot)/launch/kalman.launch"/>
-
+	<include file="$(find seabot)/launch/driver.launch"/>
+	<include file="$(find seabot)/launch/filter.launch"/>
+	<include file="$(find seabot)/launch/kalman.launch"/>
 </launch>

@@ -1,62 +1,89 @@
 <launch>
-    <group ns="driver">
-        <node name="power_node" pkg="seabot_power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
-            <param name="frequency" value="0.2" />
-        </node>
+	<rosparam file="$(find seabot)/param/config_$(env HOST).yaml"/>
+	<rosparam command="dump" file="~/.ros/mission_config.yaml" />
 
-        <node name="piston_node" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
-            <param name="frequency" value="5.0" />
+	<group ns="driver">
+		<node name="power" pkg="seabot_power_driver" type="power_node" output="screen" ns="power" respawn="true" respawn_delay="5">
+			<remap from="~frequency" to="/driver/power/frequency" />
+		</node>
 
-            <param name="distance_fast_move" value="100" />
-            <!-- If speed_fast_move is too high, disturbances are create on I2C external pressure sensor -->
-            <param name="speed_fast_move_factor" value="2.0" />
-												<param name="speed_reset" value="30" />
+		<node name="piston" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
+			<remap from="~frequency" to="/driver/piston/frequency" />
+			<remap from="~distance_fast_move" to="/driver/piston/distance_fast_move" />
+			<remap from="~speed_fast_move_factor" to="/driver/piston/speed_fast_move_factor" />
+			<remap from="~speed_reset" to="/driver/piston/speed_reset" />
+			<remap from="~speed_out_min" to="/driver/piston/speed_out_min" />
+			<remap from="~speed_in_min" to="/driver/piston/speed_in_min" />
+			<remap from="~speed_out_slope" to="/driver/piston/speed_out_slope" />
+			<remap from="~speed_in_slope" to="/driver/piston/speed_in_slope" />
+			<remap from="~speed_depth_layer" to="/driver/piston/speed_depth_layer" />
+			<remap from="~depth_max" to="/driver/piston/depth_max" />
+			<remap from="~speed_max" to="/driver/piston/speed_max" />
+			<remap from="~reached_switch_off" to="/driver/piston/reached_switch_off" />
+			<remap from="~error_interval" to="/driver/piston/error_interval" />
+			<remap from="~tick_max" to="/driver/piston/tick_max" />
+		</node>
 
-            <param name="speed_out_min" value="15" />
-            <param name="speed_in_min" value="15" />
-            <param name="speed_out_slope" value="0.5" />
-            <param name="speed_in_slope" value="0.5" />
-												<param name="speed_depth_layer" value="5.0" />
-												<param name="depth_max" value="50.0" />
-												<param name="speed_max" value="50" />
+		<node name="pressure_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
+			<remap from="~frequency" to="/driver/pressure_ext/frequency" />
+		</node>
 
-            <param name="reached_switch_off" value="true" />
-            <param name="error_interval" value="6" />
+		<node name="pressure_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true" respawn_delay="5">
+			<remap from="~frequency" to="/driver/pressure_int/frequency" />
+		</node>
 
-            <param name="tick_max" value="2500" />
-        </node>
+		<node name="temperature_ext" pkg="temperature_tsys01_driver" type="temperature_tsys01_node" output="screen" respawn="true" respawn_delay="5">
+			<remap from="~frequency" to="/driver/temperature_ext/frequency" />
+		</node>
 
-        <node name="pressure_sensor_ext" pkg="pressure_89bsd_driver" type="pressure_89bsd_node" output="screen" respawn="true" respawn_delay="5">
-            <param name="frequency" value="5.0" />
-        </node>
+		<node name="thruster" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
 
-        <node name="pressure_sensor_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true" respawn_delay="5">
-            <param name="frequency" value="5.0" />
-        </node>
+			<remap from="~frequency" to="/driver/thruster/frequency" />
+			<remap from="~coeff_cmd_to_pwm" to="/driver/thruster/coeff_cmd_to_pwm" />
+			<remap from="~delay_stop" to="/driver/thruster/delay_stop" />
+			<remap from="~allow_backward" to="/driver/thruster/allow_backward" />
+			<remap from="~invert_left_and_right" to="/driver/thruster/invert_left_and_right" />
+			<remap from="~invert_left" to="/driver/thruster/invert_left" />
+			<remap from="~invert_right" to="/driver/thruster/invert_right" />
+			<remap from="~max_engine_change" to="/driver/thruster/max_engine_change" />
 
-        <node name="temperature_sensor_ext" pkg="temperature_tsys01_driver" type="temperature_tsys01_node" output="screen" respawn="true" respawn_delay="5">
-            <param name="frequency" value="5.0" />
-        </node>
+			<remap from="~max_angular_velocity" to="/driver/thruster/max_angular_velocity" />
+			<remap from="~max_linear_velocity" to="/driver/thruster/max_linear_velocity" />
+		</node>
 
-        <node name="thruster_node" pkg="seabot_thruster_driver" type="thruster_node" output="screen" ns="thruster" respawn_delay="5">
-            <param name="frequency" value="15.0" />
-            <param name="coeff_cmd_to_pwm" value="9" />
-            <param name="delay_stop" value="0.5" />
-												<param name="allow_backward" value="false" />
-												<param name="invert_left_and_right" value="true" />
-												<param name="invert_left" value="false" />
-												<param name="invert_right" value="true" />
-												<param name="max_engine_change" value="15.0" />
+		<node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen">
+		</node>
 
-												<param name="max_angular_velocity" value="1.0" />
-												<param name="max_linear_velocity" value="1.0" />
-        </node>
+		<node name="i2c_imu" pkg="i2c_imu" type="i2c_imu_node" output="screen" respawn_delay="5">
+			<remap from="~imu_type" to="/driver/imu/imu_type" />
+			<remap from="~imu_frame" to="/driver/imu/imu_frame" />
+			<remap from="~is_i2c" to="/driver/imu/is_i2c" />
+			<remap from="~i2c_bus" to="/driver/imu/i2c_bus" />
+			<remap from="~i2c_slave_address" to="/driver/imu/i2c_slave_address" />
+			<remap from="~spi_speed" to="/driver/imu/spi_speed" />
+			<remap from="~spi_select" to="/driver/imu/spi_select" />
+			<remap from="~spi_bus" to="/driver/imu/spi_bus" />
+			<remap from="~fusion_type" to="/driver/imu/fusion_type" />
+			<remap from="~publish_euler" to="/driver/imu/publish_euler" />
+			<remap from="~publish_magnetometer" to="/driver/imu/publish_magnetometer" />
+			<remap from="~axis_rotation" to="/driver/imu/axis_rotation" />
 
-        <node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen"></node>
+			<remap from="~compass_sample_rate" to="/driver/imu/compass_sample_rate" />
+			<remap from="~gyro_accel_sample_rate" to="/driver/imu/gyro_accel_sample_rate" />
+			<remap from="~accel_low_pass_filter" to="/driver/imu/accel_low_pass_filter" />
+			<remap from="~accel_full_scale_range" to="/driver/imu/accel_full_scale_range" />
+			<remap from="~gyro_low_pass_filter" to="/driver/imu/gyro_low_pass_filter" />
+			<remap from="~gyro_full_scale_range" to="/driver/imu/gyro_full_scale_range" />
 
-							<node name="i2c_imu" pkg="i2c_imu" type="i2c_imu_node" output="screen" respawn_delay="5">
-												<rosparam file="$(find i2c_imu)/param/imu_9250.yaml"/>
-							</node>
+			<remap from="~ellipsoid_offset" to="/driver/imu/ellipsoid_offset" />
+			<remap from="~ellipsoid_matrix0" to="/driver/imu/ellipsoid_matrix0" />
+			<remap from="~ellipsoid_matrix1" to="/driver/imu/ellipsoid_matrix1" />
+			<remap from="~ellipsoid_matrix2" to="/driver/imu/ellipsoid_matrix2" />
+			<remap from="~accel_min" to="/driver/imu/accel_min" />
+			<remap from="~accel_max" to="/driver/imu/accel_max" />
+			<remap from="~gyro_bias" to="/driver/imu/gyro_bias" />
+			<remap from="~mag_declination" to="/driver/imu/mag_declination" />
+		</node>
 
-    </group>
+	</group>
 </launch>

@@ -5,7 +5,7 @@
   <description>The seabot_log package</description>
 <maintainer email="thomas.le_mezo@ensta-bretagne.org">Thomas Le Mézo</maintainer>
 
-  <license>MIT</license>
+  <license>GPL-3.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>

@@ -37,7 +37,7 @@ public:
   ImuSettings(ros::NodeHandle *nh):settings_nh_(nh){setDefaults();}
   virtual bool loadSettings();
 private:
-  ros::NodeHandle *settings_nh_;
+  ros::NodeHandle *settings_nh_; // private node handle
 };
 
 class I2cImu{
@@ -103,12 +103,6 @@ bool ImuSettings::loadSettings(){
   settings_nh_->getParam("mpu9250/gyro_low_pass_filter", m_MPU9250GyroLpf);
 
   /// ************** SENSOR CALIBRATION ************** ///
-  char name[256];
-  gethostname(name, 256);
-  std::string hostname(name);
-  ROS_INFO("[IMU] Hostname = %s", hostname.c_str());
-  hostname = "seabot3"; // Debug
-
   // Max/min Compass (diseable option)
   m_compassCalMin = RTVector3(-1., -1., -1.);
   m_compassCalMax = RTVector3(1., 1., 1.);
@@ -117,7 +111,7 @@ bool ImuSettings::loadSettings(){
   // Ellipsoid offset Compass
   m_compassCalEllipsoidValid = true;
   std::vector<double> compass_ellipsoid_offset;
-  if (settings_nh_->getParam(hostname + "/ellipsoid_offset", compass_ellipsoid_offset)
+  if (settings_nh_->getParam("ellipsoid_offset", compass_ellipsoid_offset)
       && compass_ellipsoid_offset.size() == 3){
     m_compassCalEllipsoidOffset = RTVector3(compass_ellipsoid_offset[0], compass_ellipsoid_offset[1], compass_ellipsoid_offset[2]);
     ROS_DEBUG("[IMU] Got Calibration Ellipsoid Offset for Compass");
@@ -128,9 +122,9 @@ bool ImuSettings::loadSettings(){
   }
 
   std::vector<double> ellipsoid_corr0, ellipsoid_corr1, ellipsoid_corr2;
-  if (settings_nh_->getParam(hostname + "/ellipsoid_matrix0", ellipsoid_corr0)
-      && settings_nh_->getParam(hostname + "/ellipsoid_matrix1", ellipsoid_corr1)
-      && settings_nh_->getParam(hostname + "/ellipsoid_matrix2", ellipsoid_corr2)
+  if (settings_nh_->getParam("ellipsoid_matrix0", ellipsoid_corr0)
+      && settings_nh_->getParam("ellipsoid_matrix1", ellipsoid_corr1)
+      && settings_nh_->getParam("ellipsoid_matrix2", ellipsoid_corr2)
       && ellipsoid_corr0.size() == 3 && ellipsoid_corr1.size() == 3 && ellipsoid_corr2.size() == 3){
     m_compassCalEllipsoidCorr[0][0] = ellipsoid_corr0[0];
     m_compassCalEllipsoidCorr[0][1] = ellipsoid_corr0[1];
@@ -150,7 +144,7 @@ bool ImuSettings::loadSettings(){
 
   // Compas Biais
   std::vector<double> gyro_bias;
-  if (settings_nh_->getParam(hostname + "/gyro_bias", gyro_bias)
+  if (settings_nh_->getParam("gyro_bias", gyro_bias)
       && compass_ellipsoid_offset.size() == 3){
     m_gyroBias = RTVector3(gyro_bias[0], gyro_bias[1], gyro_bias[2]);
     m_gyroBiasValid = true;
@@ -162,8 +156,8 @@ bool ImuSettings::loadSettings(){
 
   // Min/Max Acc
   std::vector<double> accel_max, accel_min;
-  if (settings_nh_->getParam(hostname + "/accel_min", accel_min)
-      && settings_nh_->getParam(hostname + "/accel_max", accel_max)
+  if (settings_nh_->getParam("accel_min", accel_min)
+      && settings_nh_->getParam("accel_max", accel_max)
       && accel_min.size() == 3 && accel_max.size() == 3)
   {
     m_accelCalMin = RTVector3(accel_min[0], accel_min[1], accel_min[2]);
@@ -177,7 +171,7 @@ bool ImuSettings::loadSettings(){
   }
 
   // Mag Declination
-  settings_nh_->getParam(hostname + "/mag_declination",m_compassAdjDeclination);
+  settings_nh_->getParam("mag_declination",m_compassAdjDeclination);
 
   return true;
 }

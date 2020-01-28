@@ -5,7 +5,7 @@
 #include <seabot_fusion/DepthPose.h>
 #include <seabot_piston_driver/PistonState.h>
 #include <seabot_piston_driver/PistonPosition.h>
-#include <seabot_depth_regulation/RegulationDebug.h>
+#include <seabot_depth_controller/RegulationDebug.h>
 #include <seabot_mission/Waypoint.h>
 #include <std_msgs/Float64.h>
 
@@ -39,7 +39,7 @@ double tick_to_volume = 0.;
 enum STATE_MACHINE {STATE_SURFACE, STATE_SINK, STATE_REGULATION, STATE_STATIONARY, STATE_EMERGENCY, STATE_PISTON_ISSUE, STATE_HOLD_DEPTH};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
-seabot_depth_regulation::RegulationDebug debug_msg;
+seabot_depth_controller::RegulationDebug debug_msg;
 
 #define NB_STATES 5
 // [Velocity; Depth; Volume; Offset]
@@ -116,15 +116,15 @@ int main(int argc, char *argv[]){
   const double delta_position_ub = n_private.param<double>("delta_position_ub", 0.0);
 
   // Physical characteristics
-  const double rho = n.param<double>("/rho", 1025.0);
-  const double g = n.param<double>("/g", 9.81);
-  const double m = n.param<double>("/m", 8.800);
-  const double diam_collerette = n.param<double>("/diam_collerette", 0.24);
-  const double screw_thread = n.param<double>("/screw_thread", 1.75e-3);
-  const double tick_per_turn = n.param<double>("/tick_per_turn", 48);
-  const double piston_diameter = n.param<double>("/piston_diameter", 0.05);
-  const double piston_ref_eq = n.param<double>("/piston_ref_eq", 2100);
-  const double piston_max_value = n.param<double>("/piston_max_value", 2400);
+  const double rho = n_private.param<double>("rho", 1025.0);
+  const double g = n_private.param<double>("g", 9.81);
+  const double m = n_private.param<double>("m", 8.800);
+  const double diam_collerette = n_private.param<double>("diam_collerette", 0.24);
+  const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
+  const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
+  const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
+  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100);
+  const double piston_max_value = n_private.param<double>("piston_max_value", 2400);
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
   coeff_A = g*rho/m;
@@ -132,11 +132,11 @@ int main(int argc, char *argv[]){
 
   // Compute regulation constant
   s = n_private.param<double>("root_regulation", -1.0);
-  double limit_depth_regulation = n_private.param<double>("limit_depth_regulation", 0.5);
+  double limit_depth_regulation = n_private.param<double>("limit_depth_controller", 0.5);
   double speed_volume_sink = n_private.param<double>("speed_volume_sink", 2.0);
 
   const double hysteresis_piston = n_private.param<double>("hysteresis_piston", 0.6);
-  const double piston_max_velocity = n.param<double>("piston_speed_max_tick", 30)*tick_to_volume; // in m3/sec
+  const double piston_max_velocity = n_private.param<double>("piston_speed_max_tick", 30)*tick_to_volume; // in m3/sec
 
   // Hold depth parameters
   const bool hold_depth_enable = n_private.param<bool>("hold_depth", false);
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]){
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);
-  ros::Publisher debug_pub = n.advertise<seabot_depth_regulation::RegulationDebug>("debug", 1);
+  ros::Publisher debug_pub = n.advertise<seabot_depth_controller::RegulationDebug>("debug", 1);
 
   seabot_piston_driver::PistonPosition position_msg;
 

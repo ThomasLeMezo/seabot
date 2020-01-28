@@ -1,18 +1,21 @@
 <launch>
 
-				<param name="mission_file_name" value="mission_depth_only.xml"/>
-    <param name="mission_path" value="$(find seabot)/mission" />
+	<include file="$(find seabot)/launch/base.launch"/>
+	<include file="$(find seabot)/launch/regulation.launch"/>
+	<include file="$(find seabot)/launch/safety.launch"/>
+	<include file="$(find seabot)/launch/iridium.launch"/>
 
-    <include file="$(find seabot)/launch/base.launch"/>
-    <include file="$(find seabot)/launch/regulation.launch"/>
-				<include file="$(find seabot)/launch/safety.launch"/>
-				<include file="$(find seabot)/launch/iridium.launch"/>
+	<param name="/mission/mission_path" value="$(find seabot)/mission" />
 
-    <node name="mission" pkg="seabot_mission" type="mission_node" ns="mission" output="screen" respawn="false">
-        <param name="frequency" value="1.0" />
-        <param name="flash_time_next_waypoint" value="3" />
-    </node>
+	<node name="mission" pkg="seabot_mission" type="mission_node" ns="mission" output="screen" respawn="false">
+		<remap from="~frequency" to="/mission/frequency" />
+		<remap from="~flash_time_next_waypoint" to="/mission/flash_time_next_waypoint" />
+		<remap from="~mission_file_name" to="/mission_file_name" />
+		<remap from="~mission_path" to="/mission/mission_path" />
 
-				<rosparam command="dump" file="~/mission.yaml" />
+		<remap from="~limit_velocity_default" to="/mission/limit_velocity_default" />
+		<remap from="~approach_velocity_default" to="/mission/approach_velocity_default" />        
+	</node>
+
 </launch>
 
