@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
     // Parameters
     ros::NodeHandle n_private("~");
     double frequency = n_private.param<double>("frequency", 2.0);
+    bool primary_i2c_address = n_private.param<bool>("primary_i2c_address", true);
     const char* m_i2c_periph = "/dev/i2c-1";
 
     // Publishers
@@ -109,7 +110,11 @@ int main(int argc, char *argv[])
     struct bme280_dev dev;
     int8_t rslt = BME280_OK;
 
-    dev.dev_id = BME280_I2C_ADDR_PRIM;
+    if(primary_i2c_address)
+      dev.dev_id = BME280_I2C_ADDR_PRIM;
+    else
+      dev.dev_id = BME280_I2C_ADDR_SEC;
+
     dev.intf = BME280_I2C_INTF;
 
     if ((file = open(m_i2c_periph,O_RDWR)) < 0) {

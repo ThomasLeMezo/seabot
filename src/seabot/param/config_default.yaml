@@ -41,6 +41,8 @@ driver:
 
 	pressure_int:
 		frequency: 5
+		# primary i2c address = 0x76, secondary = 0x77
+		primary_i2c_address: True
 
 	temperature_ext:
 		frequency: 5
