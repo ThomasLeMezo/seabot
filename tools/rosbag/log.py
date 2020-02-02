@@ -140,6 +140,8 @@ tab.addTab(area_iridium, "Iridium")
 tab.addTab(area_position, "GNSS")
 tab.addTab(area_waypoints, "Waypoints")
 
+lr_mission = None
+
 #################### Standard plot ####################
 
 def set_plot_options(p):
@@ -1083,17 +1085,18 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
 
     dock_mission.addWidget(pg_gps2)
 
-    f_pose_gnss = interpolate.interp1d(regulationWaypointData.time, regulationWaypointData.distance_error, bounds_error=False, kind="zero")
-    distance_error_interp = f_pose_gnss(poseFusionData.time)
+    if(np.size(regulationWaypointData.time)>0):
+        f_pose_gnss = interpolate.interp1d(regulationWaypointData.time, regulationWaypointData.distance_error, bounds_error=False, kind="zero")
+        distance_error_interp = f_pose_gnss(poseFusionData.time)
 
-    pg_distance_error = pg.PlotWidget()
-    set_plot_options(pg_distance_error)
-    pg_distance_error.plot(poseFusionData.time, distance_error_interp[:-1], pen=(255,0,0), name="distance_error", stepMode=True)
-    dock_mission.addWidget(pg_distance_error)
+        pg_distance_error = pg.PlotWidget()
+        set_plot_options(pg_distance_error)
+        pg_distance_error.plot(poseFusionData.time, distance_error_interp[:-1], pen=(255,0,0), name="distance_error", stepMode=True)
+        dock_mission.addWidget(pg_distance_error)
 
-    lr_mission = pg.LinearRegionItem([0, poseFusionData.time[-1]], bounds=[0,poseFusionData.time[-1]], movable=True)
-    pg_distance_error.addItem(lr_mission)
-    lr_bounds_mission = lr_mission.getRegion()
+        lr_mission = pg.LinearRegionItem([0, poseFusionData.time[-1]], bounds=[0,poseFusionData.time[-1]], movable=True)
+        pg_distance_error.addItem(lr_mission)
+        lr_bounds_mission = lr_mission.getRegion()
 
     def update_plot_mission():
         global plot_XY_mission, poseFusionData, lr_mission, poseFusionData, lr_bounds_mission
@@ -1118,9 +1121,10 @@ if(np.size(poseFusionData.east)>0 and np.size(fixData.time)>0 and np.size(missio
             plot_circle_outside.setData(X_Circ_inside, Y_Circ_inside)
             plot_circle_inside.setData(X_Circ_outside, Y_Circ_outside)
 
-    timer_mission = pg.QtCore.QTimer()
-    timer_mission.timeout.connect(update_plot_mission)
-    timer_mission.start(50)
+    if(lr_mission!=None):
+        timer_mission = pg.QtCore.QTimer()
+        timer_mission.timeout.connect(update_plot_mission)
+        timer_mission.start(50)
 
 #### Distance error ####
 if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0 and len(engineData.time)>0):
