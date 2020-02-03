@@ -30,6 +30,7 @@
 
 		<node name="pressure_int" pkg="pressure_bme280_driver" type="bme280_node" output="screen" respawn="true" respawn_delay="5">
 			<remap from="~frequency" to="/driver/pressure_int/frequency" />
+			<remap from="~primary_i2c_address" to="/driver/pressure_int/primary_i2c_address" />
 		</node>
 
 		<node name="temperature_ext" pkg="temperature_tsys01_driver" type="temperature_tsys01_node" output="screen" respawn="true" respawn_delay="5">
@@ -54,7 +55,7 @@
 		<node name="gpsd_client" pkg="gpsd_client" type="gpsd_client" output="screen">
 		</node>
 
-		<node name="i2c_imu" pkg="i2c_imu" type="i2c_imu_node" output="screen" respawn_delay="5">
+		<node name="imu_mpu9250" pkg="imu_mpu" type="imu_mpu9250" output="screen" respawn_delay="5">
 			<remap from="~imu_type" to="/driver/imu/imu_type" />
 			<remap from="~imu_frame" to="/driver/imu/imu_frame" />
 			<remap from="~is_i2c" to="/driver/imu/is_i2c" />

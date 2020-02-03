@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(i2c_imu)
+project(imu_mpu)
 
 add_compile_options(-std=c++11)
 
@@ -102,15 +102,15 @@ include_directories(
 )
 
 ## Declare a cpp executable
-add_executable(i2c_imu_node src/i2c_imu_node.cpp)
+add_executable(imu_mpu9250 src/imu_mpu9250.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(i2c_imu_node i2c_imu_generate_messages_cpp)
-add_dependencies(i2c_imu_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(imu_mpu9250 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(i2c_imu_node
+target_link_libraries(imu_mpu9250
 		RTIMULib
   ${catkin_LIBRARIES}
 )

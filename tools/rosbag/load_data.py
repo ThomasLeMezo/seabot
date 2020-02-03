@@ -447,7 +447,8 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
         elif(topic==poseFusionData.topic_name):
             poseFusionData.east[poseFusionData.k] = msg.east
             poseFusionData.north[poseFusionData.k] = msg.north
-            poseFusionData.heading[poseFusionData.k] = msg.heading
+            if hasattr(msg, 'heading'):
+                poseFusionData.heading[poseFusionData.k] = msg.heading
             poseFusionData.add_time(t,startTime)
 
         elif(topic==regulationHeadingData.topic_name):

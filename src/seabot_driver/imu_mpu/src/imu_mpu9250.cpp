@@ -21,7 +21,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/MagneticField.h>
 #include <angles/angles.h>
-#include <i2c_imu/ImuDebug.h>
+#include <imu_mpu/ImuDebug.h>
 
 #include "RTIMULib.h"
 #include "RTIMUSettings.h"
@@ -54,7 +54,7 @@ private:
   ros::NodeHandle private_nh_;
   // sensor msg topic output
   sensor_msgs::Imu imu_msg;
-  i2c_imu::ImuDebug debug_msg;
+  imu_mpu::ImuDebug debug_msg;
 
   ros::Publisher imu_pub_;
   ros::Publisher magnetometer_pub_;
@@ -181,7 +181,7 @@ I2cImu::I2cImu() : nh_(), private_nh_("~"), imu_settings_(&private_nh_){
   private_nh_.param<std::string>("frame_id", imu_frame_id_, "imu_link");
 
   imu_pub_ = nh_.advertise<sensor_msgs::Imu>("imu",1);
-  imu_debug_pub_ = nh_.advertise<i2c_imu::ImuDebug>("imu_debug", 1);
+  imu_debug_pub_ = nh_.advertise<imu_mpu::ImuDebug>("imu_debug", 1);
 
   if(private_nh_.param<bool>("publish_magnetometer", false))
     magnetometer_pub_ = nh_.advertise<geometry_msgs::Vector3>("mag", 1, false);

@@ -1,5 +1,5 @@
 <launch>
-	<node pkg="i2c_imu" type="i2c_imu_node" name="i2c_imu" output="screen" >
+	<node pkg="i2c_imu" type="imu_mpu9250" name="imu_mpu9250" output="screen" >
 		<rosparam file="$(find i2c_imu)/param/imu_9250.yaml"/>
 	</node>        
 </launch>
