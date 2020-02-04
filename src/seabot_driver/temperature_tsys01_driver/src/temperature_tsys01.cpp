@@ -1,4 +1,5 @@
 #include "temperature_tsys01.h"
+#include "sys/ioctl.h"
 
 using namespace std;
 

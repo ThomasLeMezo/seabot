@@ -159,6 +159,7 @@ add_dependencies(thruster_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPO
 # )
 target_link_libraries(thruster_node
    ${catkin_LIBRARIES}
+   ${I2C_LIBRARIES}
 )
 
 #############

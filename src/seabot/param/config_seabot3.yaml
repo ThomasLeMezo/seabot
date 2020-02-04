@@ -1,231 +1,231 @@
 
-mission_file_name: "mission_depth_only.xml"
+mission_file_name: "mission_guerledan3.xml"
 
 physics:
-	rho: 1020.0
-	g: 9.81
+  rho: 1020.0
+  g: 9.81
 
-	# Float
-	m: 8.800
-	diam_collerette: 0.24
-	screw_thread: 1.75e-3
-	tick_per_turn: 48
-	piston_diameter: 0.05
-	piston_ref_eq: 2100
-	piston_max_value: 2400
-	piston_speed_max_tick: 20
+  # Float
+  m: 18.0
+  diam_collerette: 0.24
+  screw_thread: 1.75e-3
+  tick_per_turn: 48
+  piston_diameter: 0.05
+  piston_ref_eq: 2100
+  piston_max_value: 2400
+  piston_speed_max_tick: 20
 
 driver:
-	power:
-		frequency: 0.2
+  power:
+    frequency: 0.2
 
-	piston:
-		frequency: 5.0
-		distance_fast_move: 100
-		# If speed_fast_move is too high, disturbances are create on I2C external pressure sensor
-		speed_fast_move_factor: 2.0
-		speed_reset: 30
-		speed_out_min: 15
-		speed_in_min: 15
-		speed_out_slope: 0.5
-		speed_in_slope: 0.5
-		speed_depth_layer: 5.0
-		depth_max: 50.0
-		speed_max: 50
-		reached_switch_off: True
-		error_interval: 6
-		tick_max: 2500
+  piston:
+    frequency: 5.0
+    distance_fast_move: 100
+    # If speed_fast_move is too high, disturbances are create on I2C external pressure sensor
+    speed_fast_move_factor: 2.0
+    speed_reset: 30
+    speed_out_min: 15
+    speed_in_min: 15
+    speed_out_slope: 0.5
+    speed_in_slope: 0.5
+    speed_depth_layer: 5.0
+    depth_max: 50.0
+    speed_max: 50
+    reached_switch_off: true
+    error_interval: 6
+    tick_max: 2500
 
-	pressure_ext:
-		frequency: 5
+  pressure_ext:
+    frequency: 5
 
-	pressure_int:
-		frequency: 5
+  pressure_int:
+    frequency: 5
 
-	temperature_ext:
-		frequency: 5
+  temperature_ext:
+    frequency: 5
 
-	thruster:
-		frequency: 15.0
-		coeff_cmd_to_pwm: 9
-		delay_stop: 0.5
-		allow_backward: False
-		invert_left_and_right: True
-		invert_left: False
-		invert_right: True
-		max_engine_change: 15.0
-		max_angular_velocity: 1.0
-		max_linear_velocity: 1.0
+  thruster:
+    frequency: 15.0
+    coeff_cmd_to_pwm: 9
+    delay_stop: 0.5
+    allow_backward: false
+    invert_left_and_right: true
+    invert_left: false
+    invert_right: true
+    max_engine_change: 15.0
+    max_angular_velocity: 1.0
+    max_linear_velocity: 1.0
 
-	imu:
-		imu_type: 7
-		imu_frame: imu_link
-		is_i2c: false
-		i2c_bus: 1
-		i2c_slave_address: 104
-		spi_speed: 500000
-		spi_select: 0
-		spi_bus: 0
-		fusion_type: 1
-		publish_euler: true
-		publish_magnetometer: true
-		axis_rotation: 4
-		mpu9250:
-			#Sample Rates
-			compass_sample_rate: 10
-			gyro_accel_sample_rate: 10
-			#Accel
-			accel_low_pass_filter: 4
-			accel_full_scale_range: 16
-			#Gyro
-			gyro_low_pass_filter: 3
-			gyro_full_scale_range: 16
+  imu:
+    imu_type: 7
+    imu_frame: imu_link
+    is_i2c: false
+    i2c_bus: 1
+    i2c_slave_address: 104
+    spi_speed: 500000
+    spi_select: 0
+    spi_bus: 0
+    fusion_type: 1
+    publish_euler: true
+    publish_magnetometer: true
+    axis_rotation: 4
+    mpu9250:
+      #Sample Rates
+      compass_sample_rate: 10
+      gyro_accel_sample_rate: 10
+      #Accel
+      accel_low_pass_filter: 4
+      accel_full_scale_range: 16
+      #Gyro
+      gyro_low_pass_filter: 3
+      gyro_full_scale_range: 16
 
-		ellipsoid_offset: [ 6.74780627561 ,  -8.03625475318 ,  41.0918499046 ]
-		ellipsoid_matrix0: [ 1.02033827535 ,  0.0294237290223 ,  -0.0127605544002 ]
-		ellipsoid_matrix1: [ 0.0294237290223 ,  1.00842241112 ,  0.00669261513772 ]
-		ellipsoid_matrix2: [ -0.0127605544002 ,  0.00669261513772 ,  0.972909043907 ]
+    ellipsoid_offset: [ 6.74780627561 ,  -8.03625475318 ,  41.0918499046 ]
+    ellipsoid_matrix0: [ 1.02033827535 ,  0.0294237290223 ,  -0.0127605544002 ]
+    ellipsoid_matrix1: [ 0.0294237290223 ,  1.00842241112 ,  0.00669261513772 ]
+    ellipsoid_matrix2: [ -0.0127605544002 ,  0.00669261513772 ,  0.972909043907 ]
 
-		accel_min: [-0.889, -1.043, -1.116]
-		accel_max: [1.155, 0.987, 0.957]
+    accel_min: [-0.889, -1.043, -1.116]
+    accel_max: [1.155, 0.987, 0.957]
 
-		gyro_bias: [-3.81e-05, 3.63e-06, 4.32e-05]
-		mag_declination: -1.722
+    gyro_bias: [-3.81e-05, 3.63e-06, 4.32e-05]
+    mag_declination: -1.722
 
 filter:
-	depth_filter:
-		frequency: 5
-		filter_window_size: 6
-		filter_mean_half_width: 2
-		filter_mean_width_velocity: 6
-		velocity_dt_sample: 5
-		filter_velocity_mean_half_width: 2
-		velocity_limit: 0.5
-		zero_depth_pressure: 1.024
+  depth_filter:
+    frequency: 5
+    filter_window_size: 6
+    filter_mean_half_width: 2
+    filter_mean_width_velocity: 6
+    velocity_dt_sample: 5
+    filter_velocity_mean_half_width: 2
+    velocity_limit: 0.5
+    zero_depth_pressure: 1.024
 
-	temperature_filter:
-		frequency: 5
-		filter_median_size: 6
-		filter_mean_width: 2
-		filter_mean_width_velocity: 5
-		velocity_delta_size: 5
-		velocity_limit: 2.0
+  temperature_filter:
+    frequency: 5
+    filter_median_size: 6
+    filter_mean_width: 2
+    filter_mean_width_velocity: 5
+    velocity_delta_size: 5
+    velocity_limit: 2.0
 
-	batteries_filter:
-		frequency: 0.2
-		filter_median_size: 6
-		filter_mean_width: 2
+  batteries_filter:
+    frequency: 0.2
+    filter_median_size: 6
+    filter_mean_width: 2
 
-	internal_sensor_filter:
-		frequency: 5
-		filter_median_size: 6
-		filter_mean_width: 2
+  internal_sensor_filter:
+    frequency: 5
+    filter_median_size: 6
+    filter_mean_width: 2
 
-	lambert:
-		frequency: 5
-		nb_sample_mean: 6
-		nb_sample_between_heading: 150
+  lambert:
+    frequency: 5
+    nb_sample_mean: 6
+    nb_sample_between_heading: 150
 
 iridium:
-	duration_between_msg: 60
-	wait_time_surface: 10
-	depth_surface_limit: 0.5
-	debug: False
-	enable_gnss_iridium: False
+  duration_between_msg: 60
+  wait_time_surface: 10
+  depth_surface_limit: 0.5
+  debug: false
+  enable_gnss_iridium: false
 
 kalman:
-	frequency: 5
-	limit_min_depth: 0.3
+  frequency: 5
+  limit_min_depth: 0.3
 
-	estimated_first_error_equilibrium_tick: 250
+  estimated_first_error_equilibrium_tick: 250
 
-	gamma_alpha_velocity: 1.0e-4
-	gamma_alpha_depth: 1.0e-5
-	gamma_alpha_offset: 1.0e-8
-	gamma_alpha_chi: 1.0e-8
+  gamma_alpha_velocity: 1.0e-6
+  gamma_alpha_depth: 0.0
+  gamma_alpha_offset: 1.0e-10
+  gamma_alpha_chi: 1.0e-10
 
-	limit_offset: 2400
-	limit_chi: 500
+  limit_offset: 2400
+  limit_chi: 500
 
 mission:
-	frequency: 1.0
-	flash_time_next_waypoint: 3
-	limit_velocity_default: 0.02
-	approach_velocity_default: 1.0
+  frequency: 1.0
+  flash_time_next_waypoint: 3
+  limit_velocity_default: 0.02
+  approach_velocity_default: 1.0
 
 regulation:
-	state_feedback:
-		frequency: 1.0
-		root_regulation: -0.2
-		limit_depth_controller: 0.3
+  state_feedback:
+    frequency: 1.0
+    root_regulation: -0.2
+    limit_depth_controller: 0.3
 
-		delta_velocity_lb: -0.01
-		delta_velocity_ub: 0.01
+    delta_velocity_lb: -0.01
+    delta_velocity_ub: 0.01
 
-		delta_position_lb: 0.0
-		delta_position_ub: 0.0
+    delta_position_lb: 0.0
+    delta_position_ub: 0.0
 
-		hysteresis_piston: 0.6
-		speed_volume_sink: 2.0
+    hysteresis_piston: 0.6
+    speed_volume_sink: 2.0
 
-		hold_depth_enable: false
-		hold_depth_value_enter: 0.05
-		hold_depth_value_exit: 0.
+    hold_depth_enable: false
+    hold_depth_value_enter: 0.05
+    hold_depth_value_exit: 0.
 
-	waypoint:
-		frequency: 10.0
-		delta_valid_time: 3.0
+  waypoint:
+    frequency: 10.0
+    delta_valid_time: 3.0
 
-		hysteresis_circle_in: 2.0
-		hysteresis_circle_out: 4.0
+    hysteresis_circle_in: 2.0
+    hysteresis_circle_out: 4.0
 
-		coeff_P: 0.8
-		coeff_D: 0.2
-		linear_speed: 1.3
-		depth_limit_switch_off: 0.5
-		max_angular_velocity: 1.0
+    coeff_P: 0.8
+    coeff_D: 0.2
+    linear_speed: 1.5
+    depth_limit_switch_off: 0.5
+    max_angular_velocity: 1.0
 
 safety:
-	frequency: 1.0
+  frequency: 1.0
 
-	# Leak detection
-	safety_depressure: True
-	humidity_limit: 70.0
+  # Leak detection
+  safety_depressure: true
+  humidity_limit: 70.0
 
-	internal_pressure_detection: True
-	delta_volume_allowed: 1.0
-	delta_ref_allowed: 10.0
-	volume_ref: 0.006
-	transition_tick_law: 650.0
-	pressure_internal_max: 850.0
+  internal_pressure_detection: true
+  delta_volume_allowed: 1.0
+  delta_ref_allowed: 10.0
+  volume_ref: 0.006
+  transition_tick_law: 650.0
+  pressure_internal_max: 850.0
 
-	# Zero depth reset
-	max_depth_reset_zero: 1.0
-	max_speed_reset_zero: 0.1
-	limit_piston_position_reset_depth: 3
-	time_delay_zero_depth_condition: 5
+  # Zero depth reset
+  max_depth_reset_zero: 1.0
+  max_speed_reset_zero: 0.1
+  limit_piston_position_reset_depth: 3
+  time_delay_zero_depth_condition: 5
 
-	# Depth limit
-	safety_pressure_limit: True
-	pressure_limit: 6.2
-	time_before_pressure_emergency: 3.0
+  # Depth limit
+  safety_pressure_limit: true
+  pressure_limit: 6.2
+  time_before_pressure_emergency: 3.0
 
-	# Seafloor
-	seafloor_detection: True
-	time_before_seafloor_emergency: 300.0
+  # Seafloor
+  seafloor_detection: true
+  time_before_seafloor_emergency: 300.0
 
-	# Batteries
-	safety_battery: True
-	battery_limit: 10.0
+  # Batteries
+  safety_battery: true
+  battery_limit: 10.0
 
-	# Flash
-	enable_flash: True
-	limit_depth_flash_enable: 0.5
+  # Flash
+  enable_flash: true
+  limit_depth_flash_enable: 0.5
 
-	# Message delay
-	time_delay_batteries_msg: 30.0
-	time_delay_internal_sensor_msg: 2.0
-	time_delay_external_sensor_msg: 2.0
-	time_delay_depth_msg: 2.0
-	time_delay_piston_state_msg: 2.0
-	time_delay_euler_msg: 1.0
+  # Message delay
+  time_delay_batteries_msg: 30.0
+  time_delay_internal_sensor_msg: 2.0
+  time_delay_external_sensor_msg: 2.0
+  time_delay_depth_msg: 2.0
+  time_delay_piston_state_msg: 2.0
+  time_delay_euler_msg: 1.0

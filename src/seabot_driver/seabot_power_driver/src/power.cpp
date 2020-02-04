@@ -1,4 +1,5 @@
 #include "power.h"
+#include <sys/ioctl.h>
 
 Power::Power(){
 

@@ -160,6 +160,7 @@ add_dependencies(pressure_ms5837_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 # )
 target_link_libraries(pressure_ms5837_node
    ${catkin_LIBRARIES}
+   ${I2C_LIBRARIES}
 )
 
 #############

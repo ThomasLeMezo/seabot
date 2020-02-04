@@ -159,6 +159,7 @@ add_dependencies(pressure_89bsd_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 # )
 target_link_libraries(pressure_89bsd_node
    ${catkin_LIBRARIES}
+   ${I2C_LIBRARIES}
 )
 
 #############

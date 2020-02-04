@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <omp.h>
+#include <numeric>
 #include <math.h>
 #include <array>
 

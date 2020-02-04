@@ -31,7 +31,15 @@ extern "C"{
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <asm/ioctl.h>
-#include <linux/i2c-dev.h>
+extern "C" {
+    #include <linux/i2c-dev.h>
+}
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,8,0)
+ extern "C" {
+    #include <i2c/smbus.h>
+}
+#endif
 
 using namespace std;
 double m_pressure = 0.0;

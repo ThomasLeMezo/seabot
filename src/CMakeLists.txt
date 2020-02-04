@@ -5,6 +5,14 @@ cmake_minimum_required(VERSION 2.8.3)
 
 set(CATKIN_TOPLEVEL TRUE)
 
+execute_process(COMMAND uname -r OUTPUT_VARIABLE UNAME_RESULT OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(-- " Kernel version: " ${UNAME_RESULT})
+string(REGEX MATCH "[0-9]+.[0-9]+" LINUX_KERNEL_VERSION ${UNAME_RESULT})
+if (LINUX_KERNEL_VERSION GREATER 5.0)
+    set(I2C_LIBRARIES i2c)
+    message("Set I2C LIBRARIES = " ${I2C_LIBRARIES})
+endif()
+
 # search for catkin within the workspace
 set(_cmd "catkin_find_pkg" "catkin" "${CMAKE_SOURCE_DIR}")
 execute_process(COMMAND ${_cmd}

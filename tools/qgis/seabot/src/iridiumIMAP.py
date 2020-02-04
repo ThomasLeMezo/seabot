@@ -43,6 +43,7 @@ class ImapServer(QObject):
 		self.db = DataBaseConnection(init_table=True)
 		self.locale = QLocale(QLocale.English, QLocale.UnitedStates)
 		self.start_sync = None
+		self.last_mail_datetime = None
 
 	def __del__(self):
 		# with self.lock:
@@ -214,9 +215,9 @@ class ImapServer(QObject):
 
 			# Check timed received
 			mail_datetime = QDateTime.fromString(mail["Date"], Qt.RFC2822Date)
-			if(self.start_sync>mail_datetime):
-				print("Before start_sync")
-				return True
+			# if(self.last_mail_datetime>=mail_datetime):
+			# 	print("Before last mail datetime")
+			# 	return True
 
 			if mail.get_content_maintype() != 'multipart':
 				print("No attachment")
@@ -275,7 +276,11 @@ class IridiumMessageParser():
 		fields = {}
 		
 		# To be updated
-		fields["ts"], bit_position = self.deserialize_data(data, 18, bit_position)
+		message_type, bit_position = self.deserialize_data(data, 4, bit_position)
+		time_day_LQ, bit_position = self.deserialize_data(data, 14, bit_position)
+		time_day = 3*time_day_LQ
+		# Compute difference between send_time and time_day
+
 		fields["ts"] = send_time
 
 		fields["east"], bit_position = self.deserialize_data(data, 21, bit_position, 0, 1300000)

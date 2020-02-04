@@ -157,6 +157,7 @@ add_dependencies(bme280_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORT
 # )
 target_link_libraries(bme280_node
    ${catkin_LIBRARIES}
+   ${I2C_LIBRARIES}
 )
 
 #############

@@ -99,7 +99,7 @@ class SeabotMission():
 		self.waypoint_list.append(wp)
 
 	def get_current_wp(self):
-		t = datetime.datetime.now()
+		t = datetime.datetime.utcnow()
 
 		while(len(self.waypoint_list)-1>self.current_wp_id and self.waypoint_list[self.current_wp_id].time_end<t):
 			self.current_wp_id+=1

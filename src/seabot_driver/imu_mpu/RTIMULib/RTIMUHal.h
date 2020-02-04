@@ -65,7 +65,23 @@
 
 #if !defined(WIN32) && !defined(__APPLE__)
 #include <sys/ioctl.h>
-#include <linux/i2c-dev.h>
+extern "C" {
+    #include <linux/i2c-dev.h>
+}
+
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,8,0)
+extern "C" {
+    extern "C" {
+    #include <linux/i2c-dev.h>
+}
+    extern "C" {
+    #include <i2c/smbus.h>
+}
+}
+
+#endif
+
 #endif
 
 #if !defined(WIN32)

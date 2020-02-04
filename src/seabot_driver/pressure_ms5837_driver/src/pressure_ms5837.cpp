@@ -1,4 +1,5 @@
 #include "pressure_ms5837.h"
+#include <sys/ioctl.h>
 
 #define T_MIN -20.0
 #define T_MAX 85.0

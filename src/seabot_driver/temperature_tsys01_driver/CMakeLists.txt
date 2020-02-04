@@ -159,6 +159,7 @@ add_dependencies(temperature_tsys01_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 # )
 target_link_libraries(temperature_tsys01_node
    ${catkin_LIBRARIES}
+   ${I2C_LIBRARIES}
 )
 
 #############

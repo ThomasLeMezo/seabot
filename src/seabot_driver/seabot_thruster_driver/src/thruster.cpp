@@ -1,4 +1,5 @@
 #include "thruster.h"
+#include "sys/ioctl.h"
 
 Thruster::Thruster(){
 

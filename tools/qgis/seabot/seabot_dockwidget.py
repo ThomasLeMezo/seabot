@@ -459,7 +459,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 self.label_mission_end_time.setText(str(wp.get_time_end()))
                 self.label_mission_depth.setText(str(wp.get_depth()))
                 self.label_mission_waypoint_id.setText(str(wp.get_id())+"/"+str(seabotMission.get_nb_wp()))
-                self.label_mission_time_remain.setText(str(wp.get_time_end()-datetime.datetime.now().replace(microsecond=0)))
+                self.label_mission_time_remain.setText(str(wp.get_time_end()-datetime.datetime.utcnow().replace(microsecond=0)))
 
                 wp_next = seabotMission.get_next_wp()
                 if(wp_next != None):

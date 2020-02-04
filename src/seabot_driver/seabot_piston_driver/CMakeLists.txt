@@ -159,8 +159,10 @@ add_dependencies(piston_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORT
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
 target_link_libraries(piston_node
    ${catkin_LIBRARIES}
+   ${I2C_LIBRARIES}
 )
 
 #############

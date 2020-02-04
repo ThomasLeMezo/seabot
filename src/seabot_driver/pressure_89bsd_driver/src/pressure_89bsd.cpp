@@ -1,4 +1,5 @@
 #include "pressure_89bsd.h"
+#include <sys/ioctl.h>
 
 #define Q0 9
 #define Q1 11
