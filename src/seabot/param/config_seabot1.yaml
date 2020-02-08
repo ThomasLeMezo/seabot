@@ -32,7 +32,7 @@ driver:
     speed_depth_layer: 5.0
     depth_max: 50.0
     speed_max: 50
-    reached_switch_off: True
+    reached_switch_off: true
     error_interval: 6
     tick_max: 2500
 
@@ -49,10 +49,11 @@ driver:
     frequency: 15.0
     coeff_cmd_to_pwm: 9
     delay_stop: 0.5
-    allow_backward: False
-    invert_left_and_right: True
-    invert_left: False
-    invert_right: True
+    allow_backward: false
+    thruster_left_pin: 0
+    thruster_right_pin: 1
+    invert_left: false
+    invert_right: true
     max_engine_change: 15.0
     max_angular_velocity: 1.0
     max_linear_velocity: 1.0
@@ -131,8 +132,8 @@ iridium:
   duration_between_msg: 60
   wait_time_surface: 10
   depth_surface_limit: 0.5
-  debug: False
-  enable_gnss_iridium: False
+  debug: false
+  enable_gnss_iridium: false
 
 kalman:
   frequency: 5
@@ -141,7 +142,7 @@ kalman:
   estimated_first_error_equilibrium_tick: 250
 
   gamma_alpha_velocity: 1.0e-4
-  gamma_alpha_depth: 1.0e-5
+  gamma_alpha_depth: 0.0
   gamma_alpha_offset: 1.0e-8
   gamma_alpha_chi: 1.0e-8
 
@@ -190,10 +191,10 @@ safety:
   frequency: 1.0
 
   # Leak detection
-  safety_depressure: True
+  safety_depressure: true
   humidity_limit: 70.0
 
-  internal_pressure_detection: True
+  internal_pressure_detection: true
   delta_volume_allowed: 1.0
   delta_ref_allowed: 10.0
   volume_ref: 0.006
@@ -207,20 +208,20 @@ safety:
   time_delay_zero_depth_condition: 5
 
   # Depth limit
-  safety_pressure_limit: True
+  safety_pressure_limit: true
   pressure_limit: 6.2
   time_before_pressure_emergency: 3.0
 
   # Seafloor
-  seafloor_detection: True
+  seafloor_detection: true
   time_before_seafloor_emergency: 300.0
 
   # Batteries
-  safety_battery: True
+  safety_battery: true
   battery_limit: 10.0
 
   # Flash
-  enable_flash: True
+  enable_flash: true
   limit_depth_flash_enable: 0.5
 
   # Message delay

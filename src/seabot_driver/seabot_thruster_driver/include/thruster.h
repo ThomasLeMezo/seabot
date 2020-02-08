@@ -56,10 +56,20 @@ public:
    */
   uint8_t& get_version();
 
+  /**
+   * @brief set_thrusters_pin
+   * @param left
+   * @param right
+   */
+  void set_thrusters_pin(const int &left, const int &right);
+
 private:
   int m_file;
   const int m_i2c_addr = 0x20;
   const char* m_i2c_periph = "/dev/i2c-1";
+
+  size_t m_thruster_left_pin = 0;
+  size_t m_thruster_right_pin = 1;
 
   uint8_t m_version=0;
 };
