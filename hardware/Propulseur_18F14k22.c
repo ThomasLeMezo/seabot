@@ -88,8 +88,8 @@ unsigned short cmd_motor[3] = {MOTOR_CMD_STOP, MOTOR_CMD_STOP, MOTOR_CMD_STOP};
  unsigned int cpt_global = PWM_PERIOD;
 
 // Watchdog
-volatile unsigned short watchdog_restart = 3;
 #define WATCHDOG_RESTART_DEFAULT 3 // 3 s
+volatile unsigned short watchdog_restart = WATCHDOG_RESTART_DEFAULT;
 
 /**
  * @brief i2c_read_data_from_buffer

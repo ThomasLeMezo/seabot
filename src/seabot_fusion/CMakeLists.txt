@@ -65,6 +65,7 @@ add_message_files(
   TemperaturePose.msg
   InternalPose.msg
   Kalman.msg
+  Kalman_old.msg
 )
 
 ## Generate services in the 'srv' folder

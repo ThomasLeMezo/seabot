@@ -37,7 +37,7 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x07
+#define CODE_VERSION 0x08
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
@@ -69,7 +69,7 @@ unsigned short ils_removed = 1;
 
 // State Machine
 enum power_state {IDLE,POWER_ON,WAIT_TO_SLEEP, SLEEP};
-volatile unsigned short state = IDLE;
+volatile unsigned short state = POWER_ON;
 #define CPT_STATE_MACHINE_DEFAULT 5
 unsigned short cpt_state_machine = CPT_STATE_MACHINE_DEFAULT;
 unsigned short step_state_machine = 0;
