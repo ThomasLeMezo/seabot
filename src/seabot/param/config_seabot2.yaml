@@ -49,10 +49,11 @@ driver:
     frequency: 15.0
     coeff_cmd_to_pwm: 9
     delay_stop: 0.5
-    allow_backward: False
-    invert_left_and_right: True
-    invert_left: False
-    invert_right: True
+    allow_backward: false
+    thruster_left_pin: 0
+    thruster_right_pin: 1
+    invert_left: false
+    invert_right: true
     max_engine_change: 15.0
     max_angular_velocity: 1.0
     max_linear_velocity: 1.0

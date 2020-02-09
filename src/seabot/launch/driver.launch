@@ -43,7 +43,8 @@
 			<remap from="~coeff_cmd_to_pwm" to="/driver/thruster/coeff_cmd_to_pwm" />
 			<remap from="~delay_stop" to="/driver/thruster/delay_stop" />
 			<remap from="~allow_backward" to="/driver/thruster/allow_backward" />
-			<remap from="~invert_left_and_right" to="/driver/thruster/invert_left_and_right" />
+                        <remap from="~thruster_left_pin" to="/driver/thruster/thruster_left_pin" />
+                        <remap from="~thruster_right_pin" to="/driver/thruster/thruster_right_pin" />
 			<remap from="~invert_left" to="/driver/thruster/invert_left" />
 			<remap from="~invert_right" to="/driver/thruster/invert_right" />
 			<remap from="~max_engine_change" to="/driver/thruster/max_engine_change" />

@@ -76,9 +76,11 @@ int main(int argc, char *argv[]){
   const double delay_stop = n_private.param<float>("delay_stop", 0.5);
   const bool allow_backward = n_private.param<bool>("allow_backward", false);
 
+  const size_t thruster_left_pin = n_private.param<bool>("thruster_left_pin", 0);
+  const size_t thruster_right_pin = n_private.param<bool>("thruster_right_pin", 1);
+
   const bool invert_left = n_private.param<bool>("invert_left", false);
   const bool invert_right = n_private.param<bool>("invert_right", false);
-  const bool invert_left_and_right = n_private.param<bool>("invert_left_and_right", false);
 
   const double max_angular_velocity = n_private.param<float>("max_angular_velocity", 1.0);
   const double max_linear_velocity = n_private.param<float>("max_linear_velocity", 1.0);
@@ -102,6 +104,8 @@ int main(int argc, char *argv[]){
   if(t.get_version()!=0x04){
     ROS_WARN("[Thruster] Wrong PIC code version");
   }
+
+  t.set_thrusters_pin(thruster_left_pin, thruster_right_pin);
 
   time_last_cmd = ros::Time::now();
   manual_time_last_cmd = ros::Time::now();
@@ -194,13 +198,6 @@ int main(int argc, char *argv[]){
           cmd_left = invert_cmd(cmd_left);
         if(invert_right)
           cmd_right = invert_cmd(cmd_right);
-
-        // Invert right and left if necessary
-        if(invert_left_and_right){
-          uint8_t cmd_tmp = cmd_right;
-          cmd_right = cmd_left;
-          cmd_left = cmd_tmp;
-        }
 
         // Velocity of command saturation (avoid brutal input)
         double delta_left = (double)cmd_left - cmd_left_double;
