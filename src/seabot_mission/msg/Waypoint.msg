@@ -4,7 +4,7 @@ float32 depth
 float32 limit_velocity
 float32 approach_velocity
 bool mission_enable
-bool depth_only
+bool enable_thrusters
 uint16 waypoint_number
 uint64  wall_time
 uint64  time_to_next_waypoint

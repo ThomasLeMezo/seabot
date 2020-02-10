@@ -1,4 +1,4 @@
-
+# This file will be loaded by default
 mission_file_name: "mission_depth_only.xml"
 
 physics:
@@ -73,16 +73,16 @@ driver:
     publish_euler: true
     publish_magnetometer: true
     axis_rotation: 4
-    mpu9250:
-      #Sample Rates
-      compass_sample_rate: 10
-      gyro_accel_sample_rate: 10
-      #Accel
-      accel_low_pass_filter: 4
-      accel_full_scale_range: 16
-      #Gyro
-      gyro_low_pass_filter: 3
-      gyro_full_scale_range: 16
+
+    #Sample Rates
+    compass_sample_rate: 10
+    gyro_accel_sample_rate: 10
+    #Accel
+    accel_low_pass_filter: 4
+    accel_full_scale_range: 16
+    #Gyro
+    gyro_low_pass_filter: 3
+    gyro_full_scale_range: 16
 
     ellipsoid_offset: [0, 0, 0]
     ellipsoid_matrix0: [1, 0, 0]
@@ -102,7 +102,8 @@ filter:
     velocity_dt_sample: 5
     filter_velocity_mean_half_width: 2
     velocity_limit: 0.5
-    zero_depth_pressure: 1.024
+    zero_depth_pressure: 1.024 # Initial zero depth value
+    zero_depth_window_size: 100 # Number of sample to be averaged to get zero depth (see time_delay_zero_depth_condition)
 
   temperature_filter:
     frequency: 5
@@ -204,7 +205,7 @@ safety:
   max_depth_reset_zero: 1.0
   max_speed_reset_zero: 0.1
   limit_piston_position_reset_depth: 3
-  time_delay_zero_depth_condition: 5
+  time_delay_zero_depth_condition: 20
 
   # Depth limit
   safety_pressure_limit: True

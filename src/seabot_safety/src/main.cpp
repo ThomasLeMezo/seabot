@@ -262,7 +262,7 @@ int main(int argc, char *argv[]){
 
   const double limit_piston_position_reset_depth = n_private.param<double>("limit_piston_position_reset_depth", 2);
 
-  const double d_zero_depth_condition = n_private.param<double>("time_delay_zero_depth_condition", 5.0);
+  const double d_zero_depth_condition = n_private.param<double>("time_delay_zero_depth_condition", 20.0);
 
   // Subscriber
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);

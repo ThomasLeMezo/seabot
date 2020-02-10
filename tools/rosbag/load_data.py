@@ -189,6 +189,7 @@ class DepthFusionData(SeabotData):
         SeabotData.__init__(self, "/fusion/depth", bag)
         self.depth = np.empty([self.nb_elements], dtype=np.float32)
         self.velocity = np.empty([self.nb_elements], dtype=np.float32)
+        self.zero_depth_pressure = np.empty([self.nb_elements], dtype=np.float32)
 
 class PoseFusionData(SeabotData):
     def __init__(self, bag=None):
@@ -287,6 +288,12 @@ class SafetyDebugData(SeabotData):
         self.volume_delta = np.empty([self.nb_elements], dtype=np.float32)
         self.zero_depth = np.empty([self.nb_elements], dtype=np.uint8)
 
+class SafetyCpu(SeabotData):
+    def __init__(self, bag=None):
+        SeabotData.__init__(self, "/safety/cpu", bag)
+        self.cpu = np.empty([self.nb_elements], dtype=np.float32)
+        self.ram = np.empty([self.nb_elements], dtype=np.float32)
+
 ####################### Iridium #######################
 
 class IridiumStatusData(SeabotData):
@@ -315,7 +322,7 @@ end_time = 0.0
 ####################### Function #######################
 
 #@jit#(nopython=True)
-def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData, imuDebugData):
+def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, safetyCpu, iridiumStatusData, iridiumSessionData, regulationWaypointData, imuDebugData):
     start_time_process = time.time()
     bag = rosbag.Bag(filename, 'r')
 
@@ -352,6 +359,7 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
     missionData.__init__(bag)
     safetyData.__init__(bag)
     safetyDebugData.__init__(bag)
+    safetyCpu.__init__(bag)
     iridiumStatusData.__init__(bag)
     iridiumSessionData.__init__(bag)
     regulationWaypointData.__init__(bag)
@@ -434,6 +442,7 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
         elif(topic==depthFusionData.topic_name):
             depthFusionData.depth[depthFusionData.k] = msg.depth
             depthFusionData.velocity[depthFusionData.k] = msg.velocity
+            depthFusionData.zero_depth_pressure[depthFusionData.k] = msg.zero_depth_pressure
             depthFusionData.add_time(t,startTime)
 
         elif(topic==regulationData.topic_name):
@@ -617,6 +626,11 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
                 else:
                     safetyData.piston[safetyData.k] = 0
             safetyData.add_time(t, startTime)
+
+        elif(topic==safetyCpu.topic_name):
+            safetyCpu.cpu[safetyCpu.k] = msg.cpu
+            safetyCpu.ram[safetyCpu.k] = msg.ram
+            safetyCpu.add_time(t, startTime)
 
         elif(topic==safetyDebugData.topic_name):
             if(msg.flash):

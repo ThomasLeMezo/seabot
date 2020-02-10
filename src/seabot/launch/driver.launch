@@ -1,5 +1,6 @@
 <launch>
-        <rosparam file="$(find seabot)/param/config_$(env HOSTNAME).yaml"/>
+	<rosparam file="$(find seabot)/param/config_default.yaml"/>
+	<rosparam file="$(find seabot)/param/config_$(env HOSTNAME).yaml"/>
 	<rosparam command="dump" file="~/.ros/mission_config.yaml" />
 
 	<group ns="driver">

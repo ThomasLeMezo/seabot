@@ -160,11 +160,9 @@ void call_reload_mission(){
   }
 }
 
-void call_enable_mission(const bool &enable_mission, const bool &enable_depth, const bool &enable_engine){
+void call_enable_mission(const bool &enable_mission){
   seabot_mission::MissionEnable srv;
   srv.request.enable_mission = enable_mission;
-  srv.request.enable_engine = enable_engine;
-  srv.request.enable_depth = enable_depth;
   if(!service_enable_mission.call(srv))
     ROS_ERROR("[Iridium] Failed to call reload mission");
 }
@@ -198,7 +196,7 @@ void call_decode(const string &data_raw){
     // Enable/Diseable
     // safety, flash, mission, sink etc.
     duration_between_msg = (log_cmd.m_period_message/10.)*60.;
-    call_enable_mission(log_cmd.m_enable_mission, log_cmd.m_enable_depth, log_cmd.m_enable_engine);
+    call_enable_mission(log_cmd.m_enable_mission);
     break;
   }
   default:

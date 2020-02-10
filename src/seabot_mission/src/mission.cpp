@@ -12,8 +12,6 @@
 using namespace std;
 
 bool reload_mission = false;
-bool mission_enable_depth = true;
-bool mission_enable_engine = true;
 bool mission_enable_mission = true;
 
 bool reload_mission_callback(std_srvs::Empty::Request  &req,
@@ -24,8 +22,6 @@ bool reload_mission_callback(std_srvs::Empty::Request  &req,
 
 bool mission_enable_callback(seabot_mission::MissionEnable::Request  &req,
                              seabot_mission::MissionEnable::Response &res){
-  mission_enable_depth = req.enable_depth;
-  mission_enable_engine = req.enable_engine;
   mission_enable_mission = req.enable_mission;
   return true;
 }
@@ -80,15 +76,8 @@ int main(int argc, char *argv[]){
 
     bool is_new_waypoint = m.compute_command(north, east, depth, limit_velocity, approach_velocity, enable_thrusters, ratio);
 
-    if(!mission_enable_engine)
-      waypoint_msg.depth_only = true;
-    else
-      waypoint_msg.depth_only = m.is_depth_only() || !enable_thrusters;
-
-    if(mission_enable_depth)
-      waypoint_msg.depth = depth;
-    else
-      waypoint_msg.depth = 0.0;
+    waypoint_msg.enable_thrusters = enable_thrusters;
+    waypoint_msg.depth = depth;
 
     waypoint_msg.north = north;
     waypoint_msg.east = east;

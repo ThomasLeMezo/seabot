@@ -1,25 +1,23 @@
 <?xml version="1.0"?>
 
 <mission>
-<offset>
-<!--		<start_time_utc>
-		<year>2018</year>
-		<month>11</month>
-		<day>13</day>
-		<hour>15</hour>
-		<min>10</min>
-	</start_time_utc>-->
-</offset>
+	<offset>
+	<!--		<start_time_utc>
+			<year>2018</year>
+			<month>11</month>
+			<day>13</day>
+			<hour>15</hour>
+			<min>10</min>
+		</start_time_utc>-->
+	</offset>
 
-<paths type ="1">
-	<loop number="1" depth_increment="0.0">
-			<waypoint>
-				<duration>900</duration>
-				<depth>0.0</depth>
-				<limit_velocity>0.02</limit_velocity>
-				<approach_velocity>1.0</approach_velocity>
-			</waypoint>
-	</loop>
-</paths>
+	<paths type ="1">
+				<waypoint>
+					<duration>900</duration>
+					<depth>0.0</depth>
+					<limit_velocity>0.02</limit_velocity>
+					<approach_velocity>1.0</approach_velocity>
+				</waypoint>
+	</paths>
 </mission>
 

@@ -98,6 +98,7 @@ regulationHeadingData = RegulationHeadingData()
 regulationHeadingSetPointData = RegulationHeadingSetPointData()
 missionData = MissionData()
 safetyData = SafetyData()
+safetyCpu = SafetyCpu()
 safetyDebugData = SafetyDebugData()
 iridiumStatusData = IridiumStatusData()
 iridiumSessionData = IridiumSessionData()
@@ -106,7 +107,7 @@ rosoutData = RosoutData()
 rosoutAggData = RosoutAggData()
 imuDebugData = ImuDebugData()
 
-load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, iridiumStatusData, iridiumSessionData, regulationWaypointData, imuDebugData)
+load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPointData, imuData, magData, eulerData, pistonVelocityData, pistonDistanceData, pistonSpeedData, batteryData, sensorExtData, sensorIntData, engineData, engineCmdData, fixData, temperatureData, batteryFusionData, sensorIntFusionData, depthFusionData, poseFusionData, kalmanData, regulationData, regulationHeadingData, regulationHeadingSetPointData, missionData, safetyData, safetyDebugData, safetyCpu, iridiumStatusData, iridiumSessionData, regulationWaypointData, imuDebugData)
 
 print("Data has been loaded")
 
@@ -237,32 +238,10 @@ def text_write_safety_msg(p, t, msg, data):
 
 #################### Safety ####################
 
-#### Battery ####
-if(len(batteryData.time)>0):
-    dock_battery = Dock("Battery")
-    area_safety.addDock(dock_battery)
-
-    pg_battery = pg.PlotWidget(title="Battery")
-    set_plot_options(pg_battery)
-
-    if(len(batteryFusionData.time)>0):
-        pg_battery.plot(batteryFusionData.time, batteryFusionData.b1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
-        pg_battery.plot(batteryFusionData.time, batteryFusionData.b2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
-        pg_battery.plot(batteryFusionData.time, batteryFusionData.b3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
-        pg_battery.plot(batteryFusionData.time, batteryFusionData.b4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
-        pg_battery.setLabel('left', "Tension (Fusion)", units="V")
-    else:
-        pg_battery.plot(batteryData.time, batteryData.b1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
-        pg_battery.plot(batteryData.time, batteryData.b2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
-        pg_battery.plot(batteryData.time, batteryData.b3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
-        pg_battery.plot(batteryData.time, batteryData.b4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
-        pg_battery.setLabel('left', "Tension (sensor)", units="V")
-    dock_battery.addWidget(pg_battery)
-
 #### Safety Debug ####
 if(len(safetyDebugData.time)>0):
     dock_safety_debug = Dock("Safety Debug")
-    area_safety.addDock(dock_safety_debug, 'above', dock_battery)
+    area_safety.addDock(dock_safety_debug)
 
     pg_safety_debug_ratio = pg.PlotWidget()
     set_plot_options(pg_safety_debug_ratio)
@@ -288,10 +267,27 @@ if(len(safetyDebugData.time)>0):
     pg_safety_debug_volume.setXLink(pg_safety_debug_ratio)
     pg_safety_debug_volume_delta.setXLink(pg_safety_debug_ratio)
 
+#### Safety Cpu ####
+if(len(safetyCpu.time)>0):
+    dock_safety_cpu = Dock("Safety Cpu")
+    area_safety.addDock(dock_safety_cpu, 'above', dock_safety_debug)
+
+    pg_safety_debug_cpu = pg.PlotWidget()
+    set_plot_options(pg_safety_debug_cpu)
+    pg_safety_debug_cpu.plot(safetyCpu.time, safetyCpu.cpu[:-1], pen=(255,0,0), name="cpu", stepMode=True)
+    dock_safety_cpu.addWidget(pg_safety_debug_cpu)
+
+    pg_safety_debug_ram = pg.PlotWidget()
+    set_plot_options(pg_safety_debug_ram)
+    pg_safety_debug_ram.plot(safetyCpu.time, np.round(safetyCpu.ram[:-1]/1e-6), pen=(255,0,0), name="ram", stepMode=True)
+    dock_safety_cpu.addWidget(pg_safety_debug_ram)
+
+    pg_safety_debug_ram.setXLink(pg_safety_debug_cpu)
+
 #### Safety #### 
 if(len(safetyData.time)>0):
     dock_safety = Dock("Safety")
-    area_safety.addDock(dock_safety, 'above', dock_battery)
+    area_safety.addDock(dock_safety, 'above', dock_safety_debug)
     pg_safety = pg.PlotWidget()
     set_plot_options(pg_safety)
     pg_safety.plot(safetyData.time, safetyData.published_frequency[:-1], pen=(255,0,0), name="published_frequency", stepMode=True)
@@ -303,15 +299,38 @@ if(len(safetyData.time)>0):
     text_write_safety_msg(pg_safety, safetyData.time, "depth_limit", safetyData.depth_limit)
     text_write_safety_msg(pg_safety, safetyData.time, "batteries_limit", safetyData.batteries_limit)
     text_write_safety_msg(pg_safety, safetyData.time, "depressurization", safetyData.depressurization)
-    text_write_safety_msg(pg_safety, safetyData.time, "seafloor", safetyData.seafloor)
+    text_write_safety_msg(pg_safety, safetyData.time, "seafloor", safetyData.seafloor)   
     dock_safety.addWidget(pg_safety)
 
     if(len(safetyDebugData.time)>0):
         pg_safety_debug_flash = pg.PlotWidget()
         set_plot_options(pg_safety_debug_flash)
         pg_safety_debug_flash.plot(safetyDebugData.time, safetyDebugData.flash[:-1], pen=(255,0,0), name="flash", stepMode=True)
+        pg_safety_debug_flash.plot(safetyDebugData.time, safetyDebugData.zero_depth[:-1], pen=(0,255,150), name="zero_depth", stepMode=True)
         dock_safety.addWidget(pg_safety_debug_flash)
         pg_safety_debug_flash.setXLink(pg_safety)
+
+#### Battery ####
+if(len(batteryData.time)>0):
+    dock_battery = Dock("Battery")
+    area_safety.addDock(dock_battery, 'above', dock_safety_debug)
+
+    pg_battery = pg.PlotWidget(title="Battery")
+    set_plot_options(pg_battery)
+
+    if(len(batteryFusionData.time)>0):
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
+        pg_battery.plot(batteryFusionData.time, batteryFusionData.b4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
+        pg_battery.setLabel('left', "Tension (Fusion)", units="V")
+    else:
+        pg_battery.plot(batteryData.time, batteryData.b1[:-1], pen=(255,0,0), name="Battery 1", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b2[:-1], pen=(0,255,0), name="Battery 2", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b3[:-1], pen=(0,0,255), name="Battery 3", stepMode=True)
+        pg_battery.plot(batteryData.time, batteryData.b4[:-1], pen=(255,0,255), name="Battery 4", stepMode=True)
+        pg_battery.setLabel('left', "Tension (sensor)", units="V")
+    dock_battery.addWidget(pg_battery)
 
 #################### Data ####################
 
@@ -415,6 +434,10 @@ if(len(sensorExtData.time)>0):
     pg_external_pressure = pg.PlotWidget()
     set_plot_options(pg_external_pressure)
     pg_external_pressure.plot(sensorExtData.time, sensorExtData.pressure[:-1], pen=(255,0,0), name="pressure", stepMode=True)
+
+    if(len(depthFusionData.time)>0):
+        pg_external_pressure.plot(depthFusionData.time, depthFusionData.zero_depth_pressure[:-1], pen=(255,255,0), name="zero pressure", stepMode=True)
+
     pg_external_pressure.setLabel('left', "Pressure", units="bar")
     dock_external_sensor.addWidget(pg_external_pressure)
 

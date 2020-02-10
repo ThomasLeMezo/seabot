@@ -74,12 +74,6 @@ public:
   bool is_mission_enable() const;
 
   /**
-   * @brief is_depth_only
-   * @return
-   */
-  bool is_depth_only() const;
-
-  /**
    * @brief get_current_waypoint
    * @return
    */
@@ -114,7 +108,6 @@ private:
   int m_old_waypoint = -1;
   bool    m_mission_enable = false;
   bool    m_update_mission = true;
-  bool    m_depth_only = false;
   ros::WallDuration m_duration_next_waypoint = ros::WallDuration(0.0);
 
   ros::WallTime m_time_start;
@@ -126,10 +119,6 @@ private:
 
 inline bool SeabotMission::is_mission_enable() const{
   return m_mission_enable;
-}
-
-inline bool SeabotMission::is_depth_only() const{
-  return m_depth_only;
 }
 
 inline size_t SeabotMission::get_current_waypoint() const{

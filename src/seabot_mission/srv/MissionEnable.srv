@@ -1,5 +1,3 @@
-bool enable_depth
-bool enable_engine
 bool enable_mission
 ---
 

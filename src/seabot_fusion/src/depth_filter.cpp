@@ -22,15 +22,19 @@ int filter_mean_half_width = 3;
 deque<double> pressure_deque;
 ros::Time time_pressure;
 
+// Zero depth
+deque<double> pressure_zero_depth_deque;
+size_t zero_depth_window_size = 150;
+
 bool new_data = false;
 
 bool handle_zero_depth(std_srvs::Trigger::Request  &req,
                        std_srvs::Trigger::Response &res){
-  if(!pressure_deque.empty()){
+  if(!pressure_zero_depth_deque.empty()){
     zero_depth = 0.0;
-    for(double &p:pressure_deque)
+    for(double &p:pressure_zero_depth_deque)
       zero_depth +=p;
-    zero_depth /= pressure_deque.size();
+    zero_depth /= pressure_zero_depth_deque.size();
     ROS_DEBUG("[Fusion_Depth] Zero_depth = %f", zero_depth);
 
     res.success = true;
@@ -44,6 +48,11 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
   pressure_deque.push_front(msg->pressure);
   if(pressure_deque.size()>filter_window_size)
     pressure_deque.pop_back();
+
+  pressure_zero_depth_deque.push_back(msg->pressure);
+  if(pressure_zero_depth_deque.size()>zero_depth_window_size)
+    pressure_zero_depth_deque.pop_back();
+
   time_pressure = msg->header.stamp;
   new_data = true;
 }
@@ -63,6 +72,8 @@ int main(int argc, char *argv[]){
 
   filter_window_size = n_private.param<int>("filter_window_size", 10);
   filter_mean_half_width = n_private.param<int>("filter_mean_half_width", 3);
+
+  zero_depth_window_size = (size_t) n_private.param<int>("zero_depth_window_size", 100);
 
   const size_t filter_velocity_window_size = (size_t) n_private.param<int>("filter_velocity_window_size", 6);
   const size_t velocity_dt_sample = (size_t) n_private.param<int>("velocity_dt_sample", 5);

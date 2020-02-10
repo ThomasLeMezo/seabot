@@ -144,19 +144,6 @@ void SeabotMission::load_mission(const std::string &file_xml){
     ROS_DEBUG("[Seabot_Mission] No time offset defined %s - Set now + 60s", ex.what());
   }
 
-  int mission_type = tree.get_child("mission.paths").get("<xmlattr>.type", 0);
-  switch (mission_type){
-  case 0:
-    ROS_INFO("[Seabot_Mission] Mission type : Depth and Waypoint regulation");
-    break;
-  case 1:
-    ROS_INFO("[Seabot_Mission] Mission type : Depth only regulation");
-    m_depth_only = true;
-    break;
-  default:
-    ROS_INFO("[Seabot_Mission] Mission type : unknown");
-  }
-
   ros::WallTime last_time = m_time_start;
   BOOST_FOREACH(pt::ptree::value_type &v, tree.get_child("mission.paths")){
     decode_waypoint(v, last_time, 0.0);
@@ -167,12 +154,27 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
   if(v.first == "waypoint"){
     Waypoint w;
     try{
-      if(!m_depth_only){
-        w.north = v.second.get_child("north").get_value<double>() + m_offset_north;
-        w.east = v.second.get_child("east").get_value<double>() + m_offset_east;
-      }
-      w.depth = v.second.get_child("depth").get_value<double>() + depth_offset;
 
+      // North & East position
+      boost::optional<double> north_local = v.second.get_optional<double>("north");
+      boost::optional<double> east_local = v.second.get_optional<double>("east");
+      if(north_local.is_initialized() && east_local.is_initialized()){
+        w.north = north_local.value();
+        w.east = north_local.value();
+      }
+      else{
+        w.enable_thrusters = false;
+      }
+
+      boost::optional<double> depth = v.second.get_optional<double>("depth");
+      if(depth.is_initialized()){
+        w.depth = depth.value() + depth_offset;
+      }
+      else{
+        w.depth = 0.0;
+      }
+
+      // Duration
       boost::optional<double> t = v.second.get_optional<double>("duration_since_start");
       boost::optional<double> d = v.second.get_optional<double>("duration");
       if(t.is_initialized()) // End_time
@@ -183,6 +185,7 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
       else
         throw(std::runtime_error("(No time or duration founded for a waypoint)"));
 
+      // Regulation parameters
       boost::optional<double> vel = v.second.get_optional<double>("limit_velocity");
       if(vel.is_initialized())
         w.limit_velocity = vel.value();
@@ -198,8 +201,6 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
       boost::optional<bool> enable_thrusters = v.second.get_optional<bool>("enable_thrusters");
       if(enable_thrusters.is_initialized())
         w.enable_thrusters = enable_thrusters.value();
-      else
-        w.enable_thrusters = true;
     }
     catch(std::exception const&  ex) {
       ROS_FATAL("[Seabot_Mission] Wrong xml file %s", ex.what());

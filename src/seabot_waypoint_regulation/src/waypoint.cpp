@@ -20,7 +20,7 @@ double north = 0.0;
 double yaw_imu = 0.0;
 bool is_surface = false;
 double depth = 0.0;
-bool depth_only = false;
+bool enable_thrusters = false;
 
 double angular_velocity = 0.0;
 
@@ -48,8 +48,8 @@ void set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
   east_set_point = msg->east;
   north_set_point = msg->north;
   mission_enable = msg->mission_enable;
-  depth_only = msg->depth_only;
-  if(msg->depth == 0)
+  enable_thrusters = msg->enable_thrusters;
+  if(msg->depth == 0.0)
     is_surface = true;
   else
     is_surface = false;
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]){
     if(!mission_enable || depth>depth_limit_switch_off)
       enable_regulation = false;
 
-    if(is_surface && enable_regulation && !depth_only){
+    if(is_surface && enable_regulation && enable_thrusters){
       engine_msg.linear = linear_speed;
 
       if(abs(yaw_error)<M_PI/2.)
