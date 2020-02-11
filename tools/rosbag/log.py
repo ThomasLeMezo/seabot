@@ -851,6 +851,46 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     pg_kalman_cov_offset.setXLink(pg_kalman_cov_depth)
     pg_kalman_cov_chi.setXLink(pg_kalman_cov_depth)
 
+if(len(depthFusionData.time)>0):
+    dock_fourier = Dock("Fourier")
+    area_regulation.addDock(dock_fourier, 'below', dock_kalman)
+
+    pg_depth= pg.PlotWidget()
+    set_plot_options(pg_depth)
+    pg_depth.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="Depth", stepMode=True)
+    dock_fourier.addWidget(pg_depth)
+
+    lr_fourier = pg.LinearRegionItem([0, depthFusionData.time[-1]], bounds=[0,depthFusionData.time[-1]], movable=True)
+    pg_depth.addItem(lr_fourier)
+    lr_fourier_bounds = lr_fourier.getRegion()
+
+    pg_fourier = pg.PlotWidget()
+    plot_fourier = pg_fourier.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="freq", stepMode=True)
+    set_plot_options(pg_fourier)
+    dock_fourier.addWidget(pg_fourier)
+
+    def update_fourier():
+        global depthFusionData, lr_fourier, lr_fourier_bounds, plot_fourier
+        t_bounds = lr_fourier.getRegion()
+        if(t_bounds != lr_fourier_bounds):
+            lr_TP_bounds = t_bounds
+            ub = np.where(time_mask <= np.max((1,t_bounds[1])))[0][-1]
+            lb = np.where(time_mask >= np.min((time_mask[-1],t_bounds[0])))[0][0]
+
+            ub = np.min((ub, np.size(time_mask)))
+            lb = np.max((lb,0))
+
+            d = depthFusionData.depth[lb:ub]
+
+            freq = np.fft.fftfreq(d.size, d=1./5.0)
+            depth_hz = np.fft.fft(d-np.mean(d))
+
+            plot_fourier.setData(freq, np.abs(depth_hz[:-1]))
+
+    timer_fourier = pg.QtCore.QTimer()
+    timer_fourier.timeout.connect(update_fourier)
+    timer_fourier.start(100)
+
 #################### Position ####################
 
 #### GPS Status ####
