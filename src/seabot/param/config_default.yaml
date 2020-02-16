@@ -158,15 +158,16 @@ mission:
 
 regulation:
   state_feedback:
-    frequency: 1.0
+    frequency: 25.0
+    divider_frequency: 5
     root_regulation: -0.2
     limit_depth_controller: 0.3
 
     delta_velocity_lb: -0.01
     delta_velocity_ub: 0.01
 
-    delta_position_lb: 0.0
-    delta_position_ub: 0.0
+    delta_position_lb: -0.001
+    delta_position_ub: 0.001
 
     hysteresis_piston: 0.6
     speed_volume_sink: 2.0

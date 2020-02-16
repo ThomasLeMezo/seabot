@@ -75,6 +75,69 @@
 
 \begin_body
 
+\begin_layout Section
+Control law
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\dot{\mathbf{x}}=\left(\begin{array}{c}
+\ddot{z}\\
+\dot{z}\\
+\dot{V}_{p}
+\end{array}\right)=\left(\begin{array}{c}
+-A\left(V_{p}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-B\left|\dot{z}\right|\dot{z}\\
+\dot{z}\\
+u
+\end{array}\right)\label{eq:dynamics}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\dot{z}=\beta\arctan\left(\frac{\bar{z}-z}{\alpha}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\dddot{z}=-A(u-\chi_{1}\dot{z}-\chi_{2}2z\dot{z})-2B\left|\dot{z}\right|\ddot{z}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\ddot{y}=-Au+A\dot{z}\left(\chi_{1}+\chi_{2}2z\right)-2B\left|\dot{z}\right|\ddot{z}+\gamma\frac{\ddot{z}D+2\alpha^{-2}e\dot{z}^{2}}{D^{2}}.$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+u=\frac{1}{A}(-2s\dot{y}+s^{2}y+\gamma\frac{\ddot{z}D+2\alpha^{-2}e\dot{z}^{2}}{D^{2}}-2B\left|\dot{z}\right|\ddot{z})+\dot{z}\left(\chi_{1}+\chi_{2}2z\right).
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Kalman
+\end_layout
+
 \begin_layout Standard
 \begin_inset Formula $\mathbf{x}=\left(\dot{z},z,V_{0},\chi_{1},\chi_{2}\right)^{\intercal}$
 \end_inset
