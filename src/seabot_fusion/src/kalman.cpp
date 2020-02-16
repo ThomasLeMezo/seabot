@@ -145,6 +145,7 @@ int main(int argc, char *argv[]){
   const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
   const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
   const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
+  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
 
   const double limit_offset = n_private.param<double>("limit_offset", 2400)*tick_to_volume;
@@ -215,7 +216,7 @@ int main(int argc, char *argv[]){
 
   xhat(0) = 0.0; // dz
   xhat(1) = 0.0; // z
-  xhat(2) = limit_offset/2.; // Vp
+  xhat(2) = piston_ref_eq; // Vp
   xhat(3) = 0.0; // chi
   xhat(4) = 0.0; // chi2
 
@@ -268,7 +269,8 @@ int main(int argc, char *argv[]){
           msg.forecast_dt_regulation = forecast_dt_regulation;
 
           // Case Divergence of Kalman filter
-          if(abs(xhat(2)-(xhat(3)*xhat(1)+xhat(4)*pow(xhat(1),2)))>limit_offset){
+          double equilibrium_volume = xhat(2)-(xhat(3)*xhat(1)+xhat(4)*pow(xhat(1),2));
+          if(equilibrium_volume>limit_offset || equilibrium_volume<0){
             gamma(2,2) = pow(limit_offset, 2); // Error offset;
             gamma(3,3) = pow(limit_chi,2); // Compressibility
             msg.valid = false;
@@ -281,8 +283,6 @@ int main(int argc, char *argv[]){
         if(new_depth_data){
           xhat(0) = velocity_fusion;
           xhat(1) = depth;
-          xhat(2) = xhat(2);
-          xhat(3) = xhat(3);
           msg.valid = false;
         }
       }

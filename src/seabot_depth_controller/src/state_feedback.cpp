@@ -220,11 +220,12 @@ int main(int argc, char *argv[]){
           regulation_state = STATE_SURFACE;
         else if(x(1)<limit_depth_regulation){
           u = -speed_volume_sink*tick_to_volume;
+          double ref_eq = x(3)/tick_to_volume;
 
-          if(piston_position < piston_ref_eq*0.99) // coefficient to validate reaching piston_ref_eq
-            piston_set_point = piston_ref_eq;
+          if(piston_position <ref_eq*0.99) // coefficient to validate reaching piston_ref_eq
+            piston_set_point = ref_eq;
           else{
-            piston_set_point = piston_set_point - u/(tick_to_volume*control_loop_frequency);
+            piston_set_point = ref_eq - u/(tick_to_volume*control_loop_frequency);
           }
         }
         else
