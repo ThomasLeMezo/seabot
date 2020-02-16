@@ -63,7 +63,7 @@ int main(int argc, char *argv[]){
   m.load_mission(mission_file_name); // Update mission file
 
   double north = 0.0, east = 0.0, depth = 0.0, ratio=0.0, limit_velocity=limit_velocity_default, approach_velocity=approach_velocity_default;
-  bool enable_thrusters;
+  bool enable_thrusters, seafloor_landing;
 
   ROS_INFO("[Mission] Start Ok");
   while (ros::ok()){
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
       reload_mission = false;
     }
 
-    bool is_new_waypoint = m.compute_command(north, east, depth, limit_velocity, approach_velocity, enable_thrusters, ratio);
+    bool is_new_waypoint = m.compute_command(north, east, depth, limit_velocity, approach_velocity, enable_thrusters, ratio, seafloor_landing);
 
     waypoint_msg.enable_thrusters = enable_thrusters;
     waypoint_msg.depth = depth;
@@ -83,6 +83,7 @@ int main(int argc, char *argv[]){
     waypoint_msg.east = east;
     waypoint_msg.limit_velocity = limit_velocity;
     waypoint_msg.approach_velocity = approach_velocity;
+    waypoint_msg.seafloor_landing = seafloor_landing;
 
     if(!mission_enable_mission)
       waypoint_msg.mission_enable = false;

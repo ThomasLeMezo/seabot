@@ -49,18 +49,18 @@ volatile unsigned short butee_out = 0;
 volatile unsigned short butee_in = 0;
 
 // Motor
+#define MOTOR_STOP 50
 volatile unsigned short motor_speed_in = 15; // 2 octets
 volatile unsigned short motor_speed_out = 15; // 2 octets
 volatile unsigned short motor_speed_out_reset = 30; // 2 octets
-volatile unsigned short motor_current_speed = 50; // 2 octets
-#define MOTOR_STOP 50
+volatile unsigned short motor_current_speed = MOTOR_STOP; // 2 octets
 
 // Regulation
 volatile int position_set_point = 0;
 volatile signed int error = 0;
 volatile unsigned long int position_reached_max_value = 40000;
 volatile unsigned long int position_reached_cpt = 0;
-volatile unsigned short position_reached_enable = 0;
+volatile unsigned short position_reached_enable = 1;
 volatile unsigned short error_interval = 0;
 
 volatile unsigned short zero_shift_error = 0;
@@ -223,7 +223,7 @@ void set_motor_cmd_stop(){
         CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
         CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
         
-        motor_current_speed = 50;
+        motor_current_speed = MOTOR_STOP;
         RC6_bit = 1;
     }
 
@@ -453,7 +453,7 @@ void main(){
     PSTRCON.STRB = 1;
 
     RC6_bit = 0;  //Disable L6203
-    motor_current_speed = 50;
+    motor_current_speed = MOTOR_STOP;
     delay_ms(1);
 
     UART1_Init(115200);

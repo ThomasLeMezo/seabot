@@ -18,6 +18,7 @@
 #include <seabot_safety/SafetyCpu.h>
 #include <geometry_msgs/Vector3.h>
 #include <seabot_power_driver/FlashSpeed.h>
+#include <seabot_mission/Waypoint.h>
 
 #include <math.h>
 
@@ -66,6 +67,7 @@ double internal_humidity = 0.0;
 
 // Seafloor
 bool seafloor_detected = false;
+bool seafloor_landing = false;
 ros::WallTime time_seafloor_detected;
 
 ros::ServiceClient service_zero_depth;
@@ -116,6 +118,10 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
   }
   else
     is_pressure_limit_reached = false;
+}
+
+void mission_callback(const seabot_mission::Waypoint::ConstPtr& msg){
+  seafloor_landing = msg->seafloor_landing;
 }
 
 void euler_callback(const geometry_msgs::Vector3::ConstPtr& msg){
@@ -271,6 +277,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber batteries_sub = n.subscribe("/fusion/battery", 1, batteries_callback);
   ros::Subscriber external_sensor_sub = n.subscribe("/driver/sensor_external", 1, pressure_callback);
   ros::Subscriber euler_sub = n.subscribe("/driver/euler", 1, euler_callback);
+  ros::Subscriber mission_sub = n.subscribe("/mission/set_point", 1, mission_callback);
 
   // Publisher
   ros::Publisher safety_pub = n.advertise<seabot_safety::SafetyLog>("safety", 1);
@@ -386,8 +393,9 @@ int main(int argc, char *argv[]){
        || d_piston_state > d_piston_state_ref
        || d_euler > d_euler_ref){
       ROS_WARN("[Safety] No data published by sensors (%f, %f, %f, %f, %f, %f)", d_batteries, d_internal_sensor, d_external_sensor, d_depth, d_piston_state, d_euler);
-      enable_emergency_depth = true;
+
       safety_msg.published_frequency = true;
+      enable_emergency_depth = true;
     }
 
     ///*******************************************************
@@ -437,7 +445,8 @@ int main(int argc, char *argv[]){
       }
       else{
         if((ros::WallTime::now()-time_seafloor_detected).toSec()>time_before_seafloor_emergency){
-          enable_emergency_depth = true;
+          if(!seafloor_landing)
+            enable_emergency_depth = true;
           safety_msg.seafloor = true;
         }
       }
@@ -449,17 +458,20 @@ int main(int argc, char *argv[]){
     ///**************** Depth limit **************************
     if(is_pressure_limit_reached && (ros::WallTime::now()-time_pressure_limit_reached).toSec()>time_before_pressure_emergency){
       ROS_WARN("[Safety] Limit depth detected");
-      enable_emergency_depth = true;
       safety_msg.depth_limit = true;
+
+      if(enable_safety_pressure_limit)
+        enable_emergency_depth = true;
     }
 
     ///*******************************************************
     ///**************** Batteries ****************************
     if(battery_limit_reached && enable_safety_battery){
       ROS_WARN("[Safety] Batteries limit detected");
-      enable_emergency_depth = true;
-      // ToDo : shutdown ? => launch with iridium sleep ?
+
       safety_msg.batteries_limit = true;
+      if(enable_safety_battery)
+        enable_emergency_depth = true;
     }
 
     ///*******************************************************
@@ -529,6 +541,8 @@ int main(int argc, char *argv[]){
     if(safety_msg.depressurization == true){
       ROS_WARN("[Safety] Sealing issue detected %i (p=%f, t=%f, h=%f)", warning_number, internal_pressure, internal_temperature, internal_humidity);
       ROS_WARN("[Safety] Ratio (%f / %f)", p_t_ratio, p_t_ratio_ref);
+      if(enable_safety_depressure)
+        enable_emergency_depth = true;
     }
 
     ///*******************************************************
@@ -546,11 +560,6 @@ int main(int argc, char *argv[]){
 
     ///*******************************************************
     ///**************** Summary ******************************
-    if((enable_safety_battery && safety_msg.batteries_limit) ||
-       (enable_safety_depressure && safety_msg.depressurization) ||
-       (enable_safety_pressure_limit && safety_msg.depth_limit) ||
-       safety_msg.published_frequency)
-      enable_emergency_depth = true;
 
     if(enable_emergency_depth){
       call_emergency_depth(true);

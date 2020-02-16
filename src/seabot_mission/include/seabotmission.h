@@ -14,7 +14,7 @@ class Waypoint{
 public:
   Waypoint(){}
 
-  Waypoint(const ros::WallTime &time_end_param, const double &depth_param, const double &north_param, const double &east_param, const double&limit_velocity_param, const double&approach_velocity_param, const bool &enable_thrusters_param=true){
+  Waypoint(const ros::WallTime &time_end_param, const double &depth_param, const double &north_param, const double &east_param, const double&limit_velocity_param, const double&approach_velocity_param, const bool &enable_thrusters_param=true, const bool &seafloor_landing_param=false){
     time_end = time_end_param;
     depth = depth_param;
     east = east_param;
@@ -22,6 +22,7 @@ public:
     limit_velocity = limit_velocity_param;
     approach_velocity = approach_velocity_param;
     enable_thrusters = enable_thrusters_param;
+    seafloor_landing = seafloor_landing_param;
   }
 public:
   double north = 0.0;
@@ -30,6 +31,7 @@ public:
   double limit_velocity = 0.0;
   double approach_velocity = 1.0;
   bool  enable_thrusters = true;
+  bool seafloor_landing = false;
   ros::WallTime time_end;
 };
 
@@ -59,7 +61,7 @@ public:
      * @param east
      * @param depth
      */
-  bool compute_command(double &north, double &east, double &depth, double &limit_velocity, double &approach_velocity, bool &enable_engine, double &ratio);
+  bool compute_command(double &north, double &east, double &depth, double &limit_velocity, double &approach_velocity, bool &enable_engine, double &ratio, bool &seafloor_landing);
 
   /**
      * @brief load_mission

@@ -28,6 +28,7 @@ double limit_velocity = 0.0;
 double approach_velocity = 1.0;
 ros::WallTime t_old;
 ros::Time time_last_state;
+ros::Time time_depth_data;
 
 bool emergency = true; // Wait safety clearance on startup
 
@@ -58,6 +59,7 @@ void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(3) = msg->offset;
   x(4) = msg->chi;
   time_last_state = ros::Time::now();
+  time_depth_data = msg->stamp;
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
@@ -305,6 +307,7 @@ int main(int argc, char *argv[]){
 
     if(position_msg.position != piston_set_point_msg){
       position_msg.position = piston_set_point_msg;
+      position_msg.stamp = time_depth_data;
       position_pub.publish(position_msg);
     }
 

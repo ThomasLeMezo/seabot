@@ -18,7 +18,7 @@ SeabotMission::SeabotMission(std::string folder_path){
   m_folder_path = folder_path;
 }
 
-bool SeabotMission::compute_command(double &north, double &east, double &depth, double &limit_velocity, double &approach_velocity, bool &enable_thrusters, double &ratio){
+bool SeabotMission::compute_command(double &north, double &east, double &depth, double &limit_velocity, double &approach_velocity, bool &enable_thrusters, double &ratio, bool &seafloor_landing){
   // Test if last waypoint
   bool is_new_waypoint = false;
   if(m_current_waypoint < m_waypoints.size()){
@@ -30,9 +30,11 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       depth = 0.0;
       north = m_waypoints[m_current_waypoint].north;
       east = m_waypoints[m_current_waypoint].east;
+
       limit_velocity = m_waypoints[m_current_waypoint].limit_velocity;
       approach_velocity = m_waypoints[m_current_waypoint].approach_velocity;
       enable_thrusters = m_waypoints[m_current_waypoint].enable_thrusters;
+      seafloor_landing = m_waypoints[m_current_waypoint].seafloor_landing;
       ratio = 0;
       m_duration_next_waypoint = m_time_start-t_now;
     }
@@ -48,9 +50,11 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
       }
 
       depth = m_waypoints[m_current_waypoint].depth;
+
       limit_velocity = m_waypoints[m_current_waypoint].limit_velocity;
       approach_velocity = m_waypoints[m_current_waypoint].approach_velocity;
       enable_thrusters = m_waypoints[m_current_waypoint].enable_thrusters;
+      seafloor_landing = m_waypoints[m_current_waypoint].seafloor_landing;
 
       ros::WallTime t1;
       if(m_current_waypoint==0)
@@ -85,6 +89,7 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
     east = m_waypoints[m_waypoints.size()-1].east;
     ratio = 1;
     enable_thrusters = false;
+    seafloor_landing = false;
     m_mission_enable = false;
     m_duration_next_waypoint = ros::WallDuration(0);
   }
@@ -173,6 +178,15 @@ void SeabotMission::decode_waypoint(pt::ptree::value_type &v, ros::WallTime &las
       else{
         w.depth = 0.0;
       }
+
+      boost::optional<bool> landing = v.second.get_optional<bool>("seafloor_landing");
+      if(landing.is_initialized()){
+        w.seafloor_landing = landing.value();
+      }
+      else{
+        w.seafloor_landing = false;
+      }
+
 
       // Duration
       boost::optional<double> t = v.second.get_optional<double>("duration_since_start");

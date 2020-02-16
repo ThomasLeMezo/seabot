@@ -8,3 +8,4 @@ bool enable_thrusters
 uint16 waypoint_number
 uint64  wall_time
 uint64  time_to_next_waypoint
+bool seafloor_landing

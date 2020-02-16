@@ -1,3 +1,4 @@
+time stamp
 float32 position
 bool switch_out
 bool switch_in

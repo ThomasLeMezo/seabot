@@ -50,3 +50,17 @@ qtcreator-*
 CATKIN_IGNORE
 
 .workspace
+
+# Database
+*.db
+
+# Python
+*.pyc
+*.pyo
+__pycache__
+*.so
+*.o
+
+
+# Rosbag
+tools/rosbag/bag/

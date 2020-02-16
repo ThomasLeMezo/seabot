@@ -20,11 +20,12 @@ driver:
     frequency: 0.2
 
   piston:
-    frequency: 5.0
+    frequency: 25.0
+    divider_frequency: 5 # frequency of published message = frequency/divider_frequency
     distance_fast_move: 100
     # If speed_fast_move is too high, disturbances are create on I2C external pressure sensor
     speed_fast_move_factor: 2.0
-    speed_reset: 30
+    speed_reset: 25
     speed_out_min: 15
     speed_in_min: 15
     speed_out_slope: 0.5
@@ -95,7 +96,7 @@ driver:
 
 filter:
   depth_filter:
-    frequency: 5
+    frequency: 25 # Frequency of the spinOnce, reduce latency with new pressure message
     filter_window_size: 6
     filter_mean_half_width: 2
     filter_mean_width_velocity: 6
@@ -136,7 +137,7 @@ iridium:
   enable_gnss_iridium: False
 
 kalman:
-  frequency: 5
+  frequency: 25
   limit_min_depth: 0.3
 
   estimated_first_error_equilibrium_tick: 250
@@ -214,7 +215,7 @@ safety:
 
   # Seafloor
   seafloor_detection: True
-  time_before_seafloor_emergency: 300.0
+  time_before_seafloor_emergency: 20.0
 
   # Batteries
   safety_battery: True

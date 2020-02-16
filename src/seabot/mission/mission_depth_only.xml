@@ -36,6 +36,10 @@
 	</waypoint>
 
 	<waypoint>
+		<seafloor_landing>True</seafloor_landing>
+	</waypoint>
+
+	<waypoint>
 		<duration>1800</duration>
 		<depth>1.5</depth>
 		<limit_velocity>0.05</limit_velocity>

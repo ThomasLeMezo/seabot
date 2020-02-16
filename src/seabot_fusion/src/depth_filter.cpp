@@ -91,7 +91,6 @@ int main(int argc, char *argv[]){
 
   // Loop variables
   seabot_fusion::DepthPose msg;
-  time_pressure = ros::Time::now();
   double velocity = 0.0;
 
   ROS_INFO("[FUSION depth] Start Ok");
@@ -126,7 +125,7 @@ int main(int argc, char *argv[]){
         for(size_t i=0; i<filter_velocity_window_size; i++){
           // Delta_depth / Delta_dt
           double dt = (depth_memory[i].second-depth_memory[velocity_dt_sample+i].second).toSec();
-          if(dt!=0)
+          if(dt!=0.)
             velocity_memory.push_back((depth_memory[i].first-depth_memory[velocity_dt_sample+i].first)/dt);
         }
         sort(velocity_memory.begin(), velocity_memory.end());
@@ -143,6 +142,7 @@ int main(int argc, char *argv[]){
           velocity = std::copysign(velocity_limit, velocity);
       }
 
+      msg.stamp = time_pressure;
       msg.depth = depth;
       msg.velocity = velocity;
       msg.zero_depth_pressure = zero_depth;
