@@ -24,7 +24,7 @@ void temperature_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr
   temperature_deque.push_front(msg->temperature);
   if(temperature_deque.size()>filter_median_size)
     temperature_deque.pop_back();
-  time_temperature = msg->header.stamp;
+  time_temperature = msg->stamp;
   new_data = true;
 }
 

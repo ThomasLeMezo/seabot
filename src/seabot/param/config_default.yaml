@@ -159,7 +159,7 @@ mission:
   approach_velocity_default: 1.0
 
 regulation:
-  state_feedback:
+  depth_controller:
     frequency: 25.0
     divider_frequency: 5
     root_regulation: -0.2

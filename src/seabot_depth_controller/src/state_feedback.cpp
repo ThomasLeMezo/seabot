@@ -42,7 +42,7 @@ STATE_MACHINE regulation_state = STATE_SURFACE;
 
 seabot_depth_controller::RegulationDebug debug_msg;
 
-size_t cpt_divider_frequency = 0;
+int cpt_divider_frequency;
 
 #define NB_STATES 6
 // [Velocity; Depth; Volume; Offset, chi, chi2]
@@ -72,7 +72,7 @@ void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
     depth_set_point = 0.0;
   limit_velocity = msg->limit_velocity;
   approach_velocity = msg->approach_velocity;
-  cpt_divider_frequency = 0; // Trigger new control
+  cpt_divider_frequency = 1; // Trigger new control
 }
 
 bool emergency_service(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res){
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]){
   ros::NodeHandle n_private("~");
   const double frequency = n_private.param<double>("frequency", 25.0);
   // Frequency divider
-  const size_t divider_frequency = (size_t) n_private.param<int>("divider_frequency", 5);
+  const int divider_frequency = n_private.param<int>("divider_frequency", 5);
 
   const double delta_velocity_lb = n_private.param<double>("delta_velocity_lb", 0.0);
   const double delta_velocity_ub = n_private.param<double>("delta_velocity_ub", 0.0);
@@ -142,7 +142,6 @@ int main(int argc, char *argv[]){
   const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
   const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
   const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
-  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100);
   const double piston_max_value = n_private.param<double>("piston_max_value", 2400);
   const double Cf = M_PI*pow(diam_collerette/2.0, 2);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
@@ -189,7 +188,7 @@ int main(int argc, char *argv[]){
   size_t piston_set_point_msg = 0;
 
   cpt_divider_frequency = divider_frequency; // To reduce delay
-  double control_loop_frequency = frequency/divider_frequency;
+  double control_loop_frequency = frequency/(double)divider_frequency;
 
   // Main regulation loop
   ROS_INFO("[DepthRegulation_Feedback] Start Ok");
@@ -198,7 +197,7 @@ int main(int argc, char *argv[]){
     ros::spinOnce();
 
     cpt_divider_frequency--;
-    if(divider_frequency<=0){ // New control is triggered by message reception (see depth set point callback)
+    if(cpt_divider_frequency<=0){ // New control is triggered by message reception (see depth set point callback)
       cpt_divider_frequency=divider_frequency;
 
       if(emergency)

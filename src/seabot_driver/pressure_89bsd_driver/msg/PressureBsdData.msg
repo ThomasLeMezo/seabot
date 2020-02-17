@@ -1,3 +1,3 @@
-std_msgs/Header header
+time stamp
 float32 pressure
 float32 temperature

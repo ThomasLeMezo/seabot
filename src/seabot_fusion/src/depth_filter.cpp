@@ -53,7 +53,7 @@ void pressure_callback(const pressure_89bsd_driver::PressureBsdData::ConstPtr& m
   if(pressure_zero_depth_deque.size()>zero_depth_window_size)
     pressure_zero_depth_deque.pop_back();
 
-  time_pressure = msg->header.stamp;
+  time_pressure = msg->stamp;
   new_data = true;
 }
 

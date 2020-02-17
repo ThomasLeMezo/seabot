@@ -261,10 +261,11 @@ class MissionData(SeabotData):
         self.limit_velocity = np.empty([self.nb_elements], dtype=np.float32)
         self.approach_velocity = np.empty([self.nb_elements], dtype=np.float32)
         self.mission_enable = np.empty([self.nb_elements], dtype=np.uint8)
-        self.depth_only = np.empty([self.nb_elements], dtype=np.uint8)
+        self.enable_thrusters = np.empty([self.nb_elements], dtype=np.uint8)
         self.waypoint_number = np.empty([self.nb_elements], dtype=np.uint16)
         self.wall_time = np.empty([self.nb_elements], dtype=np.uint64)
         self.time_to_next_waypoint = np.empty([self.nb_elements], dtype=np.uint64)
+        self.seafloor_landing = np.empty([self.nb_elements], dtype=np.uint8)
 
 ####################### Safety #######################
 
@@ -486,10 +487,11 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
             else:
                 missionData.approach_velocity[missionData.k] = 0
             missionData.mission_enable[missionData.k] = msg.mission_enable
-            missionData.depth_only[missionData.k] = msg.depth_only
+            missionData.enable_thrusters[missionData.k] = msg.enable_thrusters
             missionData.waypoint_number[missionData.k] = msg.waypoint_number
             missionData.wall_time[missionData.k] = msg.wall_time
             missionData.time_to_next_waypoint[missionData.k] = msg.time_to_next_waypoint
+            missionData.seafloor_landing[missionData.k] = msg.seafloor_landing
             missionData.add_time(t,startTime)
 
         elif(topic==fixData.topic_name):
@@ -587,10 +589,10 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
             kalmanData.velocity[kalmanData.k] = msg.velocity
             kalmanData.offset[kalmanData.k] = msg.offset
             kalmanData.chi[kalmanData.k] = msg.chi
-            kalmanData.cov_depth[kalmanData.k] = msg.covariance[0]
-            kalmanData.cov_velocity[kalmanData.k] = msg.covariance[1]
-            kalmanData.cov_offset[kalmanData.k] = msg.covariance[2]
-            kalmanData.cov_chi[kalmanData.k] = msg.covariance[3]
+            kalmanData.cov_depth[kalmanData.k] = msg.variance[0]
+            kalmanData.cov_velocity[kalmanData.k] = msg.variance[1]
+            kalmanData.cov_offset[kalmanData.k] = msg.variance[2]
+            kalmanData.cov_chi[kalmanData.k] = msg.variance[3]
             if hasattr(msg, 'valid'):
                 if(msg.valid):
                     kalmanData.valid[kalmanData.k] = 1

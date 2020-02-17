@@ -821,7 +821,7 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
 
 if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     dock_kalman_cov = Dock("Kalman Cov")
-    area_regulation.addDock(dock_kalman_cov, 'below', dock_kalman)
+    area_regulation.addDock(dock_kalman_cov, 'below', dock_regulation)
 
     pg_kalman_cov_depth = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_depth)
@@ -851,9 +851,9 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
     pg_kalman_cov_offset.setXLink(pg_kalman_cov_depth)
     pg_kalman_cov_chi.setXLink(pg_kalman_cov_depth)
 
-if(len(depthFusionData.time)>0):
+if(len(depthFusionData.time)>0 and len(regulationData.time)>0):
     dock_fourier = Dock("Fourier")
-    area_regulation.addDock(dock_fourier, 'below', dock_kalman)
+    area_regulation.addDock(dock_fourier, 'below', dock_regulation)
 
     pg_depth= pg.PlotWidget()
     set_plot_options(pg_depth)

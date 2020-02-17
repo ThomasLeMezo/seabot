@@ -10,6 +10,7 @@
 
 		<node name="piston" pkg="seabot_piston_driver" type="piston_node" output="screen" ns="piston" respawn="true" respawn_delay="5">
 			<remap from="~frequency" to="/driver/piston/frequency" />
+			<remap from="~divider_frequency" to="/driver/piston/divider_frequency" />
 			<remap from="~distance_fast_move" to="/driver/piston/distance_fast_move" />
 			<remap from="~speed_fast_move_factor" to="/driver/piston/speed_fast_move_factor" />
 			<remap from="~speed_reset" to="/driver/piston/speed_reset" />

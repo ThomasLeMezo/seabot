@@ -3,6 +3,7 @@
 	<node name="depth_controller" pkg="seabot_depth_controller" type="depth_controller" output="screen" ns="regulation" respawn="true" respawn_delay="5">
 
 		<remap from="~frequency" to="/regulation/depth_controller/frequency"/>
+		<remap from="~divider_frequency" to="/regulation/depth_controller/divider_frequency"/>
 		<remap from="~root_regulation" to="/regulation/depth_controller/root_regulation"/>
 		<remap from="~limit_depth_controller" to="/regulation/depth_controller/limit_depth_controller"/>
 

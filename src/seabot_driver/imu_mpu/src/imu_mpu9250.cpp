@@ -95,12 +95,12 @@ bool ImuSettings::loadSettings(){
   settings_nh_->getParam("axis_rotation", m_axisRotation);
 
   //MPU9250
-  settings_nh_->getParam("mpu9250/gyro_accel_sample_rate", m_MPU9250GyroAccelSampleRate);
-  settings_nh_->getParam("mpu9250/compass_sample_rate", m_MPU9250CompassSampleRate);
-  settings_nh_->getParam("mpu9250/accel_full_scale_range", m_MPU9250AccelFsr);
-  settings_nh_->getParam("mpu9250/accel_low_pass_filter", m_MPU9250AccelLpf);
-  settings_nh_->getParam("mpu9250/gyro_full_scale_range", m_MPU9250GyroFsr);
-  settings_nh_->getParam("mpu9250/gyro_low_pass_filter", m_MPU9250GyroLpf);
+  settings_nh_->getParam("gyro_accel_sample_rate", m_MPU9250GyroAccelSampleRate);
+  settings_nh_->getParam("compass_sample_rate", m_MPU9250CompassSampleRate);
+  settings_nh_->getParam("accel_full_scale_range", m_MPU9250AccelFsr);
+  settings_nh_->getParam("accel_low_pass_filter", m_MPU9250AccelLpf);
+  settings_nh_->getParam("gyro_full_scale_range", m_MPU9250GyroFsr);
+  settings_nh_->getParam("gyro_low_pass_filter", m_MPU9250GyroLpf);
 
   /// ************** SENSOR CALIBRATION ************** ///
   // Max/min Compass (diseable option)

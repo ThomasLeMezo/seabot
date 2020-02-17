@@ -24,9 +24,6 @@ bool enable_thrusters = false;
 
 double angular_velocity = 0.0;
 
-double speed = 0.0;
-double yaw_gnss = 0.0;
-
 bool mission_enable = false;
 
 ros::WallTime last_received_set_point;
@@ -56,11 +53,6 @@ void set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
   last_received_set_point = ros::WallTime::now();
 }
 
-void gnss_callback(const gpsd_client::GPSFix::ConstPtr& msg){
-  speed = msg->speed;
-  yaw_gnss = msg->track * M_PI/180.0; // Degree from north
-}
-
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   depth = msg->depth;
 }
@@ -68,7 +60,6 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
 void imu_callback(const sensor_msgs::Imu::ConstPtr& msg){
   angular_velocity = msg->angular_velocity.z;
 }
-
 
 int main(int argc, char *argv[]){
   ros::init(argc, argv, "waypoint_node");
@@ -93,7 +84,6 @@ int main(int argc, char *argv[]){
   ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
   ros::Subscriber mission_sub = n.subscribe("/mission/set_point", 1, set_point_callback);
   ros::Subscriber euler_sub = n.subscribe("/driver/euler", 1, euler_callback);
-  ros::Subscriber gnss_sub = n.subscribe("/driver/fix_extended", 1, gnss_callback);
   ros::Subscriber imu_sub = n.subscribe("/driver/imu", 1, imu_callback);
 
   // Publisher

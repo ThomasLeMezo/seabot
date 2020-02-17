@@ -216,7 +216,7 @@ int main(int argc, char *argv[]){
 
   xhat(0) = 0.0; // dz
   xhat(1) = 0.0; // z
-  xhat(2) = piston_ref_eq; // Vp
+  xhat(2) = piston_ref_eq*tick_to_volume; // Vp
   xhat(3) = 0.0; // chi
   xhat(4) = 0.0; // chi2
 
@@ -276,8 +276,6 @@ int main(int argc, char *argv[]){
             msg.valid = false;
           }
         }
-        new_piston_data = false;
-        new_depth_data = false;
       }
       else{
         if(new_depth_data){
@@ -303,6 +301,9 @@ int main(int argc, char *argv[]){
 
         kalman_pub.publish(msg);
       }
+
+      new_piston_data = false;
+      new_depth_data = false;
     }
 
     loop_rate.sleep();
