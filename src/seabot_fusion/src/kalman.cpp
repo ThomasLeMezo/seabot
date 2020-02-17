@@ -60,6 +60,9 @@ void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position = msg->position;
   piston_set_point = msg->position_set_point;
   new_piston_data = true;
+
+  if(time_piston_data_last.toSec() == 0.0)
+    time_piston_data_last = time_piston_data;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
@@ -69,6 +72,9 @@ void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
   velocity_fusion = msg->velocity;
   time_depth_data = msg->stamp;
   new_depth_data = true;
+
+  if(time_depth_data_last.toSec() == 0.0)
+    time_depth_data_last = time_depth_data;
 }
 
 void regulation_loop_callback(const seabot_piston_driver::RegulationLoopDuration::ConstPtr& msg){
@@ -84,26 +90,35 @@ void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
 }
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_COMMAND, 1> &u){
-  Matrix<double,NB_STATES, 1> y = Matrix<double,NB_STATES, 1>::Zero();
-  y(0) = -coeff_A*(u(0)+x(2)-(x(3)*x(1)+x(4)*x(1)))-coeff_B*copysign(x(0)*x(0), x(0));
-  y(1) = x(0);
-  y(2) = 0;
-  y(3) = 0;
-  return y;
+  Matrix<double,NB_STATES, 1> dx = Matrix<double,NB_STATES, 1>::Zero();
+  dx(0) = -coeff_A*(u(0)+x(2)-(x(3)*x(1)+x(4)*pow(x(1),2)))-coeff_B*copysign(x(0)*x(0), x(0));
+  dx(1) = x(0);
+  dx(2) = 0;
+  dx(3) = 0;
+  dx(4) = 0;
+  return dx;
 }
 
 void kalman_predict(Matrix<double,NB_STATES, 1> &x,
                     Matrix<double,NB_STATES, NB_STATES> &gamma,
                     const Matrix<double,NB_COMMAND, 1> &u,
                     const Matrix<double,NB_STATES, NB_STATES> &gamma_alpha,
-                    const Matrix<double,NB_STATES, NB_STATES> &Ak,
                     const double &dt){
+
+  Matrix<double,NB_STATES, NB_STATES> Ak = Matrix<double, NB_STATES, NB_STATES>::Zero();
+  Ak(0,0) = -2.*coeff_B*abs(x(0));
+  Ak(0,1) = coeff_A*(x(3)+2.*x(4)*x(1));
+  Ak(0, 2) = -coeff_A;
+  Ak(0,3) = x(1)*coeff_A;
+  Ak(0,4) = pow(x(1),2)*coeff_A;
+  Ak(1, 0) = 1.;
   Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
+
   gamma = Ak_tmp*gamma*Ak_tmp.transpose()+gamma_alpha*dt; // Variance estimatation
   x += f(x, u)*dt;  // New State estimation
 }
 
-void kalman_correc(Matrix<double,NB_STATES, 1> x,
+void kalman_correc(Matrix<double,NB_STATES, 1> &x,
                    Matrix<double,NB_STATES,NB_STATES> &gamma,
                    const Matrix<double,NB_MESURES, 1> &y,
                    const Matrix<double,NB_MESURES,NB_MESURES> &gamma_beta,
@@ -127,7 +142,25 @@ void kalman(Matrix<double,NB_STATES, 1> &x,
             const double &dt
             ){
   kalman_correc(x, gamma, y, gamma_beta, Ck);
-  kalman_predict(x, gamma, u, gamma_alpha, Ak, dt);
+  kalman_predict(x, gamma, u, gamma_alpha, dt);
+}
+
+void init_gamma(Matrix<double,NB_STATES,NB_STATES> &gamma, const double &gamma_init_velocity, const double &gamma_init_depth,
+                const double &gamma_init_offset, const double &gamma_init_chi, const double &gamma_init_chi2){
+  gamma = Matrix<double,NB_STATES,NB_STATES>::Zero();
+  gamma(0,0) = pow(gamma_init_velocity, 2); // velocity
+  gamma(1,1) = pow(gamma_init_depth, 2); // Depth
+  gamma(2,2) = pow(gamma_init_offset, 2); // Error offset;
+  gamma(3,3) = pow(gamma_init_chi,2); // Compressibility
+  gamma(4,4) = pow(gamma_init_chi2,2); // Compressibility 2
+}
+
+void init_xhat(Matrix<double, NB_STATES, 1> &xhat ){
+  xhat(0) = 0.0;
+  xhat(1) = depth;
+  xhat(2) = 0.0; // Vp
+  xhat(3) = 0.0; // chi
+  xhat(4) = 0.0; // chi2
 }
 
 int main(int argc, char *argv[]){
@@ -148,23 +181,21 @@ int main(int argc, char *argv[]){
   const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
 
-  const double limit_offset = n_private.param<double>("limit_offset", 2400)*tick_to_volume;
-  const double limit_chi = n_private.param<double>("limit_chi", 100)*tick_to_volume;
-  const double limit_chi2 = limit_chi;
+  const double piston_max_value = n_private.param<double>("piston_max_value", 2400)*tick_to_volume;
 
   const double limit_min_depth = n_private.param<double>("limit_min_depth", 0.5);
 
-  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-4);
-  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5);
-  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 1e-8);
-  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1e-8);
-  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1e-8);
+  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-5);
+  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 0.0);
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 2.0e-10);
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 2.0e-10);
+  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 2.0e-10);
 
-  const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1e-1);
-  const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1e-3);
-  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", limit_offset/2.);
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", limit_chi);
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", limit_chi);
+  const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1.0e-1);
+  const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-3);
+  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 1.0e-4);
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-4);
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-4);
 
   const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-4);
 
@@ -194,7 +225,6 @@ int main(int argc, char *argv[]){
   // Line, Row
   Matrix<double, NB_STATES, NB_STATES> gamma_alpha = Matrix<double, NB_STATES, NB_STATES>::Zero();
   Matrix<double, NB_MESURES, NB_MESURES> gamma_beta = Matrix<double, NB_MESURES, NB_MESURES>::Zero();
-  Matrix<double, NB_STATES, NB_STATES> Ak = Matrix<double, NB_STATES, NB_STATES>::Zero();
   Matrix<double, NB_MESURES, NB_STATES> Ck = Matrix<double, NB_MESURES, NB_STATES>::Zero();
 
   Matrix<double, NB_STATES, 1> xhat = Matrix<double, NB_STATES, 1>::Zero();
@@ -202,11 +232,7 @@ int main(int argc, char *argv[]){
   Matrix<double,NB_STATES, 1> x_forcast(xhat);
   Matrix<double,NB_STATES, NB_STATES> gamma_forcast = Matrix<double,NB_STATES,NB_STATES>::Zero();
 
-  gamma(0,0) = pow(gamma_init_velocity, 2); // velocity
-  gamma(1,1) = pow(gamma_init_depth, 2); // Depth
-  gamma(2,2) = pow(gamma_init_offset, 2); // Error offset;
-  gamma(3,3) = pow(gamma_init_chi,2); // Compressibility
-  gamma(4,4) = pow(gamma_init_chi2,2); // Compressibility 2
+  init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
 
   gamma_alpha(0,0) = pow(gamma_alpha_velocity, 2); // Velocity
   gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth
@@ -215,10 +241,6 @@ int main(int argc, char *argv[]){
   gamma_alpha(4,4) = pow(gamma_alpha_chi2, 2); // Compressibility 2
 
   gamma_beta(0, 0) = pow(gamma_beta_depth, 2); // Depth
-
-  Ak(0, 0) = 0.0;
-  Ak(0, 2) = -coeff_A;
-  Ak(1, 0) = 1.;
 
   Ck(0, 1) = 1.;
 
@@ -240,12 +262,7 @@ int main(int argc, char *argv[]){
       /// Do not enable Kalman filter if
       /// * depth limit condition
       /// * or robot is on seafloor
-      if(depth>limit_min_depth || (seafloor_detected && seafloor_landing)){
-
-        Ak(0,0) = -2.*coeff_B*abs(xhat(0));
-        Ak(0,1) = (xhat(3)+2.*xhat(4)*xhat(1))*coeff_A;
-        Ak(0,3) = xhat(1)*coeff_A;
-        Ak(0,4) = pow(xhat(1),2)*coeff_A;
+      if(depth>limit_min_depth && !(seafloor_detected && seafloor_landing)){
 
         ros::Duration dt;
         if(new_piston_data){
@@ -259,7 +276,7 @@ int main(int argc, char *argv[]){
         }
         // ToDo : case where we have both new_piston_data & new_depth_data : dt should be handle more accuratly
 
-        kalman_predict(xhat, gamma, u, gamma_alpha, Ak, dt.toSec());
+        kalman_predict(xhat, gamma, u, gamma_alpha, dt.toSec());
 
         if(new_depth_data){
           y(0) = depth;
@@ -270,7 +287,7 @@ int main(int argc, char *argv[]){
           gamma_forcast = gamma;
           if(forecast_dt_regulation != 0.0){
             u(0) = -piston_position*tick_to_volume;
-            kalman_predict(x_forcast, gamma_forcast, u, gamma_alpha, Ak, forecast_dt_regulation);
+            kalman_predict(x_forcast, gamma_forcast, u, gamma_alpha, forecast_dt_regulation);
           }
 
           msg.valid = true;
@@ -278,10 +295,15 @@ int main(int argc, char *argv[]){
 
           // Case Divergence of Kalman filter
           double equilibrium_volume = xhat(2)-(xhat(3)*xhat(1)+xhat(4)*pow(xhat(1),2));
-          if(equilibrium_volume>limit_offset || equilibrium_volume<0){
-            gamma(2,2) = pow(limit_offset, 2); // Error offset;
-            gamma(3,3) = pow(limit_chi,2); // Compressibility
+          if(equilibrium_volume>piston_max_value || equilibrium_volume<0){
+            init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
             msg.valid = false;
+          }
+
+          if(!xhat.allFinite()){
+            init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
+            init_xhat(xhat);
+            cout << gamma << endl;
           }
         }
       }

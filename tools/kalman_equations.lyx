@@ -150,7 +150,7 @@ Kalman
 \begin{equation}
 \begin{cases}
 \mathbf{\dot{\mathbf{x}}}=\mathbf{f}_{c}\left(\dot{\mathbf{x}},u\right) & =\left(\begin{array}{c}
--A\left(u+V_{0}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-B\left|\dot{z}\right|\dot{z}\\
+-A\left(V_{p}+V_{0}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-B\left|\dot{z}\right|\dot{z}\\
 \dot{z}\\
 0\\
 0\\

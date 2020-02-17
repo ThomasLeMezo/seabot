@@ -19,8 +19,7 @@
 
 		<remap from="~gamma_beta_depth" to="/kalman/gamma_beta_depth" />
 
-		<remap from="~limit_offset" to="/kalman/limit_offset" />
-		<remap from="~limit_chi" to="/kalman/limit_chi" />
+		<remap from="~piston_max_value" to="/physics/piston_max_value" />
 
 		<remap from="~rho" to="/physics/rho" />
 		<remap from="~g" to="/physics/g" />
