@@ -825,25 +825,25 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
 
     pg_kalman_cov_depth = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_depth)
-    pg_kalman_cov_depth.plot(kalmanData.time,kalmanData.cov_depth[:-1], pen=(255,0,0), name="cov depth", stepMode=True)
+    pg_kalman_cov_depth.plot(kalmanData.time,kalmanData.cov_depth[:-1], pen=(255,0,0), name="v_depth", stepMode=True)
     # pg_kalman_cov_depth.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_depth)
 
     pg_kalman_cov_velocity = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_velocity)
-    pg_kalman_cov_velocity.plot(kalmanData.time,kalmanData.cov_velocity[:-1], pen=(255,0,0), name="cov velocity", stepMode=True)
+    pg_kalman_cov_velocity.plot(kalmanData.time,kalmanData.cov_velocity[:-1], pen=(255,0,0), name="v_velocity", stepMode=True)
     # pg_kalman_cov_velocity.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_velocity)
 
     pg_kalman_cov_offset = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_offset)
-    pg_kalman_cov_offset.plot(kalmanData.time,kalmanData.cov_offset[:-1], pen=(255,0,0), name="cov offset", stepMode=True)
+    pg_kalman_cov_offset.plot(kalmanData.time,kalmanData.cov_offset[:-1], pen=(255,0,0), name="v_offset", stepMode=True)
     # pg_kalman_cov_offset.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_offset)
 
     pg_kalman_cov_chi = pg.PlotWidget()
     set_plot_options(pg_kalman_cov_chi)
-    pg_kalman_cov_chi.plot(kalmanData.time,kalmanData.cov_chi[:-1], pen=(255,0,0), name="cov chi", stepMode=True)
+    pg_kalman_cov_chi.plot(kalmanData.time,kalmanData.cov_chi[:-1], pen=(255,0,0), name="v_chi", stepMode=True)
     # pg_kalman_cov_chi.setAutoVisible(y=True)
     dock_kalman_cov.addWidget(pg_kalman_cov_chi)
 

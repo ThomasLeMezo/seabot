@@ -47,6 +47,8 @@ int speed_out_min = 15;
 bool new_set_point = false;
 ros::Time time_depth_data;
 
+size_t cpt_message_publisher;
+
 bool piston_reset(std_srvs::Empty::Request  &req,
                   std_srvs::Empty::Response &res){
   p.set_piston_reset();
@@ -69,6 +71,7 @@ void position_callback(const seabot_piston_driver::PistonPosition::ConstPtr& msg
   piston_set_point = msg->position;
   time_depth_data = msg->stamp;
   new_set_point = true;
+  cpt_message_publisher = 1;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
@@ -162,72 +165,74 @@ int main(int argc, char *argv[]){
 
   ROS_INFO("[Piston_driver] Start Ok");
   ros::Rate loop_rate(frequency);
-  size_t cpt_message_publisher = divider_frequency;
+  cpt_message_publisher = divider_frequency;
   while (ros::ok()){
     ros::spinOnce();
-
-    ros::Time t = ros::Time::now();
-
-    /// ********************************************
-    /// ******** Send Command to the piston ********
-    /// ********************************************
-    // Piston set point
-    if((piston_set_point != p.m_position_set_point) || (t-t_last_set_point).toSec()>30.0){
-      t_last_set_point = t;
-      p.set_piston_position(piston_set_point);
-    }
-
-    if(new_set_point){
-      regulation_loop_msg.dt = ros::Time::now() - time_depth_data;
-      new_set_point = false;
-    }
-
-    // Fast speed if position is far from position
-    if(abs(piston_set_point - p.m_position)>distance_fast_move){
-      if(!fast_move){
-        new_speed = true;
-        fast_move = true;
-      }
-    }
-    else{
-      if(fast_move){
-        new_speed = true;
-        fast_move = false;
-      }
-    }
-
-    // Compute new speed index (20% hysteresis) from depth
-    layer_number = depth/speed_depth_layer;
-    if(abs(layer_number_last-layer_number)>1.2 && !fast_move){
-      layer_number_last = min((size_t)ceil(abs(layer_number)), (size_t)(speed_table_in.size()-1));
-      new_speed = true;
-    }
-
-    if(new_speed){
-      size_t speed_in, speed_out;
-      if(fast_move){
-        speed_in = min((size_t)floor(speed_table_in[layer_number_last]*speed_fast_move_factor), speed_max);
-        speed_out = min((size_t)floor(speed_table_out[layer_number_last]*speed_fast_move_factor), speed_max);
-      }
-      else{
-        speed_in = speed_table_in[layer_number_last];
-        speed_out = speed_table_out[layer_number_last];
-      }
-      p.set_piston_speed(speed_in,speed_out);
-      speed_msg.speed_in = speed_in;
-      speed_msg.speed_out = speed_out;
-
-      // Log
-      speed_pub.publish(speed_msg);
-    }
-
-    /// ********************************************
-    /// ********      Get Piston state      ********
-    /// ********************************************
 
     cpt_message_publisher--;
     if(cpt_message_publisher==0){
       cpt_message_publisher=divider_frequency;
+      ros::Time t = ros::Time::now();
+
+      /// ********************************************
+      /// ******** Send Command to the piston ********
+      /// ********************************************
+      // Piston set point
+      if((piston_set_point != p.m_position_set_point) || (t-t_last_set_point).toSec()>30.0){
+        t_last_set_point = t;
+        p.set_piston_position(piston_set_point);
+      }
+
+      if(new_set_point){
+        regulation_loop_msg.dt = ros::Time::now() - time_depth_data;
+        new_set_point = false;
+        regulation_loop.publish(regulation_loop_msg);
+      }
+
+      // Fast speed if position is far from position
+      if(abs(piston_set_point - p.m_position)>distance_fast_move){
+        if(!fast_move){
+          new_speed = true;
+          fast_move = true;
+        }
+      }
+      else{
+        if(fast_move){
+          new_speed = true;
+          fast_move = false;
+        }
+      }
+
+      // Compute new speed index (20% hysteresis) from depth
+      layer_number = depth/speed_depth_layer;
+      if(abs(layer_number_last-layer_number)>1.2 && !fast_move){
+        layer_number_last = min((size_t)ceil(abs(layer_number)), (size_t)(speed_table_in.size()-1));
+        new_speed = true;
+      }
+
+      if(new_speed){
+        size_t speed_in, speed_out;
+        if(fast_move){
+          speed_in = min((size_t)floor(speed_table_in[layer_number_last]*speed_fast_move_factor), speed_max);
+          speed_out = min((size_t)floor(speed_table_out[layer_number_last]*speed_fast_move_factor), speed_max);
+        }
+        else{
+          speed_in = speed_table_in[layer_number_last];
+          speed_out = speed_table_out[layer_number_last];
+        }
+        p.set_piston_speed(speed_in,speed_out);
+        speed_msg.speed_in = speed_in;
+        speed_msg.speed_out = speed_out;
+
+        // Log
+        speed_pub.publish(speed_msg);
+      }
+
+      /// ********************************************
+      /// ********      Get Piston state      ********
+      /// ********************************************
+
+
       state_msg.stamp = ros::Time::now();
       p.get_piston_all_data();
       state_msg.position = p.m_position;

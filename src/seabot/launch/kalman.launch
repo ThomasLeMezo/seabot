@@ -11,6 +11,14 @@
 		<remap from="~gamma_alpha_offset" to="/kalman/gamma_alpha_offset" />
 		<remap from="~gamma_alpha_chi" to="/kalman/gamma_alpha_chi" />
 
+		<remap from="~gamma_init_velocity" to="/kalman/gamma_init_velocity" />
+		<remap from="~gamma_init_depth" to="/kalman/gamma_init_depth" />
+		<remap from="~gamma_init_offset" to="/kalman/gamma_init_offset" />
+		<remap from="~gamma_init_chi" to="/kalman/gamma_init_chi" />
+		<remap from="~gamma_init_chi2" to="/kalman/gamma_init_chi2" />
+
+		<remap from="~gamma_beta_depth" to="/kalman/gamma_beta_depth" />
+
 		<remap from="~limit_offset" to="/kalman/limit_offset" />
 		<remap from="~limit_chi" to="/kalman/limit_chi" />
 

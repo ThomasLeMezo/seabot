@@ -160,6 +160,14 @@ int main(int argc, char *argv[]){
   const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1e-8);
   const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1e-8);
 
+  const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1e-1);
+  const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1e-3);
+  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", limit_offset/2.);
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", limit_chi);
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", limit_chi);
+
+  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-4);
+
   g_rho_bar = g*rho/1e5;
 
   coeff_A = g*rho/m;
@@ -192,13 +200,13 @@ int main(int argc, char *argv[]){
   Matrix<double, NB_STATES, 1> xhat = Matrix<double, NB_STATES, 1>::Zero();
   Matrix<double,NB_STATES,NB_STATES> gamma = Matrix<double,NB_STATES,NB_STATES>::Zero();
   Matrix<double,NB_STATES, 1> x_forcast(xhat);
-  Matrix<double,NB_STATES, NB_STATES> gamma_forcast(gamma);
+  Matrix<double,NB_STATES, NB_STATES> gamma_forcast = Matrix<double,NB_STATES,NB_STATES>::Zero();
 
-  gamma(0,0) = pow(1e-1, 2); // velocity
-  gamma(1,1) = pow(1e-3, 2); // Depth
-  gamma(2,2) = pow(limit_offset/2.0, 2); // Error offset;
-  gamma(3,3) = pow(limit_chi,2); // Compressibility
-  gamma(4,4) = pow(limit_chi2,2); // Compressibility 2
+  gamma(0,0) = pow(gamma_init_velocity, 2); // velocity
+  gamma(1,1) = pow(gamma_init_depth, 2); // Depth
+  gamma(2,2) = pow(gamma_init_offset, 2); // Error offset;
+  gamma(3,3) = pow(gamma_init_chi,2); // Compressibility
+  gamma(4,4) = pow(gamma_init_chi2,2); // Compressibility 2
 
   gamma_alpha(0,0) = pow(gamma_alpha_velocity, 2); // Velocity
   gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth
@@ -206,7 +214,7 @@ int main(int argc, char *argv[]){
   gamma_alpha(3,3) = pow(gamma_alpha_chi, 2); // Compressibility
   gamma_alpha(4,4) = pow(gamma_alpha_chi2, 2); // Compressibility 2
 
-  gamma_beta(0, 0) = pow(1e-4, 2); // Depth
+  gamma_beta(0, 0) = pow(gamma_beta_depth, 2); // Depth
 
   Ak(0, 0) = 0.0;
   Ak(0, 2) = -coeff_A;
@@ -281,6 +289,8 @@ int main(int argc, char *argv[]){
         if(new_depth_data){
           xhat(0) = velocity_fusion;
           xhat(1) = depth;
+          x_forcast = xhat;
+          gamma_forcast = gamma;
           msg.valid = false;
         }
       }
@@ -291,7 +301,7 @@ int main(int argc, char *argv[]){
         msg.offset = x_forcast(2);
         msg.chi = x_forcast(3);
         msg.chi2 = x_forcast(4);
-        msg.stamp = time_piston_data;
+        msg.stamp = time_depth_data;
 
         msg.variance[0] = gamma_forcast(0,0);
         msg.variance[1] = gamma_forcast(1,1);
