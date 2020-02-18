@@ -21,8 +21,8 @@ find_package(catkin REQUIRED
 )
 
 find_package(Eigen3 REQUIRED NO_MODULE)
-include_directories(${Eigen3_INCLUDE_DIRS})
-
+add_definitions     ( ${EIGEN3_DEFINITIONS} )
+include_directories ( ${EIGEN3_INCLUDE_DIRS} )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -209,7 +209,7 @@ target_link_libraries(internal_sensor_filter_node
 )
 
 target_link_libraries(kalman_node
-  Eigen3::Eigen
+  #Eigen3::Eigen
   ${catkin_LIBRARIES}
 )
 

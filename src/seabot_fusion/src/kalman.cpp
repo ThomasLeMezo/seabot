@@ -118,6 +118,8 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
   Ak(1, 0) = 1.;
   Ak_tmp += Ak*dt;
 
+  cout << "u = " << u << endl;
+  cout << "dt = " << dt << endl;
   gamma = Ak_tmp*gamma*(Ak_tmp.transpose())+gamma_alpha*sqrt(dt); // Variance estimatation
   x += f(x, u)*dt;  // New State estimation
 }
@@ -131,9 +133,9 @@ void kalman_correc(Matrix<double,NB_STATES, 1> &x,
   Matrix<double,NB_MESURES,NB_MESURES> S = Ck * gamma * Ck.transpose() + gamma_beta;
   Matrix<double,NB_STATES, NB_MESURES> K = gamma * Ck.transpose() * S.inverse();
   Matrix<double,NB_MESURES, 1> ztilde = y - Ck*x;
-  cout << "S" << S << endl;
-  cout << "K" << K << endl;
-  cout << "ztilde" << ztilde << endl;
+  cout << "S" << endl << S << endl;
+  cout << "K" << endl << K << endl;
+  cout << "ztilde " << endl << ztilde << endl;
 
   Matrix<double,NB_STATES,NB_STATES> Id = Matrix<double,NB_STATES,NB_STATES>::Identity();
   Matrix<double,NB_STATES,NB_STATES> tmp = Id - K*Ck;
@@ -183,7 +185,7 @@ int main(int argc, char *argv[]){
 
   const double rho = n_private.param<double>("rho", 1025.0);
   const double g = n_private.param<double>("g", 9.81);
-  const double m = n_private.param<double>("m", 9.045);
+  const double m = n_private.param<double>("m", 9.045*2.);
   const double diam_collerette = n_private.param<double>("diam_collerette", 0.24);
   const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
   const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
@@ -203,9 +205,9 @@ int main(int argc, char *argv[]){
 
   const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1.0e-1);
   const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-3);
-  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 1.0e-4);
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-4);
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-4);
+  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 1.0e-1);
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-1);
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-1);
 
   const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-3);
 
@@ -286,6 +288,7 @@ int main(int argc, char *argv[]){
         }
         // ToDo : case where we have both new_piston_data & new_depth_data : dt should be handle more accuratly
 
+        cout << "u(0) = " << u(0) << endl;
         kalman_predict(xhat, gamma, u, gamma_alpha, dt.toSec());
         cout << "gamma" << endl << gamma << endl << "xhat" << endl << xhat << endl;
 

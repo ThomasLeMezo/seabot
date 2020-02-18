@@ -3,6 +3,7 @@
 import rospy
 from seabot_fusion.msg import DepthPose
 from seabot_piston_driver.msg import PistonState
+import numpy as np
 
 def talker():
     pub_depth = rospy.Publisher('/fusion/depth', DepthPose, queue_size=10)
@@ -19,7 +20,7 @@ def talker():
         depthPose.stamp = rospy.Time(t)#rospy.get_rostime()
         pistonState.stamp = rospy.Time(t)#rospy.get_rostime()
 
-        depthPose.depth = 1.0
+        depthPose.depth = np.random.normal(1.0,1e-4)
         pistonState.position = 1000.0
 
         pub_depth.publish(depthPose)
