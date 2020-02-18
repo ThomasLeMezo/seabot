@@ -209,6 +209,7 @@ target_link_libraries(internal_sensor_filter_node
 )
 
 target_link_libraries(kalman_node
+  Eigen3::Eigen
   ${catkin_LIBRARIES}
 )
 

@@ -19,6 +19,7 @@
 #include <deque>
 
 #include <eigen3/Eigen/Dense>
+#include <eigen3/unsupported/Eigen/MatrixFunctions>
 
 using namespace std;
 using namespace Eigen;
@@ -27,10 +28,10 @@ using namespace Eigen;
 #define NB_STATES 5
 #define NB_COMMAND 1
 
-double depth = 0.0;
-double velocity_fusion = 0.0;
-double piston_position = 0.0;
-double piston_position_last = 0.0;
+float depth = 0.0;
+float velocity_fusion = 0.0;
+float piston_position = 0.0;
+float piston_position_last = 0.0;
 
 double piston_set_point = 0.0;
 
@@ -104,17 +105,20 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
                     const Matrix<double,NB_COMMAND, 1> &u,
                     const Matrix<double,NB_STATES, NB_STATES> &gamma_alpha,
                     const double &dt){
+  if(dt==0.0)
+    return;
 
+  Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Matrix<double, NB_STATES, NB_STATES>::Identity();
   Matrix<double,NB_STATES, NB_STATES> Ak = Matrix<double, NB_STATES, NB_STATES>::Zero();
   Ak(0,0) = -2.*coeff_B*abs(x(0));
   Ak(0,1) = coeff_A*(x(3)+2.*x(4)*x(1));
-  Ak(0, 2) = -coeff_A;
+  Ak(0,2) = -coeff_A;
   Ak(0,3) = x(1)*coeff_A;
   Ak(0,4) = pow(x(1),2)*coeff_A;
   Ak(1, 0) = 1.;
-  Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Ak*dt + Matrix<double, NB_STATES, NB_STATES>::Identity();
+  Ak_tmp += Ak*dt;
 
-  gamma = Ak_tmp*gamma*Ak_tmp.transpose()+gamma_alpha*dt; // Variance estimatation
+  gamma = Ak_tmp*gamma*(Ak_tmp.transpose())+gamma_alpha*sqrt(dt); // Variance estimatation
   x += f(x, u)*dt;  // New State estimation
 }
 
@@ -123,12 +127,19 @@ void kalman_correc(Matrix<double,NB_STATES, 1> &x,
                    const Matrix<double,NB_MESURES, 1> &y,
                    const Matrix<double,NB_MESURES,NB_MESURES> &gamma_beta,
                    const Matrix<double,NB_MESURES, NB_STATES> &Ck){
+  cout << "-------- correc ---------" << endl;
   Matrix<double,NB_MESURES,NB_MESURES> S = Ck * gamma * Ck.transpose() + gamma_beta;
   Matrix<double,NB_STATES, NB_MESURES> K = gamma * Ck.transpose() * S.inverse();
-  Matrix<double,NB_MESURES, 1> ytilde = y - Ck*x;
+  Matrix<double,NB_MESURES, 1> ztilde = y - Ck*x;
+  cout << "S" << S << endl;
+  cout << "K" << K << endl;
+  cout << "ztilde" << ztilde << endl;
 
-  gamma *= (Matrix<double,NB_STATES,NB_STATES>::Identity()-K*Ck);
-  x += K*ytilde;
+  Matrix<double,NB_STATES,NB_STATES> Id = Matrix<double,NB_STATES,NB_STATES>::Identity();
+  Matrix<double,NB_STATES,NB_STATES> tmp = Id - K*Ck;
+
+  gamma = ((tmp*gamma)*(gamma.transpose())*tmp.transpose()).sqrt();
+  x += K*ztilde;
 }
 
 void kalman(Matrix<double,NB_STATES, 1> &x,
@@ -137,7 +148,6 @@ void kalman(Matrix<double,NB_STATES, 1> &x,
             const Matrix<double,NB_MESURES, 1> &y,
             const Matrix<double,NB_STATES, NB_STATES> &gamma_alpha,
             const Matrix<double,NB_MESURES,NB_MESURES> &gamma_beta,
-            const Matrix<double,NB_STATES, NB_STATES> &Ak,
             const Matrix<double,NB_MESURES, NB_STATES> &Ck,
             const double &dt
             ){
@@ -186,7 +196,7 @@ int main(int argc, char *argv[]){
   const double limit_min_depth = n_private.param<double>("limit_min_depth", 0.5);
 
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-5);
-  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 0.0);
+  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1.0e-5);
   const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 2.0e-10);
   const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 2.0e-10);
   const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 2.0e-10);
@@ -197,7 +207,7 @@ int main(int argc, char *argv[]){
   const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-4);
   const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-4);
 
-  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-4);
+  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-3);
 
   g_rho_bar = g*rho/1e5;
 
@@ -277,10 +287,12 @@ int main(int argc, char *argv[]){
         // ToDo : case where we have both new_piston_data & new_depth_data : dt should be handle more accuratly
 
         kalman_predict(xhat, gamma, u, gamma_alpha, dt.toSec());
+        cout << "gamma" << endl << gamma << endl << "xhat" << endl << xhat << endl;
 
         if(new_depth_data){
           y(0) = depth;
           kalman_correc(xhat, gamma, y, gamma_beta, Ck);
+          cout << "gamma" << endl << gamma << endl << "xhat" << endl << xhat << endl;
 
           // Forecast
           x_forcast = xhat;
@@ -303,7 +315,6 @@ int main(int argc, char *argv[]){
           if(!xhat.allFinite()){
             init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
             init_xhat(xhat);
-            cout << gamma << endl;
           }
         }
       }
