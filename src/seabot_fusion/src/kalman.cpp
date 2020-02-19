@@ -118,8 +118,6 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
   Ak(1, 0) = 1.;
   Ak_tmp += Ak*dt;
 
-  cout << "u = " << u << endl;
-  cout << "dt = " << dt << endl;
   gamma = Ak_tmp*gamma*(Ak_tmp.transpose())+gamma_alpha*sqrt(dt); // Variance estimatation
   x += f(x, u)*dt;  // New State estimation
 }
@@ -129,18 +127,15 @@ void kalman_correc(Matrix<double,NB_STATES, 1> &x,
                    const Matrix<double,NB_MESURES, 1> &y,
                    const Matrix<double,NB_MESURES,NB_MESURES> &gamma_beta,
                    const Matrix<double,NB_MESURES, NB_STATES> &Ck){
-  cout << "-------- correc ---------" << endl;
-  Matrix<double,NB_MESURES,NB_MESURES> S = Ck * gamma * Ck.transpose() + gamma_beta;
-  Matrix<double,NB_STATES, NB_MESURES> K = gamma * Ck.transpose() * S.inverse();
-  Matrix<double,NB_MESURES, 1> ztilde = y - Ck*x;
-  cout << "S" << endl << S << endl;
-  cout << "K" << endl << K << endl;
-  cout << "ztilde " << endl << ztilde << endl;
+  const Matrix<double,NB_MESURES,NB_MESURES> S = Ck * gamma * Ck.transpose() + gamma_beta;
+  const Matrix<double,NB_STATES, NB_MESURES> K = gamma * Ck.transpose() * S.inverse();
+  const Matrix<double,NB_MESURES, 1> ztilde = y - Ck*x;
 
-  Matrix<double,NB_STATES,NB_STATES> Id = Matrix<double,NB_STATES,NB_STATES>::Identity();
-  Matrix<double,NB_STATES,NB_STATES> tmp = Id - K*Ck;
+  const Matrix<double,NB_STATES,NB_STATES> Id = Matrix<double,NB_STATES,NB_STATES>::Identity();
+  const Matrix<double,NB_STATES,NB_STATES> tmp = Id - K*Ck;
 
-  gamma = ((tmp*gamma)*(gamma.transpose())*tmp.transpose()).sqrt();
+  //  gamma = ((tmp*gamma)*(gamma.transpose())*tmp.transpose()).sqrt();
+  gamma *= tmp;
   x += K*ztilde;
 }
 
@@ -190,7 +185,7 @@ int main(int argc, char *argv[]){
   const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
   const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
   const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
-  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100);
+  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100.0);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
 
   const double piston_max_value = n_private.param<double>("piston_max_value", 2400)*tick_to_volume;
@@ -199,15 +194,15 @@ int main(int argc, char *argv[]){
 
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-5);
   const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1.0e-5);
-  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 2.0e-10);
-  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 2.0e-10);
-  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 2.0e-10);
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 2.0e-5);
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 2.0e-8);
+  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 2.0e-8);
 
   const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1.0e-1);
   const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-3);
-  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 1.0e-1);
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-1);
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-1);
+  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 1.0e-4);
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-4);
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-4);
 
   const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-3);
 
@@ -257,7 +252,7 @@ int main(int argc, char *argv[]){
   Ck(0, 1) = 1.;
 
   xhat(0) = 0.0; // dz
-  xhat(1) = 0.0; // z
+  xhat(1) = 1.0; // z
   xhat(2) = piston_ref_eq*tick_to_volume; // Vp
   xhat(3) = 0.0; // chi
   xhat(4) = 0.0; // chi2
@@ -288,14 +283,11 @@ int main(int argc, char *argv[]){
         }
         // ToDo : case where we have both new_piston_data & new_depth_data : dt should be handle more accuratly
 
-        cout << "u(0) = " << u(0) << endl;
         kalman_predict(xhat, gamma, u, gamma_alpha, dt.toSec());
-        cout << "gamma" << endl << gamma << endl << "xhat" << endl << xhat << endl;
 
         if(new_depth_data){
           y(0) = depth;
           kalman_correc(xhat, gamma, y, gamma_beta, Ck);
-          cout << "gamma" << endl << gamma << endl << "xhat" << endl << xhat << endl;
 
           // Forecast
           x_forcast = xhat;
@@ -305,6 +297,7 @@ int main(int argc, char *argv[]){
             kalman_predict(x_forcast, gamma_forcast, u, gamma_alpha, forecast_dt_regulation);
           }
 
+
           msg.valid = true;
           msg.forecast_dt_regulation = forecast_dt_regulation;
 
@@ -313,6 +306,7 @@ int main(int argc, char *argv[]){
           if(equilibrium_volume>piston_max_value || equilibrium_volume<0){
             init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
             msg.valid = false;
+            ROS_INFO("[Kalman] Divergence of Kalman filter");
           }
 
           if(!xhat.allFinite()){

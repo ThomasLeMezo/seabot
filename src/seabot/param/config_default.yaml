@@ -143,7 +143,7 @@ kalman:
   estimated_first_error_equilibrium_tick: 250
 
   gamma_alpha_velocity: 1.0e-5 # Error of model
-  gamma_alpha_depth: 1.0e-5 # Error of model (atmospheric pressure variation)
+  gamma_alpha_depth: 1.0e-8 # Error of model (atmospheric pressure variation)
   gamma_alpha_offset: 2.0e-10 # Change over time (10 tick per hour)
   gamma_alpha_chi: 2.0e-10
   gamma_alpha_chi2: 2.0e-10
