@@ -170,6 +170,10 @@ add_executable(kalman_node
     src/kalman.cpp
 )
 
+add_executable(kalman_old_node
+    src/kalman_old.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -185,6 +189,7 @@ add_dependencies(batteries_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 add_dependencies(temperature_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(internal_sensor_filter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(kalman_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(kalman_old_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(depth_filter_node
@@ -209,7 +214,10 @@ target_link_libraries(internal_sensor_filter_node
 )
 
 target_link_libraries(kalman_node
-  #Eigen3::Eigen
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(kalman_old_node
   ${catkin_LIBRARIES}
 )
 

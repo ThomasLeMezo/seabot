@@ -32,6 +32,7 @@ float depth = 0.0;
 float velocity_fusion = 0.0;
 float piston_position = 0.0;
 float piston_position_last = 0.0;
+double piston_volume_eq = 0.0;
 
 double piston_set_point = 0.0;
 
@@ -50,7 +51,6 @@ bool new_piston_data = false;
 double forecast_dt_regulation = 0.0;
 double forecast_filter = 0.7;
 
-bool seafloor_landing = false;
 bool seafloor_detected = false;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
@@ -82,21 +82,22 @@ void regulation_loop_callback(const seabot_piston_driver::RegulationLoopDuration
   forecast_dt_regulation = (1.-forecast_filter)* forecast_dt_regulation + forecast_filter*(msg->dt.toSec());
 }
 
-void mission_callback(const seabot_mission::Waypoint::ConstPtr& msg){
-  seafloor_landing = msg->seafloor_landing;
-}
-
 void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
   seafloor_detected = msg->seafloor;
 }
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_COMMAND, 1> &u){
   Matrix<double,NB_STATES, 1> dx = Matrix<double,NB_STATES, 1>::Zero();
+#if NB_STATES<=4
+  dx(0) = -coeff_A*(u(0)+x(2)-(x(3)*x(1)))-coeff_B*copysign(x(0)*x(0), x(0));
+#else
   dx(0) = -coeff_A*(u(0)+x(2)-(x(3)*x(1)+x(4)*pow(x(1),2)))-coeff_B*copysign(x(0)*x(0), x(0));
+  dx(4) = 0;
+#endif
   dx(1) = x(0);
   dx(2) = 0;
   dx(3) = 0;
-  dx(4) = 0;
+
   return dx;
 }
 
@@ -111,14 +112,19 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
   Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Matrix<double, NB_STATES, NB_STATES>::Identity();
   Matrix<double,NB_STATES, NB_STATES> Ak = Matrix<double, NB_STATES, NB_STATES>::Zero();
   Ak(0,0) = -2.*coeff_B*abs(x(0));
-  Ak(0,1) = coeff_A*(x(3)+2.*x(4)*x(1));
+
   Ak(0,2) = -coeff_A;
   Ak(0,3) = x(1)*coeff_A;
+#if NB_STATES>=5
   Ak(0,4) = pow(x(1),2)*coeff_A;
+  Ak(0,1) = coeff_A*(x(3)+2.*x(4)*x(1));
+#else
+  Ak(0,1) = coeff_A*x(3);
+#endif
   Ak(1, 0) = 1.;
   Ak_tmp += Ak*dt;
 
-  gamma = Ak_tmp*gamma*(Ak_tmp.transpose())+gamma_alpha*sqrt(dt); // Variance estimatation
+  gamma = Ak_tmp*gamma*Ak_tmp.transpose()+gamma_alpha*sqrt(dt); // Variance estimatation
   x += f(x, u)*dt;  // New State estimation
 }
 
@@ -134,7 +140,7 @@ void kalman_correc(Matrix<double,NB_STATES, 1> &x,
   const Matrix<double,NB_STATES,NB_STATES> Id = Matrix<double,NB_STATES,NB_STATES>::Identity();
   const Matrix<double,NB_STATES,NB_STATES> tmp = Id - K*Ck;
 
-  //  gamma = ((tmp*gamma)*(gamma.transpose())*tmp.transpose()).sqrt();
+//    gamma = ((tmp*gamma)*(gamma.transpose())*tmp.transpose()).sqrt();
   gamma *= tmp;
   x += K*ztilde;
 }
@@ -159,15 +165,19 @@ void init_gamma(Matrix<double,NB_STATES,NB_STATES> &gamma, const double &gamma_i
   gamma(1,1) = pow(gamma_init_depth, 2); // Depth
   gamma(2,2) = pow(gamma_init_offset, 2); // Error offset;
   gamma(3,3) = pow(gamma_init_chi,2); // Compressibility
+#if NB_STATES>=5
   gamma(4,4) = pow(gamma_init_chi2,2); // Compressibility 2
+#endif
 }
 
 void init_xhat(Matrix<double, NB_STATES, 1> &xhat ){
-  xhat(0) = 0.0;
+  xhat(0) = velocity_fusion;
   xhat(1) = depth;
-  xhat(2) = 0.0; // Vp
+  xhat(2) = piston_volume_eq; // Vp
   xhat(3) = 0.0; // chi
+#if NB_STATES>=5
   xhat(4) = 0.0; // chi2
+#endif
 }
 
 int main(int argc, char *argv[]){
@@ -185,26 +195,26 @@ int main(int argc, char *argv[]){
   const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
   const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
   const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
-  const double piston_ref_eq = n_private.param<double>("piston_ref_eq", 2100.0);
   tick_to_volume = (screw_thread/tick_per_turn)*pow(piston_diameter/2.0, 2)*M_PI;
+  piston_volume_eq = n_private.param<double>("piston_ref_eq", 2100.0)*tick_to_volume;
 
   const double piston_max_value = n_private.param<double>("piston_max_value", 2400)*tick_to_volume;
 
   const double limit_min_depth = n_private.param<double>("limit_min_depth", 0.5);
 
-  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-5);
-  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1.0e-5);
-  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 2.0e-5);
-  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 2.0e-8);
-  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 2.0e-8);
+  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-3); // 1e-5
+  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-8); // 1e-5
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", tick_to_volume); // 2e-5
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", tick_to_volume); // 2e-8
+  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", tick_to_volume); // 2e-8
 
-  const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1.0e-1);
+  const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1e-2);
   const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-3);
-  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 1.0e-4);
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1.0e-4);
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-4);
+  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", piston_max_value); // 1e-2
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", tick_to_volume*100.0); // 1e-2
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", tick_to_volume*100.0); // 1e-2
 
-  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1e-3);
+  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 2.0e-3); // 5e-4
 
   g_rho_bar = g*rho/1e5;
 
@@ -222,7 +232,6 @@ int main(int argc, char *argv[]){
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
   ros::Subscriber regulation_loop_sub = n.subscribe("/driver/piston/regulation_loop", 1, regulation_loop_callback);
   ros::Subscriber safety_sub = n.subscribe("/safety/safety", 1, safety_callback);
-  ros::Subscriber mission_sub = n.subscribe("/mission/set_point", 1, mission_callback);
 
   // Publisher
   ros::Publisher kalman_pub = n.advertise<seabot_fusion::Kalman>("kalman", 1);
@@ -245,17 +254,21 @@ int main(int argc, char *argv[]){
   gamma_alpha(1,1) = pow(gamma_alpha_depth, 2); // Depth
   gamma_alpha(2,2) = pow(gamma_alpha_offset, 2); // Offset
   gamma_alpha(3,3) = pow(gamma_alpha_chi, 2); // Compressibility
+#if NB_STATES>=5
   gamma_alpha(4,4) = pow(gamma_alpha_chi2, 2); // Compressibility 2
+#endif
 
   gamma_beta(0, 0) = pow(gamma_beta_depth, 2); // Depth
 
   Ck(0, 1) = 1.;
 
   xhat(0) = 0.0; // dz
-  xhat(1) = 1.0; // z
-  xhat(2) = piston_ref_eq*tick_to_volume; // Vp
+  xhat(1) = 0.0; // z
+  xhat(2) = 0.0; // Vp
   xhat(3) = 0.0; // chi
+#if NB_STATES>=5
   xhat(4) = 0.0; // chi2
+#endif
 
   Matrix<double,NB_MESURES, 1> y = Matrix<double,NB_MESURES, 1>::Zero();
   Matrix<double,NB_COMMAND, 1> u = Matrix<double,NB_COMMAND, 1>::Zero();
@@ -269,21 +282,25 @@ int main(int argc, char *argv[]){
       /// Do not enable Kalman filter if
       /// * depth limit condition
       /// * or robot is on seafloor
-      if(depth>limit_min_depth && !(seafloor_detected && seafloor_landing)){
+      if(depth>limit_min_depth && !seafloor_detected){
 
-        ros::Duration dt;
+        double dt;
         if(new_piston_data){
           u(0) = -piston_position_last*tick_to_volume; // u
-          dt = time_piston_data - time_piston_data_last;
+          dt = (time_piston_data - time_piston_data_last).toSec();
         }
         else{
           u(0) = -piston_position*tick_to_volume; // u
-          dt = time_depth_data - time_piston_data_last;
+          dt = (time_depth_data - time_piston_data_last).toSec();
           time_piston_data_last = time_depth_data;
+        }
+        if(dt>1.0 || dt < 0.0){
+          dt = 0.0;
+          ROS_INFO("[Kalman] dt>1.0");
         }
         // ToDo : case where we have both new_piston_data & new_depth_data : dt should be handle more accuratly
 
-        kalman_predict(xhat, gamma, u, gamma_alpha, dt.toSec());
+        kalman_predict(xhat, gamma, u, gamma_alpha, dt);
 
         if(new_depth_data){
           y(0) = depth;
@@ -297,17 +314,16 @@ int main(int argc, char *argv[]){
             kalman_predict(x_forcast, gamma_forcast, u, gamma_alpha, forecast_dt_regulation);
           }
 
-
           msg.valid = true;
           msg.forecast_dt_regulation = forecast_dt_regulation;
 
           // Case Divergence of Kalman filter
-          double equilibrium_volume = xhat(2)-(xhat(3)*xhat(1)+xhat(4)*pow(xhat(1),2));
-          if(equilibrium_volume>piston_max_value || equilibrium_volume<0){
-            init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
-            msg.valid = false;
-            ROS_INFO("[Kalman] Divergence of Kalman filter");
-          }
+//          double equilibrium_volume = xhat(2)-(xhat(3)*xhat(1)+xhat(4)*pow(xhat(1),2));
+//          if(abs(equilibrium_volume)>piston_max_value || abs(gamma(0,0))>100.0*gamma_init_velocity){
+//            init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
+//            msg.valid = false;
+//            ROS_INFO("[Kalman] Divergence of Kalman filter");
+//          }
 
           if(!xhat.allFinite()){
             init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
@@ -330,14 +346,20 @@ int main(int argc, char *argv[]){
         msg.depth = x_forcast(1);
         msg.offset = x_forcast(2);
         msg.chi = x_forcast(3);
+        msg.offset_total = x_forcast(2)+x_forcast(3)*x_forcast(1);
+#if NB_STATES>=5
         msg.chi2 = x_forcast(4);
+        msg.offset_total = x_forcast(2)+x_forcast(3)*x_forcast(1) + x_forcast(4)*pow(x_forcast(1),2);
+#endif
         msg.stamp = time_depth_data;
 
         msg.variance[0] = gamma_forcast(0,0);
         msg.variance[1] = gamma_forcast(1,1);
         msg.variance[2] = gamma_forcast(2,2);
         msg.variance[3] = gamma_forcast(3,3);
+#if NB_STATES>=5
         msg.variance[4] = gamma_forcast(4,4);
+#endif
 
         kalman_pub.publish(msg);
       }
