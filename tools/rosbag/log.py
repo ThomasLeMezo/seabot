@@ -811,7 +811,8 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
 
     pg_kalman_valid = pg.PlotWidget()
     set_plot_options(pg_kalman_valid)
-    pg_kalman_valid.plot(kalmanData.time, kalmanData.valid[:-1], pen=(255,0,0), name="valid", stepMode=True)
+    # pg_kalman_valid.plot(kalmanData.time, kalmanData.offset_total[:-1]/tick_to_volume, pen=(255,0,0), name="offset total [ticks]", stepMode=True)
+    pg_kalman_valid.plot(kalmanData.time, kalmanData.offset_total[:-1], pen=(255,0,0), name="offset total", stepMode=True)
     dock_kalman.addWidget(pg_kalman_valid)
 
     pg_kalman_depth.setXLink(pg_kalman_velocity)
