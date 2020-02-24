@@ -46,8 +46,8 @@ seabot_depth_controller::RegulationDebug debug_msg;
 
 int cpt_divider_frequency;
 
-#define NB_STATES 6
-// [Velocity; Depth; Volume; Offset, chi, chi2]
+#define NB_STATES 7
+// [Velocity; Depth; Volume; Offset, chi, chi2, Cz]
 Matrix<double, NB_STATES, 1> x = Matrix<double, NB_STATES, 1>::Zero();
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
@@ -63,6 +63,7 @@ void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(3) = msg->offset;
   x(4) = msg->chi;
   x(5) = msg->chi2;
+  x(6) = msg->cz;
   time_last_state = ros::Time::now();
   time_depth_data = msg->stamp;
 }
@@ -94,6 +95,7 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   const double x4 = x(3);
   const double x5 = x(4);
   const double x6 = x(5);
+  const double x7 = x(6);
   const double A = coeff_A;
   const double B = coeff_B;
   const double beta = limit_velocity/M_PI_2;
@@ -102,14 +104,14 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
 
   double e = (set_point-x2)/alpha;
   double y = x1-gamma*atan(e);
-  double dx1 = -A*(x3+x4-(x5*x2+x6*pow(x2,2)))-B*abs(x1)*x1;
+  double dx1 = -A*(x3+x4-(x5*x2+x6*pow(x2,2)))-B*x7*abs(x1)*x1;
   double D = 1+pow(e,2);
   double dy = dx1 + gamma*x1/D;
 
   debug_msg.y = y;
   debug_msg.dy = dy;
 
-  return (-2.*s*dy+pow(s,2)*y+ gamma*(dx1*D+2.*e*pow(x1,2)/pow(alpha,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+x1*(x5+2.*x6*x2);
+  return (-2.*s*dy+pow(s,2)*y+ gamma*(dx1*D+2.*e*pow(x1,2)/pow(alpha,2))/(pow(D,2))-2.*B*x7*abs(x1)*dx1)/A+x1*(x5+2.*x6*x2);
 }
 
 bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }

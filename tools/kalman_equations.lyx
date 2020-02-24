@@ -1,10 +1,15 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
 \origin unavailable
 \textclass article
+\begin_preamble
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+\end_preamble
 \use_default_options true
 \maintain_unincluded_children false
 \language english
@@ -21,8 +26,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -44,13 +47,13 @@
 \use_package undertilde 1
 \cite_engine basic
 \cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
 \use_indices false
 \paperorientation portrait
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -59,10 +62,7 @@
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -87,7 +87,7 @@ Control law
 \dot{z}\\
 \dot{V}_{p}
 \end{array}\right)=\left(\begin{array}{c}
--A\left(V_{p}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-B\left|\dot{z}\right|\dot{z}\\
+-A\left(V_{p}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-BC_{z}\left|\dot{z}\right|\dot{z}\\
 \dot{z}\\
 u
 \end{array}\right)\label{eq:dynamics}
@@ -110,14 +110,14 @@ u
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\dddot{z}=-A(u-\chi_{1}\dot{z}-\chi_{2}2z\dot{z})-2B\left|\dot{z}\right|\ddot{z}$
+\begin_inset Formula $\dddot{z}=-A(u-\chi_{1}\dot{z}-\chi_{2}2z\dot{z})-2BC_{z}\left|\dot{z}\right|\ddot{z}$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\ddot{y}=-Au+A\dot{z}\left(\chi_{1}+\chi_{2}2z\right)-2B\left|\dot{z}\right|\ddot{z}+\gamma\frac{\ddot{z}D+2\alpha^{-2}e\dot{z}^{2}}{D^{2}}.$
+\begin_inset Formula $\ddot{y}=-Au+A\dot{z}\left(\chi_{1}+\chi_{2}2z\right)-2BC_{z}\left|\dot{z}\right|\ddot{z}+\gamma\frac{\ddot{z}D+2\alpha^{-2}e\dot{z}^{2}}{D^{2}}.$
 \end_inset
 
 
@@ -126,7 +126,7 @@ u
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-u=\frac{1}{A}(-2s\dot{y}+s^{2}y+\gamma\frac{\ddot{z}D+2\alpha^{-2}e\dot{z}^{2}}{D^{2}}-2B\left|\dot{z}\right|\ddot{z})+\dot{z}\left(\chi_{1}+\chi_{2}2z\right).
+u=\frac{1}{A}(-2s\dot{y}+s^{2}y+\gamma\frac{\ddot{z}D+2\alpha^{-2}e\dot{z}^{2}}{D^{2}}-2BC_{z}\left|\dot{z}\right|\ddot{z})+\dot{z}\left(\chi_{1}+\chi_{2}2z\right).
 \end{equation}
 
 \end_inset
@@ -139,7 +139,7 @@ Kalman
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\mathbf{x}=\left(\dot{z},z,V_{0},\chi_{1},\chi_{2}\right)^{\intercal}$
+\begin_inset Formula $\mathbf{x}=\left(\dot{z},z,V_{0},\chi_{1},\chi_{2},C_{z}\right)^{\intercal}$
 \end_inset
 
 
@@ -150,8 +150,9 @@ Kalman
 \begin{equation}
 \begin{cases}
 \mathbf{\dot{\mathbf{x}}}=\mathbf{f}_{c}\left(\dot{\mathbf{x}},u\right) & =\left(\begin{array}{c}
--A\left(V_{p}+V_{0}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-B\left|\dot{z}\right|\dot{z}\\
+-A\left(V_{p}+V_{0}-\left(\chi_{1}z+\chi_{2}z^{2}\right)\right)-BC_{z}\left|\dot{z}\right|\dot{z}\\
 \dot{z}\\
+0\\
 0\\
 0\\
 0
@@ -166,11 +167,11 @@ Kalman
 \end_layout
 
 \begin_layout Itemize
-\begin_inset Formula $\mathbf{A}_{k}=\frac{\partial\mathbf{f}(\hat{\mathbf{x}}_{k\mid k},\mathbf{u}_{k})}{\partial\mathbf{x}}=\left(\begin{array}{ccccc}
--2B\left|\hat{\dot{z}}\right| & A\left(\hat{\chi}_{1}+2\hat{\chi}_{2}z\right) & -A & A\hat{z} & A\hat{z}^{2}\\
-1 & 0 & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 0\\
-0 & 0 & 0 & 0 & 0
+\begin_inset Formula $\mathbf{A}_{k}=\frac{\partial\mathbf{f}(\hat{\mathbf{x}}_{k\mid k},\mathbf{u}_{k})}{\partial\mathbf{x}}=\left(\begin{array}{cccccc}
+-2B\left|\hat{\dot{z}}\right| & A\left(\hat{\chi}_{1}+2\hat{\chi}_{2}z\right) & -A & A\hat{z} & A\hat{z}^{2} & -B\left|\dot{z}\right|\dot{z}\\
+1 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0
 \end{array}\right)\cdot dt+\mathbf{I}_{4\times4}$
 \end_inset
 
