@@ -168,7 +168,7 @@ Kalman
 
 \begin_layout Itemize
 \begin_inset Formula $\mathbf{A}_{k}=\frac{\partial\mathbf{f}(\hat{\mathbf{x}}_{k\mid k},\mathbf{u}_{k})}{\partial\mathbf{x}}=\left(\begin{array}{cccccc}
--2B\left|\hat{\dot{z}}\right| & A\left(\hat{\chi}_{1}+2\hat{\chi}_{2}z\right) & -A & A\hat{z} & A\hat{z}^{2} & -B\left|\dot{z}\right|\dot{z}\\
+-2BC_{z}\left|\hat{\dot{z}}\right| & A\left(\hat{\chi}_{1}+2\hat{\chi}_{2}z\right) & -A & A\hat{z} & A\hat{z}^{2} & -B\left|\dot{z}\right|\dot{z}\\
 1 & 0 & 0 & 0 & 0 & 0\\
 0 & 0 & 0 & 0 & 0 & 0\\
 0 & 0 & 0 & 0 & 0 & 0

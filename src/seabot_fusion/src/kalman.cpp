@@ -88,7 +88,7 @@ void safety_callback(const seabot_safety::SafetyLog::ConstPtr& msg){
 
 Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<double,NB_COMMAND, 1> &u){
   Matrix<double,NB_STATES, 1> dx = Matrix<double,NB_STATES, 1>::Zero();
-  dx(0) = -coeff_A*(u(0)+x(2)-(x(3)*x(1)+x(4)*pow(x(1),2)))-coeff_B*copysign(x(0)*x(0), x(0));
+  dx(0) = -coeff_A*(u(0)+x(2)-(x(3)*x(1)+x(4)*pow(x(1),2)))-coeff_B*x(5)*copysign(x(0)*x(0), x(0));
   dx(1) = x(0);
   dx(2) = 0.0;
   dx(3) = 0.0;
@@ -110,7 +110,7 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
 
   Matrix<double, NB_STATES, NB_STATES> Ak_tmp = Matrix<double, NB_STATES, NB_STATES>::Identity();
   Matrix<double,NB_STATES, NB_STATES> Ak = Matrix<double, NB_STATES, NB_STATES>::Zero();
-  Ak(0,0) = -2.*coeff_B*abs(x(0));
+  Ak(0,0) = -2.*coeff_B*abs(x(0))*x(5);
   Ak(0,1) = coeff_A*(x(3)+2.*x(4)*x(1));
   Ak(0,2) = -coeff_A;
   Ak(0,3) = x(1)*coeff_A;
@@ -154,21 +154,21 @@ void kalman(Matrix<double,NB_STATES, 1> &x,
 }
 
 void init_gamma(Matrix<double,NB_STATES,NB_STATES> &gamma, const double &gamma_init_velocity, const double &gamma_init_depth,
-                const double &gamma_init_offset, const double &gamma_init_chi, const double &gamma_init_chi2, const double &gamma_init_Cz){
+                const double &gamma_init_offset, const double &gamma_init_chi, const double &gamma_init_chi2, const double &gamma_init_cz){
   gamma = Matrix<double,NB_STATES,NB_STATES>::Zero();
   gamma(0,0) = pow(gamma_init_velocity, 2); // velocity
   gamma(1,1) = pow(gamma_init_depth, 2); // Depth
   gamma(2,2) = pow(gamma_init_offset, 2); // Error offset;
   gamma(3,3) = pow(gamma_init_chi,2); // Compressibility
   gamma(4,4) = pow(gamma_init_chi2,2); // Compressibility 2
-  gamma(5,5) = pow(gamma_init_Cz,2); // Cz
+  gamma(5,5) = pow(gamma_init_cz,2); // Cz
 }
 
 void init_xhat(Matrix<double, NB_STATES, 1> &xhat ){
   xhat(0) = velocity_fusion;
   xhat(1) = depth;
   xhat(2) = piston_volume_eq; // Vp
-  xhat(3) = 0.0; // chi
+  xhat(3) = 25.0*tick_to_volume; // chi
   xhat(4) = 0.0; // chi2
   xhat(5) = 1.0; // Cz
 }
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]){
   const double rho = n_private.param<double>("rho", 1020.0);
   const double g = n_private.param<double>("g", 9.81);
   const double m = n_private.param<double>("m", 18.0);
-  const double diam_collerette = n_private.param<double>("diam_collerette", 0.1);
+  const double diam_collerette = n_private.param<double>("diam_collerette", 0.24);
   const double screw_thread = n_private.param<double>("screw_thread", 1.75e-3);
   const double tick_per_turn = n_private.param<double>("tick_per_turn", 48);
   const double piston_diameter = n_private.param<double>("piston_diameter", 0.05);
@@ -195,21 +195,21 @@ int main(int argc, char *argv[]){
 
   const double enable_depth = n_private.param<double>("enable_depth", 0.5);
 
-  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-3); // 1e-5
-  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-3); // 1e-5
-  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 10.0)*tick_to_volume; // 2e-5
-  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1)*tick_to_volume; // 2e-8
-  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1)*tick_to_volume; // 2e-8
+  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-5); // 1e-5
+  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5); // 1e-5
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 1.0e-2)*tick_to_volume; // 2e-5
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1.0e-2)*tick_to_volume; // 2e-8
+  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1.0e-3)*tick_to_volume; // 2e-8
   const double gamma_alpha_cz = n_private.param<double>("gamma_alpha_cz", 1e-3);
 
   const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1e-1);
   const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-2);
-  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", 2.*piston_ticks_max_value)*tick_to_volume; // 1e-2
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 1000.0)*tick_to_volume; // 1e-2
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1000.0)*tick_to_volume; // 1e-2
-  const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 0.5); // 1e-2
+  const double gamma_init_offset = n_private.param<double>("gamma_init_offset", piston_ticks_max_value)*tick_to_volume; // 1e-2
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 10.0)*tick_to_volume; // 1e-2
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-1)*tick_to_volume; // 1e-2
+  const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 1e-1);
 
-  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1.0e-3); // 5e-4
+  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1.0e-4); // 5e-4
 
   g_rho_bar = g*rho/1e5;
 
