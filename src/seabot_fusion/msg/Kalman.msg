@@ -1,6 +1,6 @@
 time stamp
-float64 depth
 float64 velocity
+float64 depth
 float64 offset
 float64 chi
 float64 chi2

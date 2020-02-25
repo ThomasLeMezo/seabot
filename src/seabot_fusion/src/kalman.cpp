@@ -42,8 +42,7 @@ double tick_to_volume = 0.0;
 
 double g_rho_bar = 0.0;
 
-ros::Time time_piston_data, time_piston_data_last;
-ros::Time time_depth_data, time_depth_data_last;
+ros::Time time_piston_data, time_depth_data, time_last_predict;
 
 bool new_depth_data = false;
 bool new_piston_data = false;
@@ -55,27 +54,18 @@ bool seafloor_detected = false;
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position_last = piston_position;
-  time_piston_data_last = time_piston_data;
 
   time_piston_data = msg->stamp;
   piston_position = msg->position;
   piston_set_point = msg->position_set_point;
   new_piston_data = true;
-
-  if(time_piston_data_last.toSec() == 0.0)
-    time_piston_data_last = time_piston_data;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
-  time_depth_data_last = time_depth_data;
-
   depth = msg->depth;
   velocity_fusion = msg->velocity;
   time_depth_data = msg->stamp;
   new_depth_data = true;
-
-  if(time_depth_data_last.toSec() == 0.0)
-    time_depth_data_last = time_depth_data;
 }
 
 void regulation_loop_callback(const seabot_piston_driver::RegulationLoopDuration::ConstPtr& msg){
@@ -94,7 +84,6 @@ Matrix<double,NB_STATES, 1> f(const Matrix<double,NB_STATES,1> &x, const Matrix<
   dx(3) = 0.0;
   dx(4) = 0.0;
   dx(5) = 0.0;
-
   return dx;
 }
 
@@ -168,7 +157,7 @@ void init_xhat(Matrix<double, NB_STATES, 1> &xhat ){
   xhat(0) = velocity_fusion;
   xhat(1) = depth;
   xhat(2) = piston_volume_eq; // Vp
-  xhat(3) = 25.0*tick_to_volume; // chi
+  xhat(3) = 0.0*tick_to_volume; // chi
   xhat(4) = 0.0; // chi2
   xhat(5) = 1.0; // Cz
 }
@@ -195,19 +184,19 @@ int main(int argc, char *argv[]){
 
   const double enable_depth = n_private.param<double>("enable_depth", 0.5);
 
-  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1.0e-5); // 1e-5
+  const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-3); // 1e-5
   const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5); // 1e-5
-  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 1.0e-2)*tick_to_volume; // 2e-5
-  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1.0e-2)*tick_to_volume; // 2e-8
-  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1.0e-3)*tick_to_volume; // 2e-8
-  const double gamma_alpha_cz = n_private.param<double>("gamma_alpha_cz", 1e-3);
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 100.0)*tick_to_volume; // 2e-5
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 0.0)*tick_to_volume; // 2e-8
+  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 0.0)*tick_to_volume; // 2e-8
+  const double gamma_alpha_cz = n_private.param<double>("gamma_alpha_cz", 0.0);
 
   const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1e-1);
-  const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-2);
+  const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-3);
   const double gamma_init_offset = n_private.param<double>("gamma_init_offset", piston_ticks_max_value)*tick_to_volume; // 1e-2
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 10.0)*tick_to_volume; // 1e-2
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 1.0e-1)*tick_to_volume; // 1e-2
-  const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 1e-1);
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 0.0)*tick_to_volume; // 20
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 0.0)*tick_to_volume; // 1e-1
+  const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 0.0);
 
   const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1.0e-4); // 5e-4
 
@@ -275,43 +264,49 @@ int main(int argc, char *argv[]){
         double dt;
         y(0) = depth;
 
-        if(new_depth_data && new_piston_data){
-          if(time_piston_data>time_depth_data){
-            u(0) = -piston_position_last*tick_to_volume; // u
-            dt = (time_depth_data - time_piston_data).toSec();
-            kalman_predict(xhat, gamma, u, gamma_alpha, dt); // predict up to new depth
+//        if(new_depth_data && new_piston_data){
+//          if(time_piston_data>time_depth_data){
+//            u(0) = -piston_position_last*tick_to_volume; // u
+//            dt = (time_depth_data - time_last_predict).toSec();
+//            kalman_predict(xhat, gamma, u, gamma_alpha, dt); // predict up to new depth
 
-            kalman_correc(xhat, gamma, y, gamma_beta, Ck);
+//            kalman_correc(xhat, gamma, y, gamma_beta, Ck);
 
-            u(0) = -piston_position*tick_to_volume; // u
-            dt = (time_piston_data - time_depth_data).toSec();
-            kalman_predict(xhat, gamma, u, gamma_alpha, dt);
-            time_piston_data = time_piston_data;
-          }
-          else{
-            u(0) = -piston_position_last*tick_to_volume; // u
-            dt = (time_piston_data - time_piston_data_last).toSec();
-            kalman_predict(xhat, gamma, u, gamma_alpha, dt);
+//            u(0) = -piston_position*tick_to_volume; // u
+//            dt = (time_piston_data - time_depth_data).toSec();
+//            kalman_predict(xhat, gamma, u, gamma_alpha, dt);
+//            time_last_predict = time_piston_data;
+//          }
+//          else{
+//            u(0) = -piston_position_last*tick_to_volume; // u
+//            dt = (time_piston_data - time_last_predict).toSec();
+//            kalman_predict(xhat, gamma, u, gamma_alpha, dt);
 
-            u(0) = -piston_position*tick_to_volume; // u
-            dt = (time_depth_data-time_piston_data).toSec();
-            kalman_predict(xhat, gamma, u, gamma_alpha, dt);
-            time_piston_data = time_depth_data;
+//            u(0) = -piston_position*tick_to_volume; // u
+//            dt = (time_depth_data-time_piston_data).toSec();
+//            kalman_predict(xhat, gamma, u, gamma_alpha, dt);
+//            time_last_predict = time_depth_data;
 
-            kalman_correc(xhat, gamma, y, gamma_beta, Ck);
-          }
-        }
-        else if(new_depth_data){
+//            kalman_correc(xhat, gamma, y, gamma_beta, Ck);
+//          }
+//        }
+        if(new_depth_data){
+          if(time_last_predict.toSec()==0)
+            time_last_predict = time_depth_data;
+
           u(0) = -piston_position*tick_to_volume; // u
-          dt = (time_depth_data - time_piston_data).toSec();
-          time_piston_data = time_depth_data;
+          dt = (time_depth_data - time_last_predict).toSec();
           kalman_predict(xhat, gamma, u, gamma_alpha, dt);
           kalman_correc(xhat, gamma, y, gamma_beta, Ck);
+          time_last_predict = time_depth_data;
         }
         else if(new_piston_data){
+          if(time_last_predict.toSec()==0)
+            time_last_predict = time_piston_data;
           u(0) = -piston_position_last*tick_to_volume; // u
-          dt = (time_piston_data - time_piston_data_last).toSec();
+          dt = (time_piston_data - time_last_predict).toSec();
           kalman_predict(xhat, gamma, u, gamma_alpha, dt);
+          time_last_predict = time_piston_data;
         }
 
         if(new_depth_data){
