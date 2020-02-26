@@ -26,7 +26,6 @@ size_t piston_state = 0;
 double depth_set_point = 0.0;
 double limit_velocity = 0.0;
 double approach_velocity = 1.0;
-ros::WallTime t_old;
 ros::Time time_last_state;
 ros::Time time_depth_data;
 
@@ -188,7 +187,6 @@ int main(int argc, char *argv[]){
   /// ************************* Loop *************************
   // Variables
   position_msg.position = 0.0;
-  t_old = ros::WallTime::now() - ros::WallDuration(1);
   ros::Rate loop_rate(frequency);
 
   double piston_position_old = 0.;

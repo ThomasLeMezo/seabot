@@ -33,7 +33,7 @@ bool fast_move = false;
 double distance_travelled = 0;
 double last_piston_position_hf = 0.0;
 
-ros::WallTime time_velocity_issue_detected;
+ros::Time time_velocity_issue_detected;
 bool velocity_issue_detected=false;
 
 bool is_sealing_issue = false;
@@ -266,11 +266,11 @@ int main(int argc, char *argv[]){
       // Analyze speed issue (update speed_table)
       if(p.m_motor_speed!=50 && abs(velocity)==0.0 && p.m_state==1){
         if(!velocity_issue_detected){
-          time_velocity_issue_detected = ros::WallTime::now();
+          time_velocity_issue_detected = ros::Time::now();
           velocity_issue_detected = true;
         }
         else{
-          if((ros::WallTime::now()-time_velocity_issue_detected).toSec()>3.0){
+          if((ros::Time::now()-time_velocity_issue_detected).toSec()>3.0){
             for(size_t i=layer_number_last; i<speed_table_in.size(); i++){
               if(p.m_position_set_point > p.m_position){ // Sens of movement
                 speed_table_in[i] = min(speed_max, speed_table_in[i]+speed_step_increase);
