@@ -26,7 +26,7 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x06
+#define CODE_VERSION 0x07
 
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
@@ -456,7 +456,7 @@ void main(){
     motor_current_speed = MOTOR_STOP;
     delay_ms(1);
 
-    UART1_Init(115200);
+    //UART1_Init(115200);
     delay_ms(100);
     is_init = 0;
 

@@ -37,7 +37,7 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 14/03/18/ Implantation et essai du programme, seuil des batteries à corriger
 
 */
-#define CODE_VERSION 0x08
+#define CODE_VERSION 0x09
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
@@ -134,7 +134,6 @@ void i2c_read_data_from_buffer(){
         default:
           break;
       }
-      i++;
       break;
     case 0x01:  // led power
       start_led_puissance = (rxbuffer_tab[i+1]==0x01);
@@ -350,7 +349,7 @@ void main(){
   ALIM = 0; // sortie MOSFET de puissance, commande de l'alimentation
   battery_global_default = 0;
 
-  UART1_Init(115200);
+  //UART1_Init(115200);
 
   delay_ms(250);
 
@@ -387,6 +386,7 @@ void main(){
       case IDLE: // Idle state
         ALIM = 0;
         led_delay = 50;
+        led_puissance_nb_flash = 1;
         start_led_puissance = 0;
         watchdog_restart = watchdog_restart_default;  
 
@@ -407,6 +407,8 @@ void main(){
 
         ALIM = 1;
         led_delay = 1;
+        start_led_puissance = 1;
+        led_puissance_nb_flash = 3;
         if(time_to_stop==0){
           for(k=0; k<3; k++)
             time_to_start[k] = default_time_to_start[k];
@@ -418,6 +420,7 @@ void main(){
 
       case SLEEP:
         ALIM = 0;
+        start_led_puissance = 0;
         led_delay = 200; // 20 sec
         if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
           state = POWER_ON;
@@ -469,14 +472,12 @@ void interrupt(){
         }
       }
     }
-
-    if(state == WAIT_TO_SLEEP){
+    else if(state == WAIT_TO_SLEEP){
       if(time_to_stop>0)
         time_to_stop--;
     }
-
     // Watchdog
-    if(state == POWER_ON && watchdog_restart_default!=0){
+    else if(state == POWER_ON && watchdog_restart_default!=0){
       if(watchdog_cpt_sec>0)
         watchdog_cpt_sec--;
       else{
