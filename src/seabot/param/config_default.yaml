@@ -137,24 +137,26 @@ iridium:
   enable_gnss_iridium: False
 
 kalman:
-  frequency: 25
+  frequency: 25.0
   enable_depth: 0.5
 
   estimated_first_error_equilibrium_tick: 250
 
   gamma_alpha_velocity: 1.0e-3 # Error of model
-  gamma_alpha_depth: 1.0e-4 # Error of model
-  gamma_alpha_offset: 10.0 # in ticks
-  gamma_alpha_chi: 10.0 # in ticks
-  gamma_alpha_chi2: 10.0 # in ticks
+  gamma_alpha_depth: 1.0e-5 # Error of model
+  gamma_alpha_offset: 5.0e-2 # in ticks
+  gamma_alpha_chi: 1.0e-3 # in ticks
+  gamma_alpha_chi2: 1.0e-3 # in ticks
+  gamma_alpha_cz: 1.0e-3 # in ticks
 
   gamma_init_velocity: 1.0e-1
   gamma_init_depth: 1.0e-2
-  gamma_init_offset: 4800.0 # in ticks
-  gamma_init_chi: 1000.0 # in ticks
-  gamma_init_chi2: 1000.0 # in ticks
+  gamma_init_offset: 2400.0 # in ticks
+  gamma_init_chi: 30.0 # in ticks
+  gamma_init_chi2: 30.0 # in ticks
+  gamma_init_cz: 0.1
 
-  gamma_beta_depth: 2.0e-3
+  gamma_beta_depth: 1.0e-3
 
 mission:
   frequency: 1.0

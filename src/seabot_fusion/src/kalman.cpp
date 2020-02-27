@@ -92,8 +92,8 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
                     const Matrix<double,NB_COMMAND, 1> &u,
                     const Matrix<double,NB_STATES, NB_STATES> &gamma_alpha,
                     const double &dt){
-  if(dt>1.0 || dt < 0.0){
-    ROS_INFO("[Kalman] dt issue %f", dt);
+  if(dt <= 0.0 || dt >= 1.0){
+//    ROS_INFO("[Kalman] dt issue %f", dt);
     return;
   }
 
@@ -102,9 +102,9 @@ void kalman_predict(Matrix<double,NB_STATES, 1> &x,
   Ak(0,0) = -2.*coeff_B*abs(x(0))*x(5);
   Ak(0,1) = coeff_A*(x(3)+2.*x(4)*x(1));
   Ak(0,2) = -coeff_A;
-//  Ak(0,3) = x(1)*coeff_A;
-//  Ak(0,4) = pow(x(1),2)*coeff_A;
-//  Ak(0,5) = -coeff_B*abs(x(0))*x(0);
+  Ak(0,3) = x(1)*coeff_A;
+  Ak(0,4) = pow(x(1),2)*coeff_A;
+  Ak(0,5) = -coeff_B*abs(x(0))*x(0);
   Ak(1, 0) = 1.;
   Ak_tmp += Ak*dt;
 
@@ -125,7 +125,7 @@ void kalman_correc(Matrix<double,NB_STATES, 1> &x,
   const Matrix<double,NB_STATES,NB_STATES> tmp = Id - K*Ck;
 
 //    gamma = ((tmp*gamma)*(gamma.transpose())*tmp.transpose()).sqrt();
-  gamma *= tmp;
+  gamma = tmp*gamma;
   x += K*ztilde;
 }
 
@@ -157,8 +157,8 @@ void init_xhat(Matrix<double, NB_STATES, 1> &xhat ){
   xhat(0) = velocity_fusion;
   xhat(1) = depth;
   xhat(2) = piston_volume_eq; // Vp
-  xhat(3) = 0.0*tick_to_volume; // chi
-  xhat(4) = 0.0; // chi2
+  xhat(3) = 15.0*tick_to_volume; // chi
+  xhat(4) = 0.*tick_to_volume; // chi2
   xhat(5) = 1.0; // Cz
 }
 
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]){
 
   // Parameters
   ros::NodeHandle n_private("~");
-  const double frequency = n_private.param<double>("frequency", 5.0);
+  const double frequency = n_private.param<double>("frequency", 25.0);
 
   const double rho = n_private.param<double>("rho", 1020.0);
   const double g = n_private.param<double>("g", 9.81);
@@ -181,24 +181,25 @@ int main(int argc, char *argv[]){
   piston_volume_eq = n_private.param<double>("piston_ref_eq", 2100.0)*tick_to_volume;
 
   const double piston_ticks_max_value = n_private.param<double>("piston_max_value", 2400.0);
+  const double piston_volume_max = piston_ticks_max_value*tick_to_volume;
 
   const double enable_depth = n_private.param<double>("enable_depth", 0.5);
 
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-3); // 1e-5
   const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-8); // 1e-5
-  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 0.1)*tick_to_volume; // 2e-5
-  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 0.)*tick_to_volume; // 2e-8
-  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 0.0)*tick_to_volume; // 2e-8
-  const double gamma_alpha_cz = n_private.param<double>("gamma_alpha_cz", 0.0);
+  const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 5e-2)*tick_to_volume; // 2e-5
+  const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1e-3)*tick_to_volume; // 2e-8
+  const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1e-3)*tick_to_volume; // 2e-8
+  const double gamma_alpha_cz = n_private.param<double>("gamma_alpha_cz", 1e-3);
 
   const double gamma_init_velocity = n_private.param<double>("gamma_init_velocity", 1e-1);
   const double gamma_init_depth = n_private.param<double>("gamma_init_depth", 1.0e-2);
   const double gamma_init_offset = n_private.param<double>("gamma_init_offset", piston_ticks_max_value)*tick_to_volume; // 1e-2
-  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 0.0)*tick_to_volume; // 20
-  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 0.0)*tick_to_volume; // 1e-1
-  const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 0.0);
+  const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 30.0)*tick_to_volume; // 20
+  const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 30.0)*tick_to_volume; // 1e-1
+  const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 0.1);
 
-  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1.0e-4); // 5e-4
+  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 5.0e-4); // 5e-4
 
   g_rho_bar = g*rho/1e5;
 
@@ -315,18 +316,18 @@ int main(int argc, char *argv[]){
           // Forecast
           x_forcast = xhat;
           gamma_forcast = gamma;
-//          if(forecast_dt_regulation != 0.0){
-//            u(0) = -piston_position*tick_to_volume;
-//            kalman_predict(x_forcast, gamma_forcast, u, gamma_alpha, forecast_dt_regulation);
-//          }
+          if(forecast_dt_regulation != 0.0){
+            u(0) = -piston_position*tick_to_volume;
+            kalman_predict(x_forcast, gamma_forcast, u, gamma_alpha, forecast_dt_regulation);
+          }
 
           msg.valid = true;
           msg.forecast_dt_regulation = forecast_dt_regulation;
 
           // Case Divergence of Kalman filter
 //          double equilibrium_volume = xhat(2)-(xhat(3)*xhat(1)+xhat(4)*pow(xhat(1),2));
-//          if(abs(equilibrium_volume)>piston_max_value || abs(gamma(0,0))>100.0*gamma_init_velocity){
-//            init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2);
+//          if(abs(equilibrium_volume)>piston_volume_max || abs(gamma(0,0))>100.0*gamma_init_velocity){
+//            init_gamma(gamma, gamma_init_velocity, gamma_init_depth, gamma_init_offset, gamma_init_chi, gamma_init_chi2, gamma_init_cz);
 //            msg.valid = false;
 //            ROS_INFO("[Kalman] Divergence of Kalman filter");
 //          }
