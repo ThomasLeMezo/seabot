@@ -134,6 +134,7 @@ void i2c_read_data_from_buffer(){
         default:
           break;
       }
+      i++;
       break;
     case 0x01:  // led power
       start_led_puissance = (rxbuffer_tab[i+1]==0x01);
@@ -299,6 +300,24 @@ void init_io(){
   TRISC3_bit = 1; // RC3 en entree voie AN7
 }
 
+void ils_analysis(unsigned short new_state){
+  if(ILS==0){ // Magnet detected
+    ils_cpt--;
+    set_led_on = 1;
+  }
+  else{
+    ils_cpt = ILS_CPT_TIME;
+    set_led_on = 0;
+    ils_removed = 1;
+  }
+
+  if(ils_removed == 1 && ils_cpt == 0){
+    ils_cpt = ILS_CPT_TIME;
+    state = new_state;
+    ils_removed = 0;
+    set_led_on = 0;
+  }
+}
 
 /**
  * @brief main
@@ -371,22 +390,7 @@ void main(){
         start_led_puissance = 0;
         watchdog_restart = watchdog_restart_default;  
 
-        if(ILS==0){ // Magnet detected
-          ils_cpt--;
-          set_led_on = 1;
-        }
-        else{
-          ils_cpt = ILS_CPT_TIME;
-          set_led_on = 0;
-          ils_removed = 1;
-        }
-
-        if(ils_removed == 1 && ils_cpt == 0){
-          ils_cpt = ILS_CPT_TIME;
-          state = POWER_ON;
-          ils_removed = 0;
-          set_led_on = 0;
-        }
+        ils_analysis(POWER_ON);
         break;
 
       case POWER_ON:
@@ -396,23 +400,7 @@ void main(){
         else
           led_delay = 20; // 2 sec
 
-        if(ILS==0){ // Magnet detected
-          ils_cpt--;
-          set_led_on = 1;
-        }
-        else{
-          ils_cpt = ILS_CPT_TIME;
-          set_led_on = 0;
-          ils_removed = 1;
-        }
-
-        if(ils_removed == 1 && ils_cpt == 0){
-          ils_cpt = ILS_CPT_TIME;
-          state = IDLE;
-          ils_removed = 0;
-          set_led_on = 0;
-        }
-
+        ils_analysis(IDLE);
         break;
 
       case WAIT_TO_SLEEP:
@@ -425,6 +413,7 @@ void main(){
           state = SLEEP;
           time_to_stop = default_time_to_stop;
         }
+        ils_analysis(POWER_ON);
         break;
 
       case SLEEP:
@@ -433,6 +422,7 @@ void main(){
         if(time_to_start[0] == 0 && time_to_start[1] == 0 && time_to_start[2] == 0){
           state = POWER_ON;
         }
+        ils_analysis(POWER_ON);
         break;
 
       default:

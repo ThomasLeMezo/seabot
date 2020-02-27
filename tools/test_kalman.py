@@ -3,6 +3,7 @@
 import rospy
 from seabot_fusion.msg import DepthPose
 from seabot_piston_driver.msg import PistonState
+import numpy as np
 
 def talker():
     pub_depth = rospy.Publisher('/fusion/depth', DepthPose, queue_size=10)
@@ -10,20 +11,24 @@ def talker():
 
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(5) # 10hz
+    t=0.
     while not rospy.is_shutdown():
         
         depthPose = DepthPose()
         pistonState = PistonState()
 
-        depthPose.stamp = rospy.get_rostime()
-        pistonState.stamp = rospy.get_rostime()
+        depthPose.stamp = rospy.Time(t)#rospy.get_rostime()
+        pistonState.stamp = rospy.Time(t)#rospy.get_rostime()
 
-        depthPose.depth = 1.0
-        pistonState.position = 1000.0
+        depthPose.depth = np.random.normal(1.0,1e-3)
+        pistonState.position = 1800.0
 
         pub_depth.publish(depthPose)
         pub_state.publish(pistonState)
+        
         rate.sleep()
+        # raw_input("Press Enter to continue...")
+        t+=1./5.
 
 if __name__ == '__main__':
     try:

@@ -811,7 +811,8 @@ if(len(kalmanData.time)>0 and len(regulationData.time)>0):
 
     pg_kalman_valid = pg.PlotWidget()
     set_plot_options(pg_kalman_valid)
-    pg_kalman_valid.plot(kalmanData.time, kalmanData.valid[:-1], pen=(255,0,0), name="valid", stepMode=True)
+    # pg_kalman_valid.plot(kalmanData.time, kalmanData.offset_total[:-1]/tick_to_volume, pen=(255,0,0), name="offset total [ticks]", stepMode=True)
+    pg_kalman_valid.plot(kalmanData.time, kalmanData.offset_total[:-1], pen=(255,0,0), name="offset total", stepMode=True)
     dock_kalman.addWidget(pg_kalman_valid)
 
     pg_kalman_depth.setXLink(pg_kalman_velocity)
@@ -874,18 +875,19 @@ if(len(depthFusionData.time)>0 and len(regulationData.time)>0):
         t_bounds = lr_fourier.getRegion()
         if(t_bounds != lr_fourier_bounds):
             lr_TP_bounds = t_bounds
-            ub = np.where(time_mask <= np.max((1,t_bounds[1])))[0][-1]
-            lb = np.where(time_mask >= np.min((time_mask[-1],t_bounds[0])))[0][0]
+            ub = np.where(depthFusionData.time <= np.max((1,t_bounds[1])))[0][-1]
+            lb = np.where(depthFusionData.time >= np.min((depthFusionData.time[-1],t_bounds[0])))[0][0]
 
-            ub = np.min((ub, np.size(time_mask)))
+            ub = np.min((ub, np.size(depthFusionData.time)))
             lb = np.max((lb,0))
 
             d = depthFusionData.depth[lb:ub]
 
-            freq = np.fft.fftfreq(d.size, d=1./5.0)
-            depth_hz = np.fft.fft(d-np.mean(d))
+            if(np.size(d)>0):
+                freq = np.fft.fftfreq(d.size, d=1./5.0)
+                depth_hz = np.fft.fft(d-np.mean(d))
 
-            plot_fourier.setData(freq, np.abs(depth_hz[:-1]))
+                plot_fourier.setData(freq, np.abs(depth_hz[:-1]))
 
     timer_fourier = pg.QtCore.QTimer()
     timer_fourier.timeout.connect(update_fourier)

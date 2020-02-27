@@ -206,6 +206,8 @@ class KalmanData(SeabotData):
         self.velocity = np.empty([self.nb_elements], dtype=np.float64)
         self.offset = np.empty([self.nb_elements], dtype=np.float64)
         self.chi = np.empty([self.nb_elements], dtype=np.float64)
+        self.chi2 = np.empty([self.nb_elements], dtype=np.float64)
+        self.offset_total = np.empty([self.nb_elements], dtype=np.float64)
         self.cov_depth = np.empty([self.nb_elements], dtype=np.float64)
         self.cov_velocity = np.empty([self.nb_elements], dtype=np.float64)
         self.cov_offset = np.empty([self.nb_elements], dtype=np.float64)
@@ -589,6 +591,8 @@ def load_bag(filename, rosoutData, rosoutAggData, pistonStateData, pistonSetPoin
             kalmanData.velocity[kalmanData.k] = msg.velocity
             kalmanData.offset[kalmanData.k] = msg.offset
             kalmanData.chi[kalmanData.k] = msg.chi
+            kalmanData.chi2[kalmanData.k] = msg.chi2
+            kalmanData.offset_total[kalmanData.k] = msg.offset_total
             kalmanData.cov_depth[kalmanData.k] = msg.variance[0]
             kalmanData.cov_velocity[kalmanData.k] = msg.variance[1]
             kalmanData.cov_offset[kalmanData.k] = msg.variance[2]

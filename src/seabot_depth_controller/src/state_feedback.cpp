@@ -26,7 +26,6 @@ size_t piston_state = 0;
 double depth_set_point = 0.0;
 double limit_velocity = 0.0;
 double approach_velocity = 1.0;
-ros::WallTime t_old;
 ros::Time time_last_state;
 ros::Time time_depth_data;
 
@@ -37,6 +36,8 @@ double coeff_A = 0.;
 double coeff_B = 0.;
 double tick_to_volume = 0.;
 
+double depth_fusion = 0.0;
+
 enum STATE_MACHINE {STATE_SURFACE, STATE_SINK, STATE_REGULATION, STATE_STATIONARY, STATE_EMERGENCY, STATE_PISTON_ISSUE, STATE_HOLD_DEPTH};
 STATE_MACHINE regulation_state = STATE_SURFACE;
 
@@ -44,8 +45,8 @@ seabot_depth_controller::RegulationDebug debug_msg;
 
 int cpt_divider_frequency;
 
-#define NB_STATES 6
-// [Velocity; Depth; Volume; Offset, chi, chi2]
+#define NB_STATES 7
+// [Velocity; Depth; Volume; Offset, chi, chi2, Cz]
 Matrix<double, NB_STATES, 1> x = Matrix<double, NB_STATES, 1>::Zero();
 
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
@@ -61,8 +62,13 @@ void kalman_callback(const seabot_fusion::Kalman::ConstPtr& msg){
   x(3) = msg->offset;
   x(4) = msg->chi;
   x(5) = msg->chi2;
+  x(6) = msg->cz;
   time_last_state = ros::Time::now();
   time_depth_data = msg->stamp;
+}
+
+void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
+  depth_fusion = msg->depth;
 }
 
 void depth_set_point_callback(const seabot_mission::Waypoint::ConstPtr& msg){
@@ -88,6 +94,7 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
   const double x4 = x(3);
   const double x5 = x(4);
   const double x6 = x(5);
+  const double x7 = x(6);
   const double A = coeff_A;
   const double B = coeff_B;
   const double beta = limit_velocity/M_PI_2;
@@ -96,14 +103,14 @@ double compute_u(const Matrix<double, NB_STATES, 1> &x, double set_point, double
 
   double e = (set_point-x2)/alpha;
   double y = x1-gamma*atan(e);
-  double dx1 = -A*(x3+x4-(x5*x2+x6*pow(x2,2)))-B*abs(x1)*x1;
+  double dx1 = -A*(x3+x4-(x5*x2+x6*pow(x2,2)))-B*x7*abs(x1)*x1;
   double D = 1+pow(e,2);
   double dy = dx1 + gamma*x1/D;
 
   debug_msg.y = y;
   debug_msg.dy = dy;
 
-  return (-2.*s*dy+pow(s,2)*y+ gamma*(dx1*D+2.*e*pow(x1,2)/pow(alpha,2))/(pow(D,2))-2.*B*abs(x1)*dx1)/A+x1*(x5+2.*x6*x2);
+  return (-2.*s*dy+pow(s,2)*y+ gamma*(dx1*D+2.*e*pow(x1,2)/pow(alpha,2))/(pow(D,2))-2.*B*x7*abs(x1)*dx1)/A+x1*(x5+2.*x6*x2);
 }
 
 bool sortCommandAbs (double i,double j) { return (abs(i)<abs(j)); }
@@ -166,6 +173,7 @@ int main(int argc, char *argv[]){
   ros::Subscriber kalman_sub = n.subscribe("/fusion/kalman", 1, kalman_callback);
   ros::Subscriber state_sub = n.subscribe("/driver/piston/state", 1, piston_callback);
   ros::Subscriber depth_set_point_sub = n.subscribe("/mission/set_point", 1, depth_set_point_callback);
+  ros::Subscriber depth_sub = n.subscribe("/fusion/depth", 1, depth_callback);
 
   // Publisher
   ros::Publisher position_pub = n.advertise<seabot_piston_driver::PistonPosition>("/driver/piston/position", 1);
@@ -179,7 +187,6 @@ int main(int argc, char *argv[]){
   /// ************************* Loop *************************
   // Variables
   position_msg.position = 0.0;
-  t_old = ros::WallTime::now() - ros::WallDuration(1);
   ros::Rate loop_rate(frequency);
 
   double piston_position_old = 0.;
@@ -217,14 +224,14 @@ int main(int argc, char *argv[]){
 
         if(depth_set_point<limit_depth_regulation)
           regulation_state = STATE_SURFACE;
-        else if(x(1)<limit_depth_regulation){
+        else if(depth_fusion<limit_depth_regulation){
           u = -speed_volume_sink*tick_to_volume;
-          double ref_eq = x(3)/tick_to_volume;
+          double ref_eq = (x(3)+x(4)*limit_depth_regulation+x(5)*pow(limit_depth_regulation,2))/tick_to_volume;
 
           if(piston_position <ref_eq*0.99) // coefficient to validate reaching piston_ref_eq
             piston_set_point = ref_eq;
           else{
-            piston_set_point = ref_eq - u/(tick_to_volume*control_loop_frequency);
+            piston_set_point += - u/(tick_to_volume*control_loop_frequency);
           }
         }
         else
@@ -236,7 +243,7 @@ int main(int argc, char *argv[]){
 
         if(depth_set_point<limit_depth_regulation)
           regulation_state = STATE_SURFACE;
-        else if(x(1)>=limit_depth_regulation){
+        else if(depth_fusion>=limit_depth_regulation){
           if((ros::Time::now()-time_last_state).toSec()<1.0){
 
             x(2) = -piston_position*tick_to_volume;

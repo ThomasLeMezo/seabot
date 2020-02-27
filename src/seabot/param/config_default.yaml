@@ -6,14 +6,14 @@ physics:
   g: 9.81
 
   # Float
-  m: 8.800
+  m: 18.0
   diam_collerette: 0.24
   screw_thread: 1.75e-3
   tick_per_turn: 48
   piston_diameter: 0.05
-  piston_ref_eq: 2100
-  piston_max_value: 2400
+  piston_max_value: 2400.0
   piston_speed_max_tick: 20
+  piston_ref_eq: 2100.0
 
 driver:
   power:
@@ -137,27 +137,26 @@ iridium:
   enable_gnss_iridium: False
 
 kalman:
-  frequency: 25
-  limit_min_depth: 0.3
+  frequency: 25.0
+  enable_depth: 0.5
 
   estimated_first_error_equilibrium_tick: 250
 
-  gamma_alpha_velocity: 1.0e-5 # Error of model
-  gamma_alpha_depth: 1.0e-5 # Error of model (atmospheric pressure variation)
-  gamma_alpha_offset: 2.0e-10 # Change over time (10 tick per hour)
-  gamma_alpha_chi: 2.0e-10
-  gamma_alpha_chi2: 2.0e-10
+  gamma_alpha_velocity: 1.0e-3 # Error of model
+  gamma_alpha_depth: 1.0e-5 # Error of model
+  gamma_alpha_offset: 5.0e-2 # in ticks
+  gamma_alpha_chi: 1.0e-3 # in ticks
+  gamma_alpha_chi2: 1.0e-3 # in ticks
+  gamma_alpha_cz: 1.0e-3 # in ticks
 
   gamma_init_velocity: 1.0e-1
-  gamma_init_depth: 1.0e-3
-  gamma_init_offset: 1.0e-4
-  gamma_init_chi: 1.0e-4
-  gamma_init_chi2: 1.0e-4
+  gamma_init_depth: 1.0e-2
+  gamma_init_offset: 2400.0 # in ticks
+  gamma_init_chi: 30.0 # in ticks
+  gamma_init_chi2: 30.0 # in ticks
+  gamma_init_cz: 0.1
 
-  gamma_beta_depth: 1.0e-4
-
-  limit_offset: 2400
-  limit_chi: 500
+  gamma_beta_depth: 1.0e-3
 
 mission:
   frequency: 1.0
@@ -170,7 +169,7 @@ regulation:
     frequency: 25.0
     divider_frequency: 5
     root_regulation: -0.2
-    limit_depth_controller: 0.3
+    limit_depth_controller: 0.5
 
     delta_velocity_lb: -0.01
     delta_velocity_ub: 0.01
