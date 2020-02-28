@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
   const double enable_depth = n_private.param<double>("enable_depth", 0.5);
 
   const double gamma_alpha_velocity = n_private.param<double>("gamma_alpha_velocity", 1e-3); // 1e-5
-  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-8); // 1e-5
+  const double gamma_alpha_depth = n_private.param<double>("gamma_alpha_depth", 1e-5); // 1e-5
   const double gamma_alpha_offset = n_private.param<double>("gamma_alpha_offset", 5e-2)*tick_to_volume; // 2e-5
   const double gamma_alpha_chi = n_private.param<double>("gamma_alpha_chi", 1e-3)*tick_to_volume; // 2e-8
   const double gamma_alpha_chi2 = n_private.param<double>("gamma_alpha_chi2", 1e-3)*tick_to_volume; // 2e-8
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]){
   const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 30.0)*tick_to_volume; // 1e-1
   const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 0.1);
 
-  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 5.0e-4); // 5e-4
+  const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1.0e-3); // 5e-4
 
   g_rho_bar = g*rho/1e5;
 

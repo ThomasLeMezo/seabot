@@ -27,7 +27,7 @@ import os, time
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import pyqtSignal, QTimer, QFile, QFileInfo
 from PyQt5.QtCore import QDate, QTime, QDateTime, Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QTreeWidgetItem
+from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QTreeWidgetItem, QTableWidgetItem
 from PyQt5.QtGui import QIcon
 
 from seabot.src.layerSeabot import *
@@ -79,6 +79,7 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.db = DataBaseConnection()
         self.imapServer = ImapServer()
         self.mission_selected = -1
+        self.mission_selected_last = -2
 
         ################################################################
 
@@ -124,6 +125,8 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButton_open_mission.clicked.connect(self.open_mission)
         self.pushButton_delete_mission.clicked.connect(self.delete_mission)
         self.listWidget_mission.currentRowChanged.connect(self.update_mission_info)
+
+        self.init_mission_table_widget()
 
         # State tab
         self.pushButton_state_rename.clicked.connect(self.rename_robot)
@@ -332,6 +335,9 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         else:
             self.layerBoat.set_nb_points_max(value, True)
 
+    def init_mission_table_widget(self):
+        self.tableWidget_mission.setColumnCount(5)
+        self.tableWidget_mission.setHorizontalHeaderLabels(["Depth","D start", "D end", "T start", "T end"])
 
     ###########################################################################
     ### Handler Button
@@ -469,6 +475,17 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             else:
                 self.label_mission_status.setText("NO WAYPOINTS")
                 self.label_mission_waypoint_id.setText(str(seabotMission.get_current_wp_id()+1) + "/"+str(seabotMission.get_nb_wp()))
+
+
+            # Update Table widget
+            wp_list = seabotMission.get_wp_list()
+            if(self.mission_selected_last != self.mission_selected):
+                self.tableWidget_mission.clearContents()
+            self.tableWidget_mission.setRowCount(len(wp_list))
+            row = 0
+            for wp in wp_list:
+                self.tableWidget_add_waypoint(wp, row)
+                row+=1
         else:
             self.label_mission_status.setStyleSheet("background-color: gray")
             self.label_mission_start_time.setText("-")
@@ -479,3 +496,12 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.label_mission_next_depth.setText("-")
             self.label_mission_status.setText("-")
             self.label_mission_waypoint_id.setText("-")
+        self.mission_selected_last = self.mission_selected
+
+    def tableWidget_add_waypoint(self, wp, row):
+        time_now = datetime.datetime.utcnow().replace(microsecond=0)
+        self.tableWidget_mission.setItem(row, 0, QTableWidgetItem(str(wp.get_depth())))
+        self.tableWidget_mission.setItem(row, 1, QTableWidgetItem(str(wp.get_time_end()-time_now)))
+        self.tableWidget_mission.setItem(row, 2, QTableWidgetItem(str(wp.get_time_start()-time_now)))
+        self.tableWidget_mission.setItem(row, 3, QTableWidgetItem(str(wp.get_time_start())))
+        self.tableWidget_mission.setItem(row, 4, QTableWidgetItem(str(wp.get_time_end())))

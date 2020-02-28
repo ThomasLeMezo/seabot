@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>360</width>
+    <width>435</width>
     <height>691</height>
    </rect>
   </property>
@@ -315,7 +315,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_last_sync">
            <property name="dateTime">
             <datetime>
-             <hour>14</hour>
+             <hour>13</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2018</year>
@@ -325,7 +325,7 @@
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>12</hour>
+             <hour>11</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2014</year>
@@ -404,13 +404,13 @@
          <rect>
           <x>10</x>
           <y>10</y>
-          <width>321</width>
+          <width>391</width>
           <height>236</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
+          <enum>QLayout::SetMaximumSize</enum>
          </property>
          <item>
           <layout class="QFormLayout" name="formLayout">
@@ -566,8 +566,8 @@
        <widget class="QPushButton" name="pushButton_open_mission">
         <property name="geometry">
          <rect>
-          <x>80</x>
-          <y>400</y>
+          <x>150</x>
+          <y>350</y>
           <width>111</width>
           <height>25</height>
          </rect>
@@ -579,8 +579,8 @@
        <widget class="QPushButton" name="pushButton_delete_mission">
         <property name="geometry">
          <rect>
-          <x>200</x>
-          <y>400</y>
+          <x>270</x>
+          <y>350</y>
           <width>131</width>
           <height>25</height>
          </rect>
@@ -594,15 +594,62 @@
          <rect>
           <x>10</x>
           <y>250</y>
-          <width>321</width>
-          <height>141</height>
+          <width>391</width>
+          <height>91</height>
          </rect>
         </property>
+       </widget>
+       <widget class="QTableWidget" name="tableWidget_mission">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>390</y>
+          <width>391</width>
+          <height>221</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+          <horstretch>1</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="showGrid">
+         <bool>true</bool>
+        </property>
+        <property name="gridStyle">
+         <enum>Qt::SolidLine</enum>
+        </property>
+        <property name="rowCount">
+         <number>0</number>
+        </property>
+        <property name="columnCount">
+         <number>0</number>
+        </property>
+        <attribute name="horizontalHeaderCascadingSectionResizes">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="horizontalHeaderDefaultSectionSize">
+         <number>50</number>
+        </attribute>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>50</number>
+        </attribute>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderCascadingSectionResizes">
+         <bool>false</bool>
+        </attribute>
        </widget>
        <zorder>verticalLayoutWidget_2</zorder>
        <zorder>pushButton_delete_mission</zorder>
        <zorder>pushButton_open_mission</zorder>
        <zorder>listWidget_mission</zorder>
+       <zorder>tableWidget_mission</zorder>
       </widget>
       <widget class="QWidget" name="tab_state">
        <attribute name="title">
