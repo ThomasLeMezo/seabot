@@ -18,6 +18,11 @@ from numpy import linalg as LA
 import sys
 from load_data import *
 
+# Mag calibration
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import ellipsoid_fit as ef
+
 import math
 
 class TimeAxisItem(pg.AxisItem):
@@ -61,6 +66,61 @@ def save_gpx():
     file = open(filename+".gpx","w") 
     file.write(gpx.to_xml()) 
     file.close()
+
+def export_mag():
+        global lr_mag
+        t_bounds = lr_mag.getRegion()
+        
+        lr_TP_bounds = t_bounds
+        ub = np.where(magData.time <= np.max((1,t_bounds[1])))[0][-1]
+        lb = np.where(magData.time >= np.min((magData.time[-1],t_bounds[0])))[0][0]
+
+        ub = np.min((ub, np.size(magData.time)))
+        lb = np.max((lb,0))
+
+        x_s = magData.x[lb:ub]
+        y_s = magData.y[lb:ub]
+        z_s = magData.z[lb:ub]
+
+        print("compass_min = ", min(x_s), min(y_s), min(z_s))
+        print("compass_max = ", max(x_s), max(y_s), max(z_s))
+
+        data = np.array([x_s, y_s, z_s]).transpose()
+        data2 = ef.data_regularize(data, divs=128) # .tolist()
+        center, radii, evecs, v = ef.ellipsoid_fit(data)
+
+        dataC = data - center.T
+        dataC2 = data2 - center.T
+
+        a, b, c = radii
+        r = (a * b * c) ** (1. / 3.) #preserve volume?
+        D = np.array([[r/a, 0., 0.], [0., r/b, 0.], [0., 0., r/c]])
+        #http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
+        #affine transformation from ellipsoid to sphere (translation excluded)
+        TR = evecs.dot(D).dot(evecs.T)
+        dataE = TR.dot(dataC2.T).T
+
+        print('ellipsoid_offset: [', center[0][0], ', ', center[1][0], ', ', center[2][0], ']')
+        print('ellipsoid_matrix0: [', TR[0][0], ', ', TR[0][1], ', ', TR[0][2], ']')
+        print('ellipsoid_matrix1: [', TR[1][0], ', ', TR[1][1], ', ', TR[1][2], ']')
+        print('ellipsoid_matrix2: [', TR[2][0], ', ', TR[2][1], ', ', TR[2][2], ']')
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        #hack  for equal axes
+        ax.set_aspect('equal')
+        MAX = 50
+        for direction in (-1, 1):
+            for point in np.diag(direction * MAX * np.array([1, 1, 1])):
+                ax.plot([point[0]], [point[1]], [point[2]], 'w')
+                
+        #ax.scatter(dataC[:,0], dataC[:,1], dataC[:,2], marker='o', color='g')
+        ax.scatter(dataC2[:, 0], dataC2[:, 1], dataC2[:, 2], marker='o', color='b')
+        ax.scatter(dataE[:, 0], dataE[:, 1], dataE[:, 2], marker='o', color='r')
+
+        ef.ellipsoid_plot([0, 0, 0], radii, evecs, ax=ax, plotAxes=True, cageColor='g')
+        ef.ellipsoid_plot([0, 0, 0], [r, r, r], evecs, ax=ax, plotAxes=True, cageColor='orange')
+        plt.show()
 
 
 #####################################################
@@ -157,6 +217,7 @@ def plot_depth(dock):
         pg_depth.plot(missionData.time, missionData.depth[:-1], pen=(0,255,0), name="set point", stepMode=True)
     pg_depth.setLabel('left', "Depth", units="m")
     pg_depth.showGrid(y=True)
+    pg_depth.getViewBox().invertY(True)
     dock.addWidget(pg_depth)
     return pg_depth
 
@@ -167,6 +228,7 @@ def plot_piston_position(dock):
     pg_position.plot(pistonStateData.time, pistonStateData.position_set_point[:-1],pen=(0,0,255), name="set point (pic)", stepMode=True)
     pg_position.setLabel('left', "Piston state position and set point")
     pg_position.showGrid(y=True)
+    pg_position.getViewBox().invertY(True)
     dock.addWidget(pg_position)
     return pg_position
 
@@ -279,7 +341,7 @@ if(len(safetyCpu.time)>0):
 
     pg_safety_debug_ram = pg.PlotWidget()
     set_plot_options(pg_safety_debug_ram)
-    pg_safety_debug_ram.plot(safetyCpu.time, np.round(safetyCpu.ram[:-1]/1e-6), pen=(255,0,0), name="ram", stepMode=True)
+    pg_safety_debug_ram.plot(safetyCpu.time, np.round(safetyCpu.ram[:-1]*1e-6), pen=(255,0,0), name="ram", stepMode=True)
     dock_safety_cpu.addWidget(pg_safety_debug_ram)
 
     pg_safety_debug_ram.setXLink(pg_safety_debug_cpu)
@@ -490,7 +552,15 @@ if(len(magData.time)>0):
     pg_mag2.plot(magData.time, magData.N[:-1], pen=(255,0,0), name="mag N", stepMode=True)
     dock_mag.addWidget(pg_mag2)
 
+    lr_mag = pg.LinearRegionItem([0, magData.time[-1]], bounds=[0,magData.time[-1]], movable=True)
+    pg_mag2.addItem(lr_mag)
+
+    exportMagBtn = QtGui.QPushButton('Export Mag Calibration')
+    dock_mag.addWidget(exportMagBtn, row=2, col=0)
+    
     pg_mag2.setXLink(pg_mag1)
+
+    exportMagBtn.clicked.connect(export_mag)
 
 #### Imu Acc ####
 if(len(imuData.time)>0):
@@ -510,6 +580,28 @@ if(len(imuData.time)>0):
     dock_imu_acc.addWidget(pg_acc_n)
 
     pg_acc_n.setXLink(pg_acc)
+
+    # Calibration export
+    lr_acc = pg.LinearRegionItem([0, imuData.time[-1]], bounds=[0,imuData.time[-1]], movable=True)
+    pg_acc_n.addItem(lr_acc)
+    exportAccBtn = QtGui.QPushButton('Export Acc Calibration')
+    dock_imu_acc.addWidget(exportAccBtn, row=2, col=0)
+    def export_acc():
+        global lr_acc
+        t_bounds = lr_acc.getRegion()
+        
+        lr_TP_bounds = t_bounds
+        ub = np.where(imuData.time <= np.max((1,t_bounds[1])))[0][-1]
+        lb = np.where(imuData.time >= np.min((imuData.time[-1],t_bounds[0])))[0][0]
+        ub = np.min((ub, np.size(imuData.time)))
+        lb = np.max((lb,0))
+
+        x_s = imuData.acc_x[lb:ub]
+        y_s = imuData.acc_y[lb:ub]
+        z_s = imuData.acc_z[lb:ub]
+        print("acc_min = ", min(x_s), min(y_s), min(z_s))
+        print("acc_max = ", max(x_s), max(y_s), max(z_s))
+    exportAccBtn.clicked.connect(export_acc)
 
 #### Imu Debug ####
 if(len(imuDebugData.time)>0):
@@ -542,6 +634,26 @@ if(len(imuData.time)>0):
     pg_gyro.plot(imuData.time, imuData.gyro_y[:-1], pen=(0,255,0), name="gyro y", stepMode=True)
     pg_gyro.plot(imuData.time, imuData.gyro_z[:-1], pen=(0,0,255), name="gyro z", stepMode=True)
     dock_imu_gyro.addWidget(pg_gyro)
+
+    lr_gyro = pg.LinearRegionItem([0, imuData.time[-1]], bounds=[0,imuData.time[-1]], movable=True)
+    pg_gyro.addItem(lr_gyro)
+    exportGyroBtn = QtGui.QPushButton('Export Gyro Calibration')
+    dock_imu_gyro.addWidget(exportGyroBtn, row=1, col=0)
+    def export_gyro():
+        global lr_gyro
+        t_bounds = lr_gyro.getRegion()
+        
+        lr_TP_bounds = t_bounds
+        ub = np.where(imuData.time <= np.max((1,t_bounds[1])))[0][-1]
+        lb = np.where(imuData.time >= np.min((imuData.time[-1],t_bounds[0])))[0][0]
+        ub = np.min((ub, np.size(imuData.time)))
+        lb = np.max((lb,0))
+
+        x_s = imuData.gyro_x[lb:ub]
+        y_s = imuData.gyro_y[lb:ub]
+        z_s = imuData.gyro_z[lb:ub]
+        print("gyro_mean = ", max(x_s), max(y_s), max(z_s))
+    exportGyroBtn.clicked.connect(export_gyro)
 
 #### Euler ####
 if(len(eulerData.time)>0):
@@ -856,14 +968,12 @@ if(len(depthFusionData.time)>0 and len(regulationData.time)>0):
     dock_fourier = Dock("Fourier")
     area_regulation.addDock(dock_fourier, 'below', dock_regulation)
 
-    pg_depth= pg.PlotWidget()
-    set_plot_options(pg_depth)
-    pg_depth.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="Depth", stepMode=True)
+    pg_depth = plot_depth(dock_fourier)
     dock_fourier.addWidget(pg_depth)
 
     lr_fourier = pg.LinearRegionItem([0, depthFusionData.time[-1]], bounds=[0,depthFusionData.time[-1]], movable=True)
     pg_depth.addItem(lr_fourier)
-    lr_fourier_bounds = lr_fourier.getRegion()
+    lr_fourier_bounds = None
 
     pg_fourier = pg.PlotWidget()
     plot_fourier = pg_fourier.plot(depthFusionData.time, depthFusionData.depth[:-1], pen=(255,0,0), name="freq", stepMode=True)

@@ -1,3 +1,3 @@
-uint8 service
-uint8 signal_strength
-uint8 antenna
+int8 service
+int8 signal_strength
+int8 antenna
