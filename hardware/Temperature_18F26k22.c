@@ -370,7 +370,7 @@ void main(){
         state = IDLE;
         break;
       case IDLE: // Idle state
-        LED = 0;
+        // LED = 0;
         if(reset == 1)
           state = RESET_TSYS01;
         else if(conversion == 1)
@@ -385,7 +385,7 @@ void main(){
         break;
 
       case CONVERSION_READ:
-        LED = 1;
+        // LED = 1;
         read_TSYS01_sequence();
         state = IDLE;
         break;

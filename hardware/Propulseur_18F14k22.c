@@ -1,6 +1,6 @@
 /*  PIC18F14K22  mikroC PRO for PIC v6.4
 Oscillateur externe quartz 16MHZ, PLL * 4, MCU clock frequency 64MHZ
-
+Fosc = 4*16e6
 
 Hardware:
   18F14K22  DIP20,SOIC
@@ -55,7 +55,7 @@ TIMER1: Géneration d'une temporisation variable par pas de 10us
 
 */
 
-#define CODE_VERSION 0x04
+#define CODE_VERSION 0x05
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x20;
@@ -80,7 +80,7 @@ sbit LED at LATA.B2; // sortie LED
 #define PWM_PERIOD 2000
 unsigned short cmd_motor[3] = {MOTOR_CMD_STOP, MOTOR_CMD_STOP, MOTOR_CMD_STOP};
 #define TMR1_CPT 136 // 16MHz/4 and 10us delay, cpt incrementing from TMR1_CPT to 0xFFFF
-// 136, 215, 246
+// 215-2=213 ?
 
  unsigned char cpt_motor_1 = 0;
  unsigned char cpt_motor_2 = 0;
@@ -132,12 +132,15 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
 /**
  * @brief init_timer0
  * Fonction d'initialisation du TIMER0
- * Prescaler 1:128; TMR0 Preload = 3036; Actual Interrupt Time : 1 s
+ * Prescaler 1:128; TMR0 Preload = 3035; Actual Interrupt Time : 1 s
  */
 void init_timer0(){
-  T0CON = 0x85; // TIMER0 ON (1 s)
+  T0CON = 0x07; // TIMER0 ON (1 s) // 1000 0101
+  // T0PS = 101  Timer0 Prescaler Select bit = 1/256
+  // Fosc/4 = 16Mhz
   TMR0H = 0x0B;
-  TMR0L = 0xDC;
+  TMR0L = 0xDB;
+  // 0xFFFF-62500 = 3035 => 0x0BDB
   TMR0IE_bit = 0;
 }
 
@@ -224,7 +227,7 @@ void main(){
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
-  LED = 1;
+  LED = 0;
   delay_ms(250);
 
   is_init = 0;
@@ -232,10 +235,10 @@ void main(){
   while(1){
     asm CLRWDT;
 
-    if(cmd_motor[0] != MOTOR_CMD_STOP || cmd_motor[1] != MOTOR_CMD_STOP || cmd_motor[2] != MOTOR_CMD_STOP)
-      LED = 1;
-    else
-      LED = 0;
+    // if(cmd_motor[0] != MOTOR_CMD_STOP || cmd_motor[1] != MOTOR_CMD_STOP || cmd_motor[2] != MOTOR_CMD_STOP)
+    //   LED = 1;
+    // else
+    //   LED = 0;
 
     if(nb_rx_octet>1 && SSPSTAT.P == 1){
         i2c_read_data_from_buffer();
@@ -253,6 +256,9 @@ void interrupt(){
 
   // Interruption TIMER1 toutes les 10us
   if (TMR1IF_bit){
+    TMR1H = 0xFF;
+    TMR1L = TMR1_CPT; //136
+    TMR1IF_bit = 0;
 
     if(cpt_global==0){
       MOT1 = 1;
@@ -285,13 +291,13 @@ void interrupt(){
       else
         cpt_motor_3--;
     }
-
-    TMR1H = 0xFF;
-    TMR1L = TMR1_CPT; //136
-    TMR1IF_bit = 0;
   }
 
-  else if (TMR0IF_bit){
+  if (TMR0IF_bit){
+    TMR0H = 0x0B;
+    TMR0L = 0xDB;
+    TMR0IF_bit = 0;
+
     // Watchdog
     if(watchdog_restart>0)
       watchdog_restart--;  
@@ -301,10 +307,6 @@ void interrupt(){
       cmd_motor[2] = MOTOR_CMD_STOP;
       watchdog_restart = WATCHDOG_RESTART_DEFAULT;
     }
-
-    TMR0H = 0x0B;
-    TMR0L = 0xDC;
-    TMR0IF_bit = 0;
   }
 }
 

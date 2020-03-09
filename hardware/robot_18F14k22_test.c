@@ -26,8 +26,15 @@ Hardware:
   pin 20    VSS Alim 0V
 */
 
-#define CODE_VERSION 0x07
+#define CODE_VERSION 0x08
 
+// Timers
+#define TMR1H_CPT 0xC1
+#define TMR1L_CPT 0x7F
+#define TMR0H_CPT 0x0B
+#define TMR0L_CPT 0xDC
+
+// I2C
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
 #define SIZE_RX_BUFFER 8
 volatile unsigned short rxbuffer_tab[SIZE_RX_BUFFER];
@@ -48,19 +55,20 @@ volatile int nb_pulse = 0;  // Nombre d'impulsions de la sortie de l'opto OPB461
 volatile unsigned short butee_out = 0;
 volatile unsigned short butee_in = 0;
 
-// Motor
-#define MOTOR_STOP 50
-volatile unsigned short motor_speed_in = 15; // 2 octets
-volatile unsigned short motor_speed_out = 15; // 2 octets
-volatile unsigned short motor_speed_out_reset = 30; // 2 octets
-volatile unsigned short motor_current_speed = MOTOR_STOP; // 2 octets
+// Motor [0 400]
+#define MOTOR_STOP 200
+volatile unsigned motor_speed_max = 80;
+volatile unsigned motor_speed_out_reset = 120;
+volatile unsigned motor_current_speed = MOTOR_STOP;
+volatile unsigned short motor_speed_variation = 2;
+volatile int error_speed=0;
 
 // Regulation
 volatile int position_set_point = 0;
 volatile signed int error = 0;
-volatile unsigned long int position_reached_max_value = 40000;
-volatile unsigned long int position_reached_cpt = 0;
-volatile unsigned short position_reached_enable = 1;
+volatile unsigned short delay_release_torque = 10;
+volatile unsigned short delay_release_torque_cpt = 0;
+
 volatile unsigned short error_interval = 0;
 
 volatile unsigned short zero_shift_error = 0;
@@ -68,7 +76,7 @@ volatile unsigned short time_zero_shift_error = 5;
 
 // State machine
 volatile unsigned short motor_on = 1;
-enum robot_state {RESET_OUT,REGULATION,EMERGENCY, STOP};
+enum robot_state {RESET_OUT,REGULATION,EMERGENCY};
 volatile unsigned char state = RESET_OUT;
 
 // Watchdog
@@ -110,29 +118,22 @@ void i2c_read_data_from_buffer(){
                     i++;
                 }
                 break;
-            case 0x12:  // consigne de vitesse in
+            case 0x12:  // maximum speed motor
                 if(rxbuffer_tab[i+1] <=50)
-                  motor_speed_in = rxbuffer_tab[i+1];
-                break;
-            case 0x13:  // consigne de vitesse out
-                if(rxbuffer_tab[i+1] <=50)
-                  motor_speed_out = rxbuffer_tab[i+1];
+                  motor_speed_max = rxbuffer_tab[i+1];
                 break;
             case 0x14:  // consigne de vitesse out (reset)
                 if(rxbuffer_tab[i+1] <=50)
                   motor_speed_out_reset = rxbuffer_tab[i+1];
                 break;
-            case 0xA0:  // Wait until release couple
-                if(nb_data >= i+2){
-                    position_reached_max_value = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
-                    i++;
-                }
+            case 0x15:
+                motor_speed_variation = rxbuffer_tab[i+1];
+                break;
+            case 0xA0:  // Wait until couple releasing
+                delay_release_torque = rxbuffer_tab[i+1];
                 break;
             case 0xB0: // emergency mode
                 state = EMERGENCY;
-                break;
-            case 0xB1:
-                state = STOP;
                 break;
             default:
                 break;
@@ -175,6 +176,9 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         break;
     case 0x07:
         SSPBUF = motor_speed_out;
+        break;
+    case 0x015:
+        SSPBUF = motor_speed_variation;
         break;
     case 0xA0:
         SSPBUF = error;
@@ -227,12 +231,10 @@ void set_motor_cmd_stop(){
         RC6_bit = 1;
     }
 
-    if(position_reached_enable == 1){
-      if(position_reached_cpt>position_reached_max_value)
+    if(delay_release_torque_cpt>delay_release_torque)
         RC6_bit = 0;
-      else
-        position_reached_cpt++;
-    }
+    else
+        delay_release_torque_cpt++;
 }
 
 /**
@@ -241,41 +243,32 @@ void set_motor_cmd_stop(){
  * out : [50, 100]
  * in : [0, 50]
  */
-void set_motor_cmd(unsigned short speed){
+void set_motor_cmd(unsigned speed){
     if(motor_on == 0 || (butee_out == 1 && speed >= 50) || (butee_in == 1 && speed <= 50)){
         set_motor_cmd_stop();
     }
     else if(motor_current_speed != speed){
-        position_reached_cpt = 0;
-        motor_current_speed = speed;
+        error_speed = speed - motor_current_speed;
+        if (error_speed > motor_speed_variation)
+            error_speed = motor_speed_variation
+        else if(error_speed < -motor_speed_variation)
+            error_speed = -motor_speed_variation
+
+        motor_current_speed += error_speed;
         
-        CCPR1L = speed >> 2;
-        CCP1CON.DC1B0 = speed & 0b01;
-        CCP1CON.DC1B1 = speed & 0b10;
+        // PWM is on 10-bit (2*4 + 2)
+        CCPR1L = motor_current_speed >> 2; // High bit
+        CCP1CON.DC1B0 = motor_current_speed & 0b01; // Two low bit
+        CCP1CON.DC1B1 = motor_current_speed & 0b10;
         
         RC6_bit = 1;  //Enable L6203
+        delay_release_torque_cpt = 0;
     }
 
     // P1M : 10 (P1A assigned as Capture/Compare input/output...)
     // DC1B : 00
     // CCP1 : 1100 : PWM mode; P1A, P1C active-high; P1B, P1D active-high
     
-}
-
-/**
- * @brief set_motor_cmd_out
- * @param speed
- */
-void set_motor_cmd_out(unsigned short speed){
-    set_motor_cmd(MOTOR_STOP + speed);
-}
-
-/**
- * @brief set_motor_cmd_in
- * @param speed
- */
-void set_motor_cmd_in(unsigned short speed){
-    set_motor_cmd(MOTOR_STOP - speed);
 }
 
 /**
@@ -328,9 +321,23 @@ void read_optical_fork(){
  */
 void init_timer0(){
   T0CON = 0x85; // TIMER0 ON (1 s)
-  TMR0H = 0x0B;
-  TMR0L = 0xDC;
+  TMR0H = TMR0H_CPT;
+  TMR0L = TMR0L_CPT;
   TMR0IE_bit = 0;
+}
+
+/**
+ * @brief init_timer1
+ * Fonction d'initialisation du TIMER1
+ * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 1ms
+ */
+void init_timer1(){
+  T1CON = 0x01; // Enable time (TMR1ON)
+  TMR1IF_bit = 0; // Interupt flag
+  TMR1H = TMR1H_CPT; // 49535 (= 65535-16000, 1e-3/Tproc)
+  TMR1L = TMR1L_CPT;
+  TMR1IE_bit = 0;
+  INTCON = 0xC0;
 }
 
 /**
@@ -371,6 +378,18 @@ void init_io(){
     RC6_bit = 0;
 }
 
+void regulation(){
+    read_optical_fork();
+    error = position_set_point - nb_pulse;
+
+    if(error > error_interval)
+        set_motor_cmd(MOTOR_STOP - motor_speed_max); // In
+    else if(error < -error_interval)
+        set_motor_cmd(MOTOR_STOP + motor_speed_max); // Out
+    else // position reached
+        set_motor_cmd_stop();
+}
+
 /**
  * @brief main
  */
@@ -392,6 +411,7 @@ void main(){
     init_io(); // Initialisation des I/O
     init_i2C(); // Initialisation de l'I2C en esclave
     init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
+    init_timer1();
 
     // Initialisation de l'entrée d'interruption INT0 pour la butée haute
     INTCON2.INTEDG0 = 0; // Interrupt on falling edge
@@ -426,12 +446,20 @@ void main(){
     TMR0ON_bit = 1; // Start TIMER1
 
 
-    // Period = 4 * TOSC * (PR2 + 1) * (TMR2 Prescale Value)
-    // Pulse Width = TOSC * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
-    // Delay = 4 * TOSC * (PWM1CON<6:0>)
-    PR2 = 24;
-    T2CON = 0b00000111; // ON et 16 bit
-    PWM1CON = 1; // Delay
+    //*********** PWM ***********
+    // Pwm use timer 2
+    // Period = 4 * Tosc * (PR2 + 1) * (TMR2 Prescale Value)
+    // Pulse Width = Tosc * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
+    // Therefore between [0, 400] with middle at 200
+    // Delay = 4 * Tosc * (PWM1CON<6:0>)
+    // Freq = 10kHz
+    PR2 = 99;
+    T2CON = 0b00000101; // (prescale = 16, on)
+    // Prescale
+    // 00 => 1
+    // 01 => 4
+    // 11 => 16
+    PWM1CON = 1; // Delay (to avoid cross-condition)
 
     // Max value = 4*(PR2+1)
     // Mid = 2*(PR2+1)
@@ -484,29 +512,12 @@ void main(){
             break;
 
         case REGULATION:
-            //debug_uart();
-            read_optical_fork();
             LED2 = 0;
-
-            // Regulation
-            error = position_set_point - nb_pulse;
-
-            if(error > error_interval)
-                set_motor_cmd_in(motor_speed_in); // [0, 50]
-            else if(error < -error_interval)
-                set_motor_cmd_out(motor_speed_out); // [0, 50]
-            else // position reached
-                set_motor_cmd_stop();
-
             break;
 
         case EMERGENCY:
             LED2 = 1;
             set_motor_cmd_out(motor_speed_out_reset);
-            break;
-
-        case STOP:
-            set_motor_cmd_stop();
             break;
 
         default:
@@ -534,7 +545,7 @@ void interrupt(){
     // Interruption sur l'entrée INT0/RA0, detection de butée de sortie
     if(INTCON.INT0IF == 1) {
         if (!RA0_bit){
-            delay_ms(2);
+            delay_ms(1); //
             if (!RA0_bit){
                 butee_out = 1;
                 if(motor_current_speed > MOTOR_STOP){
@@ -549,9 +560,9 @@ void interrupt(){
     }
 
     // Interruption sur l'entrée INT1/RA1, detection de butée de rentree
-    else if(INTCON3.INT1IF == 1) {
+    if(INTCON3.INT1IF == 1) {
         if (!RA1_bit){
-            delay_ms(2);
+            delay_ms(1);
             if (!RA1_bit){
                 butee_in = 1;
                 if(motor_current_speed < MOTOR_STOP)
@@ -564,7 +575,12 @@ void interrupt(){
         INTCON3.INT1IF = 0;
     }
 
-    else if (TMR0IF_bit){
+    // Timer 0
+    if (TMR0IF_bit){
+        TMR0H = TMR0H_CPT;
+        TMR0L = TMR0L_CPT;
+        TMR0IF_bit = 0;
+
         // Watchdog
         if(watchdog_restart>0)
           watchdog_restart--;  
@@ -584,12 +600,14 @@ void interrupt(){
         }
         else
             zero_shift_error=0;
+    }
 
-        
-
-        TMR0H = 0x0B;
-        TMR0L = 0xDC;
-        TMR0IF_bit = 0;
+    // Timer 1
+    if (TMR1IF_bit){
+        TMR1H = TMR1H_CPT;
+        TMR1L = TMR1L_CPT;
+        TMR1IF_bit = 0;
+        regulation();
     }
 }
 
