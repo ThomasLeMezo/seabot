@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=Temperature_18F26k22.c
+Value=temperature_18F26k22.c
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -16,16 +16,16 @@ Value=2000
 [EEPROM_DEFINITION]
 Value=
 [FILES]
+File0=temperature_18F26k22.c
 Count=1
-File0=Temperature_18F26k22.c
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
+File0=temperature_18F26k22.c
 Count=1
-File0=Temperature_18F26k22.c
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -33,37 +33,7 @@ Count=0
 [OTHER_FILES]
 Count=0
 [SEARCH_PATH]
-Count=30
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\uses\P18\
-Path2=E:\
-Path3=C:\applis\mikroC PRO for PIC\defs\
-Path4=C:\applis\mikroC PRO for PIC\uses\P18\
-Path5=C:\MikroElectronika\Robot Thomas 2004\Robot\pic\Temperature\
-Path6=C:\MikroElectronika\Robot Thomas 2004\Robot\pic\hardware\
-Path7=E:\hardware\
-Path8=U:\Projet\Robot Thomas\Robot\PIC Alimentation\
-Path9=U:\Projet\Robot Thomas\Robot\PIC Propulseur\
-Path10=U:\Projet\Robot DAART\Carte pcduino 2\PIC afficheur\
-Path11=E:\Projet\Robot Thomas\Robot\
-Path12=F:\Projet\Robot Thomas\Robot\
-Path13=U:\Projet\Sat\Programme SAT-Logger\
-Path14=U:\Projet\Sat\1336479691_interrupts_on_pi_mikroc_pic\mikroC - 18F45k22\Interrupt On Change\
-Path15=U:\Projet\Sat\1334843795_microsd_click____mikroc_pic\mikroC PRO for PIC\EasyPIC7 - PIC18F45K22\microSD click FAT16\
-Path16=U:\Projet\Sat\Nouveau dossier\EasyPIC v7 - PIC18F45K22\
-Path17=U:\Projet\Sat\1336479691_interrupts_on_pi_mikroc_pic\mikroC - 18F45k22\Peripheral Interrupt\
-Path18=U:\Projet\Ecg\
-Path19=U:\Projet\Sat\Temperature Logger\
-Path20=U:\Projet\Sat\1334843795_microsd_click____mikroc_pic\mikroC PRO for PIC\EasyPIC7 - PIC18F45K22\microSD click Common\
-Path21=U:\Projet\Sat\Nouveau dossier\Memory Card Project\
-Path22=U:\Projet\Robot DAART\Carte pcduino 2\PIC ultrason\
-Path23=U:\Projet\Bracelet\Programme\
-Path24=U:\Projet\Robot DAART\Carte pcduino 2\PIC codeur\
-Path25=U:\Projet\Robot Thomas\Robot\I2C_Slave\
-Path26=U:\Projet\Robot Thomas\Robot\1452263955_how_design_state_mikroc_pic\MAQUINA DE ESTADO 12f675\
-Path27=U:\Projet\Robot Thomas\Robot\
-Path28=U:\Projet\Largueur\PLONGEUR\
-Path29=C:\MikroElectronika\Robot Thomas 2004\Robot\pic\
+Count=0
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -71,7 +41,6 @@ Count=0
 [PLDS]
 Count=0
 [Useses]
-Count=10
 File0=UART
 File1=I2C
 File2=Conversions
@@ -82,6 +51,24 @@ File6=PWM
 File7=C_Stdlib
 File8=ADC
 File9=Software_I2C
-[EXPANDED NODES]
-Node1=Sources
-Count=1
+Count=10
+[INTERRUPT_DEFS]
+VECTOR_MODE=0
+IVT_BASE=00000008
+[EXPANDED_NODES]
+0=propulseur_18F14k22.mcppi
+30=robot_18F14k22.mcppi
+46=temperature_18F26k22.mcppi
+Count=3
+[LIB_EXPANDED_NODES]
+0=mikroE Libraries
+1=System Libraries
+85=C_Math
+Count=3
+[PROGRAMMER_TYPE]
+Value=mikroE mikroProg
+[CODEGRIP_OPTIONS]
+CODEGRIP_SPEED=0
+CODEGRIP_VERIFY_AFTER=0
+CODEGRIP_SWBP_ENABLED=0
+CODEGRIP_PROGRAMMING_TYPE=

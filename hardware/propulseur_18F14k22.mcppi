@@ -16,16 +16,16 @@ Value=2000
 [EEPROM_DEFINITION]
 Value=
 [FILES]
+File0=propulseur_18F14k22.c
 Count=1
-File0=Propulseur_18F14k22.c
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
+File0=propulseur_18F14k22.c
 Count=1
-File0=Propulseur_18F14k22.c
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -33,19 +33,14 @@ Count=0
 [OTHER_FILES]
 Count=0
 [SEARCH_PATH]
-Count=23
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroC PRO for PIC\uses\P18\
-Path2=U:\Projet\Robot Thomas\Robot\
-Path3=E:\Projet\Robot Thomas\Robot\
-Path4=F:\Projet\Robot Thomas\Robot\
+Count=0
+[HEADER_PATH]
 Count=0
 [HEADERS]
 Count=0
 [PLDS]
 Count=0
 [Useses]
-Count=9
 File0=UART
 File1=I2C
 File2=Conversions
@@ -55,6 +50,19 @@ File5=PWM12
 File6=PWM
 File7=ADC
 File8=C_Stdlib
-[EXPANDED NODES]
-Node1=Sources
+Count=9
+[INTERRUPT_DEFS]
+VECTOR_MODE=0
+IVT_BASE=00000008
+[EXPANDED_NODES]
+0=propulseur_18F14k22.mcppi
 Count=1
+[LIB_EXPANDED_NODES]
+Count=0
+[PROGRAMMER_TYPE]
+Value=mikroE mikroProg
+[CODEGRIP_OPTIONS]
+CODEGRIP_SPEED=0
+CODEGRIP_VERIFY_AFTER=0
+CODEGRIP_SWBP_ENABLED=0
+CODEGRIP_PROGRAMMING_TYPE=

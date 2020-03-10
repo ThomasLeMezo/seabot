@@ -207,7 +207,7 @@ void init_io(){
  */
 void reset_TSYS01_sequence(){
   i2c_master_write_byte(TSYS01_RESET);
-  delay_ms(10);
+  Delay_ms(10);
   reset = 0;
 }
 
@@ -230,7 +230,7 @@ void prom_read_TSYS01_sequence(){
         i2c_master_read_data(TSYS01_PROM_READ + (j+1)*2, 2);
         tsys01_prom[j*2] = i2c_master_rxbuffer_tab[0];
         tsys01_prom[j*2+1] = i2c_master_rxbuffer_tab[1];
-        delay_us(100);
+        Delay_us(100);
    }
 }
 
@@ -241,7 +241,7 @@ void prom_read_TSYS01_sequence(){
 void read_TSYS01_sequence(){
   i2c_master_write_byte(TSYS01_ADC_TEMP_CONV);
 
-  delay_ms(20);
+  Delay_ms(20);
 
   i2c_master_read_data(TSYS01_ADC_READ, 3);
 
@@ -260,11 +260,11 @@ void wait_MSSP(){
 
 void i2c_fail(){
 //   int i;
-	LED = 1;
+        LED = 1;
   SSP1CON2.PEN = 1; //Send Stop Condition
   wait_MSSP(); //Wait to complete
 
-  delay_ms(2000); // Reset
+  Delay_ms(2000); // Reset
 }
 
 void i2c_master_write_byte(unsigned char cmd){
@@ -302,19 +302,19 @@ void i2c_master_read_data(unsigned char cmd, unsigned char nb_bytes){
     SSP1CON2.RCEN = 1; // Configure master to receive bytes
     wait_MSSP(); // Wait data to be received
     i2c_master_rxbuffer_tab[i] = SSP1BUF; // Read data
-    delay_us(30);
+    Delay_us(30);
     if(i==nb_bytes-1)
       SSP1CON2.ACKDT = 1;
     else
       SSP1CON2.ACKDT = 0;
     SSP1CON2.ACKEN = 1; // Acknowledge read
     wait_MSSP();
-    delay_us(30);
+    Delay_us(30);
   }
-  delay_us(10);
+  Delay_us(10);
   SSP1CON2.PEN = 1; //Send Stop Condition
   //wait_MSSP(); //Wait to complete
-  delay_ms(5);
+  Delay_ms(5);
    mssp_interrupt_received = 0;
   //LED = 1;
 }
@@ -345,7 +345,7 @@ void main(){
   // I2C1_Init(100000);// initialize I2C communication bus I2C N?1
 
   
-  delay_ms(250);
+  Delay_ms(250);
 
   RCON.IPEN = 1;  //Enable priority levels on interrupts
 
@@ -359,7 +359,7 @@ void main(){
   reset_TSYS01_sequence();
   prom_read_TSYS01_sequence();
   
-  delay_ms(250);
+  Delay_ms(250);
 
   while(1){
 
@@ -539,7 +539,7 @@ void interrupt(){
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
-          delay_us(20);
+          Delay_us(20);
           nb_tx_octet++;
       }
 

@@ -351,7 +351,7 @@ void main(){
 
   //UART1_Init(115200);
 
-  delay_ms(250);
+  Delay_ms(250);
 
   INTCON3.INT1IP = 0; //INT1 External Interrupt Priority bit, INT0 always a high
   //priority interrupt source
@@ -641,7 +641,7 @@ void interrupt_low(){
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
-          delay_us(20);
+          Delay_us(20);
           nb_tx_octet++;
       }
 

@@ -79,7 +79,7 @@ sbit LED at LATA.B2; // sortie LED
 #define MOTOR_CMD_STOP 150
 #define PWM_PERIOD 2000
 unsigned short cmd_motor[3] = {MOTOR_CMD_STOP, MOTOR_CMD_STOP, MOTOR_CMD_STOP};
-#define TMR1_CPT 136 // 16MHz/4 and 10us delay, cpt incrementing from TMR1_CPT to 0xFFFF
+#define TMR1_CPT 213 // 16MHz/4 and 10us delay, cpt incrementing from TMR1_CPT to 0xFFFF
 // 215-2=213 ?
 
  unsigned char cpt_motor_1 = 0;
@@ -151,6 +151,8 @@ void init_timer0(){
  */
 void init_timer1(){
   T1CON = 0x01; // Enable time (TMR1ON)
+  T1CKPS0_bit = 0;
+  T1CKPS1_bit = 0;
   TMR1IF_bit = 0; // Interupt flag
   TMR1H = 0xFF; // 65416
   TMR1L = TMR1_CPT;
@@ -228,17 +230,12 @@ void main(){
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
   LED = 0;
-  delay_ms(250);
+  Delay_ms(250);
 
   is_init = 0;
 
   while(1){
     asm CLRWDT;
-
-    // if(cmd_motor[0] != MOTOR_CMD_STOP || cmd_motor[1] != MOTOR_CMD_STOP || cmd_motor[2] != MOTOR_CMD_STOP)
-    //   LED = 1;
-    // else
-    //   LED = 0;
 
     if(nb_rx_octet>1 && SSPSTAT.P == 1){
         i2c_read_data_from_buffer();
@@ -396,7 +393,7 @@ void interrupt_low(){
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
-          delay_us(20);
+          Delay_us(20);
           nb_tx_octet++;
       }
 
