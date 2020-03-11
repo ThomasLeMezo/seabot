@@ -62,7 +62,7 @@ Count=2
 0=mikroE Libraries
 1=System Libraries
 2=ADC
-Count=3
+Count=4
 [PROGRAMMER_TYPE]
 Value=mikroE mikroProg
 [CODEGRIP_OPTIONS]

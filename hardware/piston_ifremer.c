@@ -29,8 +29,8 @@ Hardware:
 #define CODE_VERSION 0x08
 
 // Timers
-#define TMR1H_CPT 0xC1
-#define TMR1L_CPT 0x7F
+#define TMR1H_CPT 0xF0
+#define TMR1L_CPT 0x5F
 
 #define TMR0H_CPT 0x0B
 #define TMR0L_CPT 0xDB
@@ -133,11 +133,11 @@ void i2c_read_data_from_buffer(){
                 }
                 break;
             case 0x12:  // maximum speed motor
-                if(rxbuffer_tab[i+1] <=50)
+                if(rxbuffer_tab[i+1] <=200)
                   motor_speed_max = rxbuffer_tab[i+1];
                 break;
             case 0x14:  // consigne de vitesse out (reset)
-                if(rxbuffer_tab[i+1] <=50)
+                if(rxbuffer_tab[i+1] <=200)
                   motor_speed_out_reset = rxbuffer_tab[i+1];
                 break;
             case 0x15:
@@ -269,7 +269,7 @@ void set_motor_cmd_stop(){
  * in : [0, 50]
  */
 void set_motor_cmd(unsigned speed){
-    if(motor_on == 0 || (butee_out == 1 && speed >= 50) || (butee_in == 1 && speed <= 50)){
+    if(motor_on == 0 || (butee_out == 1 && speed >= MOTOR_STOP) || (butee_in == 1 && speed <= MOTOR_STOP)){
         set_motor_cmd_stop();
     }
     else if(motor_current_speed != speed){
@@ -330,11 +330,6 @@ void read_optical_fork(){
     default:
         break;
     }
-
-    // if (optical_state != new_state){
-    //     TXREG = nb_pulse >> 8;
-    //     TXREG = nb_pulse;
-    // }
     
     optical_state = new_state;  // store the current state value to optical_state value this value will be used in next call
 }
@@ -349,11 +344,11 @@ void init_timer0(){
   T08BIT_bit = 0;
   PSA_bit = 0;
 
-  // Freq/4 = 16e6
-  // Prescale = 64, 0xFFFF-62500
-  T0PS0_bit = 1;
-  T0PS1_bit = 1;
+  // Freq/4 = 4e6 (PLL not working here?)
+  // Prescale = 64, 0xFFFF-62500=0x0BDB
   T0PS2_bit = 1;
+  T0PS1_bit = 0;
+  T0PS0_bit = 1;
 
   TMR0H = TMR0H_CPT;
   TMR0L = TMR0L_CPT;
@@ -368,7 +363,7 @@ void init_timer0(){
  */
 void init_timer1(){
   TMR1IF_bit = 0; // Interupt flag
-  TMR1H = TMR1H_CPT; // 49535 (= 65535-16000, 1e-3/Tproc)
+  TMR1H = TMR1H_CPT; // 61535 (= 0xFFFF-4000, 1e-3) where Fosc/4=4MHz
   TMR1L = TMR1L_CPT;
   TMR1IE_bit = 1;
   RD16_bit = 1;
@@ -445,8 +440,15 @@ void main(){
     */
 
     // Oscillateur interne de 16Mhz
-    OSCCON = 0b11110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
+    IRCF0_bit=1; // Internal Oscillator Frequency Select bits (111 = 16 MHz)
+    IRCF1_bit=1;
+    IRCF2_bit=1;
+    OSTS_bit = 0; // Device is running from the internal oscillator
+    SCS0_bit = 1; // System Clock Select bits (1x = Internal oscillator block)
+    SCS1_bit = 1;
+    PLLEN_bit = 1; // Frequency Multiplier PLL bit (1 = PLL enabled (for HFINTOSC 8 MHz and 16 MHz only)
 
+    
     asm CLRWDT;// Watchdog
     //SWDTEN_bit = 1; //armement du watchdog
 
@@ -480,8 +482,8 @@ void main(){
     // 00 => 1
     // 01 => 4
     // 11 => 16
-    T2CKPS0_bit = 1; // Prescale 16
-    T2CKPS1_bit = 1;
+    T2CKPS1_bit = 0;
+    T2CKPS0_bit = 0; // Prescale 1
     TMR2ON_bit = 1;
     
     PWM1CON = 1; // Delay (to avoid cross-condition)
@@ -572,7 +574,7 @@ void main(){
 void interrupt(){
     // Timer 0
     if (TMR0IF_bit){
-        LED1=1;
+        LED1=!LED1;
         TMR0H = TMR0H_CPT;
         TMR0L = TMR0L_CPT;
         TMR0IF_bit = 0;
@@ -591,7 +593,6 @@ void interrupt(){
             if(butee_reset_cpt!=0)
                 butee_reset_cpt--;
         }
-        LED1=0;
     }
 
     // Timer 1
