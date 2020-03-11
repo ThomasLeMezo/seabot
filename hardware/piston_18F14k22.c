@@ -29,10 +29,11 @@ Hardware:
 #define CODE_VERSION 0x08
 
 // Timers
-#define TMR1H_CPT 0xC1
-#define TMR1L_CPT 0x7F
+#define TMR1H_CPT 0xF0
+#define TMR1L_CPT 0x5F
+
 #define TMR0H_CPT 0x0B
-#define TMR0L_CPT 0xDC
+#define TMR0L_CPT 0xDB
 
 // I2C
 const unsigned short ADDRESS_I2C = 0x38; // linux I2C Adresse
@@ -48,6 +49,7 @@ sbit SA at RA2_bit;
 sbit SB at RA4_bit;
 sbit LED1 at RC0_bit;
 sbit LED2 at RC2_bit;
+sbit MOTOR_TORQUE at RC6_bit;
 
 // Sensors
 volatile unsigned short optical_state;
@@ -74,6 +76,8 @@ volatile unsigned short error_interval = 0;
 volatile unsigned short zero_shift_error = 0;
 volatile unsigned short time_zero_shift_error = 5;
 
+volatile unsigned short flag_regulation = 0;
+
 // State machine
 volatile unsigned short motor_on = 1;
 enum robot_state {RESET_OUT,REGULATION,EMERGENCY};
@@ -88,6 +92,8 @@ volatile unsigned short is_init = 1;
 void i2c_read_data_from_buffer(){
     unsigned short i = 0;
     short nb_data = nb_rx_octet-1;
+    if(nb_data==0)
+        nb_data=1;
 
     for(i=0; i<nb_data; i++){
         switch(rxbuffer_tab[0]+i){
@@ -98,7 +104,7 @@ void i2c_read_data_from_buffer(){
                 motor_on = (rxbuffer_tab[i+1]!=0x00);
                 break;
             case 0x03:
-                RC6_bit = (rxbuffer_tab[i+1]!=0x00);
+                MOTOR_TORQUE = (rxbuffer_tab[i+1]!=0x00);
                 break;
             case 0x04:
                 LED1 = (rxbuffer_tab[i+1]!=0x00);
@@ -119,11 +125,11 @@ void i2c_read_data_from_buffer(){
                 }
                 break;
             case 0x12:  // maximum speed motor
-                if(rxbuffer_tab[i+1] <=50)
+                if(rxbuffer_tab[i+1] <=MOTOR_STOP)
                   motor_speed_max = rxbuffer_tab[i+1];
                 break;
             case 0x14:  // consigne de vitesse out (reset)
-                if(rxbuffer_tab[i+1] <=50)
+                if(rxbuffer_tab[i+1] <=MOTOR_STOP)
                   motor_speed_out_reset = rxbuffer_tab[i+1];
                 break;
             case 0x15:
@@ -160,7 +166,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
                 | ((butee_in & 0b1)<<1)
                 | ((state & 0b11) <<2)
                 | ((motor_on & 0b1) << 4)
-                | ((RC6_bit & 0b1) << 5);
+                | ((MOTOR_TORQUE & 0b1) << 5);
         break;
     case 0x03:
         SSPBUF = position_set_point;
@@ -218,21 +224,22 @@ void read_butee(){
     else
         butee_in = 0;
 }
+
 /**
- * @brief Arret du Moteur
+ * @brief Stop de motor
  */
 void set_motor_cmd_stop(){
     if(motor_current_speed != MOTOR_STOP){
         CCPR1L = MOTOR_STOP >> 2;
         CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
-        CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
+        CCP1CON.DC1B1 = (MOTOR_STOP & 0b10)>>1;
         
         motor_current_speed = MOTOR_STOP;
-        RC6_bit = 1;
+        MOTOR_TORQUE = 1;
     }
 
     if(delay_release_torque_cpt>delay_release_torque)
-        RC6_bit = 0;
+        MOTOR_TORQUE = 0;
     else
         delay_release_torque_cpt++;
 }
@@ -244,24 +251,24 @@ void set_motor_cmd_stop(){
  * in : [0, 50]
  */
 void set_motor_cmd(unsigned speed){
-    if(motor_on == 0 || (butee_out == 1 && speed >= 50) || (butee_in == 1 && speed <= 50)){
+    if(motor_on == 0 || (butee_out == 1 && speed >= MOTOR_STOP) || (butee_in == 1 && speed <= MOTOR_STOP)){
         set_motor_cmd_stop();
     }
     else if(motor_current_speed != speed){
         error_speed = speed - motor_current_speed;
         if (error_speed > motor_speed_variation)
-            error_speed = motor_speed_variation
+            error_speed = motor_speed_variation;
         else if(error_speed < -motor_speed_variation)
-            error_speed = -motor_speed_variation
+            error_speed = -motor_speed_variation;
 
         motor_current_speed += error_speed;
         
         // PWM is on 10-bit (2*4 + 2)
         CCPR1L = motor_current_speed >> 2; // High bit
         CCP1CON.DC1B0 = motor_current_speed & 0b01; // Two low bit
-        CCP1CON.DC1B1 = motor_current_speed & 0b10;
+        CCP1CON.DC1B1 = (motor_current_speed & 0b10)>>1;
         
-        RC6_bit = 1;  //Enable L6203
+        MOTOR_TORQUE = 1;  //Enable L6203
         delay_release_torque_cpt = 0;
     }
 
@@ -321,9 +328,19 @@ void read_optical_fork(){
  */
 void init_timer0(){
   T0CON = 0x85; // TIMER0 ON (1 s)
+  T08BIT_bit = 0;
+  PSA_bit = 0;
+
+  // Freq/4 = 4e6 (PLL not working here?)
+  // Prescale = 64, 0xFFFF-62500=0x0BDB
+  T0PS2_bit = 1;
+  T0PS1_bit = 0;
+  T0PS0_bit = 1;
+
   TMR0H = TMR0H_CPT;
   TMR0L = TMR0L_CPT;
-  TMR0IE_bit = 0;
+
+  TMR0IE_bit = 1;  
 }
 
 /**
@@ -332,13 +349,15 @@ void init_timer0(){
  * Prescaler 1:1; TMR1 Preload = 65136; Actual Interrupt Time : 1ms
  */
 void init_timer1(){
-  T1CON = 0x01; // Enable time (TMR1ON)
   TMR1IF_bit = 0; // Interupt flag
-  TMR1H = TMR1H_CPT; // 49535 (= 65535-16000, 1e-3/Tproc)
+  TMR1H = TMR1H_CPT; // 61535 (= 0xFFFF-4000, 1e-3) where Fosc/4=4MHz
   TMR1L = TMR1L_CPT;
-  TMR1IE_bit = 0;
-  INTCON = 0xC0;
+  TMR1IE_bit = 1;
+  RD16_bit = 1;
+  T1CKPS0_bit = 0;
+  T1CKPS1_bit = 0;
 }
+
 
 /**
  * @brief Initialisation des entrées sorties du PIC
@@ -375,10 +394,11 @@ void init_io(){
     TRISC6_bit = 0; // RC6 en sortie
     TRISC7_bit = 0; // RC7 en sortie
 
-    RC6_bit = 0;
+    MOTOR_TORQUE = 0;
 }
 
 void regulation(){
+    LED2 = 1;
     read_optical_fork();
     error = position_set_point - nb_pulse;
 
@@ -388,6 +408,47 @@ void regulation(){
         set_motor_cmd(MOTOR_STOP + motor_speed_max); // Out
     else // position reached
         set_motor_cmd_stop();
+
+    flag_regulation = 0;
+    LED2 = 0;
+}
+
+void init_pwm(){
+    // Pwm use timer 2
+    // Period = 4 * Tosc * (PR2 + 1) * (TMR2 Prescale Value)
+    // Pulse Width = Tosc * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
+    // Therefore between [0, 400] with middle at 200
+    // Delay = 4 * Tosc * (PWM1CON<6:0>)
+    // Freq = 10kHz
+    PR2 = 99;
+    // Prescale
+    // 00 => 1
+    // 01 => 4
+    // 11 => 16
+    T2CKPS1_bit = 0;
+    T2CKPS0_bit = 0; // Prescale 1
+    TMR2ON_bit = 1;
+    
+    PWM1CON = 1; // Delay (to avoid cross-condition)
+
+    // Max value = 4*(PR2+1)
+    // Mid = 2*(PR2+1)
+    // Min value = 0
+    // Constraint : 4*(PR2+1) < 1023 (ie PR2<255)
+    CCPR1L = MOTOR_STOP >> 2;
+    CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
+    CCP1CON.DC1B1 = (MOTOR_STOP & 0b10) >> 1;
+
+    CCP1CON.P1M0 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
+    CCP1CON.P1M1 = 0b1; // Half-bridge output: P1A, P1B modulated with dead-band control
+    CCP1CON.CCP1M3 = 0b1; // PWM mode; P1A, P1C active-high; P1B, P1D active-high
+    CCP1CON.CCP1M2 = 0b1;
+    CCP1CON.CCP1M1 = 0b0;
+    CCP1CON.CCP1M0 = 0b0;
+    
+    // STRB: Steering Enable bit B
+    // P1B pin has the PWM waveform with polarity control from CCP1M<1:0>
+    PSTRCON.STRB = 1;
 }
 
 /**
@@ -403,7 +464,13 @@ void main(){
     */
 
     // Oscillateur interne de 16Mhz
-    OSCCON = 0b01110010;   // 0=4xPLL OFF, 111=IRCF<2:0>=16Mhz  OSTS=0  SCS<1:0>10 1x = Internal oscillator block
+    IRCF0_bit=1; // Internal Oscillator Frequency Select bits (111 = 16 MHz)
+    IRCF1_bit=1;
+    IRCF2_bit=1;
+    OSTS_bit = 0; // Device is running from the internal oscillator
+    SCS0_bit = 1; // System Clock Select bits (1x = Internal oscillator block)
+    SCS1_bit = 1;
+    PLLEN_bit = 1; // Frequency Multiplier PLL bit (1 = PLL enabled (for HFINTOSC 8 MHz and 16 MHz only)
 
     asm CLRWDT;// Watchdog
     SWDTEN_bit = 1; //armement du watchdog
@@ -412,6 +479,8 @@ void main(){
     init_i2C(); // Initialisation de l'I2C en esclave
     init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
     init_timer1();
+
+    init_pwm();
 
     // Initialisation de l'entrée d'interruption INT0 pour la butée haute
     INTCON2.INTEDG0 = 0; // Interrupt on falling edge
@@ -445,42 +514,7 @@ void main(){
     TMR0IE_bit = 1;  //Enable TIMER0
     TMR0ON_bit = 1; // Start TIMER1
 
-
-    //*********** PWM ***********
-    // Pwm use timer 2
-    // Period = 4 * Tosc * (PR2 + 1) * (TMR2 Prescale Value)
-    // Pulse Width = Tosc * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
-    // Therefore between [0, 400] with middle at 200
-    // Delay = 4 * Tosc * (PWM1CON<6:0>)
-    // Freq = 10kHz
-    PR2 = 99;
-    T2CON = 0b00000101; // (prescale = 16, on)
-    // Prescale
-    // 00 => 1
-    // 01 => 4
-    // 11 => 16
-    PWM1CON = 1; // Delay (to avoid cross-condition)
-
-    // Max value = 4*(PR2+1)
-    // Mid = 2*(PR2+1)
-    // Min value = 0
-    // Constraint : 4*(PR2+1) < 1023 (ie PR2<255)
-    CCPR1L = MOTOR_STOP >> 2;
-    CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
-    CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
-
-    CCP1CON.P1M0 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
-    CCP1CON.P1M1 = 0b1; // Half-bridge output: P1A, P1B modulated with dead-band control
-    CCP1CON.CCP1M3 = 0b1; // PWM mode; P1A, P1C active-high; P1B, P1D active-high
-    CCP1CON.CCP1M2 = 0b1;
-    CCP1CON.CCP1M1 = 0b0;
-    CCP1CON.CCP1M0 = 0b0;
-    
-    // STRB: Steering Enable bit B
-    // P1B pin has the PWM waveform with polarity control from CCP1M<1:0>
-    PSTRCON.STRB = 1;
-
-    RC6_bit = 0;  //Disable L6203
+    MOTOR_TORQUE = 0;  //Disable L6203
     motor_current_speed = MOTOR_STOP;
     Delay_ms(1);
 
@@ -513,6 +547,8 @@ void main(){
 
         case REGULATION:
             LED2 = 0;
+            if(flag_regulation==1)
+                regulation();
             break;
 
         case EMERGENCY:
@@ -607,7 +643,7 @@ void interrupt(){
         TMR1H = TMR1H_CPT;
         TMR1L = TMR1L_CPT;
         TMR1IF_bit = 0;
-        regulation();
+        flag_regulation = 1;
     }
 }
 
@@ -661,47 +697,43 @@ void init_i2c(){
  */
 void interrupt_low(){
   if (PIR1.SSPIF){  // I2C Interrupt
+        tmp_rx = SSPBUF;
 
       if(SSPCON1.SSPOV || SSPCON1.WCOL){
           SSPCON1.SSPOV = 0;
           SSPCON1.WCOL = 0;
-          tmp_rx = SSPBUF;
+          SSPCON1.CKP = 1;
       }
 
       //****** receiving data from master ****** //
       // 0 = Write (master -> slave - reception)
       if (SSPSTAT.R_W == 0){
-        if(SSPSTAT.P == 0){
-          if (SSPSTAT.D_A == 0){ // Address
+          SSPCON1.CKP = 1;
+          if(SSPSTAT.D_A == 0){ // Address
             nb_rx_octet = 0;
-            tmp_rx = SSPBUF;
           }
           else{ // Data
             if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
+              rxbuffer_tab[nb_rx_octet] = tmp_rx;
               nb_rx_octet++;
             }
-            else{
-              tmp_rx = SSPBUF;
-            }
           }
-        }
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
       else{
           if(SSPSTAT.D_A == 0){
             nb_tx_octet = 0;
-            tmp_rx = SSPBUF;
           }
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
-          delay_us(20);
+          //Delay_us(20);
+          SSPCON1.CKP = 1;
           nb_tx_octet++;
       }
 
-    SSPCON1.CKP = 1;
     PIR1.SSPIF = 0; // reset SSP interrupt flag
   }
+}
   

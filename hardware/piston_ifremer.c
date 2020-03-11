@@ -50,7 +50,7 @@ sbit SB at RA1_bit;
 sbit S_PISTON at RA2_bit;
 sbit LED1 at RC0_bit;
 sbit LED2 at RC2_bit;
-sbit MD13S_ENABLE at RC4_bit;
+sbit MOTOR_TORQUE at RC4_bit;
 
 // Sensors
 volatile unsigned short optical_state;
@@ -115,7 +115,7 @@ void i2c_read_data_from_buffer(){
                 motor_on = (rxbuffer_tab[i+1]!=0x00);
                 break;
             case 0x03:
-                MD13S_ENABLE = (rxbuffer_tab[i+1]!=0x00);
+                MOTOR_TORQUE = (rxbuffer_tab[i+1]!=0x00);
                 break;
             case 0x04:
                 LED1 = (rxbuffer_tab[i+1]!=0x00);
@@ -174,7 +174,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
                 | ((butee_in & 0b1)<<1)
                 | ((state & 0b11) <<2)
                 | ((motor_on & 0b1) << 4)
-                | ((MD13S_ENABLE & 0b1) << 5);
+                | ((MOTOR_TORQUE & 0b1) << 5);
         break;
     case 0x03:
         SSPBUF = position_set_point;
@@ -243,21 +243,22 @@ void read_butee(){
         butee_in = 0;
     }
 }
+
 /**
- * @brief Arret du Moteur
+ * @brief Stop de motor
  */
 void set_motor_cmd_stop(){
     if(motor_current_speed != MOTOR_STOP){
         CCPR1L = MOTOR_STOP >> 2;
         CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
-        CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
+        CCP1CON.DC1B1 = (MOTOR_STOP & 0b10)>>1;
         
         motor_current_speed = MOTOR_STOP;
-        MD13S_ENABLE = 1;
+        MOTOR_TORQUE = 1;
     }
 
     if(delay_release_torque_cpt>delay_release_torque)
-        MD13S_ENABLE = 0;
+        MOTOR_TORQUE = 0;
     else
         delay_release_torque_cpt++;
 }
@@ -284,9 +285,9 @@ void set_motor_cmd(unsigned speed){
         // PWM is on 10-bit (2*4 + 2)
         CCPR1L = motor_current_speed >> 2; // High bit
         CCP1CON.DC1B0 = motor_current_speed & 0b01; // Two low bit
-        CCP1CON.DC1B1 = motor_current_speed & 0b10;
+        CCP1CON.DC1B1 = (motor_current_speed & 0b10)>>1;
         
-        MD13S_ENABLE = 1;  //Enable L6203
+        MOTOR_TORQUE = 1;  //Enable L6203
         delay_release_torque_cpt = 0;
     }
 
@@ -384,7 +385,6 @@ void init_io(){
     TRISA0_bit = 1; // RA0 en entrée
     TRISA1_bit = 1; // RA1 en entrée
     TRISA2_bit = 1; // RA2 en entrée
-    // TRISA3_bit = 1; // RA3 en entrée  // toujours en entrée MCLR/VPP
     TRISA4_bit = 1; // RA4 en entrée
 
     TRISA5_bit = 0; // RA5 en sortie
@@ -403,12 +403,9 @@ void init_io(){
     TRISC2_bit = 0; // RC0 en sortie
     TRISC4_bit = 0; // RC4 en sortie
     TRISC5_bit = 0; // RC5 en sortie
-    //TRISC6_bit = 1; // RC6 en entree
     TRISC7_bit = 0; // RC7 en sortie
 
-    MD13S_ENABLE = 0;
-    
-    ANSEL8_bit = 1; // ADC Channel 8
+    MOTOR_TORQUE = 0;   
 }
 
 void regulation(){
@@ -427,50 +424,12 @@ void regulation(){
     LED2 = 0;
 }
 
-/**
- * @brief main
- */
-void main(){
-    /** Edit config (Project > Edit Project)
-    *   -> Oscillator Selection : Internal oscillator block 16 MHz
-    *   -> 4xPLL : Diseabled
-  *   -> Watchdog Timer : WDT is controlled by SWDTEN bit of the WDTCON register
-  *   -> Watchdog Time Postscale : 1:256 (32768/31000 = environ 1Hz)
-    *   -> MCLR : disabled (external reset)
-    */
+void init_adc(){
+	ANSEL8_bit = 1; // ADC Channel 8
+	ADC_Init();
+}
 
-    // Oscillateur interne de 16Mhz
-    IRCF0_bit=1; // Internal Oscillator Frequency Select bits (111 = 16 MHz)
-    IRCF1_bit=1;
-    IRCF2_bit=1;
-    OSTS_bit = 0; // Device is running from the internal oscillator
-    SCS0_bit = 1; // System Clock Select bits (1x = Internal oscillator block)
-    SCS1_bit = 1;
-    PLLEN_bit = 1; // Frequency Multiplier PLL bit (1 = PLL enabled (for HFINTOSC 8 MHz and 16 MHz only)
-
-    
-    asm CLRWDT;// Watchdog
-    //SWDTEN_bit = 1; //armement du watchdog
-
-    init_io(); // Initialisation des I/O
-    init_i2c(); // Initialisation de l'I2C en esclave
-    init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
-    init_timer1();
-
-    ADC_Init();
-
-    INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
-    //priority interrupt source
-
-    IPR1.SSPIP = 0; //Master Synchronous Serial Port Interrupt Priority bit, low priority
-    RCON.IPEN = 1;  //Enable priority levels on interrupts
-    INTCON.GIEH = 1; //enable all high-priority interrupts
-    INTCON.GIEL = 1; //enable all low-priority interrupts
-
-    INTCON.GIE = 1; // Global Interrupt Enable bit
-    INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
-
-    //*********** PWM ***********
+void init_pwm(){
     // Pwm use timer 2
     // Period = 4 * Tosc * (PR2 + 1) * (TMR2 Prescale Value)
     // Pulse Width = Tosc * (CCPR1L<7:0>:CCP1CON<5:4>) * (TMR2 Prescale Value)
@@ -494,7 +453,7 @@ void main(){
     // Constraint : 4*(PR2+1) < 1023 (ie PR2<255)
     CCPR1L = MOTOR_STOP >> 2;
     CCP1CON.DC1B0 = MOTOR_STOP & 0b01;
-    CCP1CON.DC1B1 = MOTOR_STOP & 0b10;
+    CCP1CON.DC1B1 = (MOTOR_STOP & 0b10) >> 1;
 
     CCP1CON.P1M0 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
     CCP1CON.P1M1 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
@@ -502,12 +461,55 @@ void main(){
     CCP1CON.CCP1M2 = 0b1;
     CCP1CON.CCP1M1 = 0b0;
     CCP1CON.CCP1M0 = 0b0;
-    
-    // STRB: Steering Enable bit B
-    // P1B pin has the PWM waveform with polarity control from CCP1M<1:0>
-    PSTRCON.STRB = 1;
 
-    MD13S_ENABLE = 0;  //Disable L6203
+    PSTRCON.STRA = 1; // Steering Enable bit A
+    // P1A pin has the PWM waveform with polarity control from CCP1M<1:0>
+}
+
+/**
+ * @brief main
+ */
+void main(){
+    /** Edit config (Project > Edit Project)
+    *   -> Oscillator Selection : Internal oscillator block 16 MHz
+    *   -> 4xPLL : Diseabled
+  *   -> Watchdog Timer : WDT is controlled by SWDTEN bit of the WDTCON register
+  *   -> Watchdog Time Postscale : 1:256 (32768/31000 = environ 1Hz)
+    *   -> MCLR : disabled (external reset)
+    */
+
+    // Oscillateur interne de 16Mhz
+    IRCF0_bit=1; // Internal Oscillator Frequency Select bits (111 = 16 MHz)
+    IRCF1_bit=1;
+    IRCF2_bit=1;
+    OSTS_bit = 0; // Device is running from the internal oscillator
+    SCS0_bit = 1; // System Clock Select bits (1x = Internal oscillator block)
+    SCS1_bit = 1;
+    PLLEN_bit = 1; // Frequency Multiplier PLL bit (1 = PLL enabled (for HFINTOSC 8 MHz and 16 MHz only)
+
+    asm CLRWDT;// Watchdog
+    //SWDTEN_bit = 1; //armement du watchdog
+
+    init_io(); // Initialisation des I/O
+    init_i2c(); // Initialisation de l'I2C en esclave
+    init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
+    init_timer1();
+
+    init_adc();
+    init_pwm();
+
+    INTCON3.INT1IP = 1; //INT1 External Interrupt Priority bit, INT0 always a high
+    //priority interrupt source
+
+    IPR1.SSPIP = 0; //Master Synchronous Serial Port Interrupt Priority bit, low priority
+    RCON.IPEN = 1;  //Enable priority levels on interrupts
+    INTCON.GIEH = 1; //enable all high-priority interrupts
+    INTCON.GIEL = 1; //enable all low-priority interrupts
+
+    INTCON.GIE = 1; // Global Interrupt Enable bit
+    INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
+
+    MOTOR_TORQUE = 0;  //Disable L6203
     motor_current_speed = MOTOR_STOP;
     
     Delay_ms(100);

@@ -39,6 +39,12 @@ La sortie RA4 commande trois LED de repérage via le circuit ZXLD1350.
 */
 #define CODE_VERSION 0x09
 
+#define TMR0H_CPT 0x0B
+#define TMR0L_CPT 0xDB
+
+#define TMR3H_CPT 0x3C
+#define TMR3L_CPT 0xB0
+
 // I2C
 const unsigned short ADDRESS_I2C = 0x39; // Linux Version
 #define SIZE_RX_BUFFER 8
@@ -73,8 +79,6 @@ volatile unsigned short state = POWER_ON;
 #define CPT_STATE_MACHINE_DEFAULT 5
 unsigned short cpt_state_machine = CPT_STATE_MACHINE_DEFAULT;
 unsigned short step_state_machine = 0;
-// unsigned int cpt_wait = 0;
-// #define WAIT_LOOP 10000
 
 // Batteries
 #define WARNING_LOW_VOLTAGE 665 // 0.015625 (quantum) / 10.4 (min tension)
@@ -118,8 +122,11 @@ unsigned short watchdog_cpt_default = 59;
  */
 void i2c_read_data_from_buffer(){
   short i = 0;
+  short nb_data = nb_rx_octet-1;
+  if(nb_data==0)
+        nb_data=1;
 
-  for(i=0; i<(nb_rx_octet-1); i++){
+  for(i=0; i<nb_data; i++){
     switch(rxbuffer_tab[0]+i){
     case 0x00:  // alimentation
       switch(rxbuffer_tab[i+1]){
@@ -247,9 +254,19 @@ void analyze_batteries_voltage(){
  */
 void init_timer0(){
   T0CON = 0x85; // TIMER0 ON (1 s)
-  TMR0H = 0x0B;
-  TMR0L = 0xDC;
-  TMR0IE_bit = 0;
+  T08BIT_bit = 0;
+  PSA_bit = 0;
+
+  // Freq/4 = 4e6 (PLL not working here?)
+  // Prescale = 64, 0xFFFF-62500=0x0BDB
+  T0PS2_bit = 1;
+  T0PS1_bit = 0;
+  T0PS0_bit = 1;
+
+  TMR0H = TMR0H_CPT;
+  TMR0L = TMR0L_CPT;
+
+  TMR0IE_bit = 1;  
 }
 
 /**
@@ -260,9 +277,10 @@ void init_timer0(){
 void init_timer3(){
   T3CON = 0x30;
   TMR3IF_bit = 0;
-  TMR3H = 0x3C;
-  TMR3L = 0xB0;
-  TMR3IE_bit = 0;
+
+  TMR3H = TMR3H_CPT;
+  TMR3L = TMR3L_CPT;
+  TMR3IE_bit = 1;
 }
 
 /**
@@ -364,7 +382,6 @@ void main(){
   INTCON.GIE = 1; // Global Interrupt Enable bit
   INTCON.PEIE = 1; // Peripheral Interrupt Enable bit
 
-  TMR0IE_bit = 1;  //Enable TIMER0
   TMR0ON_bit = 1; // Start TIMER1
   
   TMR3IE_bit = 1;  //Enable TIMER3
@@ -453,6 +470,9 @@ void interrupt(){
 
   // Interruption du TIMER0 (1 s) (cpt to start/stop + Watchdog)
   if (TMR0IF_bit){
+    TMR0H = TMR0H_CPT;
+    TMR0L = TMR0L_CPT;
+    TMR0IF_bit=0
 
     // To Do
     if(state == SLEEP){
@@ -497,14 +517,14 @@ void interrupt(){
         }
       }
     }
-    
-    TMR0H = 0x0B;
-    TMR0L = 0xDC;
-    TMR0IF_bit = 0;
   }
 
   // Interruption du TIMER3 (High-output LED + State Machine)
   else if (TMR3IF_bit){
+    TMR3H = TMR3H_CPT;
+    TMR3L = TMR3L_CPT;;
+    TMR3IF_bit = 0;
+
     // High-output LED
     if(start_led_puissance == 1){
       if (cpt_led_puissance > 0){
@@ -548,10 +568,6 @@ void interrupt(){
     }
     else
       cpt_state_machine--;
-
-    TMR3H = 0x3C;
-    TMR3L = 0xB0;
-    TMR3IF_bit = 0;
   }
 }
 
@@ -605,47 +621,42 @@ void init_i2c(){
  */
 void interrupt_low(){
   if (PIR1.SSPIF){  // I2C Interrupt
+        tmp_rx = SSPBUF;
 
       if(SSPCON1.SSPOV || SSPCON1.WCOL){
           SSPCON1.SSPOV = 0;
           SSPCON1.WCOL = 0;
-          tmp_rx = SSPBUF;
+          SSPCON1.CKP = 1;
       }
 
       //****** receiving data from master ****** //
       // 0 = Write (master -> slave - reception)
       if (SSPSTAT.R_W == 0){
-        if(SSPSTAT.P == 0){
-          if (SSPSTAT.D_A == 0){ // Address
+          SSPCON1.CKP = 1;
+          if(SSPSTAT.D_A == 0){ // Address
             nb_rx_octet = 0;
-            tmp_rx = SSPBUF;
           }
           else{ // Data
             if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSPBUF;
+              rxbuffer_tab[nb_rx_octet] = tmp_rx;
               nb_rx_octet++;
             }
-            else{
-              tmp_rx = SSPBUF;
-            }
           }
-        }
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
       else{
           if(SSPSTAT.D_A == 0){
             nb_tx_octet = 0;
-            tmp_rx = SSPBUF;
           }
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
-          Delay_us(20);
+          //Delay_us(20);
+          SSPCON1.CKP = 1;
           nb_tx_octet++;
       }
 
-    SSPCON1.CKP = 1;
     PIR1.SSPIF = 0; // reset SSP interrupt flag
   }
 }

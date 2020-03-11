@@ -92,6 +92,8 @@ volatile unsigned short cpt = 0;
 void i2c_read_data_from_buffer(){
     unsigned short i = 0;
     unsigned short nb_data = nb_rx_octet;
+    if(nb_data==0)
+        nb_data=1;
 
     for(i=0; i<nb_data; i++){
         switch(rxbuffer_tab[0]+i){
@@ -502,49 +504,43 @@ if(PIR1.SSP1IF){
  * @brief interrupt_low
  */
 void interrupt(){
-  if (PIR3.SSP2IF){  // I2C Interrupt
+  if (PIR1.SSPIF){  // I2C Interrupt
+        tmp_rx = SSPBUF;
 
-      if(SSP2CON1.SSPOV || SSP2CON1.WCOL){
-          SSP2CON1.SSPOV = 0;
-          SSP2CON1.WCOL = 0;
-          tmp_rx = SSP2BUF;
+      if(SSPCON1.SSPOV || SSPCON1.WCOL){
+          SSPCON1.SSPOV = 0;
+          SSPCON1.WCOL = 0;
+          SSPCON1.CKP = 1;
       }
 
       //****** receiving data from master ****** //
       // 0 = Write (master -> slave - reception)
-      if (SSP2STAT.R_W == 0){
-        if(SSP2STAT.P == 0){
-          if (SSP2STAT.D_A == 0){ // Address
+      if (SSPSTAT.R_W == 0){
+          SSPCON1.CKP = 1;
+          if(SSPSTAT.D_A == 0){ // Address
             nb_rx_octet = 0;
-            tmp_rx = SSP2BUF;
           }
           else{ // Data
             if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = SSP2BUF;
+              rxbuffer_tab[nb_rx_octet] = tmp_rx;
               nb_rx_octet++;
             }
-            else{
-              tmp_rx = SSP2BUF;
-            }
           }
-        }
       }
       //******  transmitting data to master ****** //
       // 1 = Read (slave -> master - transmission)
       else{
-          if(SSP2STAT.D_A == 0){
+          if(SSPSTAT.D_A == 0){
             nb_tx_octet = 0;
-            tmp_rx = SSP2BUF;
           }
 
           // In both D_A case (transmit data after receive add)
           i2c_write_data_to_buffer(nb_tx_octet);
-          Delay_us(20);
+          //Delay_us(20);
+          SSPCON1.CKP = 1;
           nb_tx_octet++;
       }
 
-    SSP2CON1.CKP = 1;
-    PIR3.SSP2IF = 0; // reset SSP interrupt flag
+    PIR1.SSPIF = 0; // reset SSP interrupt flag
   }
-
 }
