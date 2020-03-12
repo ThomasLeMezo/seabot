@@ -60,8 +60,8 @@ volatile unsigned short butee_in = 0;
 
 // Motor [0 400]
 #define MOTOR_STOP 200
-volatile unsigned motor_speed_max = 80;
-volatile unsigned motor_speed_out_reset = 120;
+volatile unsigned motor_speed_max = 150;
+volatile unsigned motor_speed_out_reset = 200;
 volatile unsigned motor_current_speed = MOTOR_STOP;
 volatile unsigned short motor_speed_variation = 2;
 volatile int error_speed=0;
@@ -410,7 +410,6 @@ void init_io(){
 
 void regulation(){
     LED2 = 1;
-    read_optical_fork();
     error = position_set_point - nb_pulse;
 
     if(error > error_interval)
@@ -442,7 +441,7 @@ void init_pwm(){
     // 01 => 4
     // 11 => 16
     T2CKPS1_bit = 0;
-    T2CKPS0_bit = 0; // Prescale 1
+    T2CKPS0_bit = 1; // Prescale 4
     TMR2ON_bit = 1;
     
     PWM1CON = 1; // Delay (to avoid cross-condition)
@@ -463,6 +462,7 @@ void init_pwm(){
     CCP1CON.CCP1M0 = 0b0;
 
     PSTRCON.STRA = 1; // Steering Enable bit A
+    PSTRCON.STRB = 1; // Steering Enable bit B
     // P1A pin has the PWM waveform with polarity control from CCP1M<1:0>
 }
 
@@ -485,7 +485,7 @@ void main(){
     OSTS_bit = 0; // Device is running from the internal oscillator
     SCS0_bit = 1; // System Clock Select bits (1x = Internal oscillator block)
     SCS1_bit = 1;
-    PLLEN_bit = 1; // Frequency Multiplier PLL bit (1 = PLL enabled (for HFINTOSC 8 MHz and 16 MHz only)
+    PLLEN_bit = 0; // Frequency Multiplier PLL bit (1 = PLL enabled (for HFINTOSC 8 MHz and 16 MHz only)
 
     asm CLRWDT;// Watchdog
     //SWDTEN_bit = 1; //armement du watchdog
@@ -536,6 +536,7 @@ void main(){
                 optical_state = SB<<1 | SA;  //  ou logique de RA3 et RA2, lecture du capteur pour initialiser la machine d'état
                 nb_pulse = 0; // Reset Nb pulse (The reset is also done in the interrupt function)
                 position_set_point = 0;
+                set_motor_cmd_stop();
             }
             else
                 set_motor_cmd(MOTOR_STOP + motor_speed_out_reset);
@@ -543,6 +544,7 @@ void main(){
 
         case REGULATION:
             LED2 = 0;
+            read_optical_fork();
             if(flag_regulation==1)
                 regulation();
             break;
