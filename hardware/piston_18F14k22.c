@@ -112,9 +112,6 @@ void i2c_read_data_from_buffer(){
             case 0x05:
                 error_interval = rxbuffer_tab[i+1];
                 break;
-            case 0x06:
-                position_reached_enable = rxbuffer_tab[i+1];
-                break;
             case 0x07:
                 time_zero_shift_error = rxbuffer_tab[i+1];
                 break;
@@ -178,10 +175,7 @@ void i2c_write_data_to_buffer(unsigned short nb_tx_octet){
         SSPBUF = motor_current_speed;
         break;
     case 0x06:
-        SSPBUF = motor_speed_in;
-        break;
-    case 0x07:
-        SSPBUF = motor_speed_out;
+        SSPBUF = motor_speed_max;
         break;
     case 0x015:
         SSPBUF = motor_speed_variation;
@@ -399,7 +393,6 @@ void init_io(){
 
 void regulation(){
     LED2 = 1;
-    read_optical_fork();
     error = position_set_point - nb_pulse;
 
     if(error > error_interval)
@@ -440,7 +433,7 @@ void init_pwm(){
     CCP1CON.DC1B1 = (MOTOR_STOP & 0b10) >> 1;
 
     CCP1CON.P1M0 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
-    CCP1CON.P1M1 = 0b1; // Half-bridge output: P1A, P1B modulated with dead-band control
+    CCP1CON.P1M1 = 0b0; // Half-bridge output: P1A, P1B modulated with dead-band control
     CCP1CON.CCP1M3 = 0b1; // PWM mode; P1A, P1C active-high; P1B, P1D active-high
     CCP1CON.CCP1M2 = 0b1;
     CCP1CON.CCP1M1 = 0b0;
@@ -476,7 +469,7 @@ void main(){
     SWDTEN_bit = 1; //armement du watchdog
 
     init_io(); // Initialisation des I/O
-    init_i2C(); // Initialisation de l'I2C en esclave
+    init_i2c(); // Initialisation de l'I2C en esclave
     init_timer0(); // Initialisation du TIMER0 toutes les 1 secondes
     init_timer1();
 
@@ -539,21 +532,23 @@ void main(){
                 optical_state = SB<<1 | SA;  //  ou logique de RA3 et RA2, lecture du capteur pour initialiser la machine d'état
                 nb_pulse = 0; // Reset Nb pulse (The reset is also done in the interrupt function)
                 position_set_point = 0;
+                set_motor_cmd_stop();
             }
             else
-                set_motor_cmd_out(motor_speed_out_reset); // [0, 50]
+                set_motor_cmd(MOTOR_STOP + motor_speed_out_reset);
 
             break;
 
         case REGULATION:
             LED2 = 0;
+            read_optical_fork();
             if(flag_regulation==1)
                 regulation();
             break;
 
         case EMERGENCY:
             LED2 = 1;
-            set_motor_cmd_out(motor_speed_out_reset);
+            set_motor_cmd(MOTOR_STOP + motor_speed_out_reset);
             break;
 
         default:
@@ -707,7 +702,7 @@ void interrupt_low(){
 
       //****** receiving data from master ****** //
       // 0 = Write (master -> slave - reception)
-      if (SSPSTAT.R_W == 0){
+      if (SSPSTAT.R_W == 0 && SSPSTAT.P == 0){
           SSPCON1.CKP = 1;
           if(SSPSTAT.D_A == 0){ // Address
             nb_rx_octet = 0;
@@ -736,4 +731,3 @@ void interrupt_low(){
     PIR1.SSPIF = 0; // reset SSP interrupt flag
   }
 }
-  
