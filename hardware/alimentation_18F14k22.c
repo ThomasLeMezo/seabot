@@ -621,41 +621,41 @@ void init_i2c(){
  */
 void interrupt_low(){
   if (PIR1.SSPIF){  // I2C Interrupt
-        tmp_rx = SSPBUF;
+    tmp_rx = SSPBUF;
 
-      if(SSPCON1.SSPOV || SSPCON1.WCOL){
-          SSPCON1.SSPOV = 0;
-          SSPCON1.WCOL = 0;
-          SSPCON1.CKP = 1;
-      }
+    if(SSPCON1.SSPOV || SSPCON1.WCOL){
+        SSPCON1.SSPOV = 0;
+        SSPCON1.WCOL = 0;
+        SSPCON1.CKP = 1;
+    }
 
-      //****** receiving data from master ****** //
-      // 0 = Write (master -> slave - reception)
-      if (SSPSTAT.R_W == 0){
-          SSPCON1.CKP = 1;
-          if(SSPSTAT.D_A == 0){ // Address
-            nb_rx_octet = 0;
+    //****** receiving data from master ****** //
+    // 0 = Write (master -> slave - reception)
+    if (SSPSTAT.R_W == 0){
+        SSPCON1.CKP = 1;
+        if(SSPSTAT.D_A == 0){ // Address
+          nb_rx_octet = 0;
+        }
+        else{ // Data
+          if(nb_rx_octet < SIZE_RX_BUFFER){
+            rxbuffer_tab[nb_rx_octet] = tmp_rx;
+            nb_rx_octet++;
           }
-          else{ // Data
-            if(nb_rx_octet < SIZE_RX_BUFFER){
-              rxbuffer_tab[nb_rx_octet] = tmp_rx;
-              nb_rx_octet++;
-            }
-          }
-      }
-      //******  transmitting data to master ****** //
-      // 1 = Read (slave -> master - transmission)
-      else{
-          if(SSPSTAT.D_A == 0){
-            nb_tx_octet = 0;
-          }
+        }
+    }
+    //******  transmitting data to master ****** //
+    // 1 = Read (slave -> master - transmission)
+    else{
+        if(SSPSTAT.D_A == 0){
+          nb_tx_octet = 0;
+        }
 
-          // In both D_A case (transmit data after receive add)
-          i2c_write_data_to_buffer(nb_tx_octet);
-          //Delay_us(20);
-          SSPCON1.CKP = 1;
-          nb_tx_octet++;
-      }
+        // In both D_A case (transmit data after receive add)
+        i2c_write_data_to_buffer(nb_tx_octet);
+        //Delay_us(20);
+        SSPCON1.CKP = 1;
+        nb_tx_octet++;
+    }
 
     PIR1.SSPIF = 0; // reset SSP interrupt flag
   }

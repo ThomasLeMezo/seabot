@@ -128,7 +128,7 @@ void i2c_read_data_from_buffer(){
                 break;
             case 0x10:  // consigne de postion
                 if(nb_data >= i+2){
-                    position_set_point = 4*(rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8));
+                    position_set_point = (rxbuffer_tab[i+1] | (rxbuffer_tab[i+2] << 8))<<2; // Multiply by 4
                     i++;
                 }
                 break;
