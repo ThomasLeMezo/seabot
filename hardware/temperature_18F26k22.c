@@ -483,7 +483,6 @@ void interrupt_low(){
 
 if(PIR1.SSP1IF){
 
-
     mssp_interrupt_received = 1;
 
     if(SSP1CON1.SSPOV || SSP1CON1.WCOL){
