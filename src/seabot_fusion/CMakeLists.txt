@@ -18,6 +18,7 @@ find_package(catkin REQUIRED
   pressure_89bsd_driver
   pressure_bme280_driver
   seabot_power_driver
+#  seabot_piston_driver
 )
 
 find_package(Eigen3 REQUIRED NO_MODULE)
