@@ -157,6 +157,8 @@ kalman:
   gamma_init_cz: 0.1
 
   gamma_beta_depth: 1.0e-3
+  init_chi: 15.0
+  init_chi2: 0.0
 
 mission:
   frequency: 1.0

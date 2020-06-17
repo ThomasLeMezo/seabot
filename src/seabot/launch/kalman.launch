@@ -17,6 +17,9 @@
 		<remap from="~gamma_init_chi" to="/kalman/gamma_init_chi" />
 		<remap from="~gamma_init_chi2" to="/kalman/gamma_init_chi2" />
 
+                <remap from="~init_chi" to="/kalman/init_chi" />
+                <remap from="~init_chi2" to="/kalman/init_chi2" />
+
 		<remap from="~gamma_beta_depth" to="/kalman/gamma_beta_depth" />
 
 		<remap from="~piston_max_value" to="/physics/piston_max_value" />

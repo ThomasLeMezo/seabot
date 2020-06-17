@@ -28,10 +28,10 @@ using namespace Eigen;
 #define NB_STATES 6
 #define NB_COMMAND 1
 
-float depth = 0.0;
-float velocity_fusion = 0.0;
-float piston_position = 0.0;
-float piston_position_last = 0.0;
+double depth = 0.0;
+double velocity_fusion = 0.0;
+double piston_position = 0.0;
+double piston_position_last = 0.0;
 double piston_volume_eq = 0.0;
 
 double piston_set_point = 0.0;
@@ -52,18 +52,20 @@ double forecast_filter = 0.7;
 
 bool seafloor_detected = false;
 
+double init_chi, init_chi2;
+
 void piston_callback(const seabot_piston_driver::PistonState::ConstPtr& msg){
   piston_position_last = piston_position;
 
   time_piston_data = msg->stamp;
-  piston_position = msg->position;
+  piston_position = static_cast<double>(msg->position);
   piston_set_point = msg->position_set_point;
   new_piston_data = true;
 }
 
 void depth_callback(const seabot_fusion::DepthPose::ConstPtr& msg){
-  depth = msg->depth;
-  velocity_fusion = msg->velocity;
+  depth = static_cast<double>(msg->depth);
+  velocity_fusion = static_cast<double>(msg->velocity);
   time_depth_data = msg->stamp;
   new_depth_data = true;
 }
@@ -157,8 +159,8 @@ void init_xhat(Matrix<double, NB_STATES, 1> &xhat ){
   xhat(0) = velocity_fusion;
   xhat(1) = depth;
   xhat(2) = piston_volume_eq; // Vp
-  xhat(3) = 15.0*tick_to_volume; // chi
-  xhat(4) = 0.*tick_to_volume; // chi2
+  xhat(3) = init_chi*tick_to_volume; // chi
+  xhat(4) = init_chi2*tick_to_volume; // chi2
   xhat(5) = 1.0; // Cz
 }
 
@@ -181,7 +183,7 @@ int main(int argc, char *argv[]){
   piston_volume_eq = n_private.param<double>("piston_ref_eq", 2100.0)*tick_to_volume;
 
   const double piston_ticks_max_value = n_private.param<double>("piston_max_value", 2400.0);
-  const double piston_volume_max = piston_ticks_max_value*tick_to_volume;
+//  const double piston_volume_max = piston_ticks_max_value*tick_to_volume;
 
   const double enable_depth = n_private.param<double>("enable_depth", 0.5);
 
@@ -198,6 +200,9 @@ int main(int argc, char *argv[]){
   const double gamma_init_chi = n_private.param<double>("gamma_init_chi", 30.0)*tick_to_volume; // 20
   const double gamma_init_chi2 = n_private.param<double>("gamma_init_chi2", 30.0)*tick_to_volume; // 1e-1
   const double gamma_init_cz = n_private.param<double>("gamma_init_cz", 0.1);
+
+  init_chi = n_private.param<double>("init_chi", 0.0)*tick_to_volume;
+  init_chi2 = n_private.param<double>("init_chi2", 0.0)*tick_to_volume;
 
   const double gamma_beta_depth = n_private.param<double>("gamma_beta_depth", 1.0e-3); // 5e-4
 
