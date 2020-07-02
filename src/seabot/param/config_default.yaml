@@ -183,8 +183,11 @@ regulation:
     speed_volume_sink: 2.0
 
     hold_depth_enable: false
-    hold_depth_value_enter: 0.05
-    hold_depth_value_exit: 0.
+    hold_depth_value_enter: 0.1
+    hold_depth_value_exit: 0.2
+    hold_velocity_enter: 0.01
+
+    safety_no_data: 5.0
 
   waypoint:
     frequency: 10.0

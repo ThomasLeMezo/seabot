@@ -19,6 +19,8 @@
 		<remap from="~hold_depth_enable" to="/regulation/depth_controller/hold_depth_enable"/>
 		<remap from="~hold_depth_value_enter" to="/regulation/depth_controller/hold_depth_value_enter"/>
 		<remap from="~hold_depth_value_exit" to="/regulation/depth_controller/hold_depth_value_exit"/>
+		<remap from="~hold_velocity_enter" to="/regulation/depth_controller/hold_velocity_enter"/>
+		<remap from="~safety_no_data" to ="/regulation/depth_controller/safety_no_data"/>
 
 		<remap from="~rho" to="/physics/rho"/>
 		<remap from="~g" to="/physics/g"/>
