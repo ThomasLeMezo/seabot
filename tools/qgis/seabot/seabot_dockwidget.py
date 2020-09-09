@@ -233,11 +233,15 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.listWidget_mission.addItem(layermission.get_mission().get_mission_name())
 
     def delete_mission(self, event):
-        self.mission_selected = self.listWidget_mission.currentRow()
-        if self.mission_selected != -1:
-            self.listWidget_mission.takeItem(self.mission_selected)
-            del self.layerMissions[self.mission_selected]
-        self.mission_selected = self.listWidget_mission.currentRow()
+        mission_id = self.listWidget_mission.currentRow()
+        print("mission selected = ", mission_id)
+        if mission_id != -1:
+            self.listWidget_mission.takeItem(mission_id)
+            print(mission_id)
+            print(self.layerMissions)
+            del self.layerMissions[mission_id]
+            print(self.layerMissions)
+            self.mission_selected = self.listWidget_mission.currentRow()
 
 
     def closeEvent(self, event):
@@ -478,14 +482,14 @@ class SeabotDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
             # Update Table widget
-            wp_list = seabotMission.get_wp_list()
             if(self.mission_selected_last != self.mission_selected):
+                wp_list = seabotMission.get_wp_list()
                 self.tableWidget_mission.clearContents()
-            self.tableWidget_mission.setRowCount(len(wp_list))
-            row = 0
-            for wp in wp_list:
-                self.tableWidget_add_waypoint(wp, row)
-                row+=1
+                self.tableWidget_mission.setRowCount(len(wp_list))
+                row = 0
+                for wp in wp_list:
+                    self.tableWidget_add_waypoint(wp, row)
+                    row+=1
         else:
             self.label_mission_status.setStyleSheet("background-color: gray")
             self.label_mission_start_time.setText("-")
