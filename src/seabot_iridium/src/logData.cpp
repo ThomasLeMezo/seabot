@@ -77,7 +77,7 @@ bool LogData::deserialize_log_CMD_parameters(const string &message){
   bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_depth);
   bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_engine);
 
-  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 8, bit_position, m_period_message);
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 8, bit_position, );
 
   return true;
 }
@@ -304,6 +304,10 @@ bool LogData::deserialize_log_CMD(const string &raw_data){
     m_msg_type = CMD_MISSION;
     deserialize_log_CMD_mission(raw_data);
     break;
+  case CMD_PARAMETERS:
+    cout << "CMD Parameters" << endl;
+    m_msg_type = CMD_PARAMETERS;
+    deserialize_log_CMD_parameters(raw_data);
   default:
     break;
   }

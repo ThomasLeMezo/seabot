@@ -17,6 +17,7 @@ using boost::multiprecision::cpp_int;
 // 253502,6805671
 
 enum MSG_TYPE:unsigned int {LOG_STATE=0, CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
+// First octet (4 bits) : message_id
 
 #define NB_BITS_LOG1 136
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_LOG1, NB_BITS_LOG1, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_log1_t;
@@ -235,7 +236,7 @@ public:
 
   unsigned int  m_current_waypoint = 42; // 0 to 255 max
 
-  unsigned int m_sleep_time = 0;
+  unsigned int m_sleep_time = 0; // sleep time in min
 
   std::vector<Waypoint> m_waypoint_list;
   double m_offset_east = 0.;

@@ -25,6 +25,7 @@ class LayerInfo():
         self.message_id = 0
 
         self.fields.append(QgsField('message_id', QVariant.Int))
+        self.fields.append(QgsField('gnss_heading', QVariant.Double))
 
         self.db = DataBaseConnection(init_table=False)
 
@@ -67,14 +68,30 @@ class LayerInfo():
 
             feature.setFields(self.fields)
             feature['message_id'] = data["message_id"]
+            feature['gnss_heading'] = data["gnss_heading"]
 
             pr.addFeatures([feature])
 
             # Configure the marker.
-            simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=4,color=Qt.darkRed)
+            # simple_marker_large_circle = QgsSimpleMarkerSymbolLayer(size=4,color=Qt.darkRed)
+            # marker = QgsMarkerSymbol()
+            # marker.setOpacity(0.5)
+            # marker.changeSymbolLayer(0, simple_marker_large_circle)
+
+            # Configure the marker.
+            svg_marker = QgsSvgMarkerSymbolLayer("/usr/share/qgis/svg/arrows/NorthArrow_11.svg")
+            svg_marker.setPreservedAspectRatio(True)
+            svg_marker.setSize(5)
+            # svg_marker.setAngle(0)
+            svg_marker.setColor(Qt.darkRed) # QColor(255,255,255)
+
             marker = QgsMarkerSymbol()
-            marker.setOpacity(0.5)
-            marker.changeSymbolLayer(0, simple_marker_large_circle)
+            marker.changeSymbolLayer(0, svg_marker)
+
+            prop=QgsProperty()
+            prop.setField("gnss_heading")
+            marker.setDataDefinedAngle(prop) #QgsProperty () 
+
             renderer = QgsSingleSymbolRenderer(marker)
             layer.setRenderer(renderer)
 
@@ -89,7 +106,7 @@ class LayerInfo():
             # Data
             pr = layer.dataProvider()
             for feature in layer.getFeatures():
-                pr.changeGeometryValues({feature.id():QgsGeometry.fromPointXY(point)})
+                pr.changeFeatures({feature.id():{0:self.layer_name,1:data["gnss_heading"]}}, {feature.id():QgsGeometry.fromPointXY(point)})
                 layer.triggerRepaint()
                 break
 
