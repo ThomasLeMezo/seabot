@@ -167,6 +167,9 @@ int main(int argc, char *argv[]){
   const bool hold_depth_enable = n_private.param<bool>("hold_depth", false);
   const double hold_depth_value_enter = n_private.param<double>("hold_depth_value_enter", 0.05);
   const double hold_depth_value_exit = n_private.param<double>("hold_depth_value_exit", 0.1);
+  const double hold_velocity_enter = n_private.param<double>("hold_velocity_enter", 0.01);
+
+  const double safety_no_data = n_private.param<double>("safety_no_data", 5.0);
 
   /// ************************* ROS Communication *************************
   // Subscriber
@@ -244,7 +247,7 @@ int main(int argc, char *argv[]){
         if(depth_set_point<limit_depth_regulation)
           regulation_state = STATE_SURFACE;
         else if(depth_fusion>=limit_depth_regulation){
-          if((ros::Time::now()-time_last_state).toSec()<1.0){
+          if((ros::Time::now()-time_last_state).toSec()<safety_no_data){
 
             x(2) = -piston_position*tick_to_volume;
 
@@ -281,7 +284,7 @@ int main(int argc, char *argv[]){
         // Previous form do not allow movement under 1 tick
         // piston_set_point = piston_position - u/(tick_to_volume*control_loop_frequency);
 
-        if(hold_depth_enable && abs(depth_set_point-x(1))<hold_depth_value_enter)
+        if(hold_depth_enable && abs(depth_set_point-x(1))<hold_depth_value_enter && abs(x(0))<hold_velocity_enter)
           regulation_state = STATE_HOLD_DEPTH;
 
         break;
