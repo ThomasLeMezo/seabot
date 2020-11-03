@@ -197,6 +197,18 @@ void SBD::read(){
       m_areg_error_code = stoi(fields[1]);
       omp_unset_lock(&lock_data);
     }
+    else if(boost::starts_with(result, "0")){
+        omp_set_lock(&lock_data);
+        m_valid_flush = true;
+        m_return_flush = true;
+        omp_unset_lock(&lock_data);
+    }
+    else if(boost::starts_with(result, "1")){
+        omp_set_lock(&lock_data);
+        m_valid_flush = false;
+        m_return_flush = true;
+        omp_unset_lock(&lock_data);
+    }
     else if(m_read_msg){ // Keep at the end
       omp_set_lock(&lock_data);
       m_read_msg_data = result.substr(2, result.size()-4); // checksum + ending token
@@ -323,6 +335,20 @@ int SBD::cmd_flush_message(const bool &MO, const bool &MT){
   else
     cmd += to_string(1);
   write(cmd);
+
+  for(size_t i=0; i<4*30; i++){
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if(is_flush_return()==true){
+        if(is_flush_valid()){
+            return 0;
+        }
+        else{
+            ROS_INFO("[Iridium] Error flushing device");
+            return 1;
+        }
+    }
+  }
+
   return 0;
 }
 

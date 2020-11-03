@@ -6,7 +6,8 @@
 #include <seabot_fusion/GnssPose.h>
 #include <cmath>
 
-#include <proj_api.h>
+
+#include <proj.h>
 
 using namespace std;
 double latitude, longitude, track;
@@ -63,16 +64,20 @@ int main(int argc, char *argv[])
   const size_t nb_sample = nb_sample_mean+nb_sample_between_heading;
 
   // Init proj
-  projPJ pj_lambert, pj_latlong;
-  if (!(pj_lambert = pj_init_plus("+init=epsg:2154"))){
-    ROS_WARN("[Lambert_node] Error Lambert \n");
-    exit(1);
-  }
+  PJ *P;
+  P = proj_create_crs_to_crs(PJ_DEFAULT_CTX, "EPSG:4326", "EPSG:2154", NULL);
+  if(P==0){
+      ROS_WARN("[Lambert_node] Error Proj %s\n", proj_errno_string(proj_errno(P)));
+      exit(1);
+    }
 
-  if (!(pj_latlong = pj_init_plus("+init=epsg:4326"))){
-    ROS_WARN("[Lambert_node] Error LatLong \n");
-    exit(1);
+  PJ* P_for_GIS = proj_normalize_for_visualization(PJ_DEFAULT_CTX, P);
+  if( 0 == P_for_GIS )  {
+      proj_destroy(P);
+      return 1;
   }
+  proj_destroy(P);
+  P = P_for_GIS;
 
   // Topics
   ros::Subscriber navFix_sub = n.subscribe("/driver/fix", 1, navFix_callback);
@@ -91,11 +96,17 @@ int main(int argc, char *argv[])
 
     if(new_data){
       if(longitude != 0. && latitude != 0. && data_valid){
-        double east = longitude*M_PI/180.0; // Longitude
-        double north = latitude*M_PI/180.0; // Latitude
-        pj_transform(pj_latlong, pj_lambert, 1, 1, &east, &north, nullptr);
-        msg_pose.east = east;
-        msg_pose.north = north;
+
+        PJ_COORD c, c_out;
+        c.lpzt.z = 0.0;
+        c.lpzt.t = HUGE_VAL;
+
+        c.lpzt.lam = longitude;
+        c.lpzt.phi = latitude;
+        c_out = proj_trans(P, PJ_FWD, c);
+
+        msg_pose.east = c_out.xyz.x;
+        msg_pose.north = c_out.xyz.y;
         msg_pose.heading = track;
 
         pose_pub.publish(msg_pose);
@@ -105,8 +116,8 @@ int main(int argc, char *argv[])
           north_mem.clear();
         }
         else{
-          east_mem.push_back(east);
-          north_mem.push_back(north);
+          east_mem.push_back(c_out.xyz.x);
+          north_mem.push_back(c_out.xyz.y);
           if(east_mem.size()>nb_sample){
             east_mem.erase(east_mem.begin());
             north_mem.erase(north_mem.begin());
@@ -127,8 +138,7 @@ int main(int argc, char *argv[])
     loop_rate.sleep();
   }
 
-  pj_free(pj_latlong);
-  pj_free(pj_lambert);
+  proj_destroy(P);
   return 0;
 }
 

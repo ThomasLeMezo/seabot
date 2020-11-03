@@ -249,7 +249,7 @@ public:
   bool m_enable_engine = true;
 
   unsigned int m_last_cmd_received = 0;
-  unsigned int m_period_message = 30; // in 10*min
+  unsigned int m_period_message = 15; // in 10*min
 
   bool m_safety_published_frequency = false;
   bool m_safety_depth_limit = false;

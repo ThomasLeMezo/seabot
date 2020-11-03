@@ -158,6 +158,9 @@ private:
   bool m_READY = false;
   bool m_read_msg = false;
 
+  bool m_return_flush = false;
+  bool m_valid_flush = false;
+
   bool m_in_session = false;
 
   omp_lock_t lock_data;
@@ -233,6 +236,8 @@ public:
   int get_areg_event();
   int get_areg_error_code();
   bool is_in_session();
+  bool is_flush_valid();
+  bool is_flush_return();
   bool is_ready();
   void set_ready(const bool &val);
 
@@ -428,6 +433,20 @@ inline bool SBD::is_in_session(){
   bool result = m_in_session;
   omp_unset_lock(&lock_data);
   return result;
+}
+
+inline bool SBD::is_flush_valid(){
+    omp_set_lock(&lock_data);
+    bool result = m_valid_flush;
+    omp_unset_lock(&lock_data);
+    return result;
+}
+
+inline bool SBD::is_flush_return(){
+    omp_set_lock(&lock_data);
+    bool result = m_return_flush;
+    omp_unset_lock(&lock_data);
+    return result;
 }
 
 inline bool SBD::is_ready(){

@@ -44,7 +44,7 @@ void GPSDClient::process_data_gps(struct gps_data_t* p) {
   m_fix.header.frame_id = frame_id;
 
   m_fix.status = p->fix.mode; // FIXME: gpsmm puts its constants in the global
-  m_fix.time = p->fix.time;
+  m_fix.time = p->fix.time.tv_sec+p->fix.time.tv_nsec*1e-9;
 
   if(p->fix.mode >= MODE_2D) {
     m_fix.latitude = p->fix.latitude;
@@ -61,7 +61,7 @@ void GPSDClient::process_data_gps(struct gps_data_t* p) {
     m_fix.tdop = p->dop.tdop;
     m_fix.gdop = p->dop.gdop;
 
-    m_fix.err = p->epe;
+    m_fix.err = p->fix.eph;
     m_fix.err_vert = p->fix.epv;
     m_fix.err_track = p->fix.epd;
     m_fix.err_speed = p->fix.eps;

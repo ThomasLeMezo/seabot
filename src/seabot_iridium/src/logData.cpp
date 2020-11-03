@@ -57,7 +57,7 @@ std::string LogData::serialize_log_CMD_parameters(){
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_depth);
   bit_position += serialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_engine);
 
-  bit_position += serialize_data<uint_cmd_parameters_t>(data, 8, bit_position, m_period_message);
+  bit_position += serialize_data<uint_cmd_parameters_t>(data, 4, bit_position, m_period_message);
 
   return string((char*)data.backend().limbs(), NB_BITS_CMD_PARAMETERS/8);
 }
@@ -77,7 +77,7 @@ bool LogData::deserialize_log_CMD_parameters(const string &message){
   bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_depth);
   bit_position += deserialize_data<uint_cmd_parameters_t>(data, 1, bit_position, m_enable_engine);
 
-  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 8, bit_position, );
+  bit_position += deserialize_data<uint_cmd_parameters_t>(data, 8, bit_position, m_period_message);
 
   return true;
 }
@@ -311,4 +311,5 @@ bool LogData::deserialize_log_CMD(const string &raw_data){
   default:
     break;
   }
+  return true;
 }
