@@ -183,7 +183,8 @@ void call_decode(const string &data_raw){
         call_sleep();
         break;
     }
-    case CMD_MISSION:
+    case CMD_MISSION_NEW:
+    case CMD_MISSION_KEEP:
     {
         // ToDO : write new mission file
         MissionXML m(log_cmd);
@@ -229,6 +230,10 @@ int main(int argc, char *argv[]){
 
     const string mission_file_name = n_private.param<string>("mission_file_name", "mission_test.xml");
     const string mission_path = n_private.param<string>("mission_path", "");
+
+    const string serial_port_name = n_private.param<string>("serial_port_name", "/dev/ttyAMA0");
+    const unsigned int serial_baud_rate = n_private.param<int>("serial_baud_rate", 19200);
+
     mission_file_path = mission_path + "/" + mission_file_name;
 
     const bool debug = n_private.param<bool>("debug", false);
@@ -253,7 +258,7 @@ int main(int argc, char *argv[]){
     time_last_communication.fromSec(0);
     ros::WallTime time_last_log_version;
 
-    sbd.init();
+    sbd.init(serial_port_name, serial_baud_rate);
     sbd.set_debug(debug);
 
     //  omp_set_num_threads(2);

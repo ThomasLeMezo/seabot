@@ -2,10 +2,10 @@
 <mission>
 	<offset>
 		<start_time_utc>
-			<year>2019</year>
-			<month>10</month>
-			<day>10</day>
-			<hour>08</hour>
+			<year>2020</year>
+			<month>11</month>
+			<day>12</day>
+			<hour>23</hour>
 			<min>00</min>
 		</start_time_utc>
 	</offset>
@@ -40,7 +40,7 @@
 				<approach_velocity>1.0</approach_velocity>
 				<east>253402</east>
 				<north>6805661</north>
-				
+
 			</waypoint>
 		</loop>
 

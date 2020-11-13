@@ -2,6 +2,7 @@
 #define MISSIONXML_H
 
 #include "logData.h"
+#include <boost/property_tree/ptree.hpp>
 
 class MissionXML
 {
@@ -21,6 +22,7 @@ public:
 
 private:
   LogData m_log;
+//  boost::property_tree::ptree m_tree;
 };
 
 #endif // MISSIONXML_H

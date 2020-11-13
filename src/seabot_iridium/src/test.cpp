@@ -155,7 +155,7 @@ void test6(){
 
   LogData d;
   string draw = d.read_file("Test.raw");
-  d.deserialize_log_state(draw);
+//  d.deserialize_log_state(draw);
 
   cout << endl << endl;
   cout << "time: " << std::fixed << d.m_time_now << endl;

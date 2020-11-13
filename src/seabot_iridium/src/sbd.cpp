@@ -33,11 +33,6 @@ void SBD::init(const string &serial_port_name, const unsigned int &baud_rate){
   disable_echo(); // Disable echo from SBD
 }
 
-SBD::SBD(const string &serial_port_name, const unsigned int &baud_rate){
-  omp_init_lock(&lock_data);
-  init();
-}
-
 SBD::~SBD(){
   m_serial.close();
   omp_destroy_lock(&lock_data);
@@ -412,7 +407,6 @@ int SBD::cmd_session(){
   ROS_INFO("[Iridium] End of session not received");
 
   exit(1);
-  return 1;
 }
 
 int SBD::cmd_enable_alert(const bool &enable){
@@ -454,7 +448,7 @@ bool SBD::sbd_power(const bool &enable){
       return false;
     }
 
-    setvalgpio << enable?1:0;//write value to value file
+    setvalgpio << (enable?1:0);//write value to value file
     setvalgpio.close();// close value file
 
     m_iridium_power_state = enable;

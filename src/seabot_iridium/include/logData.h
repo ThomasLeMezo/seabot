@@ -7,16 +7,13 @@
 
 using boost::multiprecision::cpp_int;
 
-//#define TIME_POSIX_START 1570529969 // 12 Juin 2019 => (18bit in minutes => ???)
-#define L93_EAST_MIN 0
-#define L93_EAST_MAX 1300000
-#define L93_NORTH_MIN 6000000
-#define L93_NORTH_MAX 7200000
+#define L93_EAST_MIN 0.0
+#define L93_EAST_MAX 1300000.0
+#define L93_NORTH_MIN 6000000.0
+#define L93_NORTH_MAX 7200000.0
+#define REF_POSIX_TIME 1604874973 //To be update every 5 years !
 
-// Guerledan
-// 253502,6805671
-
-enum MSG_TYPE:unsigned int {LOG_STATE=0, CMD_SLEEP=1, CMD_MISSION=2, CMD_PARAMETERS=3};
+enum MSG_TYPE:unsigned int {LOG_STATE=0, CMD_SLEEP=1, CMD_PARAMETERS=2, CMD_MISSION_NEW=3, CMD_MISSION_KEEP=4};
 // First octet (4 bits) : message_id
 
 #define NB_BITS_LOG1 136
@@ -25,32 +22,41 @@ typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_
 #define NB_BITS_CMD_SLEEP 16
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_SLEEP, NB_BITS_CMD_SLEEP, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_sleep_t;
 
-#define NB_BITS_CMD_WAYPOINT 52
-typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_WAYPOINT, NB_BITS_CMD_WAYPOINT, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_waypoint_t;
-
-#define NB_BITS_CMD_MISSION_HEADER 72
-typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_MISSION_HEADER, NB_BITS_CMD_MISSION_HEADER, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_mission_header_t;
-
 #define NB_BITS_CMD_PARAMETERS 16
 typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_PARAMETERS, NB_BITS_CMD_PARAMETERS, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_parameters_t;
 
+#define NB_BITS_CMD_WAYPOINT_DEPTH 24
+typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_WAYPOINT_DEPTH, NB_BITS_CMD_WAYPOINT_DEPTH, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_waypoint_depth_t;
+
+#define NB_BITS_CMD_WAYPOINT_TRAJ 40
+typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_WAYPOINT_TRAJ, NB_BITS_CMD_WAYPOINT_TRAJ, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_waypoint_traj_t;
+
+#define NB_BITS_CMD_WAYPOINT_TYPE 8
+typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_WAYPOINT_TYPE, NB_BITS_CMD_WAYPOINT_TYPE, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_waypoint_type_t;
+
+#define NB_BITS_CMD_MISSION_HEADER 64
+typedef boost::multiprecision::number<boost::multiprecision::cpp_int_backend<NB_BITS_CMD_MISSION_HEADER, NB_BITS_CMD_MISSION_HEADER, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void> > uint_cmd_mission_header_t;
 
 class Waypoint{
 
 public:
   Waypoint(){}
 
-  Waypoint(const unsigned long &time_end_param, const double &depth_param, const double &north_param, const double &east_param){
-    time_end = time_end_param;
+  Waypoint(const double &duration_param, const double &depth_param, const double &east_param, const double &north_param, const bool &enable_thrusters_param=false, const bool &seafloor_landing_param=false){
+    duration = duration_param;
     depth = depth_param;
     east = east_param;
     north = north_param;
+    enable_thrusters = enable_thrusters_param;
+    seafloor_landing = seafloor_landing_param;
   }
 public:
   double north = 0.0;
   double east = 0.0;
   double depth = 0.0;
-  unsigned long time_end = 0;
+  double duration = 0;
+  bool enable_thrusters = false;
+  bool seafloor_landing = false;
 };
 
 class LogData
@@ -72,7 +78,7 @@ private:
    * @param max
    */
   template<typename _T>
-  int serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double&value_max);
+  unsigned int serialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, const double &value, const double &value_min, const double&value_max);
 
   /**
    * @brief deserialize_data
@@ -85,7 +91,7 @@ private:
    * @return
    */
   template<typename _T>
-  int deserialize_data(_T &bits, const int &nb_bit, const int &start_bit, double &value, const double &value_min, const double &value_max);
+  unsigned int deserialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, double &value, const double &value_min, const double &value_max);
 
   /**
    * @brief serialize_data
@@ -96,7 +102,7 @@ private:
    * @return
    */
   template<typename _T>
-  int serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const unsigned int &value);
+  unsigned int serialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, const unsigned int &value);
 
   /**
    * @brief deserialize_data
@@ -107,7 +113,7 @@ private:
    * @return
    */
   template<typename _T>
-  int deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, unsigned int &value);  
+  unsigned int deserialize_data(const _T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, unsigned int &value);
 
   /**
    * @brief deserialize_data
@@ -118,14 +124,20 @@ private:
    * @return
    */
   template<typename _T>
-  int deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, bool &value);
+  unsigned int deserialize_data(const _T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, int &value);
+
+  /**
+   * @brief deserialize_data
+   * @param bits
+   * @param nb_bit
+   * @param start_bit
+   * @param value
+   * @return
+   */
+  template<typename _T>
+  unsigned int deserialize_data(const _T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, bool &value);
 
 public:
-  /**
-   * @brief deserialize_log_state
-   * @param file_name
-   */
-  bool deserialize_log_state(const std::string &data_raw);
 
   /**
    * @brief deserialize_log_CMD
@@ -150,33 +162,11 @@ public:
   bool deserialize_log_CMD_sleep(const std::string &data);
 
   /**
-   * @brief serialize_log_CMD_sleep
-   * @param file_name
-   * @param min
-   * @return
-   */
-  std::string serialize_log_CMD_sleep();
-
-  /**
-   * @brief serialize_log_CMD_mission
-   * @param file_name
-   * @return
-   */
-  std::string serialize_log_CMD_mission();
-
-  /**
    * @brief deserialize_log_CMD_mission
    * @param file_name
    * @return
    */
   bool deserialize_log_CMD_mission(const std::string &data);
-
-  /**
-   * @brief serialize_log_CMD_parameters
-   * @param file_name
-   * @return
-   */
-  std::string serialize_log_CMD_parameters();
 
   /**
    * @brief deserialize_log_CMD_parameters
@@ -215,7 +205,7 @@ private:
    * @param save_file
    * @return
    */
-  bool deserialize_log_CMD_waypoint(const std::string &message);
+  unsigned int deserialize_log_CMD_waypoint(const std::string &message, const unsigned int &bit_position);
 
 public:
   double m_time_now = 0.0;
@@ -229,6 +219,7 @@ public:
   double m_mean_east = 42.0;
   double m_mean_north = 6000042.0;
   double m_mean_heading = 242.0;
+  unsigned long m_start_time = REF_POSIX_TIME;
 
   double m_internal_pressure = 742.0;
   double m_internal_temperature = 42.0;
@@ -260,10 +251,10 @@ public:
 };
 
 template<typename _T>
-int LogData::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const double &value, const double &value_min, const double &value_max){
-  double scale = (double)(1<<nb_bit-1)/(value_max-value_min);
-  double bit_max = (1<<nb_bit-1);
-  long unsigned int v = (long unsigned int)(std::min(std::max(round((value-value_min)*scale), 0.0), bit_max));
+unsigned int LogData::serialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, const double &value, const double &value_min, const double &value_max){
+  double scale = ((1<<nb_bit)-1)/(value_max-value_min);
+  double bit_max = ((1<<nb_bit)-1);
+  long unsigned int v = static_cast<long unsigned int>(std::min(std::max(round((value-value_min)*scale), 0.0), bit_max));
   long unsigned int v_max = (1<<nb_bit)-1;
   v = std::min(v, v_max);
 
@@ -274,20 +265,21 @@ int LogData::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, c
 }
 
 template<typename _T>
-int LogData::deserialize_data(_T &bits, const int &nb_bit, const int &start_bit, double &value, const double &value_min, const double &value_max){
-  double scale = (double)(1<<nb_bit-1)/(value_max-value_min);
-  _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
-  _T v = (bits & mask)>>start_bit;
-//  cout << v << endl;
-  value = (double)v;
-  value /= scale;
-  value += value_min;
+unsigned int LogData::deserialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, double &value, const double &value_min, const double &value_max){
+  double scale = ((1<<nb_bit)-1.0)/(value_max-value_min);
 
+  _T mask = ((_T(1)<<(nb_bit-1))-1) << start_bit;
+  _T v = (bits & mask)>>start_bit;
+  value = static_cast<double>(v)/scale + value_min;
+
+  std::cout << scale << std::endl;
+  std::cout << value_min << std::endl;
+  std::cout << v << std::endl;
   return nb_bit;
 }
 
 template<typename _T>
-int LogData::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, const unsigned int &value){
+unsigned int LogData::serialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, const unsigned int &value){
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   bits &= ~mask;
   bits |= (_T(value) & ((_T(1)<<nb_bit)-1)) << start_bit;
@@ -295,20 +287,29 @@ int LogData::serialize_data(_T &bits, const int &nb_bit, const int &start_bit, c
 }
 
 template<typename _T>
-int LogData::deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, unsigned int &value){
+unsigned int LogData::deserialize_data(const _T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, unsigned int &value){
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
 
-  value = (unsigned int)v;
+  value = static_cast<unsigned int>(v);
   return nb_bit;
 }
 
 template<typename _T>
-int LogData::deserialize_data(const _T &bits, const int &nb_bit, const int &start_bit, bool &value){
+unsigned int LogData::deserialize_data(const _T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, int &value){
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
 
-  value = (bool)v;
+  value = static_cast<int>(v)-(1<<nb_bit);
+  return nb_bit;
+}
+
+template<typename _T>
+unsigned int LogData::deserialize_data(const _T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, bool &value){
+  _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
+  _T v = (bits & mask)>>start_bit;
+
+  value = static_cast<bool>(v);
   return nb_bit;
 }
 

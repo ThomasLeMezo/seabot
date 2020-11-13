@@ -81,17 +81,25 @@ target_link_libraries(iridium_node
 
 #if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 
-# add_executable(decode_log_state src/decode_log_state.cpp ${SRC})
-# add_dependencies(decode_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(decode_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+add_executable(test_decode_mission
+  src/test_decode_mission.cpp
+  src/logData.cpp
+  src/missionxml.cpp
+  )
+add_dependencies(test_decode_mission ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_decode_mission ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
-# add_executable(generate_cmd_sleep src/generate_cmd_sleep.cpp ${SRC})
-# add_dependencies(generate_cmd_sleep ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(generate_cmd_sleep ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+# add_executable(test_decode_log_state src/test_decode_log_state.cpp ${SRC})
+# add_dependencies(test_decode_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_decode_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
-# add_executable(generate_cmd_parameters src/generate_cmd_parameters.cpp ${SRC})
-# add_dependencies(generate_cmd_parameters ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(generate_cmd_parameters ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+# add_executable(test_generate_cmd_sleep src/test_generate_cmd_sleep.cpp ${SRC})
+# add_dependencies(test_generate_cmd_sleep ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_generate_cmd_sleep ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+
+# add_executable(test_generate_cmd_parameters src/test_generate_cmd_parameters.cpp ${SRC})
+# add_dependencies(test_generate_cmd_parameters ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_generate_cmd_parameters ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
 #endif()
 

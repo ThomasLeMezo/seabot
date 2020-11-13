@@ -19,7 +19,6 @@ public:
    * @param baud_rate
    * @param timeout (in ms)
    */
-  SBD(const std::string &serial_port_name, const unsigned int &baud_rate);
   SBD();
 
   ~SBD();

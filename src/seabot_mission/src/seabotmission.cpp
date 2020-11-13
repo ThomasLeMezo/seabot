@@ -28,8 +28,8 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
     if(t_now < m_time_start){
       m_mission_enable = false;
       depth = 0.0;
-      north = m_waypoints[m_current_waypoint].north;
-      east = m_waypoints[m_current_waypoint].east;
+      north = m_waypoints[m_current_waypoint].north + m_offset_north;
+      east = m_waypoints[m_current_waypoint].east + m_offset_east;
 
       limit_velocity = m_waypoints[m_current_waypoint].limit_velocity;
       approach_velocity = m_waypoints[m_current_waypoint].approach_velocity;
@@ -68,12 +68,12 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
         double d_north = m_waypoints[m_current_waypoint].north - m_waypoints[m_current_waypoint-1].north;
         double d_east = m_waypoints[m_current_waypoint].east - m_waypoints[m_current_waypoint-1].east;
 
-        north = m_waypoints[m_current_waypoint-1].north + d_north*ratio;
-        east = m_waypoints[m_current_waypoint-1].east + d_east*ratio;
+        north = m_waypoints[m_current_waypoint-1].north + d_north*ratio + m_offset_north;;
+        east = m_waypoints[m_current_waypoint-1].east + d_east*ratio + m_offset_east;
       }
       else{
-        north = m_waypoints[m_current_waypoint].north;
-        east = m_waypoints[m_current_waypoint].east;
+        north = m_waypoints[m_current_waypoint].north + m_offset_north;;
+        east = m_waypoints[m_current_waypoint].east + m_offset_east;
       }
 
       m_duration_next_waypoint = m_waypoints[m_current_waypoint].time_end-t_now;
@@ -85,8 +85,8 @@ bool SeabotMission::compute_command(double &north, double &east, double &depth, 
     depth = 0.0;
     limit_velocity = 0.0;
     approach_velocity = 1.0;
-    north = m_waypoints[m_waypoints.size()-1].north;
-    east = m_waypoints[m_waypoints.size()-1].east;
+    north = m_waypoints[m_waypoints.size()-1].north + m_offset_north;
+    east = m_waypoints[m_waypoints.size()-1].east + m_offset_east;
     ratio = 1;
     enable_thrusters = false;
     seafloor_landing = false;
