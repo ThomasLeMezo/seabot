@@ -22,7 +22,7 @@
 
 		<loop number="5" depth_increment="5.0">
 			<waypoint>
-				<duration>400</duration>
+				<duration>420</duration>
 				<depth>10.0</depth>
 				<limit_velocity>0.05</limit_velocity>
 				<approach_velocity>1.0</approach_velocity>
@@ -34,7 +34,7 @@
 
 		<loop number="6" depth_increment="-5.0">
 			<waypoint>
-				<duration>400</duration>
+				<duration>420</duration>
 				<depth>28</depth>
 				<limit_velocity>0.05</limit_velocity>
 				<approach_velocity>1.0</approach_velocity>
@@ -64,7 +64,7 @@
 
 		<loop number="5" depth_increment="5.0">
 			<waypoint>
-				<duration>400</duration>
+				<duration>420</duration>
 				<depth>5</depth>
 				<limit_velocity>0.05</limit_velocity>
 				<approach_velocity>1.0</approach_velocity>
@@ -75,7 +75,7 @@
 
 		<loop number="6" depth_increment="-5.0">
 			<waypoint>
-				<duration>400</duration>
+				<duration>420</duration>
 				<depth>28</depth>
 				<limit_velocity>0.05</limit_velocity>
 				<approach_velocity>1.0</approach_velocity>

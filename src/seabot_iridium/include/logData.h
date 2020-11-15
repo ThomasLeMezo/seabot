@@ -268,13 +268,16 @@ template<typename _T>
 unsigned int LogData::deserialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, double &value, const double &value_min, const double &value_max){
   double scale = ((1<<nb_bit)-1.0)/(value_max-value_min);
 
-  _T mask = ((_T(1)<<(nb_bit-1))-1) << start_bit;
+  _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
   value = static_cast<double>(v)/scale + value_min;
 
-  std::cout << scale << std::endl;
-  std::cout << value_min << std::endl;
-  std::cout << v << std::endl;
+  std::cout << "---" << std::endl;
+  std::cout << "scale = " << scale << std::endl;
+  std::cout << "value min = " << value_min << std::endl;
+  std::cout << "binary value = " << v << std::endl;
+  std::cout << "scaled value = " << static_cast<double>(v)/scale << std::endl;
+  std::cout << "value = " << value << std::endl << std::endl;
   return nb_bit;
 }
 

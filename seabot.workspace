@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Workspace>
-    <Distribution name="kinetic"/>
-    <DefaultBuildSystem value="0"/>
+    <Distribution path="/opt/ros/noetic"/>
+    <DefaultBuildSystem value="1"/>
     <WatchDirectories>
         <Directory>src</Directory>
     </WatchDirectories>

@@ -1,4 +1,4 @@
 #!/bin/bash
 dir=`pwd`
 script_file=$HOME/workspaceFlotteur/tools/rosbag/log.py
-python $script_file $dir/$1
+python3 $script_file $dir/$1
