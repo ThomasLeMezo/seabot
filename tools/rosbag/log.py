@@ -8,6 +8,7 @@ import pyqtgraph.console
 from pyqtgraph.dockarea import *
 import datetime
 from PyQt5.QtCore import QTime, QTimer
+from PyQt5.QtWidgets import QFileDialog, QInputDialog
 
 from scipy import signal, interpolate
 import numpy as np
@@ -48,8 +49,16 @@ def save_gpx():
     gpx_track = gpxpy.gpx.GPXTrack()
     gpx_segment = gpxpy.gpx.GPXTrackSegment()
 
+    filepath = QFileDialog.getSaveFileName(win,"Save file", str(filename[:-4])+".gpx","GPX (*.gpx)")
+    print(filepath)
+    if(filepath==None):
+        return
+    sec_delay, ok = QInputDialog.getDouble(win, "GPX Export : sample rate","Seconds between two points", 0.0, 0.0, 1000.0, 1)
+    if(not ok):
+        return
+
     for i in range(len(fixData.latitude)):
-        if(abs(last_fix_time-fixData.time[i])>30.):
+        if(abs(last_fix_time-fixData.time[i])>float(sec_delay)):
             if(fixData.status[i]==3):
                 last_fix_time = fixData.time[i]
 
@@ -63,7 +72,7 @@ def save_gpx():
     gpx_track.segments.append(gpx_segment)
     gpx.tracks.append(gpx_track)
 
-    file = open(filename+".gpx","w")
+    file = open(filepath[0],"w")
     file.write(gpx.to_xml())
     file.close()
 
@@ -298,6 +307,25 @@ def text_write_safety_msg(p, t, msg, data):
         if(tab[i+1]==1):
             text_write_plot(p, t[i+1], tab[i+1], msg)
 
+# https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value/12141511#12141511
+from bisect import bisect_left
+def take_closest_index(myList, myNumber):
+    """
+    Assumes myList is sorted. Returns closest value to myNumber.
+
+    If two numbers are equally close, return the smallest number.
+    """
+    pos = bisect_left(myList, myNumber)
+    if pos == 0:
+        return 0
+    if pos == len(myList):
+        return len(myList)-1
+    before = myList[pos - 1]
+    after = myList[pos]
+    if after - myNumber < myNumber - before:
+       return pos
+    else:
+       return pos-1
 #################### Safety ####################
 
 #### Safety Debug ####
@@ -1164,6 +1192,25 @@ if(len(iridiumSessionData.time)>0):
 
     pg_iridium_session_result.setXLink(pg_depth)
 
+    # Add text message
+    text = pg.TextItem(html='<div style="text-align: left"><span style="color: #FFF;">0</span></div>', anchor=(-0.1, 0.1),border='w', fill=(0, 0, 200, 255))
+    pg_iridium_session_result.addItem(text)
+    vLine = pg.InfiniteLine(angle=90, movable=False)
+    pg_iridium_session_result.addItem(vLine, ignoreBounds=True)
+
+    # Add message identification
+
+    def mouseMoved(evt):
+        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        if pg_iridium_session_result.sceneBoundingRect().contains(pos):
+            mousePoint = pg_iridium_session_result.getViewBox().mapSceneToView(pos)
+            index = take_closest_index(iridiumSessionData.time, mousePoint.x())
+            text.setText(map_mo_msg[iridiumSessionData.mo[index]]+"\n"+map_mt_msg[iridiumSessionData.mt[index]])
+            text.setPos(mousePoint.x(), mousePoint.y())
+            vLine.setPos(iridiumSessionData.time[index])
+
+    proxy = pg.SignalProxy(pg_iridium_session_result.scene().sigMouseMoved, rateLimit=60, slot=mouseMoved)
+
     # # /iridium/session
     # time_iridium_session = []
     # iridium_session_mo = []
@@ -1359,6 +1406,40 @@ if(np.size(engineData.time)>0 and np.size(regulationWaypointData.time)>0 and len
 
 ###################################################
 
+map_mo_msg = dict([\
+(0, "0 - MO message, if any, transferred successfully."),\
+(1, "1 - MO message, if any, transferred successfully, but the MT message in the queue was too big to be transferred."),\
+(2, "2 - MO message, if any, transferred successfully, but the requested Location Update was not accepted."),\
+(3, "3 - Reserved, but indicate MO session success if used."),\
+(5, "5 - Reserved, but indicate MO session failure if used."),\
+(10, "10 - GSS reported that the call did not complete in the allowed time."),\
+(11, "11 - MO message queue at the GSS is full."),\
+(12, "12 - MO message has too many segments."),\
+(13, "13 - GSS reported that the session did not complete."),\
+(14, "14 - Invalid segment size."),\
+(15, "15 - Access is denied."),\
+(16, "16 - ISU has been locked and may not make SBD calls (see +CULK command)."),\
+(17, "17 - Gateway not responding (local session timeout)."),\
+(18, "18 - Connection lost (RF drop)."),\
+(19, "19 - Link failure (A protocol error caused termination of the call)."),\
+(20, "20 - Reserved, but indicate failure if used."),\
+(32, "32 - No network service, unable to initiate call."),\
+(33, "33 - Antenna fault, unable to initiate call."),\
+(34, "34 - Radio is disabled, unable to initiate call (see *Rn command)."),\
+(35, "35 - ISU is busy, unable to initiate call."),\
+(36, "36 - Try later, must wait 3 minutes since last registration."),\
+(37, "37 - SBD service is temporarily disabled."),\
+(38, "38 - Try later, traffic management period (see +SBDLOE command)"),\
+(39, "39 - Reserved, but indicate failure if used."),\
+(64, "64 - Band violation (attempt to transmit outside permitted frequency band)."),\
+(65, "65 - PLL lock failure; hardware error during attempted transmit.")\
+])
+
+map_mt_msg = dict([\
+(0, "0 - No SBD message to receive from the GSS."),\
+(1, "1 - SBD message successfully received from the GSS."),\
+(2, "2 - An error occurred while attempting to perform a mailbox check or receive a message from the GSS.")\
+])
 win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
