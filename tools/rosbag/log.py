@@ -51,7 +51,7 @@ def save_gpx():
 
     filepath = QFileDialog.getSaveFileName(win,"Save file", str(filename[:-4])+".gpx","GPX (*.gpx)")
     print(filepath)
-    if(filepath==None):
+    if(filepath[0]==''):
         return
     sec_delay, ok = QInputDialog.getDouble(win, "GPX Export : sample rate","Seconds between two points", 0.0, 0.0, 1000.0, 1)
     if(not ok):

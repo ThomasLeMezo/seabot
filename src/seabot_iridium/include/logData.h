@@ -272,12 +272,12 @@ unsigned int LogData::deserialize_data(_T &bits, const unsigned int &nb_bit, con
   _T v = (bits & mask)>>start_bit;
   value = static_cast<double>(v)/scale + value_min;
 
-  std::cout << "---" << std::endl;
-  std::cout << "scale = " << scale << std::endl;
-  std::cout << "value min = " << value_min << std::endl;
-  std::cout << "binary value = " << v << std::endl;
-  std::cout << "scaled value = " << static_cast<double>(v)/scale << std::endl;
-  std::cout << "value = " << value << std::endl << std::endl;
+//  std::cout << "---" << std::endl;
+//  std::cout << "scale = " << scale << std::endl;
+//  std::cout << "value min = " << value_min << std::endl;
+//  std::cout << "binary value = " << v << std::endl;
+//  std::cout << "scaled value = " << static_cast<double>(v)/scale << std::endl;
+//  std::cout << "value = " << value << std::endl << std::endl;
   return nb_bit;
 }
 
@@ -303,7 +303,7 @@ unsigned int LogData::deserialize_data(const _T &bits, const unsigned int &nb_bi
   _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
   _T v = (bits & mask)>>start_bit;
 
-  value = static_cast<int>(v)-(1<<nb_bit);
+  value = static_cast<int>(v);// Two bit complement is automaticaly done
   return nb_bit;
 }
 
