@@ -89,6 +89,13 @@ add_executable(test_decode_mission
 add_dependencies(test_decode_mission ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(test_decode_mission ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
 
+add_executable(test_generate_log_state
+  src/test_generate_log_state.cpp
+  src/logData.cpp
+  )
+add_dependencies(test_generate_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_generate_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})
+
 # add_executable(test_decode_log_state src/test_decode_log_state.cpp ${SRC})
 # add_dependencies(test_decode_log_state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(test_decode_log_state ${catkin_LIBRARIES} ${OpenMP_CXX_FLAGS})

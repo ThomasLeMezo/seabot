@@ -253,14 +253,14 @@ public:
 template<typename _T>
 unsigned int LogData::serialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, const double &value, const double &value_min, const double &value_max){
   double scale = ((1<<nb_bit)-1)/(value_max-value_min);
-  double bit_max = ((1<<nb_bit)-1);
+  double bit_max = (1<<nb_bit)-1;
   long unsigned int v = static_cast<long unsigned int>(std::min(std::max(round((value-value_min)*scale), 0.0), bit_max));
-  long unsigned int v_max = (1<<nb_bit)-1;
+  long unsigned int v_max = static_cast<long unsigned int>(bit_max);
   v = std::min(v, v_max);
 
-  _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
-  bits &= ~mask;
-  bits |= (_T(v) & ((_T(1)<<nb_bit)-1)) << start_bit;
+  _T mask = ((_T(1)<<nb_bit)-1);
+  bits &= ~(mask << start_bit);
+  bits |= (_T(v) & mask) << start_bit;
   return nb_bit;
 }
 
@@ -283,9 +283,9 @@ unsigned int LogData::deserialize_data(_T &bits, const unsigned int &nb_bit, con
 
 template<typename _T>
 unsigned int LogData::serialize_data(_T &bits, const unsigned int &nb_bit, const unsigned int &start_bit, const unsigned int &value){
-  _T mask = ((_T(1)<<nb_bit)-1) << start_bit;
-  bits &= ~mask;
-  bits |= (_T(value) & ((_T(1)<<nb_bit)-1)) << start_bit;
+  _T mask = ((_T(1)<<nb_bit)-1);
+  bits &= ~(mask << start_bit);
+  bits |= (_T(value) & mask) << start_bit;
   return nb_bit;
 }
 
